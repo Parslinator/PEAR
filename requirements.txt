@@ -1,0 +1,12 @@
+cfbd
+openpyxl
+streamlit
+pandas
+numpy
+altair
+scikit-learn
+datetime
+matplotlib
+requests
+IPython
+seaborn
