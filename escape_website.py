@@ -51,7 +51,12 @@ metrics_api = cfbd.MetricsApi(api_client)
 players_api = cfbd.PlayersApi(api_client)
 recruiting_api = cfbd.RecruitingApi(api_client)
 
-week_start_list = [*games_api.get_calendar(year = 2024)]
+current_time = datetime.datetime.now(pytz.UTC)
+if current_time.month < 6:
+    calendar_year = current_time.year - 1
+else:
+    calendar_year = current_time.year
+week_start_list = [*games_api.get_calendar(year = calendar_year)]
 calendar_dict = [dict(
     first_game_start = c.first_game_start,
     last_game_start = c.last_game_start,
@@ -63,7 +68,6 @@ calendar = pd.DataFrame(calendar_dict)
 calendar['first_game_start'] = pd.to_datetime(calendar['first_game_start'])
 calendar['last_game_start'] = pd.to_datetime(calendar['last_game_start'])
 current_year = int(calendar.loc[0, 'season'])
-current_time = datetime.datetime.now(pytz.UTC)
 first_game_start = calendar['first_game_start'].iloc[0]
 last_game_start = calendar['last_game_start'].iloc[-1]
 current_week = None
