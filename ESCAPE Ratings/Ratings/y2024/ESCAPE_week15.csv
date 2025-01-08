@@ -1,0 +1,135 @@
+,team,power_rating,conference,week,year
+1,Ohio State,21.6,Big Ten,15,2024
+2,Notre Dame,21.0,FBS Independents,15,2024
+3,Penn State,20.0,Big Ten,15,2024
+4,Oregon,19.2,Big Ten,15,2024
+5,Texas,18.1,SEC,15,2024
+6,Georgia,17.3,SEC,15,2024
+7,Alabama,16.1,SEC,15,2024
+8,Indiana,15.9,Big Ten,15,2024
+9,Ole Miss,15.3,SEC,15,2024
+10,Tennessee,14.6,SEC,15,2024
+11,Miami,12.3,ACC,15,2024
+12,Texas A&M,12.1,SEC,15,2024
+13,Clemson,12.1,ACC,15,2024
+14,LSU,11.8,SEC,15,2024
+15,Boise State,11.2,Mountain West,15,2024
+16,Tulane,10.8,American Athletic,15,2024
+17,Florida,9.6,SEC,15,2024
+18,SMU,9.6,ACC,15,2024
+19,South Carolina,9.1,SEC,15,2024
+20,Louisville,8.9,ACC,15,2024
+21,USC,8.8,Big Ten,15,2024
+22,TCU,8.5,Big 12,15,2024
+23,Iowa,8.1,Big Ten,15,2024
+24,Colorado,8.0,Big 12,15,2024
+25,Missouri,7.8,SEC,15,2024
+26,Arizona State,7.8,Big 12,15,2024
+27,Baylor,7.6,Big 12,15,2024
+28,Nebraska,7.3,Big Ten,15,2024
+29,Iowa State,6.4,Big 12,15,2024
+30,Kansas State,6.4,Big 12,15,2024
+31,Auburn,6.4,SEC,15,2024
+32,Michigan,6.2,Big Ten,15,2024
+33,Arkansas,6.1,SEC,15,2024
+34,Virginia Tech,5.7,ACC,15,2024
+35,Oklahoma,5.6,SEC,15,2024
+36,Kansas,5.5,Big 12,15,2024
+37,Illinois,5.0,Big Ten,15,2024
+38,BYU,5.0,Big 12,15,2024
+39,North Carolina,4.8,ACC,15,2024
+40,Memphis,4.8,American Athletic,15,2024
+41,Syracuse,4.7,ACC,15,2024
+42,Minnesota,4.6,Big Ten,15,2024
+43,UNLV,4.4,Mountain West,15,2024
+44,South Alabama,4.2,Sun Belt,15,2024
+45,UCF,4.1,Big 12,15,2024
+46,Vanderbilt,3.7,SEC,15,2024
+47,Kentucky,3.6,SEC,15,2024
+48,Louisiana,3.5,Sun Belt,15,2024
+49,California,3.3,ACC,15,2024
+50,Army,3.3,American Athletic,15,2024
+51,Washington,3.2,Big Ten,15,2024
+52,Washington State,3.1,Pac-12,15,2024
+53,Boston College,2.9,ACC,15,2024
+54,Pittsburgh,2.9,ACC,15,2024
+55,Georgia Tech,2.6,ACC,15,2024
+56,Rutgers,1.9,Big Ten,15,2024
+57,Duke,1.7,ACC,15,2024
+58,NC State,1.6,ACC,15,2024
+59,Wisconsin,1.0,Big Ten,15,2024
+60,Cincinnati,0.9,Big 12,15,2024
+61,Texas Tech,0.8,Big 12,15,2024
+62,Texas State,0.8,Sun Belt,15,2024
+63,Navy,0.7,American Athletic,15,2024
+64,Utah,0.0,Big 12,15,2024
+65,UCLA,-0.3,Big Ten,15,2024
+66,James Madison,-0.4,Sun Belt,15,2024
+67,Miami (OH),-0.4,Mid-American,15,2024
+68,Marshall,-1.4,Sun Belt,15,2024
+69,West Virginia,-1.8,Big 12,15,2024
+70,Western Kentucky,-1.9,Conference USA,15,2024
+71,East Carolina,-1.9,American Athletic,15,2024
+72,UConn,-2.0,FBS Independents,15,2024
+73,Bowling Green,-2.1,Mid-American,15,2024
+74,Ohio,-2.1,Mid-American,15,2024
+75,Toledo,-2.1,Mid-American,15,2024
+76,Fresno State,-2.2,Mountain West,15,2024
+77,South Florida,-2.4,American Athletic,15,2024
+78,Mississippi State,-2.6,SEC,15,2024
+79,Northern Illinois,-2.7,Mid-American,15,2024
+80,Oklahoma State,-2.9,Big 12,15,2024
+81,Wake Forest,-3.1,ACC,15,2024
+82,Liberty,-3.2,Conference USA,15,2024
+83,UTSA,-3.2,American Athletic,15,2024
+84,Virginia,-3.3,ACC,15,2024
+85,Stanford,-3.5,ACC,15,2024
+86,Maryland,-3.6,Big Ten,15,2024
+87,Colorado State,-3.6,Mountain West,15,2024
+88,Florida State,-3.8,ACC,15,2024
+89,Michigan State,-4.2,Big Ten,15,2024
+90,Jacksonville State,-4.3,Conference USA,15,2024
+91,Old Dominion,-4.3,Sun Belt,15,2024
+92,Western Michigan,-4.3,Mid-American,15,2024
+93,Troy,-4.6,Sun Belt,15,2024
+94,App State,-4.7,Sun Belt,15,2024
+95,Coastal Carolina,-4.9,Sun Belt,15,2024
+96,Florida International,-5.6,Conference USA,15,2024
+97,North Texas,-6.2,American Athletic,15,2024
+98,Arizona,-6.8,Big 12,15,2024
+99,Georgia Southern,-7.0,Sun Belt,15,2024
+100,Sam Houston,-7.1,Conference USA,15,2024
+101,Northwestern,-7.3,Big Ten,15,2024
+102,San José State,-7.3,Mountain West,15,2024
+103,Rice,-7.3,American Athletic,15,2024
+104,New Mexico,-7.6,Mountain West,15,2024
+105,Houston,-7.7,Big 12,15,2024
+106,Utah State,-7.9,Mountain West,15,2024
+107,Hawai'i,-8.0,Mountain West,15,2024
+108,Nevada,-8.1,Mountain West,15,2024
+109,Buffalo,-8.1,Mid-American,15,2024
+110,Florida Atlantic,-8.2,American Athletic,15,2024
+111,Oregon State,-8.6,Pac-12,15,2024
+112,Eastern Michigan,-8.7,Mid-American,15,2024
+113,Air Force,-9.6,Mountain West,15,2024
+114,UAB,-9.7,American Athletic,15,2024
+115,Akron,-9.9,Mid-American,15,2024
+116,Central Michigan,-9.9,Mid-American,15,2024
+117,Georgia State,-9.9,Sun Belt,15,2024
+118,Arkansas State,-10.5,Sun Belt,15,2024
+119,Charlotte,-10.8,American Athletic,15,2024
+120,Louisiana Tech,-11.0,Conference USA,15,2024
+121,Massachusetts,-12.1,FBS Independents,15,2024
+122,Purdue,-12.3,Big Ten,15,2024
+123,Tulsa,-12.3,American Athletic,15,2024
+124,Temple,-12.8,American Athletic,15,2024
+125,Ball State,-12.9,Mid-American,15,2024
+126,UL Monroe,-13.8,Sun Belt,15,2024
+127,San Diego State,-13.9,Mountain West,15,2024
+128,Wyoming,-14.3,Mountain West,15,2024
+129,Middle Tennessee,-15.0,Conference USA,15,2024
+130,Kennesaw State,-15.7,Conference USA,15,2024
+131,New Mexico State,-16.4,Conference USA,15,2024
+132,UTEP,-17.3,Conference USA,15,2024
+133,Southern Miss,-20.2,Sun Belt,15,2024
+134,Kent State,-22.6,Mid-American,15,2024
