@@ -24,13 +24,6 @@ teams_api = cfbd.TeamsApi(api_client)
 metrics_api = cfbd.MetricsApi(api_client)
 players_api = cfbd.PlayersApi(api_client)
 recruiting_api = cfbd.RecruitingApi(api_client)
-def get_integer(prompt):
-    while True:
-        try:
-            value = int(input(prompt))
-            return value
-        except ValueError:
-            print("Invalid input. Please enter an integer.")
 
 current_time = datetime.datetime.now(pytz.UTC)
 if current_time.month < 6:
