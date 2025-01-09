@@ -76,7 +76,6 @@ print(f"Current Week: {current_week}, Current Year: {current_year}")
 print("Double Check The Current Week To Make Sure It Is Correct")
 run_full_optimization = input("Run Full Optimization? (y/n): ").strip().lower()
 
-
 def date_sort(game):
     game_date = datetime.datetime.strptime(game['start_date'], "%Y-%m-%dT%H:%M:%S.000Z")
     return game_date
@@ -461,6 +460,14 @@ if run_full_optimization == 'y':
     team_data['in_house_pr'] = scaler60.fit_transform(team_data[['adjusted_metric']]).round(2)
     team_data['in_house_pr'] = round(team_data['in_house_pr'] - team_data['in_house_pr'].mean(), 1)
 
+    ###############################################################################
+    ###############################################################################
+    ###############################################################################
+    ## When adding in the pre-season ratings, I think this is a good spot for it ##
+    ###############################################################################
+    ###############################################################################
+    ###############################################################################
+
     pbar = tqdm(total=500, desc="Optimization Progress")
     def progress_callback(xk, convergence):
         """Callback to update the progress bar after each iteration."""
@@ -829,8 +836,6 @@ if run_full_optimization == 'y':
 
     team_data.to_csv(f"./ESCAPE Ratings/Data/y{current_year}/team_data_week{current_week}_test.csv")
     team_power_rankings.to_csv(f'./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}_test.csv')
-    # team_data.to_csv("./Website Data/all_team_data.csv")
-    # team_power_rankings.to_csv(f'./Website Data/ESCAPE_week{current_week}_{current_year}.csv')
 else:
     print("No Optimization")
     team_data = pd.read_csv(f'./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}.csv').drop(columns=['Unnamed: 0'])
