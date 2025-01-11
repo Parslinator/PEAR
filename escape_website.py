@@ -138,12 +138,20 @@ def grab_team_rating(team):
 
 @st.cache_data()
 def grab_team_elo(team):
-    elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week, team=team)]
-    elo_ratings_dict = [dict(
-        team=e.team,
-        elo=e.elo
-    ) for e in elo_ratings_list]
-    elo_ratings = pd.DataFrame(elo_ratings_dict)
+    if postseason == True:
+        elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, team=team)]
+        elo_ratings_dict = [dict(
+            team=e.team,
+            elo=e.elo
+        ) for e in elo_ratings_list]
+        elo_ratings = pd.DataFrame(elo_ratings_dict)
+    else:
+        elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week, team=team)]
+        elo_ratings_dict = [dict(
+            team=e.team,
+            elo=e.elo
+        ) for e in elo_ratings_list]
+        elo_ratings = pd.DataFrame(elo_ratings_dict)        
     return elo_ratings['elo'].values[0]
 
 @st.cache_data()
@@ -191,10 +199,22 @@ def get_week_spreads(team_data):
         games = []
         response = games_api.get_games(year=current_year, division = 'fbs', season_type="postseason")
         games = [*games, *response]
+        elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week, season_type="postseason")]
+        elo_ratings_dict = [dict(
+            team = e.team,
+            elo = e.elo
+        ) for e in elo_ratings_list]
+        elo_ratings = pd.DataFrame(elo_ratings_dict)
     else:
         games = []
         response = games_api.get_games(year=current_year, week = current_week, division = 'fbs')
         games = [*games, *response]
+        elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week)]
+        elo_ratings_dict = [dict(
+            team = e.team,
+            elo = e.elo
+        ) for e in elo_ratings_list]
+        elo_ratings = pd.DataFrame(elo_ratings_dict)
     games_dict = [dict(
                 id=g.id,
                 season=g.season,
@@ -212,13 +232,6 @@ def get_week_spreads(team_data):
                 ) for g in games]
     games_dict.sort(key=date_sort)
     week_games = pd.DataFrame(games_dict)
-    
-    elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week)]
-    elo_ratings_dict = [dict(
-        team = e.team,
-        elo = e.elo
-    ) for e in elo_ratings_list]
-    elo_ratings = pd.DataFrame(elo_ratings_dict)
 
     week_games['home_elo'] = week_games.apply(
     lambda row: elo_ratings.loc[elo_ratings['team'] == row['home_team'], 'elo'].values[0]
