@@ -422,7 +422,7 @@ game_completion_info = week_spreads[['Home', 'Away', 'difference', 'formatted_op
 completed = game_completion_info[game_completion_info["ESCAPE ATS CLOSE"] != '']
 
 st.title("ESCAPE Ratings")
-st.logo("./escape_logo.jpg", size = 'large')
+st.logo("./ESCAPE Ratings/escape_logo.jpg", size = 'large')
 if postseason == True:
     st.subheader("Bowl Games Projected Spreads, Ordered by Deviation")
 else:
