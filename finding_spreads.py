@@ -14,6 +14,7 @@ import math
 import warnings
 # Suppress all warnings
 warnings.filterwarnings("ignore")
+np.random.seed(42)
 
 configuration = cfbd.Configuration()
 configuration.api_key['Authorization'] = '7vGedNNOrnl0NGcSvt92FcVahY602p7IroVBlCA1Tt+WI/dCwtT7Gj5VzmaHrrxS'
