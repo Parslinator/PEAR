@@ -106,12 +106,22 @@ logos_info_dict = [dict(
 ) for l in logos_info_list]
 logos = pd.DataFrame(logos_info_dict)
 logos = logos.dropna(subset=['logo', 'color'])
-elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week)]
-elo_ratings_dict = [dict(
-    team = e.team,
-    elo = e.elo
-) for e in elo_ratings_list]
-elo_ratings = pd.DataFrame(elo_ratings_dict)
+
+if postseason == True:
+    elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year)]
+    elo_ratings_dict = [dict(
+        team = e.team,
+        elo = e.elo
+    ) for e in elo_ratings_list]
+    elo_ratings = pd.DataFrame(elo_ratings_dict)
+else:
+    elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week)]
+    elo_ratings_dict = [dict(
+        team = e.team,
+        elo = e.elo
+    ) for e in elo_ratings_list]
+    elo_ratings = pd.DataFrame(elo_ratings_dict)
+
 print("Elo Prep Done!")
 
 records_list = []
@@ -878,7 +888,23 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
         # Fallback (should not reach here)
         return '#000000'
 
-    
+    def grab_team_elo(team):
+        if postseason == True:
+            elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, team=team)]
+            elo_ratings_dict = [dict(
+                team=e.team,
+                elo=e.elo
+            ) for e in elo_ratings_list]
+            elo_ratings = pd.DataFrame(elo_ratings_dict)
+        else:
+            elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week, team=team)]
+            elo_ratings_dict = [dict(
+                team=e.team,
+                elo=e.elo
+            ) for e in elo_ratings_list]
+            elo_ratings = pd.DataFrame(elo_ratings_dict)        
+        return elo_ratings['elo'].values[0]
+
     ################################# PREPPING DATA NEEDED #################################
 
     entire_schedule = schedule_info.copy()
@@ -955,27 +981,9 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     away_sos = SOS[SOS['team'] == away_team]['SOS'].values[0]
     home_non_completed_games = non_completed_games[(non_completed_games['home_team'] == home_team) | (non_completed_games['away_team'] == home_team)].reset_index(drop = True)
     away_non_completed_games = non_completed_games[(non_completed_games['home_team'] == away_team) | (non_completed_games['away_team'] == away_team)].reset_index(drop = True)
-    if (len(home_non_completed_games) == 0):
-        if home_team == home_completed_games.iloc[-1, :]['home_team']:
-            home_elo = home_completed_games.iloc[-1, :]['home_elo']
-        else:
-            home_elo = home_completed_games.iloc[-1, :]['away_elo']
-    else:
-        if home_team == home_non_completed_games.iloc[0, :]['home_team']:
-            home_elo = home_non_completed_games.iloc[0, :]['home_elo']
-        else:
-            home_elo = home_non_completed_games.iloc[0, :]['away_elo']
-    if (len(away_non_completed_games) == 0):
-        if away_team == away_completed_games.iloc[-1, :]['home_team']:
-            away_elo = away_completed_games.iloc[-1, :]['home_elo']
-        else:
-            away_elo = away_completed_games.iloc[-1, :]['away_elo']
-    else:
-        if away_team == away_non_completed_games.iloc[0, :]['home_team']:
-            away_elo = away_non_completed_games.iloc[0, :]['home_elo']
-        else:
-            away_elo = away_non_completed_games.iloc[0, :]['away_elo']
-
+    home_elo = grab_team_elo(home_team)
+    away_elo = grab_team_elo(away_team)
+    
     cmap = LinearSegmentedColormap.from_list('dark_gradient_orange', ['#660000', '#8B0000', '#808080', '#2C5E00', '#1D4D00'], N=100)
     def get_color(value, vmin=0, vmax=100):
         norm_value = (value - vmin) / (vmax - vmin)  # Normalize the value between 0 and 1
