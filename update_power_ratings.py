@@ -646,6 +646,14 @@ if run_full_optimization == 'y':
     team_data["defensive_total"] = team_data[defensive_columns].sum(axis=1)
     team_data["defensive_rank"] = team_data["defensive_total"].rank(ascending=False, method="dense").astype(int)
 
+    team_data['talent_scaled_rank'] = team_data['talent_scaled'].rank(method='min', ascending=False)
+    team_data['offense_success_rank'] = team_data['offense_success_scaled'].rank(method='min', ascending=False)
+    team_data['defense_success_rank'] = team_data['defense_success_scaled'].rank(method='min', ascending=False)
+    team_data['offense_explosive_rank'] = team_data['offense_explosive'].rank(method='min', ascending=False)
+    team_data['defense_explosive_rank'] = team_data['defense_explosive'].rank(method='min', ascending=False)
+    team_data['total_turnovers_rank'] = team_data['total_turnovers_scaled'].rank(method='min', ascending=False)
+    team_data['penalties_rank'] = team_data['penalties_scaled'].rank(method='min', ascending=False)
+
     ######################################## POWER RATING #################################################
 
     team_data['power_rating'] = team_data['power_ranking'] - team_data['power_ranking'].mean()
