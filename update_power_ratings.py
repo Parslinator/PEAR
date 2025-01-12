@@ -163,7 +163,10 @@ def average_team_distribution(num_simulations, schedules, average, team_name):
 
 if run_full_optimization == 'y':
 
-    elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week)]
+    if postseason:
+        elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year)]
+    else:
+        elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week)]
     elo_ratings_dict = [dict(
         team = e.team,
         elo = e.elo
@@ -685,6 +688,9 @@ if run_full_optimization == 'y':
     games_list = []
     for week in range(start_week,end_week):
         response = games_api.get_games(year=current_year, week=week,division = 'fbs')
+        games_list = [*games_list, *response]
+    if postseason:
+        response = games_api.get_games(year=current_year, division = 'fbs', season_type='postseason')
         games_list = [*games_list, *response]
     games = [dict(
                 id=g.id,

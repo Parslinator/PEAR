@@ -2021,6 +2021,9 @@ games_list = []
 for week in range(start_week,end_week):
     response = games_api.get_games(year=current_year, week=week,division = 'fbs')
     games_list = [*games_list, *response]
+if postseason:
+    response = games_api.get_games(year=current_year, division = 'fbs', season_type='postseason')
+    games_list = [*games_list, *response]
 games = [dict(
             id=g.id,
             season=g.season,
@@ -2060,7 +2063,7 @@ expected_wins_list = []
 for team in team_data['team']:
     schedule = year_long_schedule[(year_long_schedule['home_team'] == team) | (year_long_schedule['away_team'] == team)]
     df = average_team_distribution(1000, schedule, elite_team_pr, team)
-    expected_wins = df['expected_wins'].values[0]
+    expected_wins = df['expected_wins'].values[0] / len(schedule)
     expected_wins_list.append(expected_wins)
 SOS = pd.DataFrame(zip(team_data['team'], expected_wins_list), columns=['team', 'avg_expected_wins'])
 SOS = SOS.sort_values('avg_expected_wins').reset_index(drop = True)
@@ -2607,7 +2610,7 @@ def draw_playoff_bracket(seeding):
 draw_playoff_bracket(seeding)
 print("Most Deserving Playoff Done!")
 
-best_and_worst2(SOS, logos, 'avg_expected_wins', f'Week {current_week} ESCAPE SOS', "If An Elite Team Played Your Schedule, They Would Have __ Wins", "strength_of_schedule")
+best_and_worst2(SOS, logos, 'avg_expected_wins', f'Week {current_week} ESCAPE SOS', "Efficiency of an Elite Team Against Your Opponents", "strength_of_schedule")
 print("SOS Done!")
 
 best_and_worst2(SOR, logos, 'wins_above_good', f'Week {current_week} ESCAPE SOR', "Wins Above or Below a Good Team", "strength_of_record")
@@ -2883,9 +2886,12 @@ def conference_standings():
         plt.savefig(file_path, bbox_inches='tight')
 conference_standings()
 print("Conference Projections Done!")
-
-team_wins, team_loss = monte_carlo_simulation_known(1000, schedule_info, team_data)
-win_thresholds_in_season = analyze_simulation_known(team_wins, team_loss, schedule_info, records)
+if postseason:
+    team_wins, team_loss = monte_carlo_simulation_known(1000, year_long_schedule, team_data)
+    win_thresholds_in_season = analyze_simulation_known(team_wins, team_loss, year_long_schedule, records)
+else:
+    team_wins, team_loss = monte_carlo_simulation_known(1000, schedule_info, team_data)
+    win_thresholds_in_season = analyze_simulation_known(team_wins, team_loss, schedule_info, records)
 print("Win Thresholds Done!")
 if postseason:
     games = []
