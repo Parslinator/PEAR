@@ -114,7 +114,7 @@ if os.path.exists(folder_path):
     special_teams = f"{folder_path}special_teams.png"
     turnovers = f"{folder_path}turnovers.png"
     drive_control_efficiency = f"{folder_path}drive_control_efficiency.png"
-    drive_disruption_efficiency = f"{folder_path}drive_distruption_efficiency.png"
+    drive_disruption_efficiency = f"{folder_path}drive_disruption_efficiency.png"
     penalty_burden_ratio = f"{folder_path}penalty_burden_ratio.png"
     mov_performance = f"{folder_path}mov_performance.png"
     overperformer_and_underperformer = f"{folder_path}overperformer_and_underperformer.png"
@@ -132,9 +132,9 @@ if os.path.exists(folder_path):
 
     cols = st.columns(2)
     with cols[0]:
-        st.image(power_rating_team_pyramid, use_container_width=True, caption="Ratings Team Pyramid")
+        st.image(power_rating_team_pyramid, caption="Ratings Team Pyramid")
     with cols[1]:
-        st.image(projected_playoff, use_container_width=True, caption="Ratings Projected Playoff - Conference Champions are Highest Rated Team")
+        st.image(projected_playoff, caption="Ratings Projected Playoff - Conference Champions are Highest Rated Team")
 
     st.subheader("Rankings Information")
     st.image(most_deserving, use_container_width=True, caption="Most Deserving Rankings")
