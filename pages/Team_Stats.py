@@ -137,7 +137,7 @@ if os.path.exists(folder_path):
         st.image(projected_playoff, use_container_width=True, caption="Ratings Projected Playoff - Conference Champions are Highest Rated Team")
 
     st.subheader("Rankings Information")
-    st.image(most_deserving, width=1000, caption="Most Deserving Rankings")
+    st.image(most_deserving, width=1250, caption="Most Deserving Rankings")
     cols = st.columns(2)
     with cols[0]:
         st.image(most_deserving_team_pyramid, width=500, caption="Most Deserving Team Pyramid")
@@ -145,7 +145,7 @@ if os.path.exists(folder_path):
         st.image(most_deserving_playoff, use_container_width=True, caption="Rankings Projected Playoff")
 
     st.subheader("Team Stats Information")
-    st.image(avg_metric_rank, use_container_width=True, caption="Average Metric Ranks")
+    st.image(avg_metric_rank, width=1250, caption="Average Metric Ranks")
     cols = st.columns(2)
     with cols[0]:
         st.image(strength_of_record, use_container_width=True, caption="Strength of Record")
