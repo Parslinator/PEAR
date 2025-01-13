@@ -132,12 +132,12 @@ if os.path.exists(folder_path):
 
     cols = st.columns(2)
     with cols[0]:
-        st.image(power_rating_team_pyramid, caption="Ratings Team Pyramid")
+        st.image(power_rating_team_pyramid, width=500, caption="Ratings Team Pyramid")
     with cols[1]:
-        st.image(projected_playoff, caption="Ratings Projected Playoff - Conference Champions are Highest Rated Team")
+        st.image(projected_playoff, width=500, caption="Ratings Projected Playoff - Conference Champions are Highest Rated Team")
 
     st.subheader("Rankings Information")
-    st.image(most_deserving, use_container_width=True, caption="Most Deserving Rankings")
+    st.image(most_deserving, width=500, caption="Most Deserving Rankings")
     cols = st.columns(2)
     with cols[0]:
         st.image(most_deserving_team_pyramid, use_container_width=True, caption="Most Deserving Team Pyramid")
