@@ -91,7 +91,7 @@ else:
 current_week = int(current_week)
 current_year = int(current_year)
 
-st.title("Team Stats")
+st.title("Team Stats Information")
 
 # Construct the folder path
 folder_path = f"ESCAPE Ratings/Visuals/y{current_year}/week_{current_week}/"
@@ -119,11 +119,9 @@ if os.path.exists(folder_path):
     mov_performance = f"{folder_path}mov_performance.png"
     overperformer_and_underperformer = f"{folder_path}overperformer_and_underperformer.png"
     conference_average = f"{folder_path}conference_average.png"
-
     dce_vs_dde = f"{folder_path}dce_vs_dde.png"
     offense_vs_defense = f"{folder_path}offense_vs_defense.png"
 
-    st.subheader("Ratings Information")
     cols = st.columns(2)
     with cols[0]:
         st.image(top25_file, use_container_width=True, caption="Top 25 Ratings")
@@ -132,20 +130,10 @@ if os.path.exists(folder_path):
 
     cols = st.columns(2)
     with cols[0]:
-        st.image(power_rating_team_pyramid, width = 500, caption="Power Ratings Team Pyramid")
+        st.image(most_deserving, use_container_width=True, caption="Most Deserving Rankings")
     with cols[1]:
-        st.image(projected_playoff, use_container_width=True, caption="Ratings Projected Playoff - Conference Champions are Highest Rated Team")
+        st.image(avg_metric_rank, use_container_width=True, caption="Average Metric Ranks")
 
-    st.subheader("Rankings Information")
-    st.image(most_deserving, width=1250, caption="Most Deserving Rankings")
-    cols = st.columns(2)
-    with cols[0]:
-        st.image(most_deserving_team_pyramid, width=500, caption="Most Deserving Team Pyramid")
-    with cols[1]:
-        st.image(most_deserving_playoff, use_container_width=True, caption="Rankings Projected Playoff")
-
-    st.subheader("Team Stats Information")
-    st.image(avg_metric_rank, width=1250, caption="Average Metric Ranks")
     cols = st.columns(2)
     with cols[0]:
         st.image(strength_of_record, use_container_width=True, caption="Strength of Record")
@@ -187,3 +175,15 @@ if os.path.exists(folder_path):
         st.image(offense_vs_defense, use_container_width=True, caption="Offense Versus Defense")
     with cols[1]:
         st.image(dce_vs_dde, use_container_width=True, caption="DCE vs DDE")
+
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(most_deserving_team_pyramid, width=500, caption="Most Deserving Rankings Team Pyramid")
+    with cols[1]:
+        st.image(most_deserving_playoff, use_container_width=True, caption="Rankings Projected Playoff")
+    
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(power_rating_team_pyramid, width = 500, caption="Power Ratings Team Pyramid")
+    with cols[1]:
+        st.image(projected_playoff, use_container_width=True, caption="Ratings Projected Playoff - Conference Champions are Highest Rated Team")
