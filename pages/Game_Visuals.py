@@ -107,11 +107,13 @@ if os.path.exists(folder_path):
 
             # Display first image
             with cols[0]:
-                st.image(png_files[i], use_column_width=True, caption=os.path.basename(png_files[i]))
+                file_name = os.path.splitext(os.path.basename(png_files[i]))[0]
+                st.image(png_files[i], use_container_width=True, caption=file_name)
 
             # Check if there's a second image in the current pair
             if i + 1 < len(png_files):
                 with cols[1]:
-                    st.image(png_files[i + 1], use_column_width=True, caption=os.path.basename(png_files[i + 1]))
+                    file_name = os.path.splitext(os.path.basename(png_files[i+1]))[0]
+                    st.image(png_files[i + 1], use_container_width=True, caption=file_name)
     else:
         st.warning(f"No .png files found in {folder_path}")
