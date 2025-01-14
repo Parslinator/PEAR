@@ -180,6 +180,12 @@ if os.path.exists(folder_path):
 
     cols = st.columns(2)
     with cols[0]:
+        st.image(resume_vs_ratings, use_container_width=True, caption="Resume vs Ratings - Top Right is Better")
+    with cols[1]:
+        st.image(production_vs_talent, use_container_width=True, caption = "Production vs Talent")
+
+    cols = st.columns(2)
+    with cols[0]:
         st.image(most_deserving_team_pyramid, width=500, caption="Most Deserving Rankings Team Pyramid")
     with cols[1]:
         st.image(most_deserving_playoff, use_container_width=True, caption="Rankings Projected Playoff")
@@ -189,9 +195,3 @@ if os.path.exists(folder_path):
         st.image(power_rating_team_pyramid, width = 500, caption="Power Ratings Team Pyramid")
     with cols[1]:
         st.image(projected_playoff, use_container_width=True, caption="Ratings Projected Playoff - Conference Champions are Highest Rated Team")
-
-    cols = st.columns(2)
-    with cols[0]:
-        st.image(resume_vs_ratings, use_container_width=True, caption="Resume vs Ratings - Top Right is Better")
-    with cols[1]:
-        st.image(production_vs_talent, use_container_width=True, caption = "Production vs Talent")
