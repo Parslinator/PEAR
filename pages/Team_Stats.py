@@ -189,4 +189,4 @@ if os.path.exists(folder_path):
     with cols[1]:
         st.image(projected_playoff, use_container_width=True, caption="Ratings Projected Playoff - Conference Champions are Highest Rated Team")
 
-    st.image(resume_vs_ratings, use_continer_width=True, caption="Resume vs Ratings - Top Right is Better")
+    st.image(resume_vs_ratings, use_container_width=True, caption="Resume vs Ratings - Top Right is Better")
