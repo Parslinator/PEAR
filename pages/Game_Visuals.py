@@ -99,7 +99,10 @@ if os.path.exists(folder_path):
 
     # Display the images in the Streamlit app
     if png_files:
-        st.title(f"Game Visuals for Week {current_week}")
+        if postseason == True:
+            st.subheader("Game Visuals for Bowl Games")
+        else:
+            st.subheader(f"Game Visuals for Week {current_week}")
 
         # Loop through the .png files and display two per row
         for i in range(0, len(png_files), 2):  # Increment by 2 for two images per row
