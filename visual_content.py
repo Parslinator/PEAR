@@ -2749,6 +2749,58 @@ print("Most Deserving Team Pyramid Done!")
 best_and_worst2(RTP, logos, 'RTP', f'ESCAPE Margin of Victory', "If You Are Expected to Win by 10 Points, Your Average MOV is __ Points", "mov_performance")
 print("MOV Performance Done!")
 
+# Create the plot
+fig, ax = plt.subplots(figsize=(15, 9),dpi=125)
+plt.gca().set_facecolor('#5fa391')
+plt.gcf().set_facecolor('#5fa391')
+# Set the size of the logos (adjust the numbers to make logos smaller or larger)
+logo_size = 0.9  # Half the size of the logo to create spacing
+# Loop through the team_data DataFrame to plot logos
+for i in range(len(all_data)):
+    # Get the logo image from the URL
+    logo_url = logos[logos['team'] == all_data.loc[i,'team']]['logo'].values[0][0]
+    response = requests.get(logo_url)
+    img = mpimg.imread(BytesIO(response.content), format='png')
+    # Calculate the extent for the logo
+    # Here we use logo_size for both sides to center the logo at the specific coordinates
+    ax.imshow(img, aspect='auto', 
+              extent=(all_data['most_deserving_wins'].iloc[i] - (logo_size-0.7),
+                      all_data['most_deserving_wins'].iloc[i] + (logo_size-0.7),
+                      all_data['power_rating'].iloc[i] - logo_size,
+                      all_data['power_rating'].iloc[i] + logo_size))
+# Set axis labels
+ax.set_xlabel('Resume (Record Strength)', fontweight='bold')
+ax.set_ylabel('Ratings (Team Strength)', fontweight='bold')
+ax.set_title('Resume vs. Ratings', fontweight='bold', fontsize=14)
+# Show the plot
+plt.xlim(all_data['most_deserving_wins'].min() - 1, all_data['most_deserving_wins'].max() + 1)  # Adjust x-axis limits for visibility
+plt.ylim(all_data['power_rating'].min() - 3, all_data['power_rating'].max() + 3)  # Adjust y-axis limits for visibility
+plt.grid(False)  # Turn off the grid
+elite_team_pr = all_data['power_rating'].mean() + (2*all_data['power_rating'].std())
+elite_team_resume = all_data['most_deserving_wins'].mean() + (2*all_data['most_deserving_wins'].std())
+good_team_pr = all_data['power_rating'].mean() + (1*all_data['power_rating'].std())
+good_team_resume = all_data['most_deserving_wins'].mean() + (1*all_data['most_deserving_wins'].std())
+avg_team_pr = all_data['power_rating'].mean() + (0*all_data['power_rating'].std())
+avg_team_resume = all_data['most_deserving_wins'].mean() + (0*all_data['most_deserving_wins'].std())
+below_avg_team_pr = all_data['power_rating'].mean() + (-1*all_data['power_rating'].std())
+below_avg_team_resume = all_data['most_deserving_wins'].mean() + (-1*all_data['most_deserving_wins'].std())
+# Get the data ranges for normalization
+x_min, x_max = all_data['most_deserving_wins'].min()-1, all_data['most_deserving_wins'].max()+1
+y_min, y_max = all_data['power_rating'].min()-3, all_data['power_rating'].max()+3
+plt.plot([elite_team_resume, x_max], [elite_team_pr, elite_team_pr], linestyle='--', color='darkgreen', alpha=0.6)  # Horizontal line
+plt.plot([elite_team_resume, elite_team_resume], [elite_team_pr, y_max], linestyle='--', color='darkgreen', alpha=0.6)  # Vertical line
+plt.plot([good_team_resume, x_max], [good_team_pr, good_team_pr], linestyle='--', color='yellow', alpha=0.6)  # Horizontal line
+plt.plot([good_team_resume, good_team_resume], [good_team_pr, y_max], linestyle='--', color='yellow', alpha=0.6)  # Vertical line
+plt.plot([avg_team_resume, x_max], [avg_team_pr, avg_team_pr], linestyle='--', color='black', alpha=0.6)  # Horizontal line
+plt.plot([avg_team_resume, avg_team_resume], [avg_team_pr, y_max], linestyle='--', color='black', alpha=0.6)  # Vertical line
+plt.plot([below_avg_team_resume, x_max], [below_avg_team_pr, below_avg_team_pr], linestyle='--', color='red', alpha=0.6)  # Horizontal line
+plt.plot([below_avg_team_resume, below_avg_team_resume], [below_avg_team_pr, y_max], linestyle='--', color='red', alpha=0.6)  # Vertical line
+plt.tight_layout()
+file_path = os.path.join(folder_path, "resume_vs_ratings")
+plt.savefig(file_path, dpi = 300)
+print("Resume Vs Ratings Done!")
+
+
 team_conference_map = team_data.set_index('team')['conference'].to_dict()
 year_long_schedule['home_conference'] = year_long_schedule['home_team'].map(team_conference_map)
 year_long_schedule['away_conference'] = year_long_schedule['away_team'].map(team_conference_map)
