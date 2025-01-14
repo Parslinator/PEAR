@@ -122,6 +122,7 @@ if os.path.exists(folder_path):
     dce_vs_dde = f"{folder_path}dce_vs_dde.png"
     offense_vs_defense = f"{folder_path}offense_vs_defense.png"
     resume_vs_ratings = f"{folder_path}resume_vs_ratings.png"
+    production_vs_talent = f"{folder_path}production_vs_talent.png"
 
     cols = st.columns(2)
     with cols[0]:
@@ -189,4 +190,8 @@ if os.path.exists(folder_path):
     with cols[1]:
         st.image(projected_playoff, use_container_width=True, caption="Ratings Projected Playoff - Conference Champions are Highest Rated Team")
 
-    st.image(resume_vs_ratings, use_container_width=True, caption="Resume vs Ratings - Top Right is Better")
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(resume_vs_ratings, use_container_width=True, caption="Resume vs Ratings - Top Right is Better")
+    with cols[1]:
+        st.image(production_vs_talent, use_container_width=True, caption = "Production vs Talent")

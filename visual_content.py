@@ -2799,8 +2799,8 @@ try:
     fig, ax = plt.subplots(figsize=(11, 15))
     fig.patch.set_facecolor('#5fa391')
     # Plot logos with adjusted spacing
-    plot_team_logos(ax, elite_teams, -0.2, spacing_factor=1, row_spacing = 0.4, max_teams_per_row=max(len(elite_teams) // 2, 1))
-    plot_team_logos(ax, good_teams, 0.7, spacing_factor=1, row_spacing = 0.4, max_teams_per_row=max(len(good_teams) // 3, 1))
+    plot_team_logos(ax, elite_teams, -0.2, spacing_factor=1, row_spacing = 0.4, max_teams_per_row=max(len(elite_teams) // 2, 1)+1)
+    plot_team_logos(ax, good_teams, 0.7, spacing_factor=1, row_spacing = 0.4, max_teams_per_row=max(len(good_teams) // 3, 1)+1)
     plot_team_logos(ax, average_teams, 2, spacing_factor=1, row_spacing = 0.5, max_teams_per_row=max(len(average_teams) // 4, 1)+1)
     plot_team_logos(ax, below_average_teams, 4.1, spacing_factor=1, row_spacing = 0.5, max_teams_per_row=max(len(below_average_teams) // 4, 1)+1)
     ax.hlines(y=-0.5, xmin=-2.5, xmax=2.5, colors='black', linewidth=3)
@@ -2886,6 +2886,55 @@ try:
     print("Resume Vs Ratings Done!")
 except Exception as e:
     print(f"Error in code chunk: Resume vs. Ratings. Error: {e}")
+
+try:
+    fig, ax = plt.subplots(figsize=(15, 9),dpi=125)
+    plt.gca().set_facecolor('#5fa391')
+    plt.gcf().set_facecolor('#5fa391')
+    # Set the size of the logos (adjust the numbers to make logos smaller or larger)
+    logo_size = 2  # Half the size of the logo to create spacing
+    # Loop through the team_data DataFrame to plot logos
+    scaler100 = MinMaxScaler(feature_range=(1, 100))
+    all_data['most_deserving_scaled'] = scaler100.fit_transform(all_data[['most_deserving_wins']])
+    for i in range(len(all_data)):
+        # Get the logo image from the URL
+        logo_url = logos[logos['team'] == all_data.loc[i,'team']]['logo'].values[0][0]
+        response = requests.get(logo_url)
+        img = mpimg.imread(BytesIO(response.content), format='png')
+
+        # Calculate the extent for the logo
+        # Here we use logo_size for both sides to center the logo at the specific coordinates
+        ax.imshow(img, aspect='auto', 
+                extent=(all_data['avg_talent'].iloc[i] - (logo_size-0.5),
+                        all_data['avg_talent'].iloc[i] + (logo_size-0.5),
+                        all_data['most_deserving_scaled'].iloc[i] - logo_size,
+                        all_data['most_deserving_scaled'].iloc[i] + logo_size))
+
+    ax.plot(
+        [all_data['avg_talent'].min()-3, all_data['avg_talent'].max()+3],
+        [all_data['avg_talent'].min()-3, all_data['avg_talent'].max()+3],
+        color='black', linestyle='--'
+    )
+
+    # Set axis labels
+    ax.set_xlabel('Talent Percentile', fontweight='bold')
+    ax.set_ylabel('Resume Percentile', fontweight='bold')
+    ax.set_title('Production vs. Talent', fontweight='bold', fontsize=14)
+
+    # Show the plot
+    plt.xlim(all_data['avg_talent'].min() - 3, all_data['avg_talent'].max() + 3)  # Adjust x-axis limits for visibility
+    plt.ylim(all_data['most_deserving_scaled'].min() - 3, all_data['most_deserving_scaled'].max() + 3)  # Adjust y-axis limits for visibility
+    plt.grid(False)  # Turn off the grid
+
+    plt.text(1, 98, "Production Outperforming Talent", fontsize=10, fontweight='bold', ha='left')
+    plt.text(100, 2, "Production Underperforming Talent", fontsize=10, fontweight='bold', ha='right')
+
+    plt.tight_layout()
+    file_path = os.path.join(folder_path, "production_vs_talent")
+    plt.savefig(file_path, dpi = 300)
+    print("Production vs Talent Done!")
+except Exception as e:
+    print(f"Error in code chunk: Production vs. Talent. Error: {e}")
 
 try:
     team_conference_map = team_data.set_index('team')['conference'].to_dict()
