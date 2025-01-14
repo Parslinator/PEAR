@@ -186,7 +186,7 @@ if os.path.exists(folder_path):
 
     cols = st.columns(2)
     with cols[0]:
-        st.image(most_deserving_team_pyramid, width=500, caption="Most Deserving Rankings Team Pyramid")
+        st.image(projected_playoff, use_container_width=True, caption="Ratings Projected Playoff - Conference Champions are Highest Rated Team")
     with cols[1]:
         st.image(most_deserving_playoff, use_container_width=True, caption="Rankings Projected Playoff")
     
@@ -194,4 +194,4 @@ if os.path.exists(folder_path):
     with cols[0]:
         st.image(power_rating_team_pyramid, width = 500, caption="Power Ratings Team Pyramid")
     with cols[1]:
-        st.image(projected_playoff, use_container_width=True, caption="Ratings Projected Playoff - Conference Champions are Highest Rated Team")
+        st.image(most_deserving_team_pyramid, width=500, caption="Most Deserving Rankings Team Pyramid")
