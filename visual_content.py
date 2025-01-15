@@ -2306,6 +2306,8 @@ try:
     excluded_teams = list(top_4_seeds['team']) + list(autobid_5['team'])
     at_large_bids = all_data[~all_data['team'].isin(excluded_teams)].head(7).reset_index(drop=True)
     at_large_bids = pd.concat([at_large_bids, autobid_5]).reset_index(drop=True)
+    first_four_out = all_data[~all_data['team'].isin(excluded_teams)].head(11).reset_index(drop=True)[7:]
+    next_four_out = all_data[~all_data['team'].isin(excluded_teams)].head(15).reset_index(drop=True)[11:]
     # Creating a dictionary for at_large_bids starting from seed 5
     at_large_dict = {i + 5: team for i, team in enumerate(at_large_bids['team'])}
     power_5_dict = {i + 1: team for i, team in enumerate(top_4_seeds['team'])}
@@ -2382,6 +2384,16 @@ try:
         ax.add_patch(patches.ConnectionPatch((0.7, (top_seed_locations[0]+top_seed_locations[1])/2), (0.7, (top_seed_locations[2]+top_seed_locations[3])/2), 'data', 'data', arrowstyle='-'))
         ax.add_patch(patches.ConnectionPatch((0.7, (top_seed_locations[1]+top_seed_locations[2])/2), (0.9, (top_seed_locations[1]+top_seed_locations[2])/2), 'data', 'data', arrowstyle='-'))
 
+        ax.text(0.8, 0.95, "First Four Out", fontsize = 12, verticalalignment='center', ha='center',fontweight='bold')
+        ax.text(0.8,0.92, f"{first_four_out.iloc[0,0]}", fontsize = 12, verticalalignment='center', ha='center')
+        ax.text(0.8,0.89, f"{first_four_out.iloc[1,0]}", fontsize = 12, verticalalignment='center', ha='center')
+        ax.text(0.8,0.86, f"{first_four_out.iloc[2,0]}", fontsize = 12, verticalalignment='center', ha='center')
+        ax.text(0.8,0.83, f"{first_four_out.iloc[3,0]}", fontsize = 12, verticalalignment='center', ha='center')
+        ax.text(0.8,0.80, f"Next Four Out", verticalalignment='center', fontsize = 12, ha='center', fontweight='bold')
+        ax.text(0.8,0.77, f"{next_four_out.iloc[0,0]}", fontsize = 12, verticalalignment='center', ha='center')
+        ax.text(0.8,0.74, f"{next_four_out.iloc[1,0]}", fontsize = 12, verticalalignment='center', ha='center')
+        ax.text(0.8,0.71, f"{next_four_out.iloc[2,0]}", fontsize = 12, verticalalignment='center', ha='center')
+        ax.text(0.8,0.68, f"{next_four_out.iloc[3,0]}", fontsize = 12, verticalalignment='center', ha='center')
 
         # Final formatting
         ax.set_xlim(0, 1)
@@ -2389,7 +2401,7 @@ try:
         ax.axis('off')
         plt.gca().set_facecolor('#5fa391')
         plt.gcf().set_facecolor('#5fa391')
-        plt.title("Projected Playoff Bracket", fontweight='bold', fontsize=20)
+        plt.title("Power Ratings Playoff Bracket", fontweight='bold', fontsize=20)
         file_path = os.path.join(folder_path, "projected_playoff")
         plt.savefig(file_path, dpi = 300, bbox_inches = 'tight')
     draw_playoff_bracket(seeding)
@@ -2761,7 +2773,7 @@ try:
     ax.set_ylim(-5.5, 1)  # Extend y-axis to fit all levels
     ax.set_yticks([-0.75, -2.25, -4, -6])
     ax.set_yticklabels(["Elite Teams", "Good Teams", "Average Teams", "Below Average Teams"])
-    ax.text(0, 0.67, "Team Pyramid", ha='center', fontsize=24, fontweight='bold')
+    ax.text(0, 0.67, "Power Ratings Team Pyramid", ha='center', fontsize=24, fontweight='bold')
     ax.text(0, 0.5, "Teams Listed in Descending Order Within Each Row", fontsize = 16, ha='center')
     ax.axis("off")  # Remove axis lines
     plt.tight_layout()
@@ -2817,10 +2829,10 @@ try:
     ax.hlines(y=-1.75, xmin=-6.5, xmax=6.5, colors='black', linewidth=3)
     ax.hlines(y=-3.8, xmin=-9, xmax=9, colors='black', linewidth=3)
     ax.hlines(y=-5.9, xmin=-9, xmax=9, colors='black', linewidth=3)
-    ax.text(-2.5, -0.45, "2+ SD", ha='left', fontsize=14, fontweight='bold', color='black')
-    ax.text(-6.5, -1.7, "1+ SD", ha='left', fontsize=14, fontweight='bold', color='black')
-    ax.text(-9, -3.75, "0+ SD", ha='left', fontsize=14, fontweight='bold', color='black')
-    ax.text(-9, -5.85, "<0 SD", ha='left', fontsize=14, fontweight='bold', color='black')
+    ax.text(-2.5, -0.45, "Elite Resume", ha='left', fontsize=14, fontweight='bold', color='black')
+    ax.text(-6.5, -1.7, "Good Resume", ha='left', fontsize=14, fontweight='bold', color='black')
+    ax.text(-9, -3.75, "Average Resume", ha='left', fontsize=14, fontweight='bold', color='black')
+    ax.text(-9, -5.85, "Bad Resume", ha='left', fontsize=14, fontweight='bold', color='black')
     # ax.text(0, -6.3, "Below Average Teams", ha='center', fontsize=12, fontweight='bold', color='black')
     # Adjust plot limits and formatting
     ax.set_xlim(-9.5, 9.5)  # Center based on the widest row
