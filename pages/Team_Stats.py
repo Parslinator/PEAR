@@ -123,6 +123,7 @@ if os.path.exists(folder_path):
     offense_vs_defense = f"{folder_path}offense_vs_defense.png"
     resume_vs_ratings = f"{folder_path}resume_vs_ratings.png"
     production_vs_talent = f"{folder_path}production_vs_talent.png"
+    talent_performance = f"{folder_path}talent_performance.png"
 
     cols = st.columns(2)
     with cols[0]:
@@ -170,6 +171,10 @@ if os.path.exists(folder_path):
     with cols[0]:
         st.image(overperformer_and_underperformer, use_container_width=True, caption="Over and Underperformers")
     with cols[1]:
+        st.image(talent_performance, use_container_width=True, caption="Talent Performance Gap")
+
+    cols = st.columns(2)
+    with cols[0]:
         st.image(conference_average, use_container_width=True, caption="Average Team Power Rating in Each Conference")
 
     cols = st.columns(2)

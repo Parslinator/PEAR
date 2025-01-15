@@ -17,6 +17,7 @@ from PIL import Image # type: ignore
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox # type: ignore
 from matplotlib import gridspec # type: ignore
 import os
+import math # type: ignore
 import matplotlib.patches as patches # type: ignore
 from unittest import result
 import datetime
@@ -2690,6 +2691,15 @@ try:
     print("SOR Done!")
 except Exception as e:
     print(f"Error in code chunk: SOR. Error: {e}")
+
+try:
+    scaler100 = MinMaxScaler(feature_range=(1, 100))
+    all_data['most_deserving_scaled'] = scaler100.fit_transform(all_data[['most_deserving_wins']])
+    all_data['talent_performance'] = (all_data['most_deserving_scaled'] - all_data['avg_talent']) / math.sqrt(2)
+    best_and_worst(all_data, logos, 'talent_performance', "ESCAPE Talent Performance Gap", "Is Your Team Outperforming or Underperforming Its Roster?", "talent_performance")
+    print("Talent Performance Done!")
+except Exception as e:
+    print(f"Error in code chunk: Talent Performance. Error: {e}")
 
 try:
     average_pr = round(team_data['power_rating'].mean(), 2)
