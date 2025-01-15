@@ -2385,15 +2385,15 @@ try:
         ax.add_patch(patches.ConnectionPatch((0.7, (top_seed_locations[1]+top_seed_locations[2])/2), (0.9, (top_seed_locations[1]+top_seed_locations[2])/2), 'data', 'data', arrowstyle='-'))
 
         ax.text(0.8, 0.95, "First Four Out", fontsize = 12, verticalalignment='center', ha='center',fontweight='bold')
-        ax.text(0.8,0.92, f"{first_four_out.iloc[0,0]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.89, f"{first_four_out.iloc[1,0]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.86, f"{first_four_out.iloc[2,0]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.83, f"{first_four_out.iloc[3,0]}", fontsize = 12, verticalalignment='center', ha='center')
+        ax.text(0.8,0.92, f"{first_four_out.iloc[0,1]}", fontsize = 12, verticalalignment='center', ha='center')
+        ax.text(0.8,0.89, f"{first_four_out.iloc[1,1]}", fontsize = 12, verticalalignment='center', ha='center')
+        ax.text(0.8,0.86, f"{first_four_out.iloc[2,1]}", fontsize = 12, verticalalignment='center', ha='center')
+        ax.text(0.8,0.83, f"{first_four_out.iloc[3,1]}", fontsize = 12, verticalalignment='center', ha='center')
         ax.text(0.8,0.80, f"Next Four Out", verticalalignment='center', fontsize = 12, ha='center', fontweight='bold')
-        ax.text(0.8,0.77, f"{next_four_out.iloc[0,0]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.74, f"{next_four_out.iloc[1,0]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.71, f"{next_four_out.iloc[2,0]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.68, f"{next_four_out.iloc[3,0]}", fontsize = 12, verticalalignment='center', ha='center')
+        ax.text(0.8,0.77, f"{next_four_out.iloc[0,1]}", fontsize = 12, verticalalignment='center', ha='center')
+        ax.text(0.8,0.74, f"{next_four_out.iloc[1,1]}", fontsize = 12, verticalalignment='center', ha='center')
+        ax.text(0.8,0.71, f"{next_four_out.iloc[2,1]}", fontsize = 12, verticalalignment='center', ha='center')
+        ax.text(0.8,0.68, f"{next_four_out.iloc[3,1]}", fontsize = 12, verticalalignment='center', ha='center')
 
         # Final formatting
         ax.set_xlim(0, 1)
