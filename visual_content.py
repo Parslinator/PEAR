@@ -314,7 +314,7 @@ def best_and_worst2(all_data, logos, metric, title, subtitle, visual_name):
         rounding = 1
         if (metric == 'wins_above_good') or (metric == 'performance'):
             rounding = 3
-        if (metric == 'RTP') or (metric == 'wins_above_average'):
+        if (metric == 'RTP') or (metric == 'wins_above_average') or ('dependence_score'):
             rounding = 2
         good = 'Best'
         bad = 'Worst'
@@ -324,6 +324,9 @@ def best_and_worst2(all_data, logos, metric, title, subtitle, visual_name):
         if (metric == 'wins_above_average'):
             good = 'Most'
             bad = 'Least'
+        if (metric == 'dependence_score'):
+            good = 'Offensive Dependence'
+            bad = 'Defensive Dependence'
 
     # Create a figure with 5 rows and 10 columns
     fig, axs = plt.subplots(5, 10, figsize=(20, 10), dpi=125)
@@ -2848,6 +2851,17 @@ try:
     print("Most Deserving Team Pyramid Done!")
 except Exception as e:
     print(f"Error in code chunk: Most Deserving Team Pyramid. Error: {e}")
+
+try:
+    scaler100 = MinMaxScaler(feature_range=(1, 100))
+    all_data['defensive_total'] = scaler100.fit_transform(all_data[['defensive_total']])
+    all_data['offensive_total'] = scaler100.fit_transform(all_data[['offensive_total']])
+
+    all_data['dependence_score'] = (all_data['offensive_total'] - all_data['defensive_total']) / (all_data['offensive_total'] + all_data['defensive_total'])
+    best_and_worst2(all_data, logos, 'dependence_score', 'ESCAPE Unit Dependence', 'Values near 1 indicate offensive dependence, while values near -1 indicate defensive dependence', 'dependence_score')
+    print('Dependence Score Done!')
+except Exception as e:
+    print(f"Error in code chunk: Dependence Score. Error: {e}")
 
 try:
     best_and_worst2(RTP, logos, 'RTP', f'ESCAPE Margin of Victory', "If You Are Expected to Win by 10 Points, Your Average MOV is __ Points", "mov_performance")

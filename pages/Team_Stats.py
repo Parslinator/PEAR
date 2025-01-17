@@ -124,6 +124,7 @@ if os.path.exists(folder_path):
     resume_vs_ratings = f"{folder_path}resume_vs_ratings.png"
     production_vs_talent = f"{folder_path}production_vs_talent.png"
     talent_performance = f"{folder_path}talent_performance.png"
+    dependence_score = f"{folder_path}dependence_score.png"
 
     cols = st.columns(2)
     with cols[0]:
@@ -175,6 +176,8 @@ if os.path.exists(folder_path):
 
     cols = st.columns(2)
     with cols[0]:
+        st.image(dependence_score, use_container_width=True, caption="Team's Dependence on Offense or Defense")
+    with cols[1]:
         st.image(conference_average, use_container_width=True, caption="Average Team Power Rating in Each Conference")
 
     cols = st.columns(2)
