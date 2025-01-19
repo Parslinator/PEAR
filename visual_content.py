@@ -2106,24 +2106,25 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     )
     plt.gca().add_artist(image_annot)
     
-    plt.text(0,0.88, f"Record: {wins} - {losses} ({conference_wins} - {conference_losses})", ha='left', fontweight='bold', fontsize = 18)
-    plt.text(0,0.83, f"Power Rating: {power_rating} (#{rank})", ha='left', fontweight='bold', fontsize = 18)
-    plt.text(0,0.78, f"Offense: {offensive_total} (#{offensive})", fontweight='bold', ha ='left', color=get_rank_color(offensive), fontsize = 18)
-    plt.text(0,0.73, f"Defense: {defensive_total} (#{defensive})", fontweight='bold', ha ='left', color=get_rank_color(defensive), fontsize = 18)
-    plt.text(0,0.68, f"Special Teams: {stm} (#{stm_rank})", fontweight='bold', ha ='left', color=get_rank_color(stm_rank), fontsize = 18)
-    plt.text(0,0.63, f"Talent: {talent_scaled} (#{talent_rank})", fontweight='bold', ha='left', color=get_rank_color(talent_rank), fontsize=18)
-    plt.text(0,0.58, f"OFF Success: {offense_success} (#{offense_success_rank})", fontweight='bold', ha='left', color=get_rank_color(offense_success_rank), fontsize=18)
-    plt.text(0,0.53, f"OFF Explosiveness: {offense_explosive} (#{offense_explosive_rank})", fontweight='bold', ha='left', color=get_rank_color(offense_explosive_rank), fontsize=18)
-    plt.text(0,0.48, f"DEF Success: {defense_success} (#{defense_success_rank})", fontweight='bold', ha='left', color=get_rank_color(defense_success_rank), fontsize=18)
-    plt.text(0,0.43, f"DEF Explosiveness: {defense_explosive} (#{defense_explosive_rank})", fontweight='bold', ha='left', color=get_rank_color(defense_explosive_rank), fontsize=18)
-    plt.text(0,0.38, f"Turnovers: {turnovers} (#{turnover_rank})", fontweight='bold', ha='left', color=get_rank_color(turnover_rank), fontsize=18)
-    plt.text(0,0.33, f"Penalties: {penalties} (#{penalties_rank})", fontweight='bold', ha='left', color=get_rank_color(penalties_rank), fontsize=18)
-    plt.text(0,0.28, f"Most Deserving: #{MD}", ha='left', fontweight='bold', color=get_rank_color(MD), fontsize = 18)
-    plt.text(0,0.23, f"SOR: #{SOR}", ha='left', fontweight='bold', color=get_rank_color(SOR), fontsize = 18)
-    plt.text(0,0.18, f"SOS: #{SOS}", ha='left', fontweight='bold', color=get_rank_color(SOS), fontsize = 18)
-    plt.text(0,0.13, f"DCE: #{DCE}", ha='left', fontweight='bold', color=get_rank_color(DCE), fontsize = 18)
-    plt.text(0,0.08, f"DDE: #{DDE}", ha='left', fontweight='bold', color=get_rank_color(DDE), fontsize = 18)
-    plt.text(0,0.03, f"PBR: #{PBR}", ha='left', fontweight='bold', color=get_rank_color(PBR), fontsize = 18)
+    font_size = 20
+    plt.text(0,0.88, f"Record: {wins} - {losses} ({conference_wins} - {conference_losses})", ha='left', fontweight='bold', fontsize = font_size)
+    plt.text(0,0.83, f"Power Rating: {power_rating} (#{rank})", ha='left', fontweight='bold', fontsize = font_size)
+    plt.text(0,0.78, f"Offense: {offensive_total} (#{offensive})", fontweight='bold', ha ='left', color=get_rank_color(offensive), fontsize = font_size)
+    plt.text(0,0.73, f"Defense: {defensive_total} (#{defensive})", fontweight='bold', ha ='left', color=get_rank_color(defensive), fontsize = font_size)
+    plt.text(0,0.68, f"Special Teams: {stm} (#{stm_rank})", fontweight='bold', ha ='left', color=get_rank_color(stm_rank), fontsize = font_size)
+    plt.text(0,0.63, f"Talent: {talent_scaled} (#{talent_rank})", fontweight='bold', ha='left', color=get_rank_color(talent_rank), fontsize=font_size)
+    plt.text(0,0.58, f"OFF Success: {offense_success} (#{offense_success_rank})", fontweight='bold', ha='left', color=get_rank_color(offense_success_rank), fontsize=font_size)
+    plt.text(0,0.53, f"OFF Explosiveness: {offense_explosive} (#{offense_explosive_rank})", fontweight='bold', ha='left', color=get_rank_color(offense_explosive_rank), fontsize=font_size)
+    plt.text(0,0.48, f"DEF Success: {defense_success} (#{defense_success_rank})", fontweight='bold', ha='left', color=get_rank_color(defense_success_rank), fontsize=font_size)
+    plt.text(0,0.43, f"DEF Explosiveness: {defense_explosive} (#{defense_explosive_rank})", fontweight='bold', ha='left', color=get_rank_color(defense_explosive_rank), fontsize=font_size)
+    plt.text(0,0.38, f"Turnovers: {turnovers} (#{turnover_rank})", fontweight='bold', ha='left', color=get_rank_color(turnover_rank), fontsize=font_size)
+    plt.text(0,0.33, f"Penalties: {penalties} (#{penalties_rank})", fontweight='bold', ha='left', color=get_rank_color(penalties_rank), fontsize=font_size)
+    plt.text(0,0.28, f"Most Deserving: #{MD}", ha='left', fontweight='bold', color=get_rank_color(MD), fontsize = font_size)
+    plt.text(0,0.23, f"SOR: #{SOR}", ha='left', fontweight='bold', color=get_rank_color(SOR), fontsize = font_size)
+    plt.text(0,0.18, f"SOS: #{SOS}", ha='left', fontweight='bold', color=get_rank_color(SOS), fontsize = font_size)
+    plt.text(0,0.13, f"DCE: #{DCE}", ha='left', fontweight='bold', color=get_rank_color(DCE), fontsize = font_size)
+    plt.text(0,0.08, f"DDE: #{DDE}", ha='left', fontweight='bold', color=get_rank_color(DDE), fontsize = font_size)
+    plt.text(0,0.03, f"PBR: #{PBR}", ha='left', fontweight='bold', color=get_rank_color(PBR), fontsize = font_size)
 
 
     entire_schedule = schedule_info.copy()
@@ -2200,7 +2201,7 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     team_schedule['raw_spread'] = pd.to_numeric(team_schedule['spread'], errors='coerce')
 
     j = 0.8
-    font_size = 12
+    font_size = 14
     # Completed games section
     plt.text(1, 0.88, f"Expected Record: {expected_wins} - {expected_losses}", ha='right', fontweight='bold', fontsize=18)
     plt.text(1, 0.83, "FCS Games Not Included in Schedule", fontsize=font_size, ha='right', transform=ax.transAxes, fontweight='bold')
@@ -2262,14 +2263,14 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
 
         j -= 0.03
 
-    plt.text(1,0.24, "All stats are percentile ranks", ha='right', fontsize=12)
-    plt.text(1,0.21, "MD - Most Deserving, ESCAPE's 'AP Ballot'", ha='right', fontsize=12)
-    plt.text(1,0.18, "SOR - Strength of Record, how impressive is your record", ha='right', fontsize=12)
-    plt.text(1,0.15, "SOS - Strength of Schedule, how hard your schedule is", ha='right', fontsize=12)
-    plt.text(1,0.12, "DCE - Drive Control Efficiency, how well your offense controls the ball", ha='right', fontsize=12)
-    plt.text(1,0.09, "DDE - Drive Disruption Efficiency, how well your defense disrupts offenses", ha='right', fontsize=12)
-    plt.text(1,0.06, "PBR - Penalty Burden Ratio, how well your team limits or overcomes penalties", ha='right', fontsize=12)
-    plt.text(1,0.03, "Figure: @EscapeRatingsCFB | Data: @CFB_Data", ha='right', fontsize=12, fontweight='bold')
+    plt.text(1,0.24, "All stats are percentile ranks", ha='right', fontsize=font_size)
+    plt.text(1,0.21, "MD - Most Deserving, ESCAPE's 'AP Ballot'", ha='right', fontsize=font_size)
+    plt.text(1,0.18, "SOR - Strength of Record, how impressive is your record", ha='right', fontsize=font_size)
+    plt.text(1,0.15, "SOS - Strength of Schedule, how hard your schedule is", ha='right', fontsize=font_size)
+    plt.text(1,0.12, "DCE - Drive Control Efficiency, how well your offense controls the ball", ha='right', fontsize=font_size)
+    plt.text(1,0.09, "DDE - Drive Disruption Efficiency, how well your defense disrupts offenses", ha='right', fontsize=font_size)
+    plt.text(1,0.06, "PBR - Penalty Burden Ratio, how well your team limits or overcomes penalties", ha='right', fontsize=font_size)
+    plt.text(1,0.03, "Figure: @EscapeRatingsCFB | Data: @CFB_Data", ha='right', fontsize=font_size, fontweight='bold')
 
     plt.tight_layout()
 
