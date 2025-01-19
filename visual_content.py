@@ -1973,6 +1973,313 @@ def analyze_simulation_conference(win_results, loss_results, schedules, records)
 
     return win_thresholds_df
 
+def team_stats_visual(all_data, records, schedule_info, logos, team):
+
+    cmap = LinearSegmentedColormap.from_list('dark_gradient_orange', ['#660000', '#8B0000', '#808080', '#2C5E00', '#1D4D00'], N=100)
+    def get_color(value, vmin=0, vmax=100):
+        norm_value = (value - vmin) / (vmax - vmin)  # Normalize the value between 0 and 1
+        return cmap(norm_value)  # Get the color from the colormap
+    
+    def get_rank_color(number):
+        """
+        Returns a hex color code based on a number between 1 and 134.
+        
+        Parameters:
+            number (int): A number between 1 and 134.
+        
+        Returns:
+            str: Hex color code corresponding to the input number.
+        """
+        if not 1 <= number <= 134:
+            raise ValueError("Number must be between 1 and 134")
+        
+        # Define the color gradient points
+        gradient = [
+            (1, '#1D4D00'),    # Start green
+            (35, '#2C5E00'),   # Midpoint green
+            (67, '#808080'),   # Grey
+            (105, '#8B0000'),  # Red in the middle
+            (134, '#660000')   # End dark red
+        ]
+        
+        # Convert hex to RGB
+        def hex_to_rgb(hex_color):
+            hex_color = hex_color.lstrip('#')
+            return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+        
+        # Convert RGB to hex
+        def rgb_to_hex(rgb):
+            return '#' + ''.join(f'{int(c):02X}' for c in rgb)
+        
+        # Interpolate between two colors
+        def interpolate_color(color1, color2, fraction):
+            return tuple(
+                color1[i] + (color2[i] - color1[i]) * fraction
+                for i in range(3)
+            )
+        
+        # Find the range that includes the number
+        for i in range(len(gradient) - 1):
+            start, end = gradient[i], gradient[i + 1]
+            if start[0] <= number <= end[0]:
+                fraction = (number - start[0]) / (end[0] - start[0])
+                start_rgb, end_rgb = hex_to_rgb(start[1]), hex_to_rgb(end[1])
+                interpolated_rgb = interpolate_color(start_rgb, end_rgb, fraction)
+                return rgb_to_hex(interpolated_rgb)
+        
+        # Fallback (should not reach here)
+        return '#000000'
+
+    team_logo_url = logos[logos['team'] == team]['logo'].values[0][0]
+    response = requests.get(team_logo_url)
+    logo_img = Image.open(BytesIO(response.content))
+
+    scaler100 = MinMaxScaler(feature_range=(1,100))
+    all_data['talent_scaled_percentile'] = scaler100.fit_transform(all_data[['talent_scaled']])
+    all_data['offensive_total_scaled'] = scaler100.fit_transform(all_data[['offensive_total']])
+    all_data['defensive_total_scaled'] = scaler100.fit_transform(all_data[['defensive_total']])
+    all_data['stm_scaled'] = scaler100.fit_transform(all_data[['STM']])
+
+    wins = records[records['team'] == team]['wins'].values[0]
+    losses = records[records['team'] == team]['losses'].values[0]
+    conference_wins = records[records['team'] == team]['conference_wins'].values[0]
+    conference_losses = records[records['team'] == team]['conference_losses'].values[0]
+    
+    color = all_data[all_data['team'] == team]['color'].values[0]
+    alt_color = all_data[all_data['team'] == team]['alt_color'].values[0]
+
+    power_rating = all_data[all_data['team'] == team]['power_rating'].values[0]
+    rank = all_data[all_data['team'] == team].index[0] + 1
+    MD = all_data[all_data['team'] == team]['most_deserving'].values[0]
+    SOR = all_data[all_data['team'] == team]['SOR'].values[0]
+    SOS = all_data[all_data['team'] == team]['SOS'].values[0]
+    PBR = int(all_data[all_data['team'] == team]['PBR_rank'].values[0])
+    DCE = int(all_data[all_data['team'] == team]['DCE_rank'].values[0])
+    DDE = int(all_data[all_data['team'] == team]['DDE_rank'].values[0])
+    
+    offensive_total = round(all_data[all_data['team'] == team]['offensive_total_scaled'].values[0])
+    offensive = all_data[all_data['team'] == team]['offensive_rank'].values[0]
+    defensive_total = round(all_data[all_data['team'] == team]['defensive_total_scaled'].values[0])
+    defensive = all_data[all_data['team'] == team]['defensive_rank'].values[0]
+    stm = round(all_data[all_data['team'] == team]['stm_scaled'].values[0])
+    stm_rank = int(all_data[all_data['team'] == team]['STM_rank'].values[0])
+    talent_scaled = round(all_data[all_data['team'] == team]['talent_scaled_percentile'].values[0])
+    talent_rank = int(all_data[all_data['team'] == team]['talent_scaled_rank'].values[0])
+
+    offense_success = round(all_data[all_data['team'] == team]['offense_success_scaled'].values[0])
+    offense_success_rank = int(all_data[all_data['team'] == team]['offense_success_rank'].values[0])
+    offense_explosive = round(all_data[all_data['team'] == team]['offense_explosive'].values[0])
+    offense_explosive_rank = int(all_data[all_data['team'] == team]['offense_explosive_rank'].values[0])
+    defense_success = round(all_data[all_data['team'] == team]['defense_success_scaled'].values[0])
+    defense_success_rank = int(all_data[all_data['team'] == team]['defense_success_rank'].values[0])
+    defense_explosive = round(all_data[all_data['team'] == team]['defense_explosive'].values[0])
+    defense_explosive_rank = int(all_data[all_data['team'] == team]['defense_explosive_rank'].values[0])
+    turnovers = round(all_data[all_data['team'] == team]['total_turnovers_scaled'].values[0])
+    turnover_rank = int(all_data[all_data['team'] == team]['total_turnovers_rank'].values[0])
+    penalties = round(all_data[all_data['team'] == team]['penalties_scaled'].values[0])
+    penalties_rank = int(all_data[all_data['team'] == team]['penalties_rank'].values[0])
+
+    fig, ax = plt.subplots(nrows=1, figsize=(12, 10),dpi=125)
+    fig_width, fig_height = fig.get_size_inches()
+    fig.patch.set_facecolor('#5fa391')  # Set figure background color
+    ax.set_facecolor('#5fa391') 
+    ax.axis('off')
+    plt.text(
+        0.5, 0.95, team,
+        ha='center',
+        fontweight='bold',
+        fontsize=28,
+        color='#FFFFFF',
+        bbox=dict(
+            boxstyle='square,pad=0.3',  # Rounded box with padding
+            edgecolor='none',          # No border
+            facecolor=color,         # Box background color
+            alpha=0.7                  # Transparency
+        )
+    )
+    image_box = OffsetImage(logo_img, zoom=0.3)  # Adjust zoom as needed
+    image_annot = AnnotationBbox(
+        image_box,
+        (0.5, 0.75),  # Adjust position directly under the text
+        frameon=False,
+        xycoords='axes fraction'
+    )
+    plt.gca().add_artist(image_annot)
+    
+    plt.text(0,0.88, f"Record: {wins} - {losses} ({conference_wins} - {conference_losses})", ha='left', fontweight='bold', fontsize = 18)
+    plt.text(0,0.83, f"Power Rating: {power_rating} (#{rank})", ha='left', fontweight='bold', fontsize = 18)
+    plt.text(0,0.78, f"Offense: {offensive_total} (#{offensive})", fontweight='bold', ha ='left', color=get_rank_color(offensive), fontsize = 18)
+    plt.text(0,0.73, f"Defense: {defensive_total} (#{defensive})", fontweight='bold', ha ='left', color=get_rank_color(defensive), fontsize = 18)
+    plt.text(0,0.68, f"Special Teams: {stm} (#{stm_rank})", fontweight='bold', ha ='left', color=get_rank_color(stm_rank), fontsize = 18)
+    plt.text(0,0.63, f"Talent: {talent_scaled} (#{talent_rank})", fontweight='bold', ha='left', color=get_rank_color(talent_rank), fontsize=18)
+    plt.text(0,0.58, f"OFF Success: {offense_success} (#{offense_success_rank})", fontweight='bold', ha='left', color=get_rank_color(offense_success_rank), fontsize=18)
+    plt.text(0,0.53, f"OFF Explosiveness: {offense_explosive} (#{offense_explosive_rank})", fontweight='bold', ha='left', color=get_rank_color(offense_explosive_rank), fontsize=18)
+    plt.text(0,0.48, f"DEF Success: {defense_success} (#{defense_success_rank})", fontweight='bold', ha='left', color=get_rank_color(defense_success_rank), fontsize=18)
+    plt.text(0,0.43, f"DEF Explosiveness: {defense_explosive} (#{defense_explosive_rank})", fontweight='bold', ha='left', color=get_rank_color(defense_explosive_rank), fontsize=18)
+    plt.text(0,0.38, f"Turnovers: {turnovers} (#{turnover_rank})", fontweight='bold', ha='left', color=get_rank_color(turnover_rank), fontsize=18)
+    plt.text(0,0.33, f"Penalties: {penalties} (#{penalties_rank})", fontweight='bold', ha='left', color=get_rank_color(penalties_rank), fontsize=18)
+    plt.text(0,0.28, f"Most Deserving: #{MD}", ha='left', fontweight='bold', color=get_rank_color(MD), fontsize = 18)
+    plt.text(0,0.23, f"SOR: #{SOR}", ha='left', fontweight='bold', color=get_rank_color(SOR), fontsize = 18)
+    plt.text(0,0.18, f"SOS: #{SOS}", ha='left', fontweight='bold', color=get_rank_color(SOS), fontsize = 18)
+    plt.text(0,0.13, f"DCE: #{DCE}", ha='left', fontweight='bold', color=get_rank_color(DCE), fontsize = 18)
+    plt.text(0,0.08, f"DDE: #{DDE}", ha='left', fontweight='bold', color=get_rank_color(DDE), fontsize = 18)
+    plt.text(0,0.03, f"PBR: #{PBR}", ha='left', fontweight='bold', color=get_rank_color(PBR), fontsize = 18)
+
+
+    entire_schedule = schedule_info.copy()
+    completed_games = schedule_info[schedule_info['home_points'].notna()]
+    schedule_info = schedule_info[schedule_info['home_points'].isna()]
+
+    team_completed_games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
+    team_completed_games['team_win_prob'] = np.where(team_completed_games['home_team'] == team, 
+                                    team_completed_games['escape_win_prob'], 
+                                    100 - team_completed_games['escape_win_prob'])
+    expected_wins = round((team_completed_games['team_win_prob'] / 100).sum(),1)
+    expected_losses = round(len(team_completed_games) - expected_wins,1)
+
+    
+    def get_color_future(w_l):
+        if w_l <= 0:
+            return '#1D4D00'
+        else:
+            return '#660000'
+
+    def get_color_wl(w_l):
+        if w_l == "W":
+            return '#1D4D00'
+        else:
+            return '#660000'
+
+    def find_team_spread(game, team_data, team_name, home_team, away_team, neutral):
+        home_rating = all_data[all_data['team'] == home_team]['power_rating'].values[0]
+        away_rating = all_data[all_data['team'] == away_team]['power_rating'].values[0]
+        home_win_prob = game['home_win_prob']
+        def adjust_home_pr(home_win_prob):
+            return ((home_win_prob - 50) / 50) * 5
+        def round_to_nearest_half(x):
+            return np.round(x * 2) / 2 
+        if neutral:
+            spread = round((home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
+        else:
+            spread = round((4.6 + home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
+        if (home_team == team_name) & (spread > 0):
+            output = "-" + str(spread)
+        elif (home_team == team_name) & (spread < 0):
+            output = "+" + str(abs(spread))
+        elif (home_team != team_name) & (spread < 0):
+            output = str(spread)
+        elif (spread == 0.0):
+            output = str(spread)
+        else:
+            output = "+" + str(spread)
+
+        return output, spread
+    
+    def add_spreads(schedule_info, team_data, team_name):
+        # Define a helper function to apply the find_team_spread to each row
+        def compute_spread(row):
+            # Extract relevant data from the current row
+            home_team = row['home_team']
+            away_team = row['away_team']
+            neutral = row['neutral']
+            
+            # Call the find_team_spread function with this row's data
+            spread_str, raw_spread = find_team_spread(row, team_data, team_name, home_team, away_team, neutral)
+            
+            # Return both values as a tuple, so we can unpack them into two columns
+            return pd.Series([spread_str, raw_spread])
+
+        # Apply the compute_spread function to each row of the DataFrame
+        schedule_info[['spread', 'raw_spread']] = schedule_info.apply(compute_spread, axis=1)
+        
+        return schedule_info
+
+    # Example of calling the function
+    schedule_info = add_spreads(schedule_info, team_data, team)
+    team_schedule = schedule_info[(schedule_info['home_team'] == team) | (schedule_info['away_team'] == team)].reset_index()
+    team_schedule['raw_spread'] = pd.to_numeric(team_schedule['spread'], errors='coerce')
+
+    j = 0.8
+    font_size = 12
+    # Completed games section
+    plt.text(1, 0.88, f"Expected Record: {expected_wins} - {expected_losses}", ha='right', fontweight='bold', fontsize=18)
+    plt.text(1, 0.83, "FCS Games Not Included in Schedule", fontsize=font_size, ha='right', transform=ax.transAxes, fontweight='bold')
+
+    for i, game in team_completed_games.iterrows():
+        neutral = game['neutral']
+        week = game['week']
+        home_team = game['home_team']
+        away_team = game['away_team']
+        home_points = game['home_points']
+        away_points = game['away_points']
+
+        # Determine win/loss
+        if home_team == team:
+            w_l = 'W' if home_points > away_points else 'L'
+        else:
+            w_l = 'L' if home_points > away_points else 'W'
+
+        # Display week and opponent
+        plt.text(0.65, j, f"{week}", fontsize=font_size, ha='left', transform=ax.transAxes, fontweight='bold')
+        if neutral:
+            opponent = away_team if home_team == team else home_team
+            opponent_rank = team_data[team_data['team'] == opponent].index[0] + 1
+            location = "(N)"
+        else:
+            opponent = away_team if home_team == team else home_team
+            opponent_rank = team_data[team_data['team'] == opponent].index[0] + 1
+            location = "vs." if home_team == team else "@"
+        plt.text(0.68, j, f"{location} {opponent} (#{opponent_rank})", fontsize=font_size, ha='left', transform=ax.transAxes, color=get_color_wl(w_l), fontweight='bold')
+
+        # Display score
+        score = f"{int(home_points)}-{int(away_points)}" if home_points > away_points else f"{int(away_points)}-{int(home_points)}"
+        plt.text(1, j, score, fontsize=font_size, ha='right', transform=ax.transAxes, color=get_color_wl(w_l), fontweight='bold')
+
+        j -= 0.03
+
+    for i, game in team_schedule.iterrows():
+        neutral = game['neutral']
+        week = game['week']
+        spread = game['spread']
+        raw_spread = game['raw_spread']
+        home_team = game['home_team']
+        away_team = game['away_team']
+
+        # Display week and opponent
+        plt.text(0.65, j, f"{week}", fontsize=font_size, ha='left', transform=ax.transAxes, fontweight='bold')
+        if neutral:
+            opponent = away_team if home_team == team else home_team
+            opponent_rank = team_data[team_data['team'] == opponent].index[0] + 1
+            location = "(N)"
+        else:
+            opponent = away_team if home_team == team else home_team
+            opponent_rank = team_data[team_data['team'] == opponent].index[0] + 1
+            location = "vs." if home_team == team else "@"
+        plt.text(0.68, j, f"{location} {opponent} (#{opponent_rank})", fontsize=font_size, ha='left', transform=ax.transAxes, fontweight='bold')
+
+        # Display spread
+        plt.text(1, j, f"{spread}", fontsize=font_size, ha='right', transform=ax.transAxes, color=get_color_future(raw_spread), fontweight='bold')
+
+        j -= 0.03
+
+    plt.text(1,0.24, "All stats are percentile ranks", ha='right', fontsize=12)
+    plt.text(1,0.21, "MD - Most Deserving, ESCAPE's 'AP Ballot'", ha='right', fontsize=12)
+    plt.text(1,0.18, "SOR - Strength of Record, how impressive is your record", ha='right', fontsize=12)
+    plt.text(1,0.15, "SOS - Strength of Schedule, how hard your schedule is", ha='right', fontsize=12)
+    plt.text(1,0.12, "DCE - Drive Control Efficiency, how well your offense controls the ball", ha='right', fontsize=12)
+    plt.text(1,0.09, "DDE - Drive Disruption Efficiency, how well your defense disrupts offenses", ha='right', fontsize=12)
+    plt.text(1,0.06, "PBR - Penalty Burden Ratio, how well your team limits or overcomes penalties", ha='right', fontsize=12)
+    plt.text(1,0.03, "Figure: @EscapeRatingsCFB | Data: @CFB_Data", ha='right', fontsize=12, fontweight='bold')
+
+    plt.tight_layout()
+
+    folder_path = f"./ESCAPE Ratings/Visuals/y{current_year}/week_{current_week}/Stat Profiles"
+    os.makedirs(folder_path, exist_ok=True)
+
+    file_path = os.path.join(folder_path, f"{team}")
+
+    plt.savefig(file_path, bbox_inches='tight', dpi = 300)
+
 try:
     #######################################################################
     #######################################################################
@@ -3112,6 +3419,17 @@ try:
     print("Conference Projections Done!")
 except Exception as e:
     print(f"Error in code chunk: Conference Projections. Error: {e}")
+
+try:
+    i = 1
+    for team in all_data['team']:
+        if i % 10 == 0:
+            print(i)
+        team_stats_visual(all_data, records, year_long_schedule, logos, team)
+        i = i+1
+    print("Stat Profiles Done!")
+except Exception as e:
+    print(f"Error in code chunk: Stat Profiles. Error: {e}")
 
 try:
     if postseason:
