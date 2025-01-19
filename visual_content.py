@@ -2135,8 +2135,11 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     team_completed_games['team_win_prob'] = np.where(team_completed_games['home_team'] == team, 
                                     team_completed_games['escape_win_prob'], 
                                     100 - team_completed_games['escape_win_prob'])
+    games_played = records[records['team'] == team]['games_played'].values[0]
+    difference = games_played - len(team_completed_games)
     expected_wins = round((team_completed_games['team_win_prob'] / 100).sum(),1)
-    expected_losses = round(len(team_completed_games) - expected_wins,1)
+    expected_wins = round(expected_wins + (difference * 0.95),1)
+    expected_losses = round(games_played - expected_wins,1)
 
     
     def get_color_future(w_l):
