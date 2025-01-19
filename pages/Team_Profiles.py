@@ -96,7 +96,7 @@ folder_path = f"ESCAPE Ratings/Visuals/y{current_year}/week_{current_week}/Stat 
 if os.path.exists(folder_path):
     # Get a list of all .png files in the folder
     png_files = glob.glob(os.path.join(folder_path, "*.png"))
-
+    png_files = sorted(png_files, key=lambda x: os.path.basename(x).lower())
     # Display the images in the Streamlit app
     if png_files:
         st.subheader("All Teams Stat Profiles")
