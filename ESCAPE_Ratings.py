@@ -89,6 +89,7 @@ else:
         postseason = True
 current_week = int(current_week)
 current_year = int(current_year)
+postseason = True
 
 team_data = pd.read_csv(f"./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}.csv").drop(columns=['Unnamed: 0'])
 all_data = pd.read_csv(f"./ESCAPE Ratings/Data/y{current_year}/team_data_week{current_week}.csv")
