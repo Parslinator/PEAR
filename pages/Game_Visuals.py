@@ -74,8 +74,10 @@ last_game_start = calendar['last_game_start'].iloc[-1]
 current_week = None
 if current_time < first_game_start:
     current_week = 1
+    postseason = False
 elif current_time > last_game_start:
     current_week = calendar.iloc[-2, -1] + 1
+    postseason = True
 else:
     condition_1 = (calendar['first_game_start'] <= current_time) & (calendar['last_game_start'] >= current_time)
     condition_2 = (calendar['last_game_start'].shift(1) < current_time) & (calendar['first_game_start'] > current_time)
@@ -90,7 +92,6 @@ else:
         postseason = True
 current_week = int(current_week)
 current_year = int(current_year)
-postseason = True
 
 folder_path = f"ESCAPE Ratings/Visuals/y{current_year}/week_{current_week}/Games"
 
