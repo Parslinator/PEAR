@@ -673,8 +673,8 @@ if run_full_optimization == 'y':
     team_power_rankings = team_power_rankings.sort_values(by='power_rating', ascending=False).reset_index(drop=True)
 
     #### if top team is too high, use this
-    team_power_rankings.iloc[0,1] = round(team_power_rankings.iloc[1,1] + round((team_power_rankings.iloc[0,1] - team_power_rankings.iloc[1,1]) / 2, 1),1)
-    team_data.loc[0, 'power_rating'] = team_power_rankings.iloc[0, 1]
+    # team_power_rankings.iloc[0,1] = round(team_power_rankings.iloc[1,1] + round((team_power_rankings.iloc[0,1] - team_power_rankings.iloc[1,1]) / 2, 1),1)
+    # team_data.loc[0, 'power_rating'] = team_power_rankings.iloc[0, 1]
 
     team_power_rankings.index = team_power_rankings.index + 1
     team_power_rankings['week'] = current_week
@@ -841,8 +841,8 @@ if run_full_optimization == 'y':
     folder_path = f"./ESCAPE Ratings/Spreads/y{current_year}"
     os.makedirs(folder_path, exist_ok=True)
 
-    team_data.to_csv(f"./ESCAPE Ratings/Data/y{current_year}/team_data_week{current_week}_test.csv")
-    team_power_rankings.to_csv(f'./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}_test2.csv')
+    team_data.to_csv(f"./ESCAPE Ratings/Data/y{current_year}/team_data_week{current_week}_no_adjustments.csv")
+    team_power_rankings.to_csv(f'./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}_no_adjustments.csv')
 else:
     print("No Optimization")
     team_data = pd.read_csv(f'./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}.csv').drop(columns=['Unnamed: 0'])
