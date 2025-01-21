@@ -90,6 +90,7 @@ else:
         postseason = True
 current_week = int(current_week)
 current_year = int(current_year)
+postseason = True
 
 folder_path = f"ESCAPE Ratings/Visuals/y{current_year}/week_{current_week}/Games"
 
