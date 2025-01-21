@@ -49,8 +49,10 @@ last_game_start = calendar['last_game_start'].iloc[-1]
 current_week = None
 if current_time < first_game_start:
     current_week = 1
+    postseason = False
 elif current_time > last_game_start:
     current_week = calendar.iloc[-2, -1] + 1
+    postseason = True
 else:
     condition_1 = (calendar['first_game_start'] <= current_time) & (calendar['last_game_start'] >= current_time)
     condition_2 = (calendar['last_game_start'].shift(1) < current_time) & (calendar['first_game_start'] > current_time)
@@ -362,16 +364,12 @@ if run_full_optimization == 'y':
     last_three_rows = talent.groupby('team').tail(3)
     avg_talent_per_team = last_three_rows.groupby('team')['talent'].mean().reset_index()
     avg_talent_per_team.columns = ['team', 'avg_talent']
-    avg_talent_per_team.loc[avg_talent_per_team['team'] == 'Oregon State', 'avg_talent'] -= 150
 
     # Recruiting points over the last 4 years
     last_three = recruiting.groupby('team').tail(3)
     recruiting_per_team = last_three.groupby('team')['points'].sum().reset_index()
     recruiting_per_team.columns = ['team', 'avg_points']
     recruiting_per_team['avg_points'] = recruiting_per_team['avg_points'] + 150
-    # recruiting_per_team.loc[recruiting_per_team['team'] == 'Air Force', 'avg_points'] /= 2
-    recruiting_per_team.loc[recruiting_per_team['team'] == 'Army', 'avg_points'] += 150
-    recruiting_per_team.loc[recruiting_per_team['team'] == 'Navy', 'avg_points'] += 150
 
     intermediate_1 = pd.merge(team_info, avg_talent_per_team, how='left', on='team')
     intermediate_2 = pd.merge(intermediate_1, conference_sp_rating, how='left', on='conference')
@@ -383,7 +381,8 @@ if run_full_optimization == 'y':
     team_data = pd.merge(intermediate_7, metrics, how='left', on='team')
 
     # For military schools and new FBS schools, use recruiting points instead of team talent
-    target_teams = ['Air Force', 'Army', 'Navy', 'James Madison', 'Sam Houston', 'Kennesaw State', 'Jacksonville State', 'Boise State']
+    # New FBS Schools - you get on here for 3 years
+    target_teams = ['Air Force', 'Army', 'Navy', 'Kennesaw State', 'Jacksonville State', 'Sam Houston']
     mask = team_data['team'].isin(target_teams)
     team_data.loc[mask, 'avg_talent'] = team_data.loc[mask, 'team'].map(
         recruiting_per_team.set_index('team')['avg_points']
@@ -674,7 +673,7 @@ if run_full_optimization == 'y':
     team_power_rankings = team_power_rankings.sort_values(by='power_rating', ascending=False).reset_index(drop=True)
 
     #### if top team is too high, use this
-    team_power_rankings.iloc[0,1] = team_power_rankings.iloc[1,1] + round((team_power_rankings.iloc[0,1] - team_power_rankings.iloc[1,1]) / 10, 1)
+    team_power_rankings.iloc[0,1] = round(team_power_rankings.iloc[1,1] + round((team_power_rankings.iloc[0,1] - team_power_rankings.iloc[1,1]) / 2, 1),1)
     team_data.loc[0, 'power_rating'] = team_power_rankings.iloc[0, 1]
 
     team_power_rankings.index = team_power_rankings.index + 1
@@ -843,7 +842,7 @@ if run_full_optimization == 'y':
     os.makedirs(folder_path, exist_ok=True)
 
     team_data.to_csv(f"./ESCAPE Ratings/Data/y{current_year}/team_data_week{current_week}_test.csv")
-    team_power_rankings.to_csv(f'./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}_test.csv')
+    team_power_rankings.to_csv(f'./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}_test2.csv')
 else:
     print("No Optimization")
     team_data = pd.read_csv(f'./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}.csv').drop(columns=['Unnamed: 0'])
