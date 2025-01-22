@@ -92,8 +92,8 @@ else:
 current_week = int(current_week)
 current_year = int(current_year)
 
-team_data = pd.read_csv(f"./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}_no_adjustments.csv").drop(columns=['Unnamed: 0'])
-all_data = pd.read_csv(f"./ESCAPE Ratings/Data/y{current_year}/team_data_week{current_week}_no_adjustments.csv")
+team_data = pd.read_csv(f"./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}.csv").drop(columns=['Unnamed: 0'])
+all_data = pd.read_csv(f"./ESCAPE Ratings/Data/y{current_year}/team_data_week{current_week}.csv")
 
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
