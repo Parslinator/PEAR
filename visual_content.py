@@ -2041,7 +2041,9 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     all_data['offensive_total_scaled'] = scaler100.fit_transform(all_data[['offensive_total']])
     all_data['defensive_total_scaled'] = scaler100.fit_transform(all_data[['defensive_total']])
     all_data['stm_scaled'] = scaler100.fit_transform(all_data[['STM']])
-    all_data['pbr_scaled'] = scaler100.fit_transform(all_data[['PBR']])
+    pbr_min = all_data['PBR'].min()
+    pbr_max = all_data['PBR'].max()
+    all_data['pbr_scaled'] = 100 - (all_data['PBR'] - pbr_min) * 99 / (pbr_max - pbr_min)
     all_data['dce_scaled'] = scaler100.fit_transform(all_data[['DCE']])
     all_data['dde_scaled'] = scaler100.fit_transform(all_data[['DDE']])
 
