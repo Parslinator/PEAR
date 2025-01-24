@@ -2320,7 +2320,7 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     plt.text(1.8,-0.20, "DDE - Drive Disruption Efficiency, how well your defense disrupts offenses", ha='right', fontsize=12, transform = ax.transAxes)
     plt.text(1.8,-0.24, "PBR - Penalty Burden Ratio, how well your team limits or overcomes penalties", ha='right', fontsize=12, transform = ax.transAxes)
     plt.text(1.8,-0.28, "TPG - Talent Performance Gap, your performance relative to your talent", ha='right', fontsize=12, transform = ax.transAxes)
-    plt.text(0.5,-0.34, "Figure: @EscapeRatingsCFB | Data: @CFB_Data", ha='center', fontsize=14, fontweight='bold', transform = ax.transAxes)
+    plt.text(0.5,-0.34, "Figure: @EscapeRatingCFB | Data: @CFB_Data", ha='center', fontsize=14, fontweight='bold', transform = ax.transAxes)
     plt.tight_layout()
 
     folder_path = f"./ESCAPE Ratings/Visuals/y{current_year}/week_{current_week}/Stat Profiles"
