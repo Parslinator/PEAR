@@ -2046,6 +2046,10 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     all_data['pbr_scaled'] = 100 - (all_data['PBR'] - pbr_min) * 99 / (pbr_max - pbr_min)
     all_data['dce_scaled'] = scaler100.fit_transform(all_data[['DCE']])
     all_data['dde_scaled'] = scaler100.fit_transform(all_data[['DDE']])
+    all_data['most_deserving_scaled'] = scaler100.fit_transform(all_data[['most_deserving_wins']])
+    all_data['talent_performance'] = (all_data['most_deserving_scaled'] - all_data['avg_talent']) / math.sqrt(2)
+    all_data['talent_performance_scaled'] = scaler100.fit_transform(all_data[['talent_performance']])
+    all_data['TPG_rank'] = all_data['talent_performance_scaled'].rank(method='min', ascending=False)
 
     wins = records[records['team'] == team]['wins'].values[0]
     losses = records[records['team'] == team]['losses'].values[0]
@@ -2073,6 +2077,7 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     defense_explosive_rank = int(all_data[all_data['team'] == team]['defense_explosive_rank'].values[0])
     turnover_rank = int(all_data[all_data['team'] == team]['total_turnovers_rank'].values[0])
     penalties_rank = int(all_data[all_data['team'] == team]['penalties_rank'].values[0])
+    tpg_rank = int(all_data[all_data['team'] == team]['TPG_rank'].values[0])
 
     offensive_total = round(all_data[all_data['team'] == team]['offensive_total_scaled'].values[0])
     defensive_total = round(all_data[all_data['team'] == team]['defensive_total_scaled'].values[0])
@@ -2081,18 +2086,19 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     offense_explosive = round(all_data[all_data['team'] == team]['offense_explosive'].values[0])
     defense_success = round(all_data[all_data['team'] == team]['defense_success_scaled'].values[0])
     defense_explosive = round(all_data[all_data['team'] == team]['defense_explosive'].values[0])
+    tpg = round(all_data[all_data['team'] == team]['talent_performance_scaled'].values[0])
     pbr = round(all_data[all_data['team'] == team]['pbr_scaled'].values[0])
     dce = round(all_data[all_data['team'] == team]['dce_scaled'].values[0])
     dde = round(all_data[all_data['team'] == team]['dde_scaled'].values[0])
 
     categories = [
         'OFF', 'DEF', 'DEF S', 'DEF E',
-        'DDE', 'PBR', 'ST',
+        'DDE', 'TPG', 'ST',
         'DCE', 'OFF E', 'OFF S'
     ]
     values = [
         offensive_total, defensive_total, defense_success, defense_explosive,
-        dde, pbr, stm,
+        dde, tpg, stm,
         dce, offense_explosive, offense_success
     ]
 
@@ -2158,6 +2164,7 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     plt.text(-0.8,-0.10, f"DCE: #{DCE_rank}", ha='left', fontweight='bold', color=get_rank_color(DCE_rank), fontsize = 18, transform=ax.transAxes)
     plt.text(-0.8,-0.18, f"DDE: #{DDE_rank}", ha='left', fontweight='bold', color=get_rank_color(DDE_rank), fontsize = 18, transform=ax.transAxes)
     plt.text(-0.8,-0.26, f"PBR: #{PBR_rank}", ha='left', fontweight='bold', color=get_rank_color(PBR_rank), fontsize = 18, transform=ax.transAxes)
+    plt.text(-0.8,-0.34, f"TPG: #{tpg_rank}", ha='left', fontweight='bold', color=get_rank_color(tpg_rank), fontsize = 18, transform=ax.transAxes)
 
     entire_schedule = schedule_info.copy()
     completed_games = schedule_info[schedule_info['home_points'].notna()]
@@ -2301,18 +2308,19 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
 
 
     # plt.text(1.8,-0.02, "All stats are percentile ranks", ha='right', fontsize=12, transform = ax.transAxes)
-    plt.text(1.8,0.20, "OFF - Total Offense", ha='right', fontsize=12, transform = ax.transAxes)
-    plt.text(1.8,0.16, "DEF - Total Defense", ha='right', fontsize=12, transform = ax.transAxes)
-    plt.text(1.8,0.12, "OFF S - Offense Success", ha='right', fontsize=12, transform = ax.transAxes)
-    plt.text(1.8,0.08, "OFF E - Offense Explosiveness", ha='right', fontsize=12, transform = ax.transAxes)
-    plt.text(1.8,0.04, "DEF S - Defense Success", ha='right', fontsize=12, transform = ax.transAxes)
-    plt.text(1.8,0, "DEF E - Defense Explosiveness", ha='right', fontsize=12, transform = ax.transAxes)
-    plt.text(1.8,-0.04, "SOR - Strength of Record, how impressive is your record", ha='right', fontsize=12, transform = ax.transAxes)
-    plt.text(1.8,-0.08, "SOS - Strength of Schedule, how hard your schedule is", ha='right', fontsize=12, transform = ax.transAxes)
-    plt.text(1.8,-0.12, "DCE - Drive Control Efficiency, how well your offense controls the ball", ha='right', fontsize=12, transform = ax.transAxes)
-    plt.text(1.8,-0.16, "DDE - Drive Disruption Efficiency, how well your defense disrupts offenses", ha='right', fontsize=12, transform = ax.transAxes)
-    plt.text(1.8,-0.2, "PBR - Penalty Burden Ratio, how well your team limits or overcomes penalties", ha='right', fontsize=12, transform = ax.transAxes)
-    plt.text(0.5,-0.26, "Figure: @EscapeRatingsCFB | Data: @CFB_Data", ha='center', fontsize=14, fontweight='bold', transform = ax.transAxes)
+    plt.text(1.8,0.16, "OFF - Total Offense", ha='right', fontsize=12, transform = ax.transAxes)
+    plt.text(1.8,0.12, "DEF - Total Defense", ha='right', fontsize=12, transform = ax.transAxes)
+    plt.text(1.8,0.08, "OFF S - Offense Success", ha='right', fontsize=12, transform = ax.transAxes)
+    plt.text(1.8,0.04, "OFF E - Offense Explosiveness", ha='right', fontsize=12, transform = ax.transAxes)
+    plt.text(1.8,0, "DEF S - Defense Success", ha='right', fontsize=12, transform = ax.transAxes)
+    plt.text(1.8,-0.04, "DEF E - Defense Explosiveness", ha='right', fontsize=12, transform = ax.transAxes)
+    plt.text(1.8,-0.08, "SOR - Strength of Record, how impressive is your record", ha='right', fontsize=12, transform = ax.transAxes)
+    plt.text(1.8,-0.12, "SOS - Strength of Schedule, how hard your schedule is", ha='right', fontsize=12, transform = ax.transAxes)
+    plt.text(1.8,-0.16, "DCE - Drive Control Efficiency, how well your offense controls the ball", ha='right', fontsize=12, transform = ax.transAxes)
+    plt.text(1.8,-0.20, "DDE - Drive Disruption Efficiency, how well your defense disrupts offenses", ha='right', fontsize=12, transform = ax.transAxes)
+    plt.text(1.8,-0.24, "PBR - Penalty Burden Ratio, how well your team limits or overcomes penalties", ha='right', fontsize=12, transform = ax.transAxes)
+    plt.text(1.8,-0.28, "TPG - Talent Performance Gap, your performance relative to your talent", ha='right', fontsize=12, transform = ax.transAxes)
+    plt.text(0.5,-0.34, "Figure: @EscapeRatingsCFB | Data: @CFB_Data", ha='center', fontsize=14, fontweight='bold', transform = ax.transAxes)
     plt.tight_layout()
 
     folder_path = f"./ESCAPE Ratings/Visuals/y{current_year}/week_{current_week}/Stat Profiles"
