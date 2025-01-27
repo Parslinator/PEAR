@@ -1,0 +1,125 @@
+,team,power_rating,conference,week,year
+1,Florida State,29.6,ACC,17,2013
+2,Alabama,25.8,SEC,17,2013
+3,Ohio State,19.2,Big Ten,17,2013
+4,Clemson,16.9,ACC,17,2013
+5,Oregon,16.8,Big Ten,17,2013
+6,Texas A&M,14.5,SEC,17,2013
+7,Baylor,13.7,Big 12,17,2013
+8,LSU,13.6,SEC,17,2013
+9,Auburn,13.2,SEC,17,2013
+10,Georgia,12.8,SEC,17,2013
+11,South Carolina,12.4,SEC,17,2013
+12,Michigan State,12.3,Big Ten,17,2013
+13,USC,11.5,Big Ten,17,2013
+14,Wisconsin,11.0,Big Ten,17,2013
+15,Stanford,10.6,ACC,17,2013
+16,Washington,10.6,Big Ten,17,2013
+17,Oklahoma State,10.5,Big 12,17,2013
+18,UCLA,10.1,Big Ten,17,2013
+19,Oklahoma,9.8,SEC,17,2013
+20,Louisville,9.6,ACC,17,2013
+21,Virginia Tech,9.3,ACC,17,2013
+22,Florida,8.8,SEC,17,2013
+23,Michigan,8.6,Big Ten,17,2013
+24,Miami,7.4,ACC,17,2013
+25,Arizona,7.3,Big 12,17,2013
+26,Arizona State,7.2,Big 12,17,2013
+27,Notre Dame,7.2,FBS Independents,17,2013
+28,Mississippi State,6.8,SEC,17,2013
+29,Iowa,6.7,Big Ten,17,2013
+30,Ole Miss,6.4,SEC,17,2013
+31,Texas,6.2,SEC,17,2013
+32,Penn State,6.1,Big Ten,17,2013
+33,North Carolina,6.1,ACC,17,2013
+34,Missouri,6.0,SEC,17,2013
+35,Nebraska,6.0,Big Ten,17,2013
+36,Marshall,5.9,Sun Belt,17,2013
+37,East Carolina,5.9,American Athletic,17,2013
+38,Bowling Green,5.7,Mid-American,17,2013
+39,Pittsburgh,4.7,ACC,17,2013
+40,Kansas State,4.5,Big 12,17,2013
+41,Texas Tech,4.4,Big 12,17,2013
+42,Vanderbilt,4.4,SEC,17,2013
+43,TCU,4.0,Big 12,17,2013
+44,BYU,3.8,Big 12,17,2013
+45,Boise State,3.7,Mountain West,17,2013
+46,Cincinnati,3.7,Big 12,17,2013
+47,Tennessee,3.1,SEC,17,2013
+48,UCF,2.7,Big 12,17,2013
+49,Georgia Tech,2.6,ACC,17,2013
+50,Oregon State,2.5,Pac-12,17,2013
+51,Northwestern,2.4,Big Ten,17,2013
+52,Houston,2.2,Big 12,17,2013
+53,Northern Illinois,1.6,Mid-American,17,2013
+54,Minnesota,1.6,Big Ten,17,2013
+55,Navy,1.1,American Athletic,17,2013
+56,Ball State,1.1,Mid-American,17,2013
+57,Maryland,0.3,Big Ten,17,2013
+58,Duke,0.3,ACC,17,2013
+59,Utah,0.3,Big 12,17,2013
+60,Indiana,-0.1,Big Ten,17,2013
+61,Fresno State,-0.2,Mountain West,17,2013
+62,Colorado State,-0.2,Mountain West,17,2013
+63,North Texas,-0.5,American Athletic,17,2013
+64,Utah State,-0.6,Mountain West,17,2013
+65,West Virginia,-0.7,Big 12,17,2013
+66,Louisiana,-0.7,Sun Belt,17,2013
+67,Boston College,-0.8,ACC,17,2013
+68,Rice,-0.9,American Athletic,17,2013
+69,Rutgers,-0.9,Big Ten,17,2013
+70,Virginia,-0.9,ACC,17,2013
+71,Western Kentucky,-1.2,Conference USA,17,2013
+72,Florida Atlantic,-1.4,American Athletic,17,2013
+73,Arkansas,-1.5,SEC,17,2013
+74,Arkansas State,-1.8,Sun Belt,17,2013
+75,Syracuse,-2.1,ACC,17,2013
+76,Illinois,-2.6,Big Ten,17,2013
+77,Iowa State,-2.7,Big 12,17,2013
+78,Tulane,-2.9,American Athletic,17,2013
+79,Toledo,-3.5,Mid-American,17,2013
+80,NC State,-3.7,ACC,17,2013
+81,Buffalo,-3.9,Mid-American,17,2013
+82,Washington State,-4.1,Pac-12,17,2013
+83,Wake Forest,-4.3,ACC,17,2013
+84,Kentucky,-4.4,SEC,17,2013
+85,California,-4.4,ACC,17,2013
+86,Temple,-4.9,American Athletic,17,2013
+87,South Alabama,-5.1,Sun Belt,17,2013
+88,Troy,-6.5,Sun Belt,17,2013
+89,San Diego State,-6.5,Mountain West,17,2013
+90,SMU,-6.5,ACC,17,2013
+91,Colorado,-6.6,Big 12,17,2013
+92,Middle Tennessee,-7.4,Conference USA,17,2013
+93,Ohio,-7.6,Mid-American,17,2013
+94,Memphis,-7.6,American Athletic,17,2013
+95,UNLV,-7.7,Mountain West,17,2013
+96,UConn,-7.7,FBS Independents,17,2013
+97,Louisiana Tech,-7.8,Conference USA,17,2013
+98,Texas State,-7.9,Sun Belt,17,2013
+99,Nevada,-7.9,Mountain West,17,2013
+100,Wyoming,-7.9,Mountain West,17,2013
+101,San José State,-8.6,Mountain West,17,2013
+102,Kansas,-8.6,Big 12,17,2013
+103,New Mexico,-8.6,Mountain West,17,2013
+104,Central Michigan,-9.0,Mid-American,17,2013
+105,Purdue,-9.4,Big Ten,17,2013
+106,Tulsa,-9.6,American Athletic,17,2013
+107,Army,-9.7,American Athletic,17,2013
+108,UAB,-9.9,American Athletic,17,2013
+109,UTSA,-10.4,American Athletic,17,2013
+110,South Florida,-11.2,American Athletic,17,2013
+111,Kent State,-11.3,Mid-American,17,2013
+112,Hawai'i,-11.4,Mountain West,17,2013
+113,Akron,-11.6,Mid-American,17,2013
+114,UL Monroe,-11.9,Sun Belt,17,2013
+115,Air Force,-11.9,Mountain West,17,2013
+116,UTEP,-13.4,Conference USA,17,2013
+117,New Mexico State,-14.1,Conference USA,17,2013
+118,Western Michigan,-15.3,Mid-American,17,2013
+119,Southern Miss,-17.1,Sun Belt,17,2013
+120,Florida International,-17.2,Conference USA,17,2013
+121,Miami (OH),-17.4,Mid-American,17,2013
+122,Eastern Michigan,-18.3,Mid-American,17,2013
+123,Georgia State,-20.3,Sun Belt,17,2013
+124,Massachusetts,-20.4,FBS Independents,17,2013

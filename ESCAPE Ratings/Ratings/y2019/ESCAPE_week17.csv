@@ -1,0 +1,131 @@
+,team,power_rating,conference,week,year
+1,Ohio State,25.0,Big Ten,17,2019
+2,Alabama,24.8,SEC,17,2019
+3,Clemson,23.8,ACC,17,2019
+4,LSU,23.2,SEC,17,2019
+5,Georgia,18.0,SEC,17,2019
+6,Penn State,15.3,Big Ten,17,2019
+7,Oklahoma,14.8,SEC,17,2019
+8,Wisconsin,14.1,Big Ten,17,2019
+9,Michigan,13.2,Big Ten,17,2019
+10,Oregon,13.0,Big Ten,17,2019
+11,Auburn,12.9,SEC,17,2019
+12,Utah,12.7,Big 12,17,2019
+13,Notre Dame,12.6,FBS Independents,17,2019
+14,Florida,12.1,SEC,17,2019
+15,Texas A&M,10.6,SEC,17,2019
+16,USC,10.1,Big Ten,17,2019
+17,Washington,9.9,Big Ten,17,2019
+18,UCF,9.0,Big 12,17,2019
+19,Texas,8.6,SEC,17,2019
+20,Air Force,8.3,Mountain West,17,2019
+21,Minnesota,8.2,Big Ten,17,2019
+22,Memphis,8.0,American Athletic,17,2019
+23,App State,7.5,Sun Belt,17,2019
+24,Navy,7.4,American Athletic,17,2019
+25,Virginia Tech,7.3,ACC,17,2019
+26,Missouri,7.1,SEC,17,2019
+27,North Carolina,7.1,ACC,17,2019
+28,Miami,6.7,ACC,17,2019
+29,Louisiana,6.4,Sun Belt,17,2019
+30,Baylor,6.0,Big 12,17,2019
+31,Iowa,5.8,Big Ten,17,2019
+32,Indiana,5.7,Big Ten,17,2019
+33,Cincinnati,4.9,Big 12,17,2019
+34,Kentucky,4.9,SEC,17,2019
+35,Tennessee,4.8,SEC,17,2019
+36,Boise State,4.8,Mountain West,17,2019
+37,Virginia,4.8,ACC,17,2019
+38,TCU,4.7,Big 12,17,2019
+39,Florida State,4.6,ACC,17,2019
+40,Louisiana Tech,4.5,Conference USA,17,2019
+41,Florida Atlantic,4.4,American Athletic,17,2019
+42,Iowa State,2.9,Big 12,17,2019
+43,Washington State,2.9,Pac-12,17,2019
+44,Oklahoma State,2.9,Big 12,17,2019
+45,SMU,2.9,ACC,17,2019
+46,Nebraska,2.8,Big Ten,17,2019
+47,Tulane,2.8,American Athletic,17,2019
+48,Mississippi State,2.8,SEC,17,2019
+49,Pittsburgh,2.7,ACC,17,2019
+50,Western Kentucky,2.6,Conference USA,17,2019
+51,BYU,2.4,Big 12,17,2019
+52,Ole Miss,2.0,SEC,17,2019
+53,Michigan State,1.8,Big Ten,17,2019
+54,South Carolina,1.6,SEC,17,2019
+55,Kansas State,1.5,Big 12,17,2019
+56,Arizona State,1.5,Big 12,17,2019
+57,Louisville,1.4,ACC,17,2019
+58,San Diego State,1.1,Mountain West,17,2019
+59,Army,1.0,American Athletic,17,2019
+60,Temple,0.7,American Athletic,17,2019
+61,Ohio,0.3,Mid-American,17,2019
+62,Texas Tech,-0.1,Big 12,17,2019
+63,Wake Forest,-0.3,ACC,17,2019
+64,Buffalo,-0.3,Mid-American,17,2019
+65,Duke,-0.7,ACC,17,2019
+66,Illinois,-0.8,Big Ten,17,2019
+67,Wyoming,-0.9,Mountain West,17,2019
+68,Oregon State,-0.9,Pac-12,17,2019
+69,UAB,-1.0,American Athletic,17,2019
+70,Hawai'i,-1.0,Mountain West,17,2019
+71,Stanford,-1.0,ACC,17,2019
+72,Arkansas State,-1.0,Sun Belt,17,2019
+73,California,-1.2,ACC,17,2019
+74,Western Michigan,-1.2,Mid-American,17,2019
+75,Colorado State,-1.3,Mountain West,17,2019
+76,Fresno State,-2.1,Mountain West,17,2019
+77,Southern Miss,-2.2,Sun Belt,17,2019
+78,Central Michigan,-2.2,Mid-American,17,2019
+79,Marshall,-2.3,Sun Belt,17,2019
+80,NC State,-2.6,ACC,17,2019
+81,Troy,-2.6,Sun Belt,17,2019
+82,Maryland,-2.8,Big Ten,17,2019
+83,UCLA,-3.6,Big Ten,17,2019
+84,Syracuse,-3.7,ACC,17,2019
+85,Boston College,-3.8,ACC,17,2019
+86,Tulsa,-3.9,American Athletic,17,2019
+87,Utah State,-4.0,Mountain West,17,2019
+88,Colorado,-4.0,Big 12,17,2019
+89,Houston,-4.1,Big 12,17,2019
+90,San José State,-4.1,Mountain West,17,2019
+91,Florida International,-4.2,Conference USA,17,2019
+92,North Texas,-4.5,American Athletic,17,2019
+93,West Virginia,-4.6,Big 12,17,2019
+94,Ball State,-4.7,Mid-American,17,2019
+95,Purdue,-5.7,Big Ten,17,2019
+96,Liberty,-5.8,Conference USA,17,2019
+97,Arizona,-5.8,Big 12,17,2019
+98,Northwestern,-5.9,Big Ten,17,2019
+99,Charlotte,-6.3,American Athletic,17,2019
+100,Eastern Michigan,-6.4,Mid-American,17,2019
+101,South Florida,-6.6,American Athletic,17,2019
+102,Georgia State,-6.7,Sun Belt,17,2019
+103,Middle Tennessee,-7.0,Conference USA,17,2019
+104,Georgia Southern,-7.8,Sun Belt,17,2019
+105,UL Monroe,-7.8,Sun Belt,17,2019
+106,Miami (OH),-7.9,Mid-American,17,2019
+107,Nevada,-8.0,Mountain West,17,2019
+108,East Carolina,-8.2,American Athletic,17,2019
+109,Toledo,-8.2,Mid-American,17,2019
+110,Rice,-8.4,American Athletic,17,2019
+111,Kent State,-8.4,Mid-American,17,2019
+112,Northern Illinois,-8.8,Mid-American,17,2019
+113,Arkansas,-8.9,SEC,17,2019
+114,Vanderbilt,-9.8,SEC,17,2019
+115,Coastal Carolina,-9.9,Sun Belt,17,2019
+116,Kansas,-10.1,Big 12,17,2019
+117,UNLV,-10.1,Mountain West,17,2019
+118,New Mexico,-10.7,Mountain West,17,2019
+119,Georgia Tech,-11.2,ACC,17,2019
+120,UTSA,-12.3,American Athletic,17,2019
+121,South Alabama,-13.0,Sun Belt,17,2019
+122,Rutgers,-13.3,Big Ten,17,2019
+123,UTEP,-14.0,Conference USA,17,2019
+124,UConn,-14.8,FBS Independents,17,2019
+125,Texas State,-15.2,Sun Belt,17,2019
+126,New Mexico State,-15.2,Conference USA,17,2019
+127,Old Dominion,-16.0,Sun Belt,17,2019
+128,Bowling Green,-19.5,Mid-American,17,2019
+129,Akron,-21.8,Mid-American,17,2019
+130,Massachusetts,-25.0,FBS Independents,17,2019

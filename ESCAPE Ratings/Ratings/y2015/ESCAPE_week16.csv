@@ -1,0 +1,128 @@
+,team,power_rating,conference,week,year
+1,Ohio State,26.4,Big Ten,16,2015
+2,Alabama,26.4,SEC,16,2015
+3,Ole Miss,21.2,SEC,16,2015
+4,Oklahoma,20.3,SEC,16,2015
+5,Clemson,20.1,ACC,16,2015
+6,Stanford,20.0,ACC,16,2015
+7,Florida State,19.9,ACC,16,2015
+8,Georgia,19.6,SEC,16,2015
+9,USC,19.1,Big Ten,16,2015
+10,Michigan,18.7,Big Ten,16,2015
+11,Tennessee,17.9,SEC,16,2015
+12,Notre Dame,17.6,FBS Independents,16,2015
+13,LSU,16.6,SEC,16,2015
+14,Arkansas,16.0,SEC,16,2015
+15,North Carolina,14.4,ACC,16,2015
+16,UCLA,13.9,Big Ten,16,2015
+17,Baylor,13.6,Big 12,16,2015
+18,TCU,13.2,Big 12,16,2015
+19,Texas A&M,13.1,SEC,16,2015
+20,Florida,12.9,SEC,16,2015
+21,Auburn,12.8,SEC,16,2015
+22,Wisconsin,12.2,Big Ten,16,2015
+23,Mississippi State,12.0,SEC,16,2015
+24,Oklahoma State,11.6,Big 12,16,2015
+25,Oregon,11.6,Big Ten,16,2015
+26,Boise State,11.2,Mountain West,16,2015
+27,California,11.0,ACC,16,2015
+28,Michigan State,10.8,Big Ten,16,2015
+29,West Virginia,10.7,Big 12,16,2015
+30,Washington,10.2,Big Ten,16,2015
+31,NC State,10.2,ACC,16,2015
+32,Navy,10.2,American Athletic,16,2015
+33,San Diego State,9.6,Mountain West,16,2015
+34,Houston,8.7,Big 12,16,2015
+35,Iowa,8.4,Big Ten,16,2015
+36,Miami,7.6,ACC,16,2015
+37,Virginia Tech,6.9,ACC,16,2015
+38,Pittsburgh,6.2,ACC,16,2015
+39,Nebraska,5.9,Big Ten,16,2015
+40,Utah,5.9,Big 12,16,2015
+41,BYU,5.8,Big 12,16,2015
+42,Western Kentucky,5.5,Conference USA,16,2015
+43,Penn State,5.1,Big Ten,16,2015
+44,Louisville,5.1,ACC,16,2015
+45,Arizona State,4.8,Big 12,16,2015
+46,Bowling Green,4.8,Mid-American,16,2015
+47,Arizona,4.6,Big 12,16,2015
+48,App State,4.3,Sun Belt,16,2015
+49,Texas,4.1,SEC,16,2015
+50,Georgia Tech,3.8,ACC,16,2015
+51,Memphis,3.8,American Athletic,16,2015
+52,South Florida,3.6,American Athletic,16,2015
+53,Washington State,3.4,Pac-12,16,2015
+54,Marshall,3.4,Sun Belt,16,2015
+55,Southern Miss,3.2,Sun Belt,16,2015
+56,Louisiana Tech,3.0,Conference USA,16,2015
+57,Texas Tech,2.7,Big 12,16,2015
+58,Duke,2.6,ACC,16,2015
+59,South Carolina,2.6,SEC,16,2015
+60,Boston College,2.3,ACC,16,2015
+61,Indiana,1.5,Big Ten,16,2015
+62,Western Michigan,0.1,Mid-American,16,2015
+63,Georgia Southern,-0.1,Sun Belt,16,2015
+64,Kansas State,-0.2,Big 12,16,2015
+65,Toledo,-0.2,Mid-American,16,2015
+66,Cincinnati,-0.3,Big 12,16,2015
+67,Air Force,-0.4,Mountain West,16,2015
+68,Vanderbilt,-0.4,SEC,16,2015
+69,Central Michigan,-0.6,Mid-American,16,2015
+70,Illinois,-1.1,Big Ten,16,2015
+71,Missouri,-1.8,SEC,16,2015
+72,Temple,-2.4,American Athletic,16,2015
+73,Minnesota,-2.4,Big Ten,16,2015
+74,Virginia,-2.5,ACC,16,2015
+75,Arkansas State,-2.6,Sun Belt,16,2015
+76,Northwestern,-2.6,Big Ten,16,2015
+77,Akron,-2.9,Mid-American,16,2015
+78,East Carolina,-3.0,American Athletic,16,2015
+79,Kentucky,-3.3,SEC,16,2015
+80,Middle Tennessee,-3.4,Conference USA,16,2015
+81,Colorado State,-4.3,Mountain West,16,2015
+82,Syracuse,-4.5,ACC,16,2015
+83,Colorado,-4.6,Big 12,16,2015
+84,Iowa State,-5.2,Big 12,16,2015
+85,Utah State,-5.2,Mountain West,16,2015
+86,Rutgers,-5.3,Big Ten,16,2015
+87,San José State,-5.3,Mountain West,16,2015
+88,UConn,-5.5,FBS Independents,16,2015
+89,Georgia State,-5.8,Sun Belt,16,2015
+90,Nevada,-6.0,Mountain West,16,2015
+91,Tulsa,-6.8,American Athletic,16,2015
+92,Northern Illinois,-7.4,Mid-American,16,2015
+93,Louisiana,-7.9,Sun Belt,16,2015
+94,Purdue,-8.1,Big Ten,16,2015
+95,Ohio,-8.1,Mid-American,16,2015
+96,Army,-8.4,American Athletic,16,2015
+97,Florida International,-8.4,Conference USA,16,2015
+98,Troy,-10.4,Sun Belt,16,2015
+99,Wake Forest,-10.4,ACC,16,2015
+100,Maryland,-10.7,Big Ten,16,2015
+101,Buffalo,-11.2,Mid-American,16,2015
+102,UNLV,-11.2,Mountain West,16,2015
+103,New Mexico,-12.1,Mountain West,16,2015
+104,Oregon State,-12.7,Pac-12,16,2015
+105,Massachusetts,-13.5,FBS Independents,16,2015
+106,Florida Atlantic,-13.6,American Athletic,16,2015
+107,Texas State,-14.3,Sun Belt,16,2015
+108,SMU,-14.3,ACC,16,2015
+109,Rice,-14.5,American Athletic,16,2015
+110,Ball State,-14.6,Mid-American,16,2015
+111,UTSA,-14.6,American Athletic,16,2015
+112,Tulane,-15.4,American Athletic,16,2015
+113,Old Dominion,-15.9,Sun Belt,16,2015
+114,South Alabama,-16.1,Sun Belt,16,2015
+115,Fresno State,-16.3,Mountain West,16,2015
+116,Wyoming,-18.3,Mountain West,16,2015
+117,Miami (OH),-19.2,Mid-American,16,2015
+118,Hawai'i,-20.0,Mountain West,16,2015
+119,Eastern Michigan,-20.6,Mid-American,16,2015
+120,UL Monroe,-21.3,Sun Belt,16,2015
+121,UTEP,-21.8,Conference USA,16,2015
+122,Kent State,-21.9,Mid-American,16,2015
+123,UCF,-22.0,Big 12,16,2015
+124,Charlotte,-22.0,American Athletic,16,2015
+125,North Texas,-22.1,American Athletic,16,2015
+126,New Mexico State,-23.1,Conference USA,16,2015
+127,Kansas,-23.6,Big 12,16,2015

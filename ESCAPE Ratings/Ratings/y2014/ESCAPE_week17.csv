@@ -1,0 +1,128 @@
+,team,power_rating,conference,week,year
+1,Alabama,27.2,SEC,17,2014
+2,Ohio State,25.3,Big Ten,17,2014
+3,Georgia,22.0,SEC,17,2014
+4,Oregon,16.3,Big Ten,17,2014
+5,Auburn,15.8,SEC,17,2014
+6,Michigan State,15.7,Big Ten,17,2014
+7,Oklahoma,15.6,SEC,17,2014
+8,Florida State,15.5,ACC,17,2014
+9,Mississippi State,15.4,SEC,17,2014
+10,Miami,15.4,ACC,17,2014
+11,USC,15.3,Big Ten,17,2014
+12,TCU,15.2,Big 12,17,2014
+13,Ole Miss,15.1,SEC,17,2014
+14,LSU,15.1,SEC,17,2014
+15,Florida,14.8,SEC,17,2014
+16,Texas A&M,14.0,SEC,17,2014
+17,Clemson,13.6,ACC,17,2014
+18,Baylor,13.4,Big 12,17,2014
+19,UCLA,13.0,Big Ten,17,2014
+20,Stanford,12.9,ACC,17,2014
+21,Arkansas,12.5,SEC,17,2014
+22,Wisconsin,12.1,Big Ten,17,2014
+23,Notre Dame,11.3,FBS Independents,17,2014
+24,Michigan,10.4,Big Ten,17,2014
+25,Tennessee,10.2,SEC,17,2014
+26,Louisville,10.2,ACC,17,2014
+27,Boise State,9.8,Mountain West,17,2014
+28,Nebraska,9.3,Big Ten,17,2014
+29,Arizona State,8.2,Big 12,17,2014
+30,Missouri,8.1,SEC,17,2014
+31,Texas,8.0,SEC,17,2014
+32,Georgia Tech,8.0,ACC,17,2014
+33,Washington,7.6,Big Ten,17,2014
+34,Virginia Tech,7.2,ACC,17,2014
+35,Marshall,6.7,Sun Belt,17,2014
+36,Pittsburgh,6.0,ACC,17,2014
+37,West Virginia,5.8,Big 12,17,2014
+38,Kansas State,5.7,Big 12,17,2014
+39,Utah,5.7,Big 12,17,2014
+40,South Carolina,5.3,SEC,17,2014
+41,Arizona,5.1,Big 12,17,2014
+42,Houston,5.0,Big 12,17,2014
+43,Penn State,4.9,Big Ten,17,2014
+44,NC State,4.2,ACC,17,2014
+45,BYU,3.8,Big 12,17,2014
+46,East Carolina,3.1,American Athletic,17,2014
+47,Duke,3.1,ACC,17,2014
+48,Virginia,2.3,ACC,17,2014
+49,Minnesota,2.2,Big Ten,17,2014
+50,Oklahoma State,1.0,Big 12,17,2014
+51,Cincinnati,1.0,Big 12,17,2014
+52,Boston College,0.9,ACC,17,2014
+53,Maryland,0.4,Big Ten,17,2014
+54,North Carolina,0.4,ACC,17,2014
+55,Memphis,0.4,American Athletic,17,2014
+56,UCF,0.3,Big 12,17,2014
+57,Iowa,0.3,Big Ten,17,2014
+58,California,0.2,ACC,17,2014
+59,Louisiana Tech,0.2,Conference USA,17,2014
+60,Kentucky,0.2,SEC,17,2014
+61,Toledo,0.2,Mid-American,17,2014
+62,Western Michigan,0.1,Mid-American,17,2014
+63,Colorado State,0.0,Mountain West,17,2014
+64,San Diego State,-0.2,Mountain West,17,2014
+65,Northern Illinois,-0.8,Mid-American,17,2014
+66,Rutgers,-0.9,Big Ten,17,2014
+67,Oregon State,-1.0,Pac-12,17,2014
+68,Texas Tech,-1.3,Big 12,17,2014
+69,Utah State,-1.4,Mountain West,17,2014
+70,Indiana,-1.5,Big Ten,17,2014
+71,Louisiana,-1.6,Sun Belt,17,2014
+72,Air Force,-1.7,Mountain West,17,2014
+73,Temple,-1.7,American Athletic,17,2014
+74,Northwestern,-2.0,Big Ten,17,2014
+75,UAB,-2.0,American Athletic,17,2014
+76,Georgia Southern,-2.1,Sun Belt,17,2014
+77,Texas State,-2.3,Sun Belt,17,2014
+78,Navy,-3.2,American Athletic,17,2014
+79,Arkansas State,-3.8,Sun Belt,17,2014
+80,Washington State,-3.8,Pac-12,17,2014
+81,Western Kentucky,-4.1,Conference USA,17,2014
+82,Syracuse,-4.1,ACC,17,2014
+83,Illinois,-4.3,Big Ten,17,2014
+84,Colorado,-4.5,Big 12,17,2014
+85,Rice,-4.7,American Athletic,17,2014
+86,South Florida,-4.9,American Athletic,17,2014
+87,App State,-5.2,Sun Belt,17,2014
+88,Vanderbilt,-5.4,SEC,17,2014
+89,Nevada,-6.3,Mountain West,17,2014
+90,Central Michigan,-6.5,Mid-American,17,2014
+91,Buffalo,-7.1,Mid-American,17,2014
+92,Wake Forest,-7.1,ACC,17,2014
+93,Purdue,-7.2,Big Ten,17,2014
+94,Middle Tennessee,-7.8,Conference USA,17,2014
+95,Ball State,-8.3,Mid-American,17,2014
+96,Iowa State,-8.4,Big 12,17,2014
+97,Fresno State,-8.6,Mountain West,17,2014
+98,Ohio,-8.7,Mid-American,17,2014
+99,Southern Miss,-8.8,Sun Belt,17,2014
+100,Bowling Green,-9.1,Mid-American,17,2014
+101,North Texas,-9.3,American Athletic,17,2014
+102,New Mexico,-9.5,Mountain West,17,2014
+103,Akron,-10.2,Mid-American,17,2014
+104,South Alabama,-10.5,Sun Belt,17,2014
+105,UConn,-10.5,FBS Independents,17,2014
+106,Florida International,-10.5,Conference USA,17,2014
+107,Kansas,-11.2,Big 12,17,2014
+108,Florida Atlantic,-11.7,American Athletic,17,2014
+109,San José State,-11.8,Mountain West,17,2014
+110,UTSA,-12.2,American Athletic,17,2014
+111,Hawai'i,-12.3,Mountain West,17,2014
+112,UTEP,-12.4,Conference USA,17,2014
+113,Tulane,-12.5,American Athletic,17,2014
+114,Tulsa,-12.7,American Athletic,17,2014
+115,Old Dominion,-12.8,Sun Belt,17,2014
+116,Massachusetts,-12.8,FBS Independents,17,2014
+117,Kent State,-12.9,Mid-American,17,2014
+118,Miami (OH),-13.7,Mid-American,17,2014
+119,Troy,-13.7,Sun Belt,17,2014
+120,UL Monroe,-14.6,Sun Belt,17,2014
+121,Army,-15.0,American Athletic,17,2014
+122,UNLV,-15.9,Mountain West,17,2014
+123,Wyoming,-16.4,Mountain West,17,2014
+124,New Mexico State,-20.4,Conference USA,17,2014
+125,SMU,-21.3,ACC,17,2014
+126,Georgia State,-21.8,Sun Belt,17,2014
+127,Eastern Michigan,-22.8,Mid-American,17,2014

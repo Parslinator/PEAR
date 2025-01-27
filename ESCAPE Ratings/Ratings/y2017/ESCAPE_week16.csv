@@ -1,0 +1,128 @@
+,team,power_rating,conference,week,year
+1,Alabama,25.8,SEC,16,2017
+2,Ohio State,20.0,Big Ten,16,2017
+3,Clemson,18.2,ACC,16,2017
+4,LSU,18.1,SEC,16,2017
+5,Georgia,18.0,SEC,16,2017
+6,Penn State,17.3,Big Ten,16,2017
+7,Washington,17.2,Big Ten,16,2017
+8,Wisconsin,14.6,Big Ten,16,2017
+9,Oklahoma,14.5,SEC,16,2017
+10,Notre Dame,14.3,FBS Independents,16,2017
+11,Auburn,13.9,SEC,16,2017
+12,USC,13.8,Big Ten,16,2017
+13,Stanford,13.0,ACC,16,2017
+14,Michigan,12.9,Big Ten,16,2017
+15,TCU,12.8,Big 12,16,2017
+16,Texas,12.6,SEC,16,2017
+17,Virginia Tech,12.3,ACC,16,2017
+18,Miami,10.9,ACC,16,2017
+19,Florida State,10.2,ACC,16,2017
+20,UCF,10.0,Big 12,16,2017
+21,Texas A&M,9.8,SEC,16,2017
+22,Florida,9.1,SEC,16,2017
+23,Mississippi State,8.8,SEC,16,2017
+24,Oregon,8.0,Big Ten,16,2017
+25,Oklahoma State,7.7,Big 12,16,2017
+26,South Carolina,7.6,SEC,16,2017
+27,Northwestern,7.5,Big Ten,16,2017
+28,Louisville,6.2,ACC,16,2017
+29,NC State,6.1,ACC,16,2017
+30,Iowa,6.1,Big Ten,16,2017
+31,Michigan State,6.1,Big Ten,16,2017
+32,South Florida,5.8,American Athletic,16,2017
+33,Missouri,5.8,SEC,16,2017
+34,UCLA,5.6,Big Ten,16,2017
+35,West Virginia,5.4,Big 12,16,2017
+36,Iowa State,5.3,Big 12,16,2017
+37,Ole Miss,4.8,SEC,16,2017
+38,Florida Atlantic,4.4,American Athletic,16,2017
+39,Kansas State,3.3,Big 12,16,2017
+40,Boise State,3.2,Mountain West,16,2017
+41,Arizona,3.1,Big 12,16,2017
+42,Utah,3.1,Big 12,16,2017
+43,Texas Tech,3.1,Big 12,16,2017
+44,Pittsburgh,3.0,ACC,16,2017
+45,Arizona State,2.9,Big 12,16,2017
+46,Houston,2.8,Big 12,16,2017
+47,Wake Forest,2.6,ACC,16,2017
+48,San Diego State,2.4,Mountain West,16,2017
+49,Memphis,2.2,American Athletic,16,2017
+50,Arkansas,2.1,SEC,16,2017
+51,Purdue,1.9,Big Ten,16,2017
+52,Vanderbilt,1.9,SEC,16,2017
+53,Duke,1.1,ACC,16,2017
+54,Washington State,0.9,Pac-12,16,2017
+55,Georgia Tech,0.9,ACC,16,2017
+56,Boston College,0.9,ACC,16,2017
+57,Indiana,0.9,Big Ten,16,2017
+58,Colorado State,0.8,Mountain West,16,2017
+59,Tennessee,0.7,SEC,16,2017
+60,Troy,0.6,Sun Belt,16,2017
+61,Ohio,0.5,Mid-American,16,2017
+62,Fresno State,0.4,Mountain West,16,2017
+63,Kentucky,0.3,SEC,16,2017
+64,North Carolina,0.2,ACC,16,2017
+65,Toledo,0.1,Mid-American,16,2017
+66,Virginia,-0.1,ACC,16,2017
+67,SMU,-0.3,ACC,16,2017
+68,Northern Illinois,-0.3,Mid-American,16,2017
+69,Arkansas State,-0.5,Sun Belt,16,2017
+70,Navy,-0.8,American Athletic,16,2017
+71,Army,-1.0,American Athletic,16,2017
+72,App State,-1.4,Sun Belt,16,2017
+73,California,-1.4,ACC,16,2017
+74,Marshall,-1.8,Sun Belt,16,2017
+75,Colorado,-2.1,Big 12,16,2017
+76,Louisiana Tech,-2.1,Conference USA,16,2017
+77,Southern Miss,-2.5,Sun Belt,16,2017
+78,Nebraska,-3.3,Big Ten,16,2017
+79,Minnesota,-3.4,Big Ten,16,2017
+80,Syracuse,-3.6,ACC,16,2017
+81,Miami (OH),-3.7,Mid-American,16,2017
+82,Wyoming,-3.7,Mountain West,16,2017
+83,Baylor,-3.7,Big 12,16,2017
+84,Utah State,-3.8,Mountain West,16,2017
+85,Western Michigan,-3.8,Mid-American,16,2017
+86,Rutgers,-4.2,Big Ten,16,2017
+87,Temple,-4.2,American Athletic,16,2017
+88,UTSA,-4.7,American Athletic,16,2017
+89,Middle Tennessee,-5.1,Conference USA,16,2017
+90,BYU,-5.1,Big 12,16,2017
+91,Air Force,-5.5,Mountain West,16,2017
+92,Central Michigan,-5.5,Mid-American,16,2017
+93,Maryland,-5.8,Big Ten,16,2017
+94,Tulane,-5.9,American Athletic,16,2017
+95,Massachusetts,-5.9,FBS Independents,16,2017
+96,Eastern Michigan,-5.9,Mid-American,16,2017
+97,Western Kentucky,-6.0,Conference USA,16,2017
+98,Cincinnati,-6.2,Big 12,16,2017
+99,North Texas,-6.3,American Athletic,16,2017
+100,Georgia State,-6.5,Sun Belt,16,2017
+101,Tulsa,-7.0,American Athletic,16,2017
+102,Buffalo,-7.3,Mid-American,16,2017
+103,Florida International,-7.3,Conference USA,16,2017
+104,South Alabama,-7.5,Sun Belt,16,2017
+105,Nevada,-7.6,Mountain West,16,2017
+106,Georgia Southern,-8.5,Sun Belt,16,2017
+107,New Mexico State,-8.5,Conference USA,16,2017
+108,Akron,-9.6,Mid-American,16,2017
+109,Illinois,-11.1,Big Ten,16,2017
+110,UNLV,-11.2,Mountain West,16,2017
+111,Louisiana,-11.4,Sun Belt,16,2017
+112,UConn,-11.7,FBS Independents,16,2017
+113,UL Monroe,-12.2,Sun Belt,16,2017
+114,Kansas,-12.4,Big 12,16,2017
+115,Hawai'i,-12.5,Mountain West,16,2017
+116,East Carolina,-12.7,American Athletic,16,2017
+117,Bowling Green,-12.8,Mid-American,16,2017
+118,New Mexico,-13.0,Mountain West,16,2017
+119,Oregon State,-13.8,Pac-12,16,2017
+120,Texas State,-13.8,Sun Belt,16,2017
+121,Old Dominion,-14.5,Sun Belt,16,2017
+122,Ball State,-16.1,Mid-American,16,2017
+123,Rice,-16.7,American Athletic,16,2017
+124,Charlotte,-18.0,American Athletic,16,2017
+125,San José State,-19.0,Mountain West,16,2017
+126,Kent State,-19.7,Mid-American,16,2017
+127,UTEP,-24.2,Conference USA,16,2017

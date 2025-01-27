@@ -1,0 +1,128 @@
+,team,power_rating,conference,week,year
+1,Alabama,26.5,SEC,17,2020
+2,Oklahoma,19.4,SEC,17,2020
+3,Clemson,17.6,ACC,17,2020
+4,Ohio State,17.5,Big Ten,17,2020
+5,Notre Dame,17.0,FBS Independents,17,2020
+6,Texas A&M,15.2,SEC,17,2020
+7,USC,14.6,Big Ten,17,2020
+8,Georgia,13.8,SEC,17,2020
+9,Texas,13.4,SEC,17,2020
+10,BYU,12.9,Big 12,17,2020
+11,Florida,12.4,SEC,17,2020
+12,Iowa,10.0,Big Ten,17,2020
+13,Miami,9.5,ACC,17,2020
+14,Penn State,9.0,Big Ten,17,2020
+15,North Carolina,8.8,ACC,17,2020
+16,Cincinnati,8.7,Big 12,17,2020
+17,Northwestern,8.6,Big Ten,17,2020
+18,Washington,8.5,Big Ten,17,2020
+19,Iowa State,7.9,Big 12,17,2020
+20,Auburn,7.7,SEC,17,2020
+21,UCF,7.7,Big 12,17,2020
+22,LSU,7.6,SEC,17,2020
+23,Pittsburgh,7.4,ACC,17,2020
+24,Wisconsin,6.6,Big Ten,17,2020
+25,Arizona State,6.0,Big 12,17,2020
+26,Oregon,5.9,Big Ten,17,2020
+27,TCU,5.8,Big 12,17,2020
+28,West Virginia,5.3,Big 12,17,2020
+29,Indiana,5.2,Big Ten,17,2020
+30,Utah,5.0,Big 12,17,2020
+31,Oklahoma State,5.0,Big 12,17,2020
+32,Arkansas,5.0,SEC,17,2020
+33,Stanford,4.8,ACC,17,2020
+34,Michigan,4.8,Big Ten,17,2020
+35,Boise State,4.7,Mountain West,17,2020
+36,UCLA,4.6,Big Ten,17,2020
+37,Nebraska,4.3,Big Ten,17,2020
+38,Ole Miss,4.1,SEC,17,2020
+39,Memphis,4.1,American Athletic,17,2020
+40,Purdue,4.1,Big Ten,17,2020
+41,Marshall,3.7,Sun Belt,17,2020
+42,Army,3.6,American Athletic,17,2020
+43,Coastal Carolina,3.3,Sun Belt,17,2020
+44,NC State,3.2,ACC,17,2020
+45,SMU,2.8,ACC,17,2020
+46,Virginia Tech,2.7,ACC,17,2020
+47,App State,2.4,Sun Belt,17,2020
+48,Louisville,2.3,ACC,17,2020
+49,Louisiana,2.2,Sun Belt,17,2020
+50,Baylor,1.6,Big 12,17,2020
+51,Tennessee,1.6,SEC,17,2020
+52,Kentucky,1.5,SEC,17,2020
+53,Buffalo,1.5,Mid-American,17,2020
+54,UAB,1.5,American Athletic,17,2020
+55,San Diego State,1.4,Mountain West,17,2020
+56,Nevada,1.4,Mountain West,17,2020
+57,Western Michigan,1.4,Mid-American,17,2020
+58,Air Force,1.3,Mountain West,17,2020
+59,Colorado,0.9,Big 12,17,2020
+60,Missouri,0.8,SEC,17,2020
+61,Tulane,0.4,American Athletic,17,2020
+62,Toledo,0.4,Mid-American,17,2020
+63,Fresno State,0.3,Mountain West,17,2020
+64,Boston College,-0.3,ACC,17,2020
+65,Washington State,-0.3,Pac-12,17,2020
+66,California,-0.7,ACC,17,2020
+67,Tulsa,-0.8,American Athletic,17,2020
+68,Minnesota,-0.8,Big Ten,17,2020
+69,South Carolina,-0.9,SEC,17,2020
+70,Wake Forest,-0.9,ACC,17,2020
+71,Florida Atlantic,-0.9,American Athletic,17,2020
+72,Georgia Southern,-1.0,Sun Belt,17,2020
+73,Oregon State,-1.0,Pac-12,17,2020
+74,San José State,-1.0,Mountain West,17,2020
+75,Virginia,-1.6,ACC,17,2020
+76,Mississippi State,-1.7,SEC,17,2020
+77,Texas Tech,-1.8,Big 12,17,2020
+78,Houston,-2.0,Big 12,17,2020
+79,Kansas State,-2.0,Big 12,17,2020
+80,Maryland,-2.1,Big Ten,17,2020
+81,Georgia Tech,-2.1,ACC,17,2020
+82,Rutgers,-2.4,Big Ten,17,2020
+83,Florida State,-2.4,ACC,17,2020
+84,Western Kentucky,-2.6,Conference USA,17,2020
+85,Georgia State,-2.8,Sun Belt,17,2020
+86,Ball State,-3.0,Mid-American,17,2020
+87,UTSA,-3.1,American Athletic,17,2020
+88,Rice,-3.9,American Athletic,17,2020
+89,Liberty,-4.4,Conference USA,17,2020
+90,Wyoming,-4.9,Mountain West,17,2020
+91,Illinois,-5.1,Big Ten,17,2020
+92,Kent State,-5.3,Mid-American,17,2020
+93,Colorado State,-5.4,Mountain West,17,2020
+94,Troy,-5.6,Sun Belt,17,2020
+95,Eastern Michigan,-5.7,Mid-American,17,2020
+96,Ohio,-6.2,Mid-American,17,2020
+97,East Carolina,-6.4,American Athletic,17,2020
+98,Syracuse,-6.4,ACC,17,2020
+99,Arkansas State,-6.6,Sun Belt,17,2020
+100,Duke,-6.9,ACC,17,2020
+101,Michigan State,-6.9,Big Ten,17,2020
+102,Hawai'i,-7.1,Mountain West,17,2020
+103,Temple,-7.3,American Athletic,17,2020
+104,Florida International,-7.3,Conference USA,17,2020
+105,Louisiana Tech,-7.7,Conference USA,17,2020
+106,Middle Tennessee,-7.7,Conference USA,17,2020
+107,Miami (OH),-8.1,Mid-American,17,2020
+108,Central Michigan,-8.8,Mid-American,17,2020
+109,Charlotte,-8.9,American Athletic,17,2020
+110,South Florida,-9.0,American Athletic,17,2020
+111,Navy,-9.2,American Athletic,17,2020
+112,Southern Miss,-9.2,Sun Belt,17,2020
+113,North Texas,-9.2,American Athletic,17,2020
+114,Northern Illinois,-9.4,Mid-American,17,2020
+115,Vanderbilt,-9.5,SEC,17,2020
+116,Arizona,-9.7,Big 12,17,2020
+117,UTEP,-9.8,Conference USA,17,2020
+118,Kansas,-10.0,Big 12,17,2020
+119,Texas State,-10.6,Sun Belt,17,2020
+120,South Alabama,-12.2,Sun Belt,17,2020
+121,New Mexico,-12.4,Mountain West,17,2020
+122,UNLV,-12.9,Mountain West,17,2020
+123,Utah State,-13.2,Mountain West,17,2020
+124,UL Monroe,-17.8,Sun Belt,17,2020
+125,Bowling Green,-19.6,Mid-American,17,2020
+126,Akron,-21.5,Mid-American,17,2020
+127,Massachusetts,-23.5,FBS Independents,17,2020

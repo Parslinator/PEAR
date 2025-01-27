@@ -1,0 +1,131 @@
+,team,power_rating,conference,week,year
+1,Georgia,26.1,SEC,16,2021
+2,Ohio State,20.9,Big Ten,16,2021
+3,Alabama,17.8,SEC,16,2021
+4,Cincinnati,16.3,Big 12,16,2021
+5,Michigan,15.5,Big Ten,16,2021
+6,Texas A&M,15.3,SEC,16,2021
+7,Pittsburgh,13.4,ACC,16,2021
+8,NC State,12.4,ACC,16,2021
+9,Wisconsin,12.1,Big Ten,16,2021
+10,Oklahoma,12.0,SEC,16,2021
+11,Notre Dame,11.5,FBS Independents,16,2021
+12,Arizona State,11.2,Big 12,16,2021
+13,Oklahoma State,11.1,Big 12,16,2021
+14,Clemson,10.7,ACC,16,2021
+15,Baylor,10.6,Big 12,16,2021
+16,Coastal Carolina,10.5,Sun Belt,16,2021
+17,Western Kentucky,10.3,Conference USA,16,2021
+18,Utah,10.3,Big 12,16,2021
+19,Houston,10.0,Big 12,16,2021
+20,Tennessee,8.8,SEC,16,2021
+21,Penn State,8.6,Big Ten,16,2021
+22,Arkansas,8.6,SEC,16,2021
+23,Auburn,8.5,SEC,16,2021
+24,Minnesota,8.4,Big Ten,16,2021
+25,Florida,8.3,SEC,16,2021
+26,Kentucky,8.0,SEC,16,2021
+27,Ole Miss,7.1,SEC,16,2021
+28,Mississippi State,7.0,SEC,16,2021
+29,BYU,6.9,Big 12,16,2021
+30,Iowa State,6.7,Big 12,16,2021
+31,Fresno State,6.6,Mountain West,16,2021
+32,Miami,6.5,ACC,16,2021
+33,Nebraska,6.5,Big Ten,16,2021
+34,App State,6.5,Sun Belt,16,2021
+35,SMU,6.4,ACC,16,2021
+36,Kansas State,6.4,Big 12,16,2021
+37,Oregon State,6.1,Pac-12,16,2021
+38,Oregon,6.0,Big Ten,16,2021
+39,UCF,5.9,Big 12,16,2021
+40,Air Force,5.9,Mountain West,16,2021
+41,Texas,5.6,SEC,16,2021
+42,UCLA,5.0,Big Ten,16,2021
+43,Purdue,5.0,Big Ten,16,2021
+44,San Diego State,4.9,Mountain West,16,2021
+45,Michigan State,4.4,Big Ten,16,2021
+46,Toledo,4.4,Mid-American,16,2021
+47,Boise State,4.4,Mountain West,16,2021
+48,Virginia,4.0,ACC,16,2021
+49,Iowa,3.3,Big Ten,16,2021
+50,UAB,3.1,American Athletic,16,2021
+51,Wake Forest,3.1,ACC,16,2021
+52,Louisville,3.0,ACC,16,2021
+53,Marshall,3.0,Sun Belt,16,2021
+54,Louisiana,2.9,Sun Belt,16,2021
+55,Army,2.8,American Athletic,16,2021
+56,North Carolina,2.5,ACC,16,2021
+57,Texas Tech,2.3,Big 12,16,2021
+58,Florida State,2.3,ACC,16,2021
+59,LSU,2.2,SEC,16,2021
+60,UTSA,2.1,American Athletic,16,2021
+61,Liberty,1.8,Conference USA,16,2021
+62,Boston College,1.7,ACC,16,2021
+63,South Carolina,1.6,SEC,16,2021
+64,Georgia State,1.6,Sun Belt,16,2021
+65,Maryland,1.6,Big Ten,16,2021
+66,West Virginia,1.5,Big 12,16,2021
+67,California,1.5,ACC,16,2021
+68,Washington,1.5,Big Ten,16,2021
+69,Western Michigan,1.0,Mid-American,16,2021
+70,Nevada,1.0,Mountain West,16,2021
+71,Virginia Tech,0.9,ACC,16,2021
+72,Illinois,0.5,Big Ten,16,2021
+73,Florida Atlantic,0.4,American Athletic,16,2021
+74,USC,0.2,Big Ten,16,2021
+75,Washington State,-0.3,Pac-12,16,2021
+76,Memphis,-0.6,American Athletic,16,2021
+77,East Carolina,-0.6,American Athletic,16,2021
+78,Central Michigan,-0.7,Mid-American,16,2021
+79,Miami (OH),-0.8,Mid-American,16,2021
+80,Syracuse,-0.8,ACC,16,2021
+81,Tulsa,-1.6,American Athletic,16,2021
+82,TCU,-1.9,Big 12,16,2021
+83,Utah State,-2.5,Mountain West,16,2021
+84,Missouri,-2.7,SEC,16,2021
+85,UTEP,-2.8,Conference USA,16,2021
+86,Middle Tennessee,-2.9,Conference USA,16,2021
+87,San José State,-3.8,Mountain West,16,2021
+88,Wyoming,-3.8,Mountain West,16,2021
+89,Rutgers,-4.1,Big Ten,16,2021
+90,Colorado State,-4.2,Mountain West,16,2021
+91,South Alabama,-4.2,Sun Belt,16,2021
+92,Old Dominion,-4.3,Sun Belt,16,2021
+93,North Texas,-5.1,American Athletic,16,2021
+94,Hawai'i,-5.2,Mountain West,16,2021
+95,Troy,-5.5,Sun Belt,16,2021
+96,Stanford,-6.0,ACC,16,2021
+97,Kent State,-6.6,Mid-American,16,2021
+98,Georgia Tech,-6.9,ACC,16,2021
+99,Northern Illinois,-7.3,Mid-American,16,2021
+100,Tulane,-7.4,American Athletic,16,2021
+101,Eastern Michigan,-7.4,Mid-American,16,2021
+102,Colorado,-7.5,Big 12,16,2021
+103,Ohio,-7.5,Mid-American,16,2021
+104,Ball State,-7.5,Mid-American,16,2021
+105,Louisiana Tech,-8.2,Conference USA,16,2021
+106,Arizona,-9.1,Big 12,16,2021
+107,Duke,-9.7,ACC,16,2021
+108,Buffalo,-10.0,Mid-American,16,2021
+109,Charlotte,-10.5,American Athletic,16,2021
+110,South Florida,-10.8,American Athletic,16,2021
+111,Northwestern,-11.0,Big Ten,16,2021
+112,Southern Miss,-11.4,Sun Belt,16,2021
+113,Indiana,-11.8,Big Ten,16,2021
+114,Texas State,-11.9,Sun Belt,16,2021
+115,Bowling Green,-12.7,Mid-American,16,2021
+116,Georgia Southern,-13.1,Sun Belt,16,2021
+117,Navy,-13.2,American Athletic,16,2021
+118,UL Monroe,-13.7,Sun Belt,16,2021
+119,Arkansas State,-15.1,Sun Belt,16,2021
+120,Rice,-15.2,American Athletic,16,2021
+121,UNLV,-15.9,Mountain West,16,2021
+122,Florida International,-16.4,Conference USA,16,2021
+123,Temple,-16.6,American Athletic,16,2021
+124,Vanderbilt,-17.0,SEC,16,2021
+125,New Mexico State,-18.3,Conference USA,16,2021
+126,Kansas,-18.5,Big 12,16,2021
+127,New Mexico,-18.8,Mountain West,16,2021
+128,Akron,-19.0,Mid-American,16,2021
+129,UConn,-20.0,FBS Independents,16,2021
+130,Massachusetts,-23.9,FBS Independents,16,2021
