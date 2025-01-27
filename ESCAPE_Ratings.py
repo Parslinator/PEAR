@@ -414,37 +414,37 @@ def get_week_spreads(team_data):
             return 0
     week_games['ESCAPE SU'] = week_games.apply(lambda row: check_straight_up(row, 'pr_spread'), axis = 1)
     return week_games
-week_spreads = get_week_spreads(team_data)
-week_spreads['DK Spread'] = week_spreads['formatted_spread']
-week_spreads['ESCAPE Spread'] = week_spreads['ESCAPE']
-week_spreads.columns.values[4] = 'Home'
-week_spreads.columns.values[8] = 'Away'
-week_spreads.index = week_spreads.index + 1
-game_completion_info = week_spreads[['Home', 'Away', 'difference', 'formatted_open', 'formatted_spread', 'ESCAPE', 'actual_spread', 'ESCAPE ATS OPEN', 'ESCAPE ATS CLOSE', 'ESCAPE SU']]
-completed = game_completion_info[game_completion_info["ESCAPE ATS CLOSE"] != '']
-
 st.title("ESCAPE Ratings")
 st.logo("./ESCAPE Ratings/escape_logo.jpg", size = 'large')
-if postseason == True:
-    st.subheader("Bowl Games Projected Spreads, Ordered by Deviation")
-else:
-    st.subheader(f"Week {current_week} Projected Spreads, Ordered by Deviation")
-week_spreads['Deviation'] = week_spreads['difference']
-week_spreads['ATS'] = week_spreads['ESCAPE ATS CLOSE']
-with st.container(border=True, height=440):
-    st.dataframe(week_spreads[['ESCAPE Spread', 'DK Spread', 'Deviation','Home', 'Away', 'ATS']], use_container_width=True)
-X = 10
-if len(completed) > 0:
-    no_pushes = completed[completed['difference'] != 0.0]
-    st.markdown(f"ATS This Week: {round(100 * sum(no_pushes['ESCAPE ATS CLOSE']) / len(no_pushes),1)}% through {round(100*len(completed)/len(week_spreads))}% of games.")
-    st.markdown(f"SU This Week: {round(100*sum(completed['ESCAPE SU'] / len(completed)),1)}%")
-    # print(f'wATS: {wATS}%')
-    # print(f"MAE: {MAE}")
-    # print(f"DAE: {DAE}")
-    # print(f"RMSE: {RMSE}")
-    # print(f"MAE+: {round(100-MAE_plus,2)}%")
-    # print(f"AE < {X}: {round(count/len(completed)*100,2)}%")
-st.caption(f"Deviation is defined as the absolute difference from the DraftKings spread at the time of the data load. The current average deviation is {round(week_spreads['Deviation'].mean(),2)} points. The total deviation is {round(week_spreads['Deviation'].sum(),1)} points.")
+
+# week_spreads = get_week_spreads(team_data)
+# week_spreads['DK Spread'] = week_spreads['formatted_spread']
+# week_spreads['ESCAPE Spread'] = week_spreads['ESCAPE']
+# week_spreads.columns.values[4] = 'Home'
+# week_spreads.columns.values[8] = 'Away'
+# week_spreads.index = week_spreads.index + 1
+# game_completion_info = week_spreads[['Home', 'Away', 'difference', 'formatted_open', 'formatted_spread', 'ESCAPE', 'actual_spread', 'ESCAPE ATS OPEN', 'ESCAPE ATS CLOSE', 'ESCAPE SU']]
+# completed = game_completion_info[game_completion_info["ESCAPE ATS CLOSE"] != '']
+# if postseason == True:
+#     st.subheader("Bowl Games Projected Spreads, Ordered by Deviation")
+# else:
+#     st.subheader(f"Week {current_week} Projected Spreads, Ordered by Deviation")
+# week_spreads['Deviation'] = week_spreads['difference']
+# week_spreads['ATS'] = week_spreads['ESCAPE ATS CLOSE']
+# with st.container(border=True, height=440):
+#     st.dataframe(week_spreads[['ESCAPE Spread', 'DK Spread', 'Deviation','Home', 'Away', 'ATS']], use_container_width=True)
+# X = 10
+# if len(completed) > 0:
+#     no_pushes = completed[completed['difference'] != 0.0]
+#     st.markdown(f"ATS This Week: {round(100 * sum(no_pushes['ESCAPE ATS CLOSE']) / len(no_pushes),1)}% through {round(100*len(completed)/len(week_spreads))}% of games.")
+#     st.markdown(f"SU This Week: {round(100*sum(completed['ESCAPE SU'] / len(completed)),1)}%")
+#     # print(f'wATS: {wATS}%')
+#     # print(f"MAE: {MAE}")
+#     # print(f"DAE: {DAE}")
+#     # print(f"RMSE: {RMSE}")
+#     # print(f"MAE+: {round(100-MAE_plus,2)}%")
+#     # print(f"AE < {X}: {round(count/len(completed)*100,2)}%")
+# st.caption(f"Deviation is defined as the absolute difference from the DraftKings spread at the time of the data load. The current average deviation is {round(week_spreads['Deviation'].mean(),2)} points. The total deviation is {round(week_spreads['Deviation'].sum(),1)} points.")
 
 st.divider()
 
