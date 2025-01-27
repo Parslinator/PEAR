@@ -414,7 +414,7 @@ def get_week_spreads(team_data):
             return 0
     week_games['ESCAPE SU'] = week_games.apply(lambda row: check_straight_up(row, 'pr_spread'), axis = 1)
     return week_games
-st.title("ESCAPE Ratings")
+st.title(f"{current_year} ESCAPE Ratings")
 st.logo("./ESCAPE Ratings/escape_logo.jpg", size = 'large')
 
 # week_spreads = get_week_spreads(team_data)
