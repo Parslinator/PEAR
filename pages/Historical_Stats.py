@@ -271,25 +271,3 @@ st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedu
 # , MD - Most Deserving Rankings
 
 st.divider()
-
-all_data = pd.read_csv("./ESCAPE Ratings/Data/y2013/team_data_week17.csv")
-all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
-all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
-st.subheader("2013 Ratings")
-all_data['OFF'] = all_data['Offense']
-all_data['DEF'] = all_data['Defense']
-all_data['MD'] = all_data['most_deserving']
-all_data['Rating'] = all_data['power_rating']
-all_data['Team'] = all_data['team']
-all_data['CONF'] = all_data['conference']
-all_data['ST'] = all_data['STM_rank']
-all_data['PBR'] = all_data['PBR_rank']
-all_data['DCE'] = all_data['DCE_rank']
-all_data['DDE'] = all_data['DDE_rank']
-all_data.index = all_data.index + 1
-with st.container(border=True, height=440):
-    st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
-st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
-# , MD - Most Deserving Rankings
-
-st.divider()
