@@ -88,10 +88,10 @@ def spreads_across_years(team1, team1_season, team2, team2_season, data, neutral
 
 st.subheader("Calculate Spread Between Two Teams From Different Years")
 with st.form(key='calculate_spread'):
-    away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'])))
-    away_season = st.selectbox("Away Season", ["Select Season"] + list(sorted(team_data['season'])))
-    home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(team_data['team'])))
-    home_season = st.selectbox("Home Season", ["Select Season"] + list(sorted(team_data['season'])))
+    away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'].unique())))
+    away_season = st.selectbox("Away Season", ["Select Season"] + list(sorted(team_data['season'].unique())))
+    home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(team_data['team'].unique())))
+    home_season = st.selectbox("Home Season", ["Select Season"] + list(sorted(team_data['season'].unique())))
     neutrality = st.radio(
         "Game Location",
         ["Neutral Field", "On Campus"]
