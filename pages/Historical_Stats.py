@@ -111,6 +111,7 @@ with st.form(key='calculate_spread'):
 st.divider()
 
 st.subheader("Year-Normalized Power Ratings")
+team_data.index += 1
 team_data['Team'] = team_data['team']
 team_data['Season'] = team_data['season'].astype(str)
 team_data['Normalized Rating'] = team_data['norm_pr']
