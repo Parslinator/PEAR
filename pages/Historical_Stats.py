@@ -86,8 +86,7 @@ def spreads_across_years(team1, team1_season, team2, team2_season, data, neutral
     else:
         return f"{team2} {spread}"
 
-
-st.subheader("Calculate Spread Between Any Two Teams")
+st.subheader("Calculate Spread Between Two Teams From Different Years")
 with st.form(key='calculate_spread'):
     away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'])))
     away_season = st.selectbox("Away Season", ["Select Season"] + list(sorted(team_data['season'])))
@@ -106,18 +105,6 @@ with st.form(key='calculate_spread'):
         st.write(spreads_across_years(home_team, home_season, away_team, away_season, team_data, neutrality))
 
 st.divider()
-
-
-
-
-
-
-
-
-
-
-
-
 
 all_data = pd.read_csv("./ESCAPE Ratings/Data/y2023/team_data_week15.csv")
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
