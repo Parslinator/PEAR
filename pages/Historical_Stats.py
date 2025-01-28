@@ -70,10 +70,12 @@ def grab_team_elo_across_years(team, season):
     return elo_ratings['elo'].values[0]
 
 def spreads_across_years(team1, team1_season, team2, team2_season, data, neutrality=False):
+    team1_season = int(team1_season)
+    team2_season = int(team2_season)
     home_elo = grab_team_elo_across_years(team1, team1_season)
     away_elo = grab_team_elo_across_years(team2, team2_season)
-    home_pr = data.loc[(data['team'] == team1) & (data['season'] == team1_season), 'norm_pr']
-    away_pr = data.loc[(data['team'] == team2) & (data['season'] == team2_season), 'norm_pr']
+    home_pr = data.loc[(data['team'] == team1) & (data['season'] == team1_season), 'norm_pr'].values[0]
+    away_pr = data.loc[(data['team'] == team2) & (data['season'] == team2_season), 'norm_pr'].values[0]
     home_win_prob = round((10 ** ((home_elo - away_elo) / 400)) / ((10 ** ((home_elo - away_elo) / 400)) + 1) * 100, 2)
     adjustment = adjust_home_pr(home_win_prob)
     if neutrality:
