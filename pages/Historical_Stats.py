@@ -52,6 +52,73 @@ metrics_api = cfbd.MetricsApi(api_client)
 players_api = cfbd.PlayersApi(api_client)
 recruiting_api = cfbd.RecruitingApi(api_client)
 
+
+
+team_data = pd.read_csv("./ESCAPE Ratings/normalized_power_rating_across_years.csv")
+
+def adjust_home_pr(home_win_prob):
+    return ((home_win_prob - 50) / 50) * 5
+
+def grab_team_elo_across_years(team, season):
+    elo_ratings_list = [*ratings_api.get_elo_ratings(year=season, team=team)]
+    elo_ratings_dict = [dict(
+        team=e.team,
+        elo=e.elo
+    ) for e in elo_ratings_list]
+    elo_ratings = pd.DataFrame(elo_ratings_dict)       
+    return elo_ratings['elo'].values[0]
+
+def spreads_across_years(team1, team1_season, team2, team2_season, data, neutrality=False):
+    home_elo = grab_team_elo_across_years(team1, team1_season)
+    away_elo = grab_team_elo_across_years(team2, team2_season)
+    home_pr = data.loc[(data['team'] == team1) & (data['season'] == team1_season), 'norm_pr']
+    away_pr = data.loc[(data['team'] == team2) & (data['season'] == team2_season), 'norm_pr']
+    home_win_prob = round((10 ** ((home_elo - away_elo) / 400)) / ((10 ** ((home_elo - away_elo) / 400)) + 1) * 100, 2)
+    adjustment = adjust_home_pr(home_win_prob)
+    if neutrality:
+        spread = home_pr + adjustment - away_pr
+    else:
+        spread = 4.6 + home_pr + adjustment - away_pr
+    spread = round(spread,1)
+
+    if spread >= 0:
+        return f"{team1} -{spread}"
+    else:
+        return f"{team2} {spread}"
+
+
+st.subheader("Calculate Spread Between Any Two Teams")
+with st.form(key='calculate_spread'):
+    away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'])))
+    away_season = st.selectbox("Away Season", ["Select Season"] + list(sorted(team_data['season'])))
+    home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(team_data['team'])))
+    home_season = st.selectbox("Home Season", ["Select Season"] + list(sorted(team_data['season'])))
+    neutrality = st.radio(
+        "Game Location",
+        ["Neutral Field", "On Campus"]
+    )
+    spread_button = st.form_submit_button("Calculate Spread")
+    if spread_button:
+        if neutrality == 'Neutral Field':
+            neutrality = True
+        else:
+            neutrality = False
+        st.write(spreads_across_years(home_team, home_season, away_team, away_season, team_data, neutrality))
+
+st.divider()
+
+
+
+
+
+
+
+
+
+
+
+
+
 all_data = pd.read_csv("./ESCAPE Ratings/Data/y2023/team_data_week15.csv")
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
