@@ -107,6 +107,15 @@ with st.form(key='calculate_spread'):
             neutrality = False
         st.write(spreads_across_years(home_team, home_season, away_team, away_season, team_data, neutrality))
 
+
+st.divider()
+
+st.subheader("Year-Normalized Power Ratings")
+team_data['Season'] = team_data['season']
+team_data['Normalized Rating'] = team_data['norm_pr']
+with st.container(border=True, height=440):
+    st.dataframe(team_data[['team', 'Normalized Rating', 'Season']])
+
 st.divider()
 
 all_data = pd.read_csv("./ESCAPE Ratings/Data/y2023/team_data_week15.csv")
