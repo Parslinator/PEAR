@@ -60,6 +60,7 @@ def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 5
 
 def grab_team_elo_across_years(team, season):
+    season = int(season)
     elo_ratings_list = [*ratings_api.get_elo_ratings(year=season, team=team)]
     elo_ratings_dict = [dict(
         team=e.team,
