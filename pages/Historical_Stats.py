@@ -115,7 +115,7 @@ team_data['Team'] = team_data['team']
 team_data['Season'] = team_data['season'].astype(str)
 team_data['Normalized Rating'] = team_data['norm_pr']
 with st.container(border=True, height=440):
-    st.dataframe(team_data[['team', 'Normalized Rating', 'Season']])
+    st.dataframe(team_data[['Team', 'Normalized Rating', 'Season']], use_container_width=True)
 
 st.divider()
 
