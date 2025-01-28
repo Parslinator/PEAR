@@ -83,11 +83,11 @@ def spreads_across_years(team1, team1_season, team2, team2_season, data, neutral
     else:
         spread = 4.6 + home_pr + adjustment - away_pr
     spread = round(spread,1)
-    return spread
-    # if spread >= 0:
-    #     return f"{team1} -{spread}"
-    # else:
-    #     return f"{team2} {spread}"
+
+    if spread >= 0:
+        return f"{team1} -{spread}"
+    else:
+        return f"{team2} {spread}"
 
 st.subheader("Calculate Spread Between Two Teams From Different Years")
 with st.form(key='calculate_spread'):
