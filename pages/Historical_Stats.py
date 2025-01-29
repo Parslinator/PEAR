@@ -105,30 +105,15 @@ def teams_yearly_stats(team, data):
     team_df = team_df[['Season', 'Normalized Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE']]
     return team_df
 
-scroll_script = """
-<script>
-    function scrollToSection(section_id) {
-        var element = document.getElementById(section_id);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    }
-</script>
-"""
-st.markdown(scroll_script, unsafe_allow_html=True)
-
-# Sidebar navigation with JavaScript function calls
-st.sidebar.title("Navigation")
-st.sidebar.markdown('<a href="#" onclick="scrollToSection(\'spread-calculator\')">Spread Calculator</a>', unsafe_allow_html=True)
-st.sidebar.markdown('<a href="#" onclick="scrollToSection(\'team-filter\')">Team Filter</a>', unsafe_allow_html=True)
-st.sidebar.markdown('<a href="#" onclick="scrollToSection(\'norm-ratings\')">Normalized Ratings</a>', unsafe_allow_html=True)
+st.sidebar.markdown(f"[Spread Calculator](#spread)", unsafe_allow_html=True)
+st.sidebar.markdown(f"[Team Filter](#filter)", unsafe_allow_html=True)
+st.sidebar.markdown(f"[Normalized Ratings](#norm)", unsafe_allow_html=True)
 
 years = [2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]
 for year in years:
-    st.sidebar.markdown(f'<a href="#" onclick="scrollToSection(\'{year}-ratings\')">{year} Ratings</a>', unsafe_allow_html=True)
+    st.sidebar.markdown(f"[{year} Ratings](#{year}-ratings)", unsafe_allow_html=True)
 
-# Main Page Sections with IDs
-st.markdown(f'<h2 id="spread-calculator">Calculate Spread Between Two Teams From Different Years</h2>', unsafe_allow_html=True)
+st.markdown(f'<h2 id="spread">Calculate Spread Between Two Teams From Different Years</h2>', unsafe_allow_html=True)
 with st.form(key='calculate_spread'):
     away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'].unique())))
     away_season = st.selectbox("Away Season", ["Select Season"] + list(sorted(team_data['season'].unique())))
@@ -153,7 +138,7 @@ team_data.index += 1
 team_data['Team'] = team_data['team']
 team_data['Season'] = team_data['season'].astype(str)
 team_data['Normalized Rating'] = team_data['norm_pr']
-st.markdown(f'<h2 id="team-filter">View A Specific Teams Stats</h2>', unsafe_allow_html=True)
+st.markdown(f'<h2 id="filter">View A Specific Teams Stats</h2>', unsafe_allow_html=True)
 with st.form(key='filter_team'):
     team = st.selectbox("Team Filter", ["Select Team"] + list(sorted(team_data['team'].unique())))
     filter_button = st.form_submit_button("Filter Team")
@@ -163,7 +148,7 @@ with st.form(key='filter_team'):
 st.divider()
 
 st.subheader("Year-Normalized Power Ratings")
-st.markdown(f'<h2 id="norm-ratings">Year-Normalized Power Ratings</h2>', unsafe_allow_html=True)
+st.markdown(f'<h2 id="norm">Year-Normalized Power Ratings</h2>', unsafe_allow_html=True)
 with st.container(border=True, height=440):
     st.dataframe(team_data[['Team', 'Normalized Rating', 'Season']], use_container_width=True)
 
