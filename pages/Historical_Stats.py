@@ -88,6 +88,22 @@ def spreads_across_years(team1, team1_season, team2, team2_season, data, neutral
         return f"{team1_season} {team1} -{spread}"
     else:
         return f"{team2_season} {team2} {spread}"
+    
+def teams_yearly_stats(team, data):
+    team_df = data[data['team'] == team].reset_index(drop=True)
+    team_df.index += 1
+    team_df['OFF'] = team_df['offensive_rank']
+    team_df['DEF'] = team_df['defensive_rank']
+    team_df['MD'] = team_df['most_deserving']
+    team_df['Rating'] = team_df['power_rating']
+    team_df['Team'] = team_df['team']
+    team_df['CONF'] = team_df['conference']
+    team_df['ST'] = team_df['STM_rank']
+    team_df['PBR'] = team_df['PBR_rank']
+    team_df['DCE'] = team_df['DCE_rank']
+    team_df['DDE'] = team_df['DDE_rank']
+    team_df = team_df[['Season', 'Normalized Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE']]
+    return team_df
 
 st.subheader("Calculate Spread Between Two Teams From Different Years")
 with st.form(key='calculate_spread'):
@@ -110,11 +126,19 @@ with st.form(key='calculate_spread'):
 
 st.divider()
 
-st.subheader("Year-Normalized Power Ratings")
 team_data.index += 1
 team_data['Team'] = team_data['team']
 team_data['Season'] = team_data['season'].astype(str)
 team_data['Normalized Rating'] = team_data['norm_pr']
+with st.form(key='filter_team'):
+    team = st.selectbox("Team Filter", ["Select Team"] + list(sorted(team_data['team'].unique())))
+    filter_button = st.form_submit_button("Filter Team")
+    if filter_button:
+        st.dataframe(teams_yearly_stats(team, team_data))
+
+st.divider()
+
+st.subheader("Year-Normalized Power Ratings")
 with st.container(border=True, height=440):
     st.dataframe(team_data[['Team', 'Normalized Rating', 'Season']], use_container_width=True)
 
