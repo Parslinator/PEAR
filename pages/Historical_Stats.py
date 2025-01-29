@@ -148,7 +148,7 @@ with st.container(border=True, height=440):
 
 st.divider()
 
-st.markdown(f'<h2 id="2023-ratings">2023 Ratings</h2>', unsafe_allow_html=True)
+st.markdown(f'<h2 id="2023-ratings"/h2>', unsafe_allow_html=True)
 all_data = pd.read_csv("./ESCAPE Ratings/Data/y2023/team_data_week15.csv")
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
