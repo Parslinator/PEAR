@@ -105,7 +105,7 @@ def teams_yearly_stats(team, data):
     team_df = team_df[['Season', 'Normalized Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE']]
     return team_df
 
-years = ['Normalized', 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]
+years = ['All', 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]
 for year in years:
     st.sidebar.markdown(f"[{year} Ratings](#{year}-ratings)", unsafe_allow_html=True)
 
@@ -143,7 +143,7 @@ with st.form(key='filter_team'):
 
 st.divider()
 
-st.markdown(f'<h2 id="Normalized-ratings">Normalized Ratings</h2>', unsafe_allow_html=True)
+st.markdown(f'<h2 id="All-ratings">Normalized Ratings</h2>', unsafe_allow_html=True)
 with st.container(border=True, height=440):
     st.dataframe(team_data[['Team', 'Normalized Rating', 'Season']], use_container_width=True)
 
