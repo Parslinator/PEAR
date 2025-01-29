@@ -143,7 +143,7 @@ with st.form(key='filter_team'):
 
 st.divider()
 
-st.markdown(f'<h2 id="Normalized-ratings">Year-Normalized Power Ratings</h2>', unsafe_allow_html=True)
+st.markdown(f'<h2 id="Normalized-ratings">Normalized Ratings</h2>', unsafe_allow_html=True)
 with st.container(border=True, height=440):
     st.dataframe(team_data[['Team', 'Normalized Rating', 'Season']], use_container_width=True)
 
