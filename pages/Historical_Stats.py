@@ -130,11 +130,12 @@ team_data.index += 1
 team_data['Team'] = team_data['team']
 team_data['Season'] = team_data['season'].astype(str)
 team_data['Normalized Rating'] = team_data['norm_pr']
+st.subheader("View A Specific Teams Stats")
 with st.form(key='filter_team'):
     team = st.selectbox("Team Filter", ["Select Team"] + list(sorted(team_data['team'].unique())))
     filter_button = st.form_submit_button("Filter Team")
     if filter_button:
-        st.dataframe(teams_yearly_stats(team, team_data))
+        st.dataframe(teams_yearly_stats(team, team_data), use_container_width=True)
 
 st.divider()
 
