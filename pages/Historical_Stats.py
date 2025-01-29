@@ -104,6 +104,9 @@ def teams_yearly_stats(team, data):
     team_df['DDE'] = team_df['DDE_rank']
     team_df = team_df[['Season', 'Normalized Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE']]
     return team_df
+years = [2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]
+for year in years:
+    st.sidebar.markdown(f"[{year} Ratings](#{year}-ratings)", unsafe_allow_html=True)
 
 st.subheader("Calculate Spread Between Two Teams From Different Years")
 with st.form(key='calculate_spread'):
@@ -145,6 +148,7 @@ with st.container(border=True, height=440):
 
 st.divider()
 
+st.markdown(f'<h2 id="2023-ratings">2023 Ratings</h2>', unsafe_allow_html=True)
 all_data = pd.read_csv("./ESCAPE Ratings/Data/y2023/team_data_week15.csv")
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
