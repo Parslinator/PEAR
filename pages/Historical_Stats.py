@@ -105,13 +105,28 @@ def teams_yearly_stats(team, data):
     team_df = team_df[['Season', 'Normalized Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE']]
     return team_df
 
-st.sidebar.markdown(f"[Spread Calculator](#spread)", unsafe_allow_html=True)
-st.sidebar.markdown(f"[Team Filter](#filter)", unsafe_allow_html=True)
-st.sidebar.markdown(f"[Normalized Ratings](#norm)", unsafe_allow_html=True)
+# Initialize session state for navigation
+if "navigate_to" not in st.session_state:
+    st.session_state.navigate_to = None
+
+# Function to set navigation target and rerun script
+def navigate_to(section_id):
+    st.session_state.navigate_to = section_id
+    st.experimental_rerun()
+
+# Sidebar navigation buttons
+st.sidebar.title("Navigation")
+if st.sidebar.button("Spread Calculator"):
+    navigate_to("spread-calculator")
+if st.sidebar.button("Team Filter"):
+    navigate_to("team-filter")
+if st.sidebar.button("Normalized Ratings"):
+    navigate_to("norm-ratings")
 
 years = [2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]
 for year in years:
-    st.sidebar.markdown(f"[{year} Ratings](#{year}-ratings)", unsafe_allow_html=True)
+    if st.sidebar.button(f"{year} Ratings"):
+        navigate_to(f"{year}-ratings")
 
 st.markdown(f'<h2 id="spread">Calculate Spread Between Two Teams From Different Years</h2>', unsafe_allow_html=True)
 with st.form(key='calculate_spread'):
