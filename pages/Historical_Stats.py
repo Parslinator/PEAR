@@ -90,7 +90,7 @@ def spreads_across_years(team1, team1_season, team2, team2_season, data, neutral
         return f"{team2_season} {team2} {spread}"
     
 def teams_yearly_stats(team, data):
-    team_df = data[data['team'] == team].reset_index(drop=True)
+    team_df = data[data['team'] == team]
     team_df.index += 1
     team_df['OFF'] = team_df['offensive_rank']
     team_df['DEF'] = team_df['defensive_rank']
