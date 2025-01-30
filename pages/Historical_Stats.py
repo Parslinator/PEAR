@@ -108,6 +108,26 @@ years = [2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]
 for year in years:
     st.sidebar.markdown(f"[{year} Ratings](#{year}-ratings)", unsafe_allow_html=True)
 
+team_data.index += 1
+team_data['Team'] = team_data['team']
+team_data['Season'] = team_data['season'].astype(str)
+team_data['Normalized Rating'] = team_data['norm_pr']
+
+st.markdown(f'<h2 id="All-ratings">Year Normalized Ratings</h2>', unsafe_allow_html=True)
+with st.container(border=True, height=440):
+    st.dataframe(team_data[['Team', 'Normalized Rating', 'Season']], use_container_width=True)
+
+st.divider()
+
+st.markdown(f'<h2 id="filter">View A Specific Teams Stats</h2>', unsafe_allow_html=True)
+with st.form(key='filter_team'):
+    team = st.selectbox("Team Filter", ["Select Team"] + list(sorted(team_data['team'].unique())))
+    filter_button = st.form_submit_button("Filter Team")
+    if filter_button:
+        st.dataframe(teams_yearly_stats(team, team_data), use_container_width=True)
+
+st.divider()
+
 st.markdown(f'<h2 id="spread">Calculate Spread Between Two Teams From Different Years</h2>', unsafe_allow_html=True)
 with st.form(key='calculate_spread'):
     away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'].unique())))
@@ -125,26 +145,6 @@ with st.form(key='calculate_spread'):
         else:
             neutrality = False
         st.write(spreads_across_years(home_team, home_season, away_team, away_season, team_data, neutrality))
-
-
-st.divider()
-
-team_data.index += 1
-team_data['Team'] = team_data['team']
-team_data['Season'] = team_data['season'].astype(str)
-team_data['Normalized Rating'] = team_data['norm_pr']
-st.markdown(f'<h2 id="filter">View A Specific Teams Stats</h2>', unsafe_allow_html=True)
-with st.form(key='filter_team'):
-    team = st.selectbox("Team Filter", ["Select Team"] + list(sorted(team_data['team'].unique())))
-    filter_button = st.form_submit_button("Filter Team")
-    if filter_button:
-        st.dataframe(teams_yearly_stats(team, team_data), use_container_width=True)
-
-st.divider()
-
-st.markdown(f'<h2 id="All-ratings">Year Normalized Ratings</h2>', unsafe_allow_html=True)
-with st.container(border=True, height=440):
-    st.dataframe(team_data[['Team', 'Normalized Rating', 'Season']], use_container_width=True)
 
 st.divider()
 
