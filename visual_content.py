@@ -220,7 +220,7 @@ def best_and_worst(all_data, logos, metric, title, subtitle, visual_name):
             ax.set_facecolor('#f0f0f0')
             
             # Start counting for Worst from 134 and decrement
-            worst_rank = 110 + (i*5 + (j-5)) 
+            worst_rank = (len(all_data) - 24) + (i*5 + (j-5)) 
             ax.set_title(f"#{worst_rank} \n{round(top_25_worst.loc[i*5 + (j-5), metric], 1)}", fontsize=14, fontweight='bold')
             ax.axis('off')
 
@@ -232,7 +232,6 @@ def best_and_worst(all_data, logos, metric, title, subtitle, visual_name):
     # Show the final figure
     plt.savefig(file_path, bbox_inches='tight', dpi=300)
 
-# Function to plot the bar chart for a given dataset
 def plot_bar_charts(ax, data, logos, metric, title, top_or_bottom):
     if top_or_bottom == 'Top':
         top_or_bottom = True
@@ -366,7 +365,7 @@ def best_and_worst2(all_data, logos, metric, title, subtitle, visual_name):
             ax.set_facecolor('#f0f0f0')
             
             # Start counting for Worst from 134 and decrement
-            worst_rank = 110 + (i*5 + (j-5)) 
+            worst_rank = (len(all_data) - 24) + (i*5 + (j-5)) 
             ax.set_title(f"#{worst_rank} \n{round(top_25_worst.loc[i*5 + (j-5), metric], rounding)}", fontsize=14, fontweight='bold')
             ax.axis('off')
 
