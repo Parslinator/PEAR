@@ -328,7 +328,7 @@ if run_full_optimization == 'y':
 
     # team talent
     talent_list = []
-    for year in range(2019, 2025):
+    for year in range(current_year-3, current_year+1):
         response = teams_api.get_talent(year=year)
         talent_list = [*talent_list, *response]
     talent_dict = [dict(
@@ -348,7 +348,7 @@ if run_full_optimization == 'y':
 
     # team recruiting
     recruiting_info_list = []
-    for year in range(2019,2025):
+    for year in range(current_year-3, current_year+1):
         response = recruiting_api.get_recruiting_teams(year=year)
         recruiting_info_list = [*recruiting_info_list, *response]
     recruiting_info_dict = [dict(
