@@ -73,8 +73,8 @@ current_year = int(current_year)
 current_week = int(current_week)
 print(f"Current Week: {current_week}, Current Year: {current_year}")
 
-team_data = pd.read_csv(f'./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}.csv').drop(columns=['Unnamed: 0'])
-all_data = pd.read_csv(f"./ESCAPE Ratings/Data/y{current_year}/team_data_week{current_week}.csv").drop(columns=['Unnamed: 0'])
+team_data = pd.read_csv(f'./PEAR/Ratings/y{current_year}/PEAR_week{current_week}.csv').drop(columns=['Unnamed: 0'])
+all_data = pd.read_csv(f"./PEAR/Data/y{current_year}/team_data_week{current_week}.csv").drop(columns=['Unnamed: 0'])
 
 offensive_scaler = MinMaxScaler(feature_range=(35,70))
 defensive_scaler = MinMaxScaler(feature_range=(15,40))
@@ -251,7 +251,7 @@ week_games = add_pr_prediction(week_games, 'pr_spread', 'spread', 'pr_prediction
 week_games = add_pr_prediction(week_games, 'pr_spread', 'spread_open', 'opening_spread_prediction')
 
 # Formatting the KRATOS Power Rating Spread
-week_games['ESCAPE'] = week_games.apply(
+week_games['PEAR'] = week_games.apply(
     lambda row: f"{row['away_team']} {-abs(row['pr_spread'])}" if ((row['pr_spread'] <= 0)) 
     else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1)
 
@@ -260,7 +260,7 @@ week_games['opening_difference'] = abs(week_games['pr_spread'] - week_games['spr
 week_games['over_under_difference'] = abs(week_games['over_under'] - week_games['predicted_over_under'])
 week_games = week_games.sort_values(by=["difference", "home_win_prob"], ascending=False).reset_index(drop=True)
 week_games = week_games.drop_duplicates(subset='home_team')
-prediction_information = week_games[['home_team', 'away_team', 'game_quality', 'home_win_prob','difference', 'formatted_open', 'formatted_spread', 'ESCAPE', 'pr_prediction', 'home_pr', 'away_pr']]
+prediction_information = week_games[['home_team', 'away_team', 'game_quality', 'home_win_prob','difference', 'formatted_open', 'formatted_spread', 'PEAR', 'pr_prediction', 'home_pr', 'away_pr']]
 prediction_information = prediction_information.dropna()
 print("Total Difference from Vegas Spread:", round(sum(prediction_information['difference']),1))
 print("Average Difference from Vegas Spread:", round(sum(prediction_information['difference'])/len(prediction_information), 2))
@@ -288,8 +288,8 @@ def check_prediction_correct(row, prediction_col, ats_tester):
     else:
         return 0
 # Apply the check prediction function and store the result in a new column
-week_games['ESCAPE ATS CLOSE'] = week_games.apply(lambda row: check_prediction_correct(row, 'pr_prediction', 'CLOSE ATS RESULT'), axis=1)
-week_games['ESCAPE ATS OPEN'] = week_games.apply(lambda row: check_prediction_correct(row, 'opening_spread_prediction', 'OPEN ATS RESULT'), axis=1)
+week_games['PEAR ATS CLOSE'] = week_games.apply(lambda row: check_prediction_correct(row, 'pr_prediction', 'CLOSE ATS RESULT'), axis=1)
+week_games['PEAR ATS OPEN'] = week_games.apply(lambda row: check_prediction_correct(row, 'opening_spread_prediction', 'OPEN ATS RESULT'), axis=1)
 
 def check_straight_up(row, prediction_col):
     if row['actual_spread'] == '':
@@ -300,15 +300,15 @@ def check_straight_up(row, prediction_col):
         return 1
     else:
         return 0
-week_games['ESCAPE SU'] = week_games.apply(lambda row: check_straight_up(row, 'pr_spread'), axis = 1)
-game_completion_info = week_games[['home_team', 'away_team', 'difference', 'formatted_open', 'formatted_spread', 'ESCAPE', 'spread', 'actual_margin', 'actual_spread', 'ESCAPE ATS OPEN', 'ESCAPE ATS CLOSE', 'ESCAPE SU']]
-completed = game_completion_info[game_completion_info["ESCAPE ATS CLOSE"] != '']
+week_games['PEAR SU'] = week_games.apply(lambda row: check_straight_up(row, 'pr_spread'), axis = 1)
+game_completion_info = week_games[['home_team', 'away_team', 'difference', 'formatted_open', 'formatted_spread', 'PEAR', 'spread', 'actual_margin', 'actual_spread', 'PEAR ATS OPEN', 'PEAR ATS CLOSE', 'PEAR SU']]
+completed = game_completion_info[game_completion_info["PEAR ATS CLOSE"] != '']
 no_pushes = completed[completed['difference'] != 0]
 no_pushes = no_pushes[no_pushes['spread'] != no_pushes['actual_margin']]
 
 X = 10
 if len(completed) > 0:
-    win_difference = completed.loc[completed["ESCAPE ATS CLOSE"] == 1, "difference"].sum()
+    win_difference = completed.loc[completed["PEAR ATS CLOSE"] == 1, "difference"].sum()
     total_difference = completed['difference'].sum()
     MAE = round(abs(week_games['actual_margin'] - week_games['pr_spread']).mean(),2)
     DAE = round(abs(week_games['actual_margin'] - week_games['pr_spread']).median(),2)
@@ -319,8 +319,8 @@ if len(completed) > 0:
     print("----------------------")
     print("Performance This Week")
     print("----------------------")
-    print(f"SU: {round(100*sum(completed['ESCAPE SU'] / len(completed)),2)}%  -  {sum(completed['ESCAPE SU'])}/{len(completed)}")
-    print(f"ATS: {round(100 * sum(no_pushes['ESCAPE ATS CLOSE']) / len(no_pushes),2)}%  -  {sum(no_pushes['ESCAPE ATS CLOSE'])}/{len(no_pushes)}")
+    print(f"SU: {round(100*sum(completed['PEAR SU'] / len(completed)),2)}%  -  {sum(completed['PEAR SU'])}/{len(completed)}")
+    print(f"ATS: {round(100 * sum(no_pushes['PEAR ATS CLOSE']) / len(no_pushes),2)}%  -  {sum(no_pushes['PEAR ATS CLOSE'])}/{len(no_pushes)}")
     print(f'wATS: {wATS}%')
     print(f"MAE: {MAE}")
     print(f"DAE: {DAE}")
@@ -328,4 +328,4 @@ if len(completed) > 0:
     print(f"MAE+: {round(100-MAE_plus,2)}%")
     print(f"AE < {X}: {round(count/len(completed)*100,2)}%")
 
-game_completion_info.to_excel(f'./ESCAPE Ratings/Spreads/y{current_year}/spreads_tracker_week{current_week}.xlsx')
+game_completion_info.to_excel(f'./PEAR/Spreads/y{current_year}/spreads_tracker_week{current_week}.xlsx')

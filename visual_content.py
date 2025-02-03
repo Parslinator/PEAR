@@ -94,10 +94,10 @@ current_year = int(current_year)
 current_week = int(current_week)
 print(f"Current Week: {current_week}, Current Year: {current_year}")
 
-folder_path = f"./ESCAPE Ratings/Visuals/y{current_year}/week_{current_week}"
+folder_path = f"./PEAR/Visuals/y{current_year}/week_{current_week}"
 os.makedirs(folder_path, exist_ok=True)
 
-conf_folder_path = f"./ESCAPE Ratings/Visuals/y{current_year}/week_{current_week}/Conference Projections"
+conf_folder_path = f"./PEAR/Visuals/y{current_year}/week_{current_week}/Conference Projections"
 os.makedirs(conf_folder_path, exist_ok=True)
 
 logos_info_list = []
@@ -146,19 +146,19 @@ records.at[records[records['team'] == 'Utah'].index[0], 'conference_wins'] -= 1
 records.at[records[records['team'] == 'Baylor'].index[0], 'conference_losses'] -= 1
 records.at[records[records['team'] == 'Arizona'].index[0], 'conference_losses'] -= 1
 print("Records Prep Done!")
-all_data = pd.read_csv(f"./ESCAPE Ratings/Data/y{current_year}/team_data_week{current_week}.csv")
-team_data = pd.read_csv(f'./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}.csv')
+all_data = pd.read_csv(f"./PEAR/Data/y{current_year}/team_data_week{current_week}.csv")
+team_data = pd.read_csv(f'./PEAR/Ratings/y{current_year}/PEAR_week{current_week}.csv')
 
-start_season_data = pd.read_csv(f"./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}.csv")
-if os.path.exists(f"./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week-1}.csv"):
-    last_week_data = pd.read_csv(f"./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week-1}.csv")
+start_season_data = pd.read_csv(f"./PEAR/Ratings/y{current_year}/PEAR_week{current_week}.csv")
+if os.path.exists(f"./PEAR/Ratings/y{current_year}/PEAR_week{current_week-1}.csv"):
+    last_week_data = pd.read_csv(f"./PEAR/Ratings/y{current_year}/PEAR_week{current_week-1}.csv")
 else:
-    last_week_data = pd.read_csv(f"./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}.csv")
+    last_week_data = pd.read_csv(f"./PEAR/Ratings/y{current_year}/PEAR_week{current_week}.csv")
 week_to_check = current_week - 4
 last_month_data = None
 # Loop to find the most recent existing file
 while week_to_check <= current_week:
-    file_path = f"./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{week_to_check}.csv"
+    file_path = f"./PEAR/Ratings/y{current_year}/PEAR_week{week_to_check}.csv"
     if os.path.exists(file_path):
         # If the file is found, read it in and break the loop
         last_month_data = pd.read_csv(file_path)
@@ -170,7 +170,7 @@ def date_sort(game):
     game_date = datetime.datetime.strptime(game['start_date'], "%Y-%m-%dT%H:%M:%S.000Z")
     return game_date
 
-def ESCAPE_Win_Prob(home_power_rating, away_power_rating):
+def PEAR_Win_Prob(home_power_rating, away_power_rating):
     return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
 
 def best_and_worst(all_data, logos, metric, title, subtitle, visual_name):
@@ -461,7 +461,7 @@ def simulate_season_known(schedules, team_data):
     for _, game in schedules.iterrows():
         home_team = game['home_team']
         away_team = game['away_team']
-        home_win_prob = game['escape_win_prob']
+        home_win_prob = game['PEAR_win_prob']
 
         # Simulate the game outcome
         winner, loser = simulate_game_known(home_team, away_team, home_win_prob)
@@ -562,14 +562,14 @@ def average_team_distribution(num_simulations, schedules, average, team_name):
             if game['home_team'] == team_name:
                 opponent_team = game['away_team']
                 opponent_pr = game['away_pr']
-                win_prob = ESCAPE_Win_Prob(average, opponent_pr)
+                win_prob = PEAR_Win_Prob(average, opponent_pr)
 
                 # opponent_elo = game['away_elo']
                 # win_prob = round((10**((average-opponent_elo) / 400)) / ((10**((average-opponent_elo) / 400)) + 1)*100, 2)
             else:
                 opponent_team = game['home_team']
                 opponent_pr = game['home_pr']
-                win_prob = 100 - ESCAPE_Win_Prob(opponent_pr, average)
+                win_prob = 100 - PEAR_Win_Prob(opponent_pr, average)
 
                 # opponent_elo = game['home_elo']
                 # win_prob = 100 - round((10**((opponent_elo-average) / 400)) / ((10**((opponent_elo-average) / 400)) + 1)*100, 2)
@@ -695,7 +695,7 @@ def simulate_season_conference(schedules, team_data):
     for _, game in schedules.iterrows():
         home_team = game['home_team']
         away_team = game['away_team']
-        home_win_prob = game['escape_win_prob']
+        home_win_prob = game['PEAR_win_prob']
 
         # Simulate the game outcome
         winner, loser = simulate_game_conference(home_team, away_team, home_win_prob)
@@ -775,7 +775,7 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     sns.set(style='whitegrid')
     ################################# HELPER FUNCTIONS #################################
 
-    def ESCAPE_Win_Prob(home_power_rating, away_power_rating):
+    def PEAR_Win_Prob(home_power_rating, away_power_rating):
         return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
 
     def adjust_home_pr(home_win_prob):
@@ -948,17 +948,17 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     home_completed_games = completed_games[(completed_games['home_team'] == home_team) | (completed_games['away_team'] == home_team)]
     away_completed_games = completed_games[(completed_games['home_team'] == away_team) | (completed_games['away_team'] == away_team)]
     home_completed_games['team_win_prob'] = np.where(home_completed_games['home_team'] == home_team, 
-                                    home_completed_games['escape_win_prob'], 
-                                    100 - home_completed_games['escape_win_prob'])
+                                    home_completed_games['PEAR_win_prob'], 
+                                    100 - home_completed_games['PEAR_win_prob'])
     away_completed_games['team_win_prob'] = np.where(away_completed_games['home_team'] == away_team, 
-                                    away_completed_games['escape_win_prob'], 
-                                    100 - away_completed_games['escape_win_prob'])
+                                    away_completed_games['PEAR_win_prob'], 
+                                    100 - away_completed_games['PEAR_win_prob'])
     home_completed_games['avg_win_prob'] = np.where(home_completed_games['home_team'] == home_team, 
-                                    ESCAPE_Win_Prob(average_pr, home_completed_games['away_pr']), 
-                                    100 - ESCAPE_Win_Prob(home_completed_games['home_pr'], average_pr))
+                                    PEAR_Win_Prob(average_pr, home_completed_games['away_pr']), 
+                                    100 - PEAR_Win_Prob(home_completed_games['home_pr'], average_pr))
     away_completed_games['avg_win_prob'] = np.where(away_completed_games['home_team'] == away_team, 
-                                    ESCAPE_Win_Prob(average_pr, away_completed_games['away_pr']), 
-                                    100 - ESCAPE_Win_Prob(away_completed_games['home_pr'], average_pr))
+                                    PEAR_Win_Prob(average_pr, away_completed_games['away_pr']), 
+                                    100 - PEAR_Win_Prob(away_completed_games['home_pr'], average_pr))
     home_avg_xwins = round(sum(home_completed_games['avg_win_prob']) / 100, 1)
     home_avg_xlosses = round(len(home_completed_games) - home_avg_xwins, 1)
     away_avg_xwins = round(sum(away_completed_games['avg_win_prob']) / 100, 1)
@@ -1057,17 +1057,17 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     away_penalties_rank = int(all_data[all_data['team'] == away_team]['penalties_rank'].values[0])
 
     home_win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1)*100,2)
-    escape_home_prob = ESCAPE_Win_Prob(home_power_rating, away_power_rating)
+    PEAR_home_prob = PEAR_Win_Prob(home_power_rating, away_power_rating)
     spread = (4.6 + home_power_rating + adjust_home_pr(home_win_prob) - away_power_rating).round(1)
     if neutrality:
         spread = (spread - 4.6).round(1)
     spread = round(spread,1)
     if (spread) <= 0:
         formatted_spread = (f'{away_team} {spread}')
-        game_win_prob = round(100 - escape_home_prob,2)
+        game_win_prob = round(100 - PEAR_home_prob,2)
     elif (spread) > 0:
         formatted_spread = (f'{home_team} -{spread}')
-        game_win_prob = escape_home_prob
+        game_win_prob = PEAR_home_prob
 
     ################################# PLOTTING LOGOS #################################
 
@@ -1274,7 +1274,7 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     plt.text(0.85, 0.44, f"DCE: #{away_dce}", fontsize = 25, va='top', ha='right', transform=ax.transAxes, fontweight='bold', color=get_rank_color(away_dce))
     plt.text(0.85, 0.39, f"DDE: #{away_dde}", fontsize = 25, va='top', ha='right', transform=ax.transAxes, fontweight='bold', color=get_rank_color(away_dde))
 
-    plt.text(0.65, 0.90, f"ESCAPE Ratings", fontsize = 35, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
+    plt.text(0.65, 0.90, f"PEAR", fontsize = 35, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
     plt.text(0.65, 0.84, f"{home_team} vs. {away_team}", fontsize = 35, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
     plt.text(0.65, 0.78, f"{formatted_spread}", fontsize = 25, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
     plt.text(0.65, 0.73, f"Win Prob: {game_win_prob}%", fontsize = 25, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
@@ -1282,7 +1282,7 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
 
     plt.tight_layout()
 
-    folder_path = f"./ESCAPE Ratings/Visuals/y{current_year}/week_{current_week}/Games"
+    folder_path = f"./PEAR/Visuals/y{current_year}/week_{current_week}/Games"
     os.makedirs(folder_path, exist_ok=True)
 
     file_path = os.path.join(folder_path, f"{home_team} vs {away_team}")
@@ -1314,8 +1314,8 @@ def plot_win_probabilities(wins_df, all_conference_wins, logos_df, team_data, la
 
     team_completed_games = completed_games[(completed_games['home_team'] == team_name) | (completed_games['away_team'] == team_name)]
     team_completed_games['team_win_prob'] = np.where(team_completed_games['home_team'] == team_name, 
-                                    team_completed_games['escape_win_prob'], 
-                                    100 - team_completed_games['escape_win_prob'])
+                                    team_completed_games['PEAR_win_prob'], 
+                                    100 - team_completed_games['PEAR_win_prob'])
     completed_expected_wins = round(sum(team_completed_games['team_win_prob']) / 100, 1)
     completed_expected_losses = round(len(team_completed_games) - completed_expected_wins, 1)
     games_played = wins + losses
@@ -1407,8 +1407,8 @@ def plot_win_probabilities(wins_df, all_conference_wins, logos_df, team_data, la
     transposed_avg['win_count'] = transposed_avg['win_count'].str.replace('win_', '').astype(int) 
     transposed_avg = transposed_avg.drop(columns=['index'])
     team_completed_games['avg_win_prob'] = np.where(team_completed_games['home_team'] == team_name, 
-                                    ESCAPE_Win_Prob(average_pr, team_completed_games['away_pr']), 
-                                    100 - ESCAPE_Win_Prob(team_completed_games['home_pr'], average_pr))
+                                    PEAR_Win_Prob(average_pr, team_completed_games['away_pr']), 
+                                    100 - PEAR_Win_Prob(team_completed_games['home_pr'], average_pr))
     avg_expected_wins = round(sum(team_completed_games['avg_win_prob']) / 100, 1)
     avg_expected_loss = round(len(team_completed_games) - avg_expected_wins, 1)
     strength_of_record = SOR[SOR['team'] == team_name]['SOR'].values[0]
@@ -1552,8 +1552,8 @@ def plot_win_probabilities(wins_df, all_conference_wins, logos_df, team_data, la
     team_schedule = schedule_info[(schedule_info['home_team'] == team_name) | (schedule_info['away_team'] == team_name)].reset_index()
     team_schedule['raw_spread'] = pd.to_numeric(team_schedule['spread'], errors='coerce')
     team_schedule['team_win_prob'] = np.where(team_schedule['home_team'] == team_name, 
-                                 team_schedule['escape_win_prob'], 
-                                 100 - team_schedule['escape_win_prob'])
+                                 team_schedule['PEAR_win_prob'], 
+                                 100 - team_schedule['PEAR_win_prob'])
     lowest_prob_row = team_schedule.loc[team_schedule['team_win_prob'].idxmin()]
     if lowest_prob_row['home_team'] == team_name:
         most_likely_loss = lowest_prob_row['away_team']
@@ -1836,8 +1836,8 @@ def plot_win_probabilities(wins_df, all_conference_wins, logos_df, team_data, la
 
     ################################# ENDING BOILER PLATE #################################
     if branding:
-        plt.text(1.82, .14, "@EscapeRatingCFB", fontsize=16, ha='center', verticalalignment='top', transform=ax2.transAxes, fontweight='bold')
-        img_path = './escape_logo.jpg'  # Replace with the actual path to the image
+        plt.text(1.82, .14, "@PEARatings", fontsize=16, ha='center', verticalalignment='top', transform=ax2.transAxes, fontweight='bold')
+        img_path = './PEAR_logo.jpg'  # Replace with the actual path to the image
         img = mpimg.imread(img_path)
         img_ax = fig.add_axes([2.1,.04,0.30,0.30])
         img_ax.imshow(img)
@@ -1898,7 +1898,7 @@ def simulate_season_conference(schedules, team_data):
     for _, game in schedules.iterrows():
         home_team = game['home_team']
         away_team = game['away_team']
-        home_win_prob = game['escape_win_prob']
+        home_win_prob = game['PEAR_win_prob']
 
         # Simulate the game outcome
         winner, loser = simulate_game_conference(home_team, away_team, home_win_prob)
@@ -2171,8 +2171,8 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
 
     team_completed_games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
     team_completed_games['team_win_prob'] = np.where(team_completed_games['home_team'] == team, 
-                                    team_completed_games['escape_win_prob'], 
-                                    100 - team_completed_games['escape_win_prob'])
+                                    team_completed_games['PEAR_win_prob'], 
+                                    100 - team_completed_games['PEAR_win_prob'])
     games_played = records[records['team'] == team]['games_played'].values[0]
     difference = games_played - len(team_completed_games)
     expected_wins = round((team_completed_games['team_win_prob'] / 100).sum(),1)
@@ -2319,10 +2319,10 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     plt.text(1.8,-0.20, "DDE - Drive Disruption Efficiency, how well your defense disrupts offenses", ha='right', fontsize=12, transform = ax.transAxes)
     plt.text(1.8,-0.24, "PBR - Penalty Burden Ratio, how well your team limits or overcomes penalties", ha='right', fontsize=12, transform = ax.transAxes)
     plt.text(1.8,-0.28, "TPG - Talent Performance Gap, your performance relative to your talent", ha='right', fontsize=12, transform = ax.transAxes)
-    plt.text(0.5,-0.34, "Figure: @EscapeRatingCFB | Data: @CFB_Data", ha='center', fontsize=14, fontweight='bold', transform = ax.transAxes)
+    plt.text(0.5,-0.34, "Figure: @PEARatings | Data: @CFB_Data", ha='center', fontsize=14, fontweight='bold', transform = ax.transAxes)
     plt.tight_layout()
 
-    folder_path = f"./ESCAPE Ratings/Visuals/y{current_year}/week_{current_week}/Stat Profiles"
+    folder_path = f"./PEAR/Visuals/y{current_year}/week_{current_week}/Stat Profiles"
     os.makedirs(folder_path, exist_ok=True)
 
     file_path = os.path.join(folder_path, f"{team}")
@@ -2367,9 +2367,9 @@ try:
                                         right_on='team', 
                                         how='left').rename(columns={'power_rating': 'away_pr'})
     schedule_info = schedule_info.drop(columns=['team'])
-    # Apply the ESCAPE_Win_Prob function to the schedule_info DataFrame
-    schedule_info['escape_win_prob'] = schedule_info.apply(
-        lambda row: ESCAPE_Win_Prob(row['home_pr'], row['away_pr']), axis=1
+    # Apply the PEAR_Win_Prob function to the schedule_info DataFrame
+    schedule_info['PEAR_win_prob'] = schedule_info.apply(
+        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr']), axis=1
     )
     # Elo Win Probability
     schedule_info['home_win_prob'] = round((10**((schedule_info['home_elo'] - schedule_info['away_elo']) / 400)) / ((10**((schedule_info['home_elo'] - schedule_info['away_elo']) / 400)) + 1)*100,2)
@@ -2412,8 +2412,8 @@ try:
                                         right_on='team', 
                                         how='left').rename(columns={'power_rating': 'away_pr'})
     year_long_schedule = year_long_schedule.drop(columns=['team'])
-    year_long_schedule['escape_win_prob'] = year_long_schedule.apply(
-        lambda row: ESCAPE_Win_Prob(row['home_pr'], row['away_pr']), axis=1
+    year_long_schedule['PEAR_win_prob'] = year_long_schedule.apply(
+        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr']), axis=1
     )
     year_long_schedule['home_win_prob'] = round((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) / ((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) + 1)*100,2)
 except Exception as e:
@@ -2449,14 +2449,14 @@ try:
         games_played = records[records['team'] == team]['games_played'].values[0]
         wins = records[records['team'] == team]['wins'].values[0]
         team_completed_games['avg_win_prob'] = np.where(team_completed_games['home_team'] == team,
-                                                        ESCAPE_Win_Prob(average_pr, team_completed_games['away_pr']),
-                                                        100 - ESCAPE_Win_Prob(team_completed_games['home_pr'], average_pr))
+                                                        PEAR_Win_Prob(average_pr, team_completed_games['away_pr']),
+                                                        100 - PEAR_Win_Prob(team_completed_games['home_pr'], average_pr))
         team_completed_games['good_win_prob'] = np.where(team_completed_games['home_team'] == team,
-                                                        ESCAPE_Win_Prob(good_team_pr, team_completed_games['away_pr']),
-                                                        100 - ESCAPE_Win_Prob(team_completed_games['home_pr'], good_team_pr))
+                                                        PEAR_Win_Prob(good_team_pr, team_completed_games['away_pr']),
+                                                        100 - PEAR_Win_Prob(team_completed_games['home_pr'], good_team_pr))
         team_completed_games['elite_win_prob']  = np.where(team_completed_games['home_team'] == team,
-                                                        ESCAPE_Win_Prob(elite_team_pr, team_completed_games['away_pr']),
-                                                        100 - ESCAPE_Win_Prob(team_completed_games['home_pr'], elite_team_pr))
+                                                        PEAR_Win_Prob(elite_team_pr, team_completed_games['away_pr']),
+                                                        100 - PEAR_Win_Prob(team_completed_games['home_pr'], elite_team_pr))
 
         # team_completed_games['avg_win_prob'] = np.where(team_completed_games['home_team'] == team, 
         #                             round((10**((average_elo-team_completed_games['away_elo']) / 400)) / ((10**((average_elo-team_completed_games['away_elo']) / 400)) + 1)*100, 2), 
@@ -2549,8 +2549,8 @@ try:
         # Adjust win probability with MOV influence
         team_completed_games['avg_win_prob'] = np.where(
             team_completed_games['home_team'] == team,
-            ESCAPE_Win_Prob(num_12_pr, team_completed_games['away_pr']) + f(team_completed_games['margin_of_victory']),
-            100 - ESCAPE_Win_Prob(team_completed_games['home_pr'], num_12_pr) - f(-team_completed_games['margin_of_victory'])
+            PEAR_Win_Prob(num_12_pr, team_completed_games['away_pr']) + f(team_completed_games['margin_of_victory']),
+            100 - PEAR_Win_Prob(team_completed_games['home_pr'], num_12_pr) - f(-team_completed_games['margin_of_victory'])
         )
         # Calculate expected wins (xWins)
         current_xWins = round(sum(team_completed_games['avg_win_prob']) / 100, 3)
@@ -2572,12 +2572,12 @@ print("Prep Work Done!")
 
 try:
     top_25 = all_data[:25]
-    last_week_data = pd.read_csv(f"./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week-1}.csv")
+    last_week_data = pd.read_csv(f"./PEAR/Ratings/y{current_year}/PEAR_week{current_week-1}.csv")
 
     fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#5fa391')
-    plt.suptitle(f"Week {current_week} ESCAPE Ratings", fontsize=20, fontweight='bold', color='black')
+    plt.suptitle(f"Week {current_week} PEAR", fontsize=20, fontweight='bold', color='black')
     fig.text(0.5, 0.93, "Power Rating (Position Change)", fontsize=8, ha='center', color='black')
 
     for i, ax in enumerate(axs.ravel()):
@@ -2606,7 +2606,7 @@ try:
     fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#5fa391')
-    plt.suptitle(f"Week {current_week} GO5 ESCAPE Ratings", fontsize=20, fontweight='bold', color='black')
+    plt.suptitle(f"Week {current_week} GO5 PEAR", fontsize=20, fontweight='bold', color='black')
 
     for i, ax in enumerate(axs.ravel()):
         team = top_25.loc[i, 'team']
@@ -2777,7 +2777,7 @@ except Exception as e:
 try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
     all_data['offensive_total'] = scaler100.fit_transform(all_data[['offensive_total']])
-    best_and_worst(all_data, logos, 'offensive_total', "ESCAPE Raw Offenses: Best and Worst 25", "Percentile Based: 100 is best, 1 is worst", "offenses")
+    best_and_worst(all_data, logos, 'offensive_total', "PEAR Raw Offenses: Best and Worst 25", "Percentile Based: 100 is best, 1 is worst", "offenses")
     print("Offenses Done!")
 except Exception as e:
     print(f"Error in code chunk: Offenses. Error: {e}")
@@ -2785,7 +2785,7 @@ except Exception as e:
 try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
     all_data['defensive_total'] = scaler100.fit_transform(all_data[['defensive_total']])
-    best_and_worst(all_data, logos, 'defensive_total', "ESCAPE Raw Defenses: Best and Worst 25", "100 is the best raw defense, 1 is the worst", "defenses")
+    best_and_worst(all_data, logos, 'defensive_total', "PEAR Raw Defenses: Best and Worst 25", "100 is the best raw defense, 1 is the worst", "defenses")
     print("Defenses Done!")
 except Exception as e:
     print(f"Error in code chunk: Defenses. Error: {e}")
@@ -2830,7 +2830,7 @@ except Exception as e:
 try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
     all_data['STM_scaled'] = scaler100.fit_transform(all_data[['STM']])
-    best_and_worst(all_data, logos, 'STM_scaled', "ESCAPE Special Teams", "Percentile Based: 100 is best, 1 is worst", "special_teams")
+    best_and_worst(all_data, logos, 'STM_scaled', "PEAR Special Teams", "Percentile Based: 100 is best, 1 is worst", "special_teams")
     print("Special Teams Done!")
 except Exception as e:
     print(f"Error in code chunk: Special Teams. Error: {e}")
@@ -2839,7 +2839,7 @@ try:
     pbr_min = all_data['PBR'].min()
     pbr_max = all_data['PBR'].max()
     all_data['PBR_scaled'] = 100 - (all_data['PBR'] - pbr_min) * (99 / (pbr_max - pbr_min))
-    best_and_worst(all_data, logos, 'PBR_scaled', "ESCAPE Penalty Burden Ratio", "How Penalties Impact Success - 100 is best, 1 is worst", "penalty_burden_ratio")
+    best_and_worst(all_data, logos, 'PBR_scaled', "PEAR Penalty Burden Ratio", "How Penalties Impact Success - 100 is best, 1 is worst", "penalty_burden_ratio")
     print("PBR Done!")
 except Exception as e:
     print(f"Error in code chunk: PBR. Error: {e}")
@@ -2847,7 +2847,7 @@ except Exception as e:
 try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
     all_data['DCE_scaled'] = scaler100.fit_transform(all_data[['DCE']])
-    best_and_worst(all_data, logos, 'DCE_scaled', "ESCAPE Drive Control Efficiency", "How Well You Control the Ball - 100 is best, 1 is worst", "drive_control_efficiency")
+    best_and_worst(all_data, logos, 'DCE_scaled', "PEAR Drive Control Efficiency", "How Well You Control the Ball - 100 is best, 1 is worst", "drive_control_efficiency")
     print("DCE Done!")
 except Exception as e:
     print(f"Error in code chunk: DCE. Error: {e}")
@@ -2855,7 +2855,7 @@ except Exception as e:
 try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
     all_data['DDE_scaled'] = scaler100.fit_transform(all_data[['DDE']])
-    best_and_worst(all_data, logos, 'DDE_scaled', "ESCAPE Drive Disruption Efficiency", "How Well You Disrupt the Offense - 100 is best, 1 is worst", "drive_disruption_efficiency")
+    best_and_worst(all_data, logos, 'DDE_scaled', "PEAR Drive Disruption Efficiency", "How Well You Disrupt the Offense - 100 is best, 1 is worst", "drive_disruption_efficiency")
     print("DDE Done!")
 except Exception as e:
     print(f"Error in code chunk: DDE. Error: {e}")
@@ -2900,7 +2900,7 @@ except Exception as e:
 try:
     columns_to_average = ["offensive_rank", "defensive_rank", "STM_rank", "PBR_rank", "DCE_rank", "DDE_rank"]
     all_data["average_metric_rank"] = round(all_data[columns_to_average].mean(axis=1),1)
-    best_and_worst(all_data, logos, 'average_metric_rank', "ESCAPE Average Metric Ranking", "Average OFF, DEF, ST, PBR, DCE, DDE Ranking - Lower is Better", "average_metric_rank")
+    best_and_worst(all_data, logos, 'average_metric_rank', "PEAR Average Metric Ranking", "Average OFF, DEF, ST, PBR, DCE, DDE Ranking - Lower is Better", "average_metric_rank")
     print("Average Metric Done!")
 except Exception as e:
     print(f"Error in code chunk: Average Metric. Error: {e}")
@@ -2914,8 +2914,8 @@ try:
 
         team_completed_games = completed_games[(completed_games['home_team'] == team_name) | (completed_games['away_team'] == team_name)]
         team_completed_games['team_win_prob'] = np.where(team_completed_games['home_team'] == team_name, 
-                                        team_completed_games['escape_win_prob'], 
-                                        100 - team_completed_games['escape_win_prob'])
+                                        team_completed_games['PEAR_win_prob'], 
+                                        100 - team_completed_games['PEAR_win_prob'])
         completed_expected_wins = round(sum(team_completed_games['team_win_prob']) / 100, 2)
         completed_expected_losses = round(len(team_completed_games) - completed_expected_wins, 1)
         games_played = wins + losses
@@ -2924,7 +2924,7 @@ try:
         performance = wins - completed_expected_wins
         performance_list.append(performance)
     current_performance = pd.DataFrame(zip(team_data['team'], performance_list), columns = ['team', 'performance'])
-    best_and_worst2(current_performance, logos, 'performance', f'Week {current_week} ESCAPE Overperformers and Underperformers', "Wins ABOVE or BELOW Your Retroactive Win Expectation", "overperformer_and_underperformer")
+    best_and_worst2(current_performance, logos, 'performance', f'Week {current_week} PEAR Overperformers and Underperformers', "Wins ABOVE or BELOW Your Retroactive Win Expectation", "overperformer_and_underperformer")
     print("Achieving vs. Expectation Done!")
 except Exception as e:
     print(f"Error in code chunk: Achieving vs. Expectation. Error: {e}")
@@ -3052,13 +3052,13 @@ except Exception as e:
     print(f"Error in code chunk: Most Deserving Playoff. Error: {e}")
 
 try:
-    best_and_worst2(SOS, logos, 'avg_expected_wins', f'Week {current_week} ESCAPE SOS', "Efficiency of an Elite Team Against Your Opponents", "strength_of_schedule")
+    best_and_worst2(SOS, logos, 'avg_expected_wins', f'Week {current_week} PEAR SOS', "Efficiency of an Elite Team Against Your Opponents", "strength_of_schedule")
     print("SOS Done!")
 except Exception as e:
     print(f"Error in code chunk: SOS. Error: {e}")
 
 try:
-    best_and_worst2(SOR, logos, 'wins_above_good', f'Week {current_week} ESCAPE SOR', "Wins Above or Below a Good Team", "strength_of_record")
+    best_and_worst2(SOR, logos, 'wins_above_good', f'Week {current_week} PEAR SOR', "Wins Above or Below a Good Team", "strength_of_record")
     print("SOR Done!")
 except Exception as e:
     print(f"Error in code chunk: SOR. Error: {e}")
@@ -3067,7 +3067,7 @@ try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
     all_data['most_deserving_scaled'] = scaler100.fit_transform(all_data[['most_deserving_wins']])
     all_data['talent_performance'] = (all_data['most_deserving_scaled'] - all_data['avg_talent']) / math.sqrt(2)
-    best_and_worst(all_data, logos, 'talent_performance', "ESCAPE Talent Performance Gap", "Is Your Team Outperforming or Underperforming Its Roster?", "talent_performance")
+    best_and_worst(all_data, logos, 'talent_performance', "PEAR Talent Performance Gap", "Is Your Team Outperforming or Underperforming Its Roster?", "talent_performance")
     print("Talent Performance Done!")
 except Exception as e:
     print(f"Error in code chunk: Talent Performance. Error: {e}")
@@ -3214,13 +3214,13 @@ try:
     all_data['offensive_total'] = scaler100.fit_transform(all_data[['offensive_total']])
 
     all_data['dependence_score'] = (all_data['offensive_total'] - all_data['defensive_total']) / (all_data['offensive_total'] + all_data['defensive_total'])
-    best_and_worst2(all_data, logos, 'dependence_score', 'ESCAPE Unit Dependence', 'Values near 1 indicate offensive dependence, while values near -1 indicate defensive dependence', 'dependence_score')
+    best_and_worst2(all_data, logos, 'dependence_score', 'PEAR Unit Dependence', 'Values near 1 indicate offensive dependence, while values near -1 indicate defensive dependence', 'dependence_score')
     print('Dependence Score Done!')
 except Exception as e:
     print(f"Error in code chunk: Dependence Score. Error: {e}")
 
 try:
-    best_and_worst2(RTP, logos, 'RTP', f'ESCAPE Margin of Victory', "If You Are Expected to Win by 10 Points, Your Average MOV is __ Points", "mov_performance")
+    best_and_worst2(RTP, logos, 'RTP', f'PEAR Margin of Victory', "If You Are Expected to Win by 10 Points, Your Average MOV is __ Points", "mov_performance")
     print("MOV Performance Done!")
 except Exception as e:
     print(f"Error in code chunk: MOV. Error: {e}")
@@ -3459,7 +3459,7 @@ try:
                 fig.text(1.44 + 0.132*j, 0.9, f"{this_conference_games}", fontsize=12, fontweight='bold', ha='center')
                 this_conference_games -= 1
                 j+=1
-            fig.text(0.38, 0.98, f"ESCAPE PROJECTED {this_conference.upper()} STANDINGS", fontsize=16, fontweight='bold', ha='left')
+            fig.text(0.38, 0.98, f"PEAR PROJECTED {this_conference.upper()} STANDINGS", fontsize=16, fontweight='bold', ha='left')
             fig.text(0.38, 0.95, "PERCENT CHANCE TO WIN AT LEAST _ CONFERENCE GAMES", fontsize =10, ha='left')
 
             file_path = os.path.join(conf_folder_path, f"{this_conference}")

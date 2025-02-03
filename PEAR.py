@@ -92,8 +92,8 @@ else:
 current_week = int(current_week)
 current_year = int(current_year)
 
-team_data = pd.read_csv(f"./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}.csv").drop(columns=['Unnamed: 0'])
-all_data = pd.read_csv(f"./ESCAPE Ratings/Data/y{current_year}/team_data_week{current_week}.csv")
+team_data = pd.read_csv(f"./PEAR/Ratings/y{current_year}/PEAR_week{current_week}.csv").drop(columns=['Unnamed: 0'])
+all_data = pd.read_csv(f"./PEAR/Data/y{current_year}/team_data_week{current_week}.csv")
 
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
@@ -102,7 +102,7 @@ def date_sort(game):
     game_date = datetime.datetime.strptime(game['start_date'], "%Y-%m-%dT%H:%M:%S.000Z")
     return game_date
 
-def ESCAPE_Win_Prob(home_pr, away_pr):
+def PEAR_Win_Prob(home_pr, away_pr):
     rating_diff = home_pr - away_pr
     win_prob = round(1 / (1 + 10 ** (-rating_diff / 20)) * 100, 2)
     return win_prob
@@ -124,7 +124,7 @@ def fetch_logo_image(logo_url):
     return Image.open(BytesIO(response.content))
     
 # Function to calculate spread
-def ESCAPE_Win_Prob(home_pr, away_pr):
+def PEAR_Win_Prob(home_pr, away_pr):
     rating_diff = home_pr - away_pr
     win_prob = round(1 / (1 + 10 ** (-rating_diff / 20)) * 100, 2)
     return win_prob
@@ -170,7 +170,7 @@ def find_spread(home_team, away_team, neutral=False):
         raw_spread -= HFA
 
     spread = round(raw_spread,1)
-    escape_win_prob = ESCAPE_Win_Prob(home_pr, away_pr)
+    PEAR_win_prob = PEAR_Win_Prob(home_pr, away_pr)
     game_quality = round(((home_pr + away_pr) / 2) - (abs(spread + 0.01) * 0.5), 1)
 
     if spread >= 0:
@@ -368,7 +368,7 @@ def get_week_spreads(team_data):
     week_games = add_pr_prediction(week_games, 'pr_spread', 'spread_open', 'opening_spread_prediction')
 
     # Formatting the KRATOS Power Rating Spread
-    week_games['ESCAPE'] = week_games.apply(
+    week_games['PEAR'] = week_games.apply(
         lambda row: f"{row['away_team']} {-abs(row['pr_spread'])}" if ((row['pr_spread'] <= 0)) 
         else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1)
 
@@ -400,8 +400,8 @@ def get_week_spreads(team_data):
         else:
             return 0
     # Apply the check prediction function and store the result in a new column
-    week_games['ESCAPE ATS CLOSE'] = week_games.apply(lambda row: check_prediction_correct(row, 'pr_prediction', 'CLOSE ATS RESULT'), axis=1)
-    week_games['ESCAPE ATS OPEN'] = week_games.apply(lambda row: check_prediction_correct(row, 'opening_spread_prediction', 'OPEN ATS RESULT'), axis=1)
+    week_games['PEAR ATS CLOSE'] = week_games.apply(lambda row: check_prediction_correct(row, 'pr_prediction', 'CLOSE ATS RESULT'), axis=1)
+    week_games['PEAR ATS OPEN'] = week_games.apply(lambda row: check_prediction_correct(row, 'opening_spread_prediction', 'OPEN ATS RESULT'), axis=1)
 
     def check_straight_up(row, prediction_col):
         if row['actual_spread'] == '':
@@ -412,32 +412,32 @@ def get_week_spreads(team_data):
             return 1
         else:
             return 0
-    week_games['ESCAPE SU'] = week_games.apply(lambda row: check_straight_up(row, 'pr_spread'), axis = 1)
+    week_games['PEAR SU'] = week_games.apply(lambda row: check_straight_up(row, 'pr_spread'), axis = 1)
     return week_games
-st.title(f"{current_year} ESCAPE Ratings")
-st.logo("./ESCAPE Ratings/escape_logo.jpg", size = 'large')
+st.title(f"{current_year} PEAR")
+st.logo("./PEAR/escape_logo.jpg", size = 'large')
 
 # week_spreads = get_week_spreads(team_data)
 # week_spreads['DK Spread'] = week_spreads['formatted_spread']
-# week_spreads['ESCAPE Spread'] = week_spreads['ESCAPE']
+# week_spreads['PEAR Spread'] = week_spreads['PEAR']
 # week_spreads.columns.values[4] = 'Home'
 # week_spreads.columns.values[8] = 'Away'
 # week_spreads.index = week_spreads.index + 1
-# game_completion_info = week_spreads[['Home', 'Away', 'difference', 'formatted_open', 'formatted_spread', 'ESCAPE', 'actual_spread', 'ESCAPE ATS OPEN', 'ESCAPE ATS CLOSE', 'ESCAPE SU']]
-# completed = game_completion_info[game_completion_info["ESCAPE ATS CLOSE"] != '']
+# game_completion_info = week_spreads[['Home', 'Away', 'difference', 'formatted_open', 'formatted_spread', 'PEAR', 'actual_spread', 'PEAR ATS OPEN', 'PEAR ATS CLOSE', 'PEAR SU']]
+# completed = game_completion_info[game_completion_info["PEAR ATS CLOSE"] != '']
 # if postseason == True:
 #     st.subheader("Bowl Games Projected Spreads, Ordered by Deviation")
 # else:
 #     st.subheader(f"Week {current_week} Projected Spreads, Ordered by Deviation")
 # week_spreads['Deviation'] = week_spreads['difference']
-# week_spreads['ATS'] = week_spreads['ESCAPE ATS CLOSE']
+# week_spreads['ATS'] = week_spreads['PEAR ATS CLOSE']
 # with st.container(border=True, height=440):
-#     st.dataframe(week_spreads[['ESCAPE Spread', 'DK Spread', 'Deviation','Home', 'Away', 'ATS']], use_container_width=True)
+#     st.dataframe(week_spreads[['PEAR Spread', 'DK Spread', 'Deviation','Home', 'Away', 'ATS']], use_container_width=True)
 # X = 10
 # if len(completed) > 0:
 #     no_pushes = completed[completed['difference'] != 0.0]
-#     st.markdown(f"ATS This Week: {round(100 * sum(no_pushes['ESCAPE ATS CLOSE']) / len(no_pushes),1)}% through {round(100*len(completed)/len(week_spreads))}% of games.")
-#     st.markdown(f"SU This Week: {round(100*sum(completed['ESCAPE SU'] / len(completed)),1)}%")
+#     st.markdown(f"ATS This Week: {round(100 * sum(no_pushes['PEAR ATS CLOSE']) / len(no_pushes),1)}% through {round(100*len(completed)/len(week_spreads))}% of games.")
+#     st.markdown(f"SU This Week: {round(100*sum(completed['PEAR SU'] / len(completed)),1)}%")
 #     # print(f'wATS: {wATS}%')
 #     # print(f"MAE: {MAE}")
 #     # print(f"DAE: {DAE}")
@@ -481,18 +481,18 @@ all_data['DDE'] = all_data['DDE_rank']
 all_data.index = all_data.index + 1
 with st.container(border=True, height=440):
     st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
-st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
+st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
 # , MD - Most Deserving Rankings
 
 st.divider()
 
 
 
-# st.markdown("General Info for ESCAPE v2")
+# st.markdown("General Info for PEAR v2")
 # st.caption(f"SU Since Week 9: {SU}%")
 # st.caption(f"ATS Since Week 9: {ATS}%")
 # st.caption(f"Mean Absolute Error: {MAE}")
 # st.caption(f"Median Absolute Error: {DAE}")
 # st.caption(f"Root Square Error: {RMSE}")
-# st.caption("Made by me. Who is me? Well, I'm me. If you run into an error, please reach out to me at @EscapeRatingsCFB on Twitter/X.")
-st.caption("ESCAPE v2 came to be in Week 9, 2024. Currently powered by ESCAPE v2.9")
+# st.caption("Made by me. Who is me? Well, I'm me. If you run into an error, please reach out to me at @PEARRatingsCFB on Twitter/X.")
+st.caption("PEAR v2 came to be in Week 9, 2024. Currently powered by PEAR v2.9")

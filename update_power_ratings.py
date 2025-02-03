@@ -76,7 +76,7 @@ def date_sort(game):
     game_date = datetime.datetime.strptime(game['start_date'], "%Y-%m-%dT%H:%M:%S.000Z")
     return game_date
 
-def ESCAPE_Win_Prob(home_power_rating, away_power_rating):
+def PEAR_Win_Prob(home_power_rating, away_power_rating):
     return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
 
 def average_team_distribution(num_simulations, schedules, average, team_name):
@@ -95,14 +95,14 @@ def average_team_distribution(num_simulations, schedules, average, team_name):
             if game['home_team'] == team_name:
                 opponent_team = game['away_team']
                 opponent_pr = game['away_pr']
-                win_prob = ESCAPE_Win_Prob(average, opponent_pr)
+                win_prob = PEAR_Win_Prob(average, opponent_pr)
 
                 # opponent_elo = game['away_elo']
                 # win_prob = round((10**((average-opponent_elo) / 400)) / ((10**((average-opponent_elo) / 400)) + 1)*100, 2)
             else:
                 opponent_team = game['home_team']
                 opponent_pr = game['home_pr']
-                win_prob = 100 - ESCAPE_Win_Prob(opponent_pr, average)
+                win_prob = 100 - PEAR_Win_Prob(opponent_pr, average)
 
                 # opponent_elo = game['home_elo']
                 # win_prob = 100 - round((10**((opponent_elo-average) / 400)) / ((10**((opponent_elo-average) / 400)) + 1)*100, 2)
@@ -718,9 +718,9 @@ if run_full_optimization == 'y':
                                         how='left').rename(columns={'power_rating': 'away_pr'})
     year_long_schedule = year_long_schedule.drop(columns=['team'])
 
-    # Apply the ESCAPE_Win_Prob function to the schedule_info DataFrame
-    year_long_schedule['escape_win_prob'] = year_long_schedule.apply(
-        lambda row: ESCAPE_Win_Prob(row['home_pr'], row['away_pr']), axis=1
+    # Apply the PEAR_Win_Prob function to the schedule_info DataFrame
+    year_long_schedule['PEAR_win_prob'] = year_long_schedule.apply(
+        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr']), axis=1
     )
     year_long_schedule['home_win_prob'] = round((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) / ((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) + 1)*100,2)
 
@@ -752,14 +752,14 @@ if run_full_optimization == 'y':
         games_played = records[records['team'] == team]['games_played'].values[0]
         wins = records[records['team'] == team]['wins'].values[0]
         team_completed_games['avg_win_prob'] = np.where(team_completed_games['home_team'] == team,
-                                                        ESCAPE_Win_Prob(average_pr, team_completed_games['away_pr']),
-                                                        100 - ESCAPE_Win_Prob(team_completed_games['home_pr'], average_pr))
+                                                        PEAR_Win_Prob(average_pr, team_completed_games['away_pr']),
+                                                        100 - PEAR_Win_Prob(team_completed_games['home_pr'], average_pr))
         team_completed_games['good_win_prob'] = np.where(team_completed_games['home_team'] == team,
-                                                        ESCAPE_Win_Prob(good_team_pr, team_completed_games['away_pr']),
-                                                        100 - ESCAPE_Win_Prob(team_completed_games['home_pr'], good_team_pr))
+                                                        PEAR_Win_Prob(good_team_pr, team_completed_games['away_pr']),
+                                                        100 - PEAR_Win_Prob(team_completed_games['home_pr'], good_team_pr))
         team_completed_games['elite_win_prob']  = np.where(team_completed_games['home_team'] == team,
-                                                        ESCAPE_Win_Prob(elite_team_pr, team_completed_games['away_pr']),
-                                                        100 - ESCAPE_Win_Prob(team_completed_games['home_pr'], elite_team_pr))
+                                                        PEAR_Win_Prob(elite_team_pr, team_completed_games['away_pr']),
+                                                        100 - PEAR_Win_Prob(team_completed_games['home_pr'], elite_team_pr))
 
         # team_completed_games['avg_win_prob'] = np.where(team_completed_games['home_team'] == team, 
         #                             round((10**((average_elo-team_completed_games['away_elo']) / 400)) / ((10**((average_elo-team_completed_games['away_elo']) / 400)) + 1)*100, 2), 
@@ -807,8 +807,8 @@ if run_full_optimization == 'y':
         # Adjust win probability with MOV influence
         team_completed_games['avg_win_prob'] = np.where(
             team_completed_games['home_team'] == team,
-            ESCAPE_Win_Prob(num_12_pr, team_completed_games['away_pr']) + f(team_completed_games['margin_of_victory']),
-            100 - ESCAPE_Win_Prob(team_completed_games['home_pr'], num_12_pr) - f(-team_completed_games['margin_of_victory'])
+            PEAR_Win_Prob(num_12_pr, team_completed_games['away_pr']) + f(team_completed_games['margin_of_victory']),
+            100 - PEAR_Win_Prob(team_completed_games['home_pr'], num_12_pr) - f(-team_completed_games['margin_of_victory'])
         )
         
         # Calculate expected wins (xWins)
@@ -832,23 +832,23 @@ if run_full_optimization == 'y':
     team_data = pd.merge(team_data, SOR, how='left', on='team')
     team_data = pd.merge(team_data, most_deserving, how='left', on='team')
 
-    folder_path = f"./ESCAPE Ratings/Data/y{current_year}"
+    folder_path = f"./PEAR/Data/y{current_year}"
     os.makedirs(folder_path, exist_ok=True)
 
-    folder_path = f"./ESCAPE Ratings/Ratings/y{current_year}"
+    folder_path = f"./PEAR/Ratings/y{current_year}"
     os.makedirs(folder_path, exist_ok=True)
 
-    folder_path = f"./ESCAPE Ratings/Spreads/y{current_year}"
+    folder_path = f"./PEAR/Spreads/y{current_year}"
     os.makedirs(folder_path, exist_ok=True)
 
-    team_data.to_csv(f"./ESCAPE Ratings/Data/y{current_year}/team_data_week{current_week}_no_adjustments.csv")
-    team_power_rankings.to_csv(f'./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}_no_adjustments.csv')
+    team_data.to_csv(f"./PEAR/Data/y{current_year}/team_data_week{current_week}_no_adjustments.csv")
+    team_power_rankings.to_csv(f'./PEAR/Ratings/y{current_year}/PEAR_week{current_week}_no_adjustments.csv')
 else:
     print("No Optimization")
-    team_data = pd.read_csv(f'./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}.csv').drop(columns=['Unnamed: 0'])
+    team_data = pd.read_csv(f'./PEAR/Ratings/y{current_year}/PEAR_week{current_week}.csv').drop(columns=['Unnamed: 0'])
 
-    running_tracker_file = "./ESCAPE Ratings/Adjustments_Tracking/team_adjustments.txt"
-    weekly_changes_file = f"./ESCAPE Ratings/Adjustments_Tracking/team_adjustments_week{current_week}_{current_year}.txt"
+    running_tracker_file = "./PEAR/Adjustments_Tracking/team_adjustments.txt"
+    weekly_changes_file = f"./PEAR/Adjustments_Tracking/team_adjustments_week{current_week}_{current_year}.txt"
     def load_adjustments():
         adjustments = {}
         try:
@@ -924,5 +924,5 @@ else:
     team_data = team_data.sort_values('power_rating', ascending=False).reset_index(drop=True)
     team_data['power_rating'] = team_data['power_rating'].round(1)
     team_data.index = team_data.index + 1
-    team_data.to_csv(f'./ESCAPE Ratings/Ratings/y{current_year}/ESCAPE_week{current_week}_test.csv')
+    team_data.to_csv(f'./PEAR/Ratings/y{current_year}/PEAR_week{current_week}_test.csv')
     print(team_data.head())
