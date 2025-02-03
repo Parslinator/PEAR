@@ -91,7 +91,7 @@ else:
 current_week = int(current_week)
 current_year = int(current_year)
 
-folder_path = f"ESCAPE Ratings/Visuals/y{current_year}/week_{current_week}/Stat Profiles"
+folder_path = f"PEAR/Visuals/y{current_year}/week_{current_week}/Stat Profiles"
 
 if os.path.exists(folder_path):
     # Get a list of all .png files in the folder

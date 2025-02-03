@@ -94,7 +94,7 @@ current_year = int(current_year)
 st.title("Team Stats Information")
 
 # Construct the folder path
-folder_path = f"ESCAPE Ratings/Visuals/y{current_year}/week_{current_week}/"
+folder_path = f"PEAR/Visuals/y{current_year}/week_{current_week}/"
 
 if os.path.exists(folder_path):
     top25_file = f"{folder_path}top25.png" # used
