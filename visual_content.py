@@ -188,7 +188,7 @@ def best_and_worst(all_data, logos, metric, title, subtitle, visual_name):
 
     # Adjust space between subplots
     fig.subplots_adjust(hspace=0.4, wspace=0.4)
-    fig.patch.set_facecolor('#5fa391')
+    fig.patch.set_facecolor('#CECEB2')
 
     # Title and description
     plt.suptitle(title, fontsize=20, fontweight='bold', color='black')
@@ -334,7 +334,7 @@ def best_and_worst2(all_data, logos, metric, title, subtitle, visual_name):
 
     # Adjust space between subplots
     fig.subplots_adjust(hspace=0.4, wspace=0.4)
-    fig.patch.set_facecolor('#5fa391')
+    fig.patch.set_facecolor('#CECEB2')
 
     # Title and description
     plt.suptitle(title, fontsize=20, fontweight='bold', color='black')
@@ -633,7 +633,7 @@ def average_team_distribution(num_simulations, schedules, average, team_name):
 def finish_schedule(win_thresholds_in_season, team_data, logos, team):
     # Prepare the figure
     fig, ax = plt.subplots(figsize=(10, 10))
-    fig.patch.set_facecolor('#5fa391')
+    fig.patch.set_facecolor('#CECEB2')
 
     # Filter for the specific team and get the team logo
     wins = win_thresholds_in_season[win_thresholds_in_season['team'] == team]
@@ -1073,8 +1073,8 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
 
     fig, ax = plt.subplots(nrows=1, figsize=(12, 10),dpi=125)
     fig_width, fig_height = fig.get_size_inches()
-    fig.patch.set_facecolor('#5fa391')  # Set figure background color
-    ax.set_facecolor('#5fa391') 
+    fig.patch.set_facecolor('#CECEB2')  # Set figure background color
+    ax.set_facecolor('#CECEB2') 
     ax.axis('off')
     home_logo_url = logos_df[logos_df['team'] == home_team]['logo'].values[0][0]
     home_team_color = logos_df[logos_df['team'] == home_team]['color'].values[0]   
@@ -1274,7 +1274,7 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     plt.text(0.85, 0.44, f"DCE: #{away_dce}", fontsize = 25, va='top', ha='right', transform=ax.transAxes, fontweight='bold', color=get_rank_color(away_dce))
     plt.text(0.85, 0.39, f"DDE: #{away_dde}", fontsize = 25, va='top', ha='right', transform=ax.transAxes, fontweight='bold', color=get_rank_color(away_dde))
 
-    plt.text(0.65, 0.90, f"PEAR", fontsize = 35, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
+    plt.text(0.65, 0.90, f"PEAR Game Preview", fontsize = 35, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
     plt.text(0.65, 0.84, f"{home_team} vs. {away_team}", fontsize = 35, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
     plt.text(0.65, 0.78, f"{formatted_spread}", fontsize = 25, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
     plt.text(0.65, 0.73, f"Win Prob: {game_win_prob}%", fontsize = 25, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
@@ -1375,8 +1375,8 @@ def plot_win_probabilities(wins_df, all_conference_wins, logos_df, team_data, la
 
     # Create the plot
     fig, (ax, ax2) = plt.subplots(nrows=2, figsize=(8, 12))
-    fig.patch.set_facecolor('#5fa391')  # Set figure background color
-    ax.set_facecolor('#5fa391')    
+    fig.patch.set_facecolor('#CECEB2')  # Set figure background color
+    ax.set_facecolor('#CECEB2')    
     team_logo_url = logos_df[logos_df['team'] == team_name]['logo'].values[0][0]
     team_color = logos_df[logos_df['team'] == team_name]['color'].values[0]
     
@@ -1449,8 +1449,8 @@ def plot_win_probabilities(wins_df, all_conference_wins, logos_df, team_data, la
 
     ################################# AVERAGE TEAM DISTRIBUTION CHART #################################
 
-    fig.patch.set_facecolor('#5fa391')  # Set figure background color
-    ax2.set_facecolor('#5fa391')    
+    fig.patch.set_facecolor('#CECEB2')  # Set figure background color
+    ax2.set_facecolor('#CECEB2')    
     # Plot the probabilities as a bar plot
     sns.barplot(x='win_count', y='prob', data=transposed_avg, ax=ax2, color='#555555')
     
@@ -2112,8 +2112,8 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     # Plot the spider chart
     fig, ax = plt.subplots(figsize=(12, 8), subplot_kw=dict(polar=True))
     ax.set_theta_offset((np.pi/2) - ((angles[0] + angles[1]) / 2))
-    fig.set_facecolor('#5fa391')
-    ax.set_facecolor('#5fa391')
+    fig.set_facecolor('#CECEB2')
+    ax.set_facecolor('#CECEB2')
     ax.fill(angles, values, color=color, alpha=0.6)
     ax.plot(angles, values, color=color, linewidth=5)
     ax.set_yticks([25, 50, 75, 102])
@@ -2576,7 +2576,7 @@ try:
 
     fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
-    fig.patch.set_facecolor('#5fa391')
+    fig.patch.set_facecolor('#CECEB2')
     plt.suptitle(f"Week {current_week} PEAR", fontsize=20, fontweight='bold', color='black')
     fig.text(0.5, 0.93, "Power Rating (Position Change)", fontsize=8, ha='center', color='black')
 
@@ -2605,7 +2605,7 @@ try:
 
     fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
-    fig.patch.set_facecolor('#5fa391')
+    fig.patch.set_facecolor('#CECEB2')
     plt.suptitle(f"Week {current_week} GO5 PEAR", fontsize=20, fontweight='bold', color='black')
 
     for i, ax in enumerate(axs.ravel()):
@@ -2627,16 +2627,16 @@ try:
     conference_stats = all_data.groupby('conference')['power_rating'].agg(['mean', 'min', 'max']).reset_index()
     conference_stats = conference_stats.sort_values(by='mean', ascending=False)
 
-    plt.figure(figsize=(8, 4), facecolor='#5fa391',dpi=125)
+    plt.figure(figsize=(8, 4), facecolor='#CECEB2',dpi=125)
     bars = plt.bar(conference_stats['conference'], conference_stats['mean'], 
                     color='#A74C54', 
                     yerr=[conference_stats['mean'] - conference_stats['min'], 
                         conference_stats['max'] - conference_stats['mean']], 
                     capsize=5)
     ax = plt.gca()
-    ax.set_facecolor('#5fa391')
+    ax.set_facecolor('#CECEB2')
     for spine in ax.spines.values():
-        spine.set_color('#5fa391')  # Set the border color
+        spine.set_color('#CECEB2')  # Set the border color
         spine.set_linewidth(2)  # Adjust the border thickness if needed
     ax.xaxis.set_tick_params(color='black')  # X-axis ticks
     ax.yaxis.set_tick_params(color='black')  # Y-axis ticks
@@ -2758,8 +2758,8 @@ try:
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
         ax.axis('off')
-        plt.gca().set_facecolor('#5fa391')
-        plt.gcf().set_facecolor('#5fa391')
+        plt.gca().set_facecolor('#CECEB2')
+        plt.gcf().set_facecolor('#CECEB2')
         plt.title("Power Ratings Playoff Bracket", fontweight='bold', fontsize=20)
         file_path = os.path.join(folder_path, "projected_playoff")
         plt.savefig(file_path, dpi = 300, bbox_inches = 'tight')
@@ -2797,8 +2797,8 @@ try:
     all_data['defensive_total'] = scaler100.fit_transform(all_data[['defensive_total']])
     all_data['defensive_total'] = all_data['defensive_total'] - all_data['defensive_total'].mean()
     fig, ax = plt.subplots(figsize=(15, 9),dpi=125)
-    plt.gca().set_facecolor('#5fa391')
-    plt.gcf().set_facecolor('#5fa391')
+    plt.gca().set_facecolor('#CECEB2')
+    plt.gcf().set_facecolor('#CECEB2')
     logo_size = 2  # Half the size of the logo to create spacing
     for i in range(len(all_data)):
         logo_url = logos[logos['team'] == all_data.loc[i,'team']]['logo'].values[0][0]
@@ -2867,8 +2867,8 @@ try:
     all_data['DDE'] = scaler100.fit_transform(all_data[['DDE']])
     all_data['DDE'] = all_data['DDE'] - all_data['DDE'].mean()
     fig, ax = plt.subplots(figsize=(15, 9),dpi=125)
-    plt.gca().set_facecolor('#5fa391')
-    plt.gcf().set_facecolor('#5fa391')
+    plt.gca().set_facecolor('#CECEB2')
+    plt.gcf().set_facecolor('#CECEB2')
     logo_size = 2  # Half the size of the logo to create spacing
     for i in range(len(all_data)):
         logo_url = logos[logos['team'] == all_data.loc[i,'team']]['logo'].values[0][0]
@@ -3040,8 +3040,8 @@ try:
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
         ax.axis('off')
-        plt.gca().set_facecolor('#5fa391')
-        plt.gcf().set_facecolor('#5fa391')
+        plt.gca().set_facecolor('#CECEB2')
+        plt.gcf().set_facecolor('#CECEB2')
         plt.title("Most Deserving Playoff Bracket", fontweight='bold', fontsize=20)
         file_path = os.path.join(folder_path, "most_deserving_playoff")
         plt.savefig(file_path, bbox_inches='tight',dpi=300)
@@ -3112,7 +3112,7 @@ try:
                 ax.add_artist(ab)
     # Plotting
     fig, ax = plt.subplots(figsize=(11, 15))
-    fig.patch.set_facecolor('#5fa391')
+    fig.patch.set_facecolor('#CECEB2')
     # Plot logos with adjusted spacing
     plot_team_logos(ax, elite_teams, -0.2, spacing_factor=1, row_spacing = 0.4, max_teams_per_row=max(len(elite_teams) // 2, 1)+1)
     plot_team_logos(ax, good_teams, 0.7, spacing_factor=1, row_spacing = 0.4, max_teams_per_row=max(len(good_teams) // 3, 1)+1)
@@ -3178,7 +3178,7 @@ try:
                 ax.add_artist(ab)
     # Plotting
     fig, ax = plt.subplots(figsize=(11, 15))
-    fig.patch.set_facecolor('#5fa391')
+    fig.patch.set_facecolor('#CECEB2')
     # Plot logos with adjusted spacing
     plot_team_logos(ax, elite_teams, -0.2, spacing_factor=1, row_spacing = 0.4, max_teams_per_row=max(len(elite_teams) // 2, 1)+1)
     plot_team_logos(ax, good_teams, 0.7, spacing_factor=1, row_spacing = 0.4, max_teams_per_row=max(len(good_teams) // 3, 1)+1)
@@ -3228,8 +3228,8 @@ except Exception as e:
 try:
     # Create the plot
     fig, ax = plt.subplots(figsize=(15, 9),dpi=125)
-    plt.gca().set_facecolor('#5fa391')
-    plt.gcf().set_facecolor('#5fa391')
+    plt.gca().set_facecolor('#CECEB2')
+    plt.gcf().set_facecolor('#CECEB2')
     # Set the size of the logos (adjust the numbers to make logos smaller or larger)
     logo_size = 0.9  # Half the size of the logo to create spacing
     # Loop through the team_data DataFrame to plot logos
@@ -3281,8 +3281,8 @@ except Exception as e:
 
 try:
     fig, ax = plt.subplots(figsize=(15, 9),dpi=125)
-    plt.gca().set_facecolor('#5fa391')
-    plt.gcf().set_facecolor('#5fa391')
+    plt.gca().set_facecolor('#CECEB2')
+    plt.gcf().set_facecolor('#CECEB2')
     # Set the size of the logos (adjust the numbers to make logos smaller or larger)
     logo_size = 2  # Half the size of the logo to create spacing
     # Loop through the team_data DataFrame to plot logos
@@ -3408,7 +3408,7 @@ try:
             this_conference_games = num_conference_games[this_conference]
             # Create a figure with a reduced height and smaller logos
             fig, axs = plt.subplots(len(this_conference_wins), 1, figsize=(4, len(this_conference_wins) * 0.4))  # Adjusted height
-            fig.patch.set_facecolor('#5fa391')
+            fig.patch.set_facecolor('#CECEB2')
 
             # Loop through each team in the conference
             for i, ax in enumerate(axs.ravel()):
