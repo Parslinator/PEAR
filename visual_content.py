@@ -192,7 +192,8 @@ def best_and_worst(all_data, logos, metric, title, subtitle, visual_name):
 
     # Title and description
     plt.suptitle(title, fontsize=20, fontweight='bold', color='black')
-    plt.text(0.505, 0.935, subtitle, ha='center', fontsize=14, color='black', transform=fig.transFigure)
+    plt.text(0.51, 0.935, subtitle, ha='center', fontsize=14, color='black', transform=fig.transFigure)
+    plt.text(0.9, 0.09, "@PEARatings", ha='right', fontsize=18, color='black', transform=fig.transFigure, fontweight='bold')
 
     # Fill the grid alternating Best and Worst Defenses
     for i in range(5):  # There are 5 rows
@@ -225,8 +226,8 @@ def best_and_worst(all_data, logos, metric, title, subtitle, visual_name):
             ax.axis('off')
 
     fig.add_artist(Line2D([0.512, 0.512], [0.12, 0.92], color='black', lw=5))
-    fig.text(0.13, 0.96, "Best", ha='left', va='center', fontsize=20, fontweight='bold', color='black')
-    fig.text(0.89, 0.96, "Worst", ha='right', va='center', fontsize=20, fontweight='bold', color='black')
+    fig.text(0.13, 0.965, "Best", ha='left', va='center', fontsize=20, fontweight='bold', color='black')
+    fig.text(0.89, 0.965, "Worst", ha='right', va='center', fontsize=20, fontweight='bold', color='black')
 
     file_path = os.path.join(folder_path, visual_name)
     # Show the final figure
@@ -338,7 +339,8 @@ def best_and_worst2(all_data, logos, metric, title, subtitle, visual_name):
 
     # Title and description
     plt.suptitle(title, fontsize=20, fontweight='bold', color='black')
-    plt.text(0.505, 0.935, subtitle, ha='center', fontsize=14, color='black', transform=fig.transFigure)
+    plt.text(0.51, 0.935, subtitle, ha='center', fontsize=14, color='black', transform=fig.transFigure)
+    plt.text(0.9, 0.09, "@PEARatings", ha='right', fontsize=18, color='black', transform=fig.transFigure, fontweight='bold')
 
     # Fill the grid alternating Best and Worst Defenses
     for i in range(5):  # There are 5 rows
@@ -370,8 +372,8 @@ def best_and_worst2(all_data, logos, metric, title, subtitle, visual_name):
             ax.axis('off')
 
     fig.add_artist(Line2D([0.512, 0.512], [0.12, 0.92], color='black', lw=5))
-    fig.text(0.13, 0.96, good, ha='left', va='center', fontsize=20, fontweight='bold', color='black')
-    fig.text(0.89, 0.96, bad, ha='right', va='center', fontsize=20, fontweight='bold', color='black')
+    fig.text(0.13, 0.965, good, ha='left', va='center', fontsize=20, fontweight='bold', color='black')
+    fig.text(0.89, 0.965, bad, ha='right', va='center', fontsize=20, fontweight='bold', color='black')
 
     file_path = os.path.join(folder_path, visual_name)
     # Show the final figure
@@ -1274,10 +1276,11 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     plt.text(0.85, 0.44, f"DCE: #{away_dce}", fontsize = 25, va='top', ha='right', transform=ax.transAxes, fontweight='bold', color=get_rank_color(away_dce))
     plt.text(0.85, 0.39, f"DDE: #{away_dde}", fontsize = 25, va='top', ha='right', transform=ax.transAxes, fontweight='bold', color=get_rank_color(away_dde))
 
-    plt.text(0.65, 0.90, f"PEAR Game Preview", fontsize = 35, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
-    plt.text(0.65, 0.84, f"{home_team} vs. {away_team}", fontsize = 35, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
-    plt.text(0.65, 0.78, f"{formatted_spread}", fontsize = 25, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
-    plt.text(0.65, 0.73, f"Win Prob: {game_win_prob}%", fontsize = 25, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
+    plt.text(0.65, 0.965, f"PEAR Game Preview", fontsize = 45, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
+    plt.text(0.65, 0.895, f"@PEARatings", fontsize=25, va='top', ha='center', transform=ax.transAxes)
+    plt.text(0.65, 0.85, f"{home_team} vs. {away_team}", fontsize = 35, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
+    plt.text(0.65, 0.79, f"{formatted_spread}", fontsize = 25, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
+    plt.text(0.65, 0.74, f"Win Prob: {game_win_prob}%", fontsize = 25, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
     plt.text(0.65, 0.35, "Team Stats are Percentile Based", fontsize = 16, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
 
     plt.tight_layout()
@@ -2579,6 +2582,7 @@ try:
     fig.patch.set_facecolor('#CECEB2')
     plt.suptitle(f"Week {current_week} PEAR", fontsize=20, fontweight='bold', color='black')
     fig.text(0.5, 0.93, "Power Rating (Position Change)", fontsize=8, ha='center', color='black')
+    fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
 
     for i, ax in enumerate(axs.ravel()):
         team = top_25.loc[i, 'team']
@@ -2607,6 +2611,7 @@ try:
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#CECEB2')
     plt.suptitle(f"Week {current_week} GO5 PEAR", fontsize=20, fontweight='bold', color='black')
+    fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
 
     for i, ax in enumerate(axs.ravel()):
         team = top_25.loc[i, 'team']
@@ -2615,7 +2620,7 @@ try:
         img = Image.open(BytesIO(response.content))
         ax.imshow(img)
         ax.set_facecolor('#f0f0f0')
-        ax.set_title(f"#{i+1} {team} \n{round(top_25.loc[i, 'power_rating'],1)}", fontsize=8, fontweight='bold')
+        ax.set_title(f"#{i+1} {team} \n{round(top_25.loc[i, 'power_rating'],1)}", fontsize=8)
         ax.axis('off')
     file_path = os.path.join(folder_path, "go5_top25")
     plt.savefig(file_path, bbox_inches = 'tight', dpi = 300)
@@ -2651,6 +2656,7 @@ try:
     plt.title('Average Power Rating by Conference', fontsize=14, fontweight='bold', color='black')
     plt.xticks(rotation=45, ha='right', color='black', fontsize=8)
     plt.yticks(color='black', fontsize=8)
+    plt.text(-1.8, 28.5, "@PEARatings", fontsize=12, color='black', fontweight='bold', ha='left')
     plt.tight_layout()
     file_path = os.path.join(folder_path, "conference_average")
     plt.savefig(file_path, dpi = 300)
@@ -2758,6 +2764,7 @@ try:
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
         ax.axis('off')
+        ax.text(0.9, 0.05, "@PEARatings", fontsize=18, fontweight='bold', ha='right')
         plt.gca().set_facecolor('#CECEB2')
         plt.gcf().set_facecolor('#CECEB2')
         plt.title("Power Ratings Playoff Bracket", fontweight='bold', fontsize=20)
@@ -3040,6 +3047,7 @@ try:
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
         ax.axis('off')
+        ax.text(0.9, 0.05, "@PEARatings", fontsize=18, fontweight='bold', ha='right')
         plt.gca().set_facecolor('#CECEB2')
         plt.gcf().set_facecolor('#CECEB2')
         plt.title("Most Deserving Playoff Bracket", fontweight='bold', fontsize=20)
