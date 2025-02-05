@@ -2767,7 +2767,7 @@ try:
         ax.text(0.9, 0.05, "@PEARatings", fontsize=18, fontweight='bold', ha='right')
         plt.gca().set_facecolor('#CECEB2')
         plt.gcf().set_facecolor('#CECEB2')
-        plt.title("Power Ratings Playoff Bracket", fontweight='bold', fontsize=20)
+        plt.title("PEAR Power Ratings Bracket", fontweight='bold', fontsize=20)
         file_path = os.path.join(folder_path, "projected_playoff")
         plt.savefig(file_path, dpi = 300, bbox_inches = 'tight')
     draw_playoff_bracket(seeding)
@@ -3050,7 +3050,7 @@ try:
         ax.text(0.9, 0.05, "@PEARatings", fontsize=18, fontweight='bold', ha='right')
         plt.gca().set_facecolor('#CECEB2')
         plt.gcf().set_facecolor('#CECEB2')
-        plt.title("Most Deserving Playoff Bracket", fontweight='bold', fontsize=20)
+        plt.title("PEAR Most Deserving Bracket", fontweight='bold', fontsize=20)
         file_path = os.path.join(folder_path, "most_deserving_playoff")
         plt.savefig(file_path, bbox_inches='tight',dpi=300)
     # Assuming team_data is a DataFrame with columns ['team', 'logo'], where 'logo' is the URL to each team's logo
