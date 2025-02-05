@@ -3140,8 +3140,9 @@ try:
     ax.set_ylim(-5.5, 1)  # Extend y-axis to fit all levels
     ax.set_yticks([-0.75, -2.25, -4, -6])
     ax.set_yticklabels(["Elite Teams", "Good Teams", "Average Teams", "Below Average Teams"])
-    ax.text(0, 0.67, "Power Ratings Team Pyramid", ha='center', fontsize=24, fontweight='bold')
-    ax.text(0, 0.5, "Teams Listed in Descending Order Within Each Row", fontsize = 16, ha='center')
+    ax.text(0, 0.75, "PEAR Power Ratings Pyramid", ha='center', fontsize=24, fontweight='bold')
+    ax.text(0, 0.62, "@PEARatings", fontsize=16, ha='center', fontweight='bold')
+    ax.text(0, 0.50, "Teams Listed in Descending Order Within Each Row", fontsize = 16, ha='center')
     ax.axis("off")  # Remove axis lines
     plt.tight_layout()
     file_path = os.path.join(folder_path, "power_rating_team_pyramid")
@@ -3206,8 +3207,9 @@ try:
     ax.set_ylim(-5.5, 1)  # Extend y-axis to fit all levels
     ax.set_yticks([-0.75, -2.25, -4, -6])
     ax.set_yticklabels(["Elite Teams", "Good Teams", "Average Teams", "Below Average Teams"])
-    ax.text(0, 0.67, "Most Deserving Team Pyramid", ha='center', fontsize=24, fontweight='bold')
-    ax.text(0, 0.5, "Teams Listed in Descending Order Within Each Row", fontsize = 16, ha='center')
+    ax.text(0, 0.75, "PEAR Most Deserving Pyramid", ha='center', fontsize=24, fontweight='bold')
+    ax.text(0, 0.62, "@PEARatings", fontsize=16, ha='center', fontweight='bold')
+    ax.text(0, 0.50, "Teams Listed in Descending Order Within Each Row", fontsize = 16, ha='center')
     ax.axis("off")  # Remove axis lines
     plt.tight_layout()
     file_path = os.path.join(folder_path, "most_deserving_team_pyramid")
