@@ -41,7 +41,7 @@ week_list = [9,10,11,12,13,14,15,16]
 
 configuration = cfbd.Configuration()
 configuration.api_key['Authorization'] = "7vGedNNOrnl0NGcSvt92FcVahY602p7IroVBlCA1Tt+WI/dCwtT7Gj5VzmaHrrxS"
-configuration.api_key_prefix['Authorization'] = 'Bearer '
+configuration.api_key_prefix['Authorization'] = 'Bearer'
 api_client = cfbd.ApiClient(configuration)
 games_api = cfbd.GamesApi(api_client)
 betting_api = cfbd.BettingApi(api_client)
@@ -56,41 +56,43 @@ if current_time.month < 6:
     calendar_year = current_time.year - 1
 else:
     calendar_year = current_time.year
-week_start_list = [*games_api.get_calendar(year = calendar_year)]
-calendar_dict = [dict(
-    first_game_start = c.first_game_start,
-    last_game_start = c.last_game_start,
-    season = c.season,
-    season_type = c.season_type,
-    week = c.week
-) for c in week_start_list]
-calendar = pd.DataFrame(calendar_dict)
-calendar['first_game_start'] = pd.to_datetime(calendar['first_game_start'])
-calendar['last_game_start'] = pd.to_datetime(calendar['last_game_start'])
-current_year = int(calendar.loc[0, 'season'])
-first_game_start = calendar['first_game_start'].iloc[0]
-last_game_start = calendar['last_game_start'].iloc[-1]
-current_week = None
-if current_time < first_game_start:
-    current_week = 1
-    postseason = False
-elif current_time > last_game_start:
-    current_week = calendar.iloc[-2, -1] + 1
-    postseason = True
-else:
-    condition_1 = (calendar['first_game_start'] <= current_time) & (calendar['last_game_start'] >= current_time)
-    condition_2 = (calendar['last_game_start'].shift(1) < current_time) & (calendar['first_game_start'] > current_time)
+# week_start_list = [*games_api.get_calendar(year = calendar_year)]
+# calendar_dict = [dict(
+#     first_game_start = c.first_game_start,
+#     last_game_start = c.last_game_start,
+#     season = c.season,
+#     season_type = c.season_type,
+#     week = c.week
+# ) for c in week_start_list]
+# calendar = pd.DataFrame(calendar_dict)
+# calendar['first_game_start'] = pd.to_datetime(calendar['first_game_start'])
+# calendar['last_game_start'] = pd.to_datetime(calendar['last_game_start'])
+# current_year = int(calendar.loc[0, 'season'])
+# first_game_start = calendar['first_game_start'].iloc[0]
+# last_game_start = calendar['last_game_start'].iloc[-1]
+# current_week = None
+# if current_time < first_game_start:
+#     current_week = 1
+#     postseason = False
+# elif current_time > last_game_start:
+#     current_week = calendar.iloc[-2, -1] + 1
+#     postseason = True
+# else:
+#     condition_1 = (calendar['first_game_start'] <= current_time) & (calendar['last_game_start'] >= current_time)
+#     condition_2 = (calendar['last_game_start'].shift(1) < current_time) & (calendar['first_game_start'] > current_time)
 
-    # Combine conditions
-    result = calendar[condition_1 | condition_2].reset_index(drop=True)
-    if result['season_type'][0] == 'regular':
-        current_week = result['week'][0]
-        postseason = False
-    else:
-        current_week = calendar.iloc[-2, -1] + 1
-        postseason = True
-current_week = int(current_week)
-current_year = int(current_year)
+#     # Combine conditions
+#     result = calendar[condition_1 | condition_2].reset_index(drop=True)
+#     if result['season_type'][0] == 'regular':
+#         current_week = result['week'][0]
+#         postseason = False
+#     else:
+#         current_week = calendar.iloc[-2, -1] + 1
+#         postseason = True
+# current_week = int(current_week)
+# current_year = int(current_year)
+current_week = 17
+current_year = 2024
 
 team_data = pd.read_csv(f"./PEAR/Ratings/y{current_year}/PEAR_week{current_week}.csv").drop(columns=['Unnamed: 0'])
 all_data = pd.read_csv(f"./PEAR/Data/y{current_year}/team_data_week{current_week}.csv")
