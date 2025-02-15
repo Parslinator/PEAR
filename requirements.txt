@@ -1,4 +1,4 @@
-cfbd
+cfbd==4.5.2
 openpyxl
 streamlit
 pandas
