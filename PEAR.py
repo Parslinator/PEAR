@@ -41,7 +41,7 @@ week_list = [9,10,11,12,13,14,15,16]
 
 configuration = cfbd.Configuration()
 configuration.api_key['Authorization'] = "7vGedNNOrnl0NGcSvt92FcVahY602p7IroVBlCA1Tt+WI/dCwtT7Gj5VzmaHrrxS"
-configuration.api_key_prefix['Authorization'] = 'Bearer'
+configuration.api_key_prefix['Authorization'] = 'Bearer '
 api_client = cfbd.ApiClient(configuration)
 games_api = cfbd.GamesApi(api_client)
 betting_api = cfbd.BettingApi(api_client)
