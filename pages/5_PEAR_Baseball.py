@@ -38,4 +38,4 @@ st.divider()
 
 modeling_stats.index = modeling_stats.index + 1
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats[['Team', 'Rating']], use_container_width=True)
+    st.dataframe(modeling_stats[['Team', 'Rating', 'Conference', 'ERA', 'WHIP', 'BA', 'OBP', 'SLG', 'OPS']], use_container_width=True)
