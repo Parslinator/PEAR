@@ -375,10 +375,11 @@ modeling_stats = modeling_stats.sort_values('power_ranking', ascending=False).re
 
 modeling_stats['Rating'] = modeling_stats['power_ranking'] - modeling_stats['power_ranking'].mean()
 current_range = modeling_stats['Rating'].max() - modeling_stats['Rating'].min()
-desired_range = 25
+desired_range = 15
 scaling_factor = desired_range / current_range
 modeling_stats['Rating'] = round(modeling_stats['Rating'] * scaling_factor, 4)
 modeling_stats['Rating'] = modeling_stats['Rating'] - modeling_stats['Rating'].min()
+modeling_stats['Rating'] = round(modeling_stats['Rating'] - modeling_stats['Rating'].mean(),2)
 modeling_stats['Rating'] = round(modeling_stats['Rating'], 2)
 
 ending_data = pd.merge(baseball_stats, modeling_stats[['Team', 'Rating']], on="Team", how="inner").sort_values('Rating', ascending=False).reset_index(drop=True)
