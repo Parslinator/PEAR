@@ -414,7 +414,7 @@ def get_week_spreads(team_data):
             return 0
     week_games['PEAR SU'] = week_games.apply(lambda row: check_straight_up(row, 'pr_spread'), axis = 1)
     return week_games
-st.title(f"{current_year} PEAR")
+st.title(f"{current_year} CFB PEAR")
 # st.logo("./PEAR/pear_logo2.png", size = 'large')
 
 # week_spreads = get_week_spreads(team_data)

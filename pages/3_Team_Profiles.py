@@ -74,10 +74,8 @@ last_game_start = calendar['last_game_start'].iloc[-1]
 current_week = None
 if current_time < first_game_start:
     current_week = 1
-    postseason = False
 elif current_time > last_game_start:
     current_week = calendar.iloc[-2, -1] + 1
-    postseason = True
 else:
     condition_1 = (calendar['first_game_start'] <= current_time) & (calendar['last_game_start'] >= current_time)
     condition_2 = (calendar['last_game_start'].shift(1) < current_time) & (calendar['first_game_start'] > current_time)
@@ -93,18 +91,15 @@ else:
 current_week = int(current_week)
 current_year = int(current_year)
 
-folder_path = f"PEAR/Visuals/y{current_year}/week_{current_week}/Games"
+folder_path = f"PEAR/Visuals/y{current_year}/week_{current_week}/Stat Profiles"
 
 if os.path.exists(folder_path):
     # Get a list of all .png files in the folder
     png_files = glob.glob(os.path.join(folder_path, "*.png"))
-
+    png_files = sorted(png_files, key=lambda x: os.path.basename(x).lower())
     # Display the images in the Streamlit app
     if png_files:
-        if postseason == True:
-            st.subheader("Game Previews for Bowl Games")
-        else:
-            st.subheader(f"Game Previews for Week {current_week}")
+        st.subheader("CFB Team Stat Profiles")
 
         # Loop through the .png files and display two per row
         for i in range(0, len(png_files), 2):  # Increment by 2 for two images per row

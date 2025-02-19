@@ -45,7 +45,7 @@ def find_spread(home_team, away_team, neutrality):
         return f"{away_team} {spread}"
 
 
-st.title(f"{current_season} PEAR Baseball")
+st.title(f"{current_season} CBASE PEAR")
 st.caption(f"Last Updated {formatted_latest_date}")
 st.divider()
 

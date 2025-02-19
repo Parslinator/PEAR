@@ -91,7 +91,7 @@ else:
 current_week = int(current_week)
 current_year = int(current_year)
 
-st.title("PEAR Stats Visuals")
+st.title("PEAR CFB Stats Visuals")
 
 # Construct the folder path
 folder_path = f"PEAR/Visuals/y{current_year}/week_{current_week}/"

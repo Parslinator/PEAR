@@ -112,7 +112,7 @@ team_data.index += 1
 team_data['Team'] = team_data['team']
 team_data['Season'] = team_data['season'].astype(str)
 team_data['Normalized Rating'] = team_data['norm_pr']
-
+st.title("CFB Ratings Archive")
 st.markdown(f'<h2 id="All-ratings">Year Normalized Ratings</h2>', unsafe_allow_html=True)
 with st.container(border=True, height=440):
     st.dataframe(team_data[['Team', 'Normalized Rating', 'Season']], use_container_width=True)
