@@ -30,8 +30,11 @@ if date_files:
     modeling_stats = pd.read_csv(file_path)
 else:
     modeling_stats = None  # No valid files found
+formatted_latest_date = latest_date.strftime("%B %d, %Y")
 
 st.title(f"{current_season} PEAR Baseball")
+st.caption(f"Last Updated {formatted_latest_date}")
+st.divider()
 
 modeling_stats.index = modeling_stats.index + 1
 with st.container(border=True, height=440):

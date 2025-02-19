@@ -335,5 +335,5 @@ modeling_stats['Rating'] = modeling_stats['Rating'] - modeling_stats['Rating'].m
 ending_data = pd.merge(baseball_stats, modeling_stats[['Team', 'Rating']], on="Team", how="inner").sort_values('Rating', ascending=False).reset_index(drop=True)
 ending_data.index = ending_data.index + 1
 
-file_path = os.path.join(folder_path, f"baseball_{formatted_date}")
+file_path = os.path.join(folder_path, f"baseball_{formatted_date}.csv")
 ending_data.to_csv(file_path)
