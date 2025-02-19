@@ -32,9 +32,39 @@ else:
     modeling_stats = None  # No valid files found
 formatted_latest_date = latest_date.strftime("%B %d, %Y")
 
+def find_spread(home_team, away_team, neutrality):
+    home_pr = modeling_stats[modeling_stats['Team'] == home_team]['Rating'].values[0]
+    away_pr = modeling_stats[modeling_stats['Team'] == away_team]['Rating'].values[0]
+    raw_spread = 0.35 + home_pr - away_pr
+    if neutrality:
+        raw_spread -= 0.35
+    spread = round(raw_spread,2)
+    if spread >= 0:
+        return f"{home_team} -{spread}"
+    else:
+        return f"{away_team} {spread}"
+
+
 st.title(f"{current_season} PEAR Baseball")
 st.caption(f"Last Updated {formatted_latest_date}")
 st.divider()
+
+st.subheader("Calculate Spread Between Any Two Teams")
+with st.form(key='calculate_spread'):
+    away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+    home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+    neutrality = st.radio(
+        "Game Location",
+        ["Neutral Field", "On Campus"]
+    )
+    spread_button = st.form_submit_button("Calculate Spread")
+    if spread_button:
+        if neutrality == 'Neutral Field':
+            neutrality = True
+        else:
+            neutrality = False
+        st.write(find_spread(home_team, away_team, neutrality))
+
 
 modeling_stats.index = modeling_stats.index + 1
 with st.container(border=True, height=440):
