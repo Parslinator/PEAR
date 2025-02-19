@@ -246,21 +246,28 @@ for df in dfs[1:]:
 baseball_stats = df_combined.loc[:, ~df_combined.columns.duplicated()].sort_values('Team').reset_index(drop=True)
 baseball_stats['OPS'] = baseball_stats['SLG'] + baseball_stats['OBP']
 
+rpi_2024 = pd.read_csv("./PEAR/PEAR Baseball/rpi_end_2024.csv")
+
 modeling_stats = baseball_stats[['Team', 'HPG',
                 'BBPG', 'ERA', 'PCT', 
                 'KP9', 'WP9', 'OPS', 
-                'WHIP', 'Rank', 'CBRank']]
+                'WHIP', 'CBRank']]
+modeling_stats = pd.merge(modeling_stats, rpi_2024[['Team', 'Rank']], on = 'Team', how='left')
 modeling_stats["Rank"] = modeling_stats["Rank"].apply(pd.to_numeric, errors='coerce')
 modeling_stats["CBRank"] = modeling_stats["CBRank"].apply(pd.to_numeric, errors='coerce')
+modeling_stats['Rank_pct'] = 1 - (modeling_stats['Rank'] - 1) / (len(modeling_stats) - 1)
 
-higher_better = ["HPG", "BBPG", "PCT", "KP9", "OPS"]
+higher_better = ["HPG", "BBPG", "PCT", "KP9", "OPS", "Rank_pct"]
 lower_better = ["ERA", "WP9", "WHIP"]
 
 scaler = MinMaxScaler(feature_range=(1, 100))
 modeling_stats[higher_better] = scaler.fit_transform(modeling_stats[higher_better])
 modeling_stats[lower_better] = scaler.fit_transform(-modeling_stats[lower_better])
-
-modeling_stats['in_house_pr'] = 2 * modeling_stats['ERA'] + 0.1 * modeling_stats['BBPG'] + 0.5 * modeling_stats['HPG'] + 2 * modeling_stats['OPS'] + 0.5 * modeling_stats['WHIP']
+weights = {
+    'HPG': 8, 'BBPG': 8, 'ERA': 22, 'PCT': 8,
+    'KP9': 8, 'WP9': 8, 'OPS': 22, 'WHIP': 8, 'Rank_pct': 50
+}
+modeling_stats['in_house_pr'] = sum(modeling_stats[stat] * weight for stat, weight in weights.items())
 modeling_stats['in_house_pr'] = modeling_stats['in_house_pr'] - modeling_stats['in_house_pr'].mean()
 current_range = modeling_stats['in_house_pr'].max() - modeling_stats['in_house_pr'].min()
 desired_range = 25
@@ -283,7 +290,7 @@ def progress_callback(xk, convergence):
         pbar.close()
 
 def objective_function(weights):
-    (w_hpb, w_bbpg, w_era, w_pct, w_kp9, w_wp9, w_whip, w_ops, w_in_house_pr, w_cbrank) = weights
+    (w_hpb, w_bbpg, w_era, w_pct, w_kp9, w_wp9, w_whip, w_ops, w_in_house_pr) = weights
     
     modeling_stats['power_ranking'] = (
         w_hpb * modeling_stats['HPG'] +
@@ -299,7 +306,7 @@ def objective_function(weights):
 
     modeling_stats['calculated_rank'] = modeling_stats['power_ranking'].rank(ascending=False)
     modeling_stats['combined_rank'] = (
-        w_cbrank * modeling_stats['CBRank']
+        modeling_stats['CBRank']
     )
     spearman_corr = modeling_stats[['calculated_rank', 'combined_rank']].corr(method='spearman').iloc[0,1]
 
@@ -313,7 +320,6 @@ bounds = [(-1,1),
           (-1,1),
           (-1,1),
           (-1,1),
-          (0,1),
           (0,1)]
 result = differential_evolution(objective_function, bounds, strategy='best1bin', maxiter=500, tol=1e-4, seed=42, callback=progress_callback)
 optimized_weights = result.x
