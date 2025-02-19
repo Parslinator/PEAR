@@ -379,6 +379,7 @@ desired_range = 25
 scaling_factor = desired_range / current_range
 modeling_stats['Rating'] = round(modeling_stats['Rating'] * scaling_factor, 4)
 modeling_stats['Rating'] = modeling_stats['Rating'] - modeling_stats['Rating'].min()
+modeling_stats['Rating'] = round(modeling_stats['Rating'], 2)
 
 ending_data = pd.merge(baseball_stats, modeling_stats[['Team', 'Rating']], on="Team", how="inner").sort_values('Rating', ascending=False).reset_index(drop=True)
 ending_data.index = ending_data.index + 1

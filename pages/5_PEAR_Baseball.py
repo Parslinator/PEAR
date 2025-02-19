@@ -65,6 +65,7 @@ with st.form(key='calculate_spread'):
             neutrality = False
         st.write(find_spread(home_team, away_team, neutrality))
 
+st.divder()
 
 modeling_stats.index = modeling_stats.index + 1
 with st.container(border=True, height=440):
