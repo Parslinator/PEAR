@@ -293,7 +293,7 @@ for df in dfs[1:]:
     df_combined = pd.merge(df_combined, df, on="Team", how="inner")
 baseball_stats = df_combined.loc[:, ~df_combined.columns.duplicated()].sort_values('Team').reset_index(drop=True)
 baseball_stats['OPS'] = baseball_stats['SLG'] + baseball_stats['OBP']
-baseball_stats['PYTHAG'] = (baseball_stats['RS'] ** 1.83) / ((baseball_stats['RS'] ** 1.83) + (baseball_stats['RA'] ** 1.83))
+baseball_stats['PYTHAG'] = round((baseball_stats['RS'] ** 1.83) / ((baseball_stats['RS'] ** 1.83) + (baseball_stats['RA'] ** 1.83)),3)
 
 rpi_2024 = pd.read_csv("./PEAR/PEAR Baseball/rpi_end_2024.csv")
 
