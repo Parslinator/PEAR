@@ -67,6 +67,7 @@ with st.form(key='calculate_spread'):
 
 st.divider()
 
+st.subheader("CBASE Power Ratings")
 modeling_stats.index = modeling_stats.index + 1
 modeling_stats[['Wins', 'Losses']] = modeling_stats['Rec'].str.split('-', expand=True).astype(int)
 modeling_stats['WIN%'] = round(modeling_stats['Wins'] / (modeling_stats['Wins'] + modeling_stats['Losses']), 3)
