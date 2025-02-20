@@ -72,4 +72,5 @@ modeling_stats[['Wins', 'Losses']] = modeling_stats['Rec'].str.split('-', expand
 modeling_stats['WIN%'] = round(modeling_stats['Wins'] / (modeling_stats['Wins'] + modeling_stats['Losses']), 3)
 modeling_stats.drop(columns=['Wins', 'Losses'], inplace=True)
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats[['Team', 'Rating', 'Conf', 'Rec', 'WIN%', 'ERA', 'WHIP', 'BA', 'OBP', 'SLG', 'OPS']], use_container_width=True)
+    st.dataframe(modeling_stats[['Team', 'Rating', 'Conf', 'Rec', 'WIN%', 'ERA', 'WHIP', 'KP9', 'BA', 'OBP', 'SLG', 'OPS']], use_container_width=True)
+st.caption("WIN% - Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
