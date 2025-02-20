@@ -293,19 +293,20 @@ for df in dfs[1:]:
     df_combined = pd.merge(df_combined, df, on="Team", how="inner")
 baseball_stats = df_combined.loc[:, ~df_combined.columns.duplicated()].sort_values('Team').reset_index(drop=True)
 baseball_stats['OPS'] = baseball_stats['SLG'] + baseball_stats['OBP']
+baseball_stats['PYTHAG'] = (baseball_stats['RS'] ** 1.83) / ((baseball_stats['RS'] ** 1.83) + (baseball_stats['RA'] ** 1.83))
 
 rpi_2024 = pd.read_csv("./PEAR/PEAR Baseball/rpi_end_2024.csv")
 
 modeling_stats = baseball_stats[['Team', 'HPG',
                 'BBPG', 'ERA', 'PCT', 
                 'KP9', 'WP9', 'OPS', 
-                'WHIP', 'CBRank']]
+                'WHIP', 'PYTHAG', 'CBRank']]
 modeling_stats = pd.merge(modeling_stats, rpi_2024[['Team', 'Rank']], on = 'Team', how='left')
 modeling_stats["Rank"] = modeling_stats["Rank"].apply(pd.to_numeric, errors='coerce')
 modeling_stats["CBRank"] = modeling_stats["CBRank"].apply(pd.to_numeric, errors='coerce')
 modeling_stats['Rank_pct'] = 1 - (modeling_stats['Rank'] - 1) / (len(modeling_stats) - 1)
 
-higher_better = ["HPG", "BBPG", "PCT", "KP9", "OPS", "Rank_pct"]
+higher_better = ["HPG", "BBPG", "PCT", "KP9", "OPS", "Rank_pct", 'PYTHAG']
 lower_better = ["ERA", "WP9", "WHIP"]
 
 scaler = MinMaxScaler(feature_range=(1, 100))
@@ -313,9 +314,10 @@ modeling_stats[higher_better] = scaler.fit_transform(modeling_stats[higher_bette
 modeling_stats[lower_better] = scaler.fit_transform(-modeling_stats[lower_better])
 weights = {
     'HPG': 8, 'BBPG': 8, 'ERA': 22, 'PCT': 8,
-    'KP9': 8, 'WP9': 8, 'OPS': 22, 'WHIP': 8, 'Rank_pct': 50
+    'KP9': 8, 'WP9': 8, 'OPS': 22, 'WHIP': 8, 'PYTHAG': 22, 'Rank_pct': 50
 }
 modeling_stats['in_house_pr'] = sum(modeling_stats[stat] * weight for stat, weight in weights.items())
+
 modeling_stats['in_house_pr'] = modeling_stats['in_house_pr'] - modeling_stats['in_house_pr'].mean()
 current_range = modeling_stats['in_house_pr'].max() - modeling_stats['in_house_pr'].min()
 desired_range = 25
@@ -338,7 +340,7 @@ def progress_callback(xk, convergence):
         pbar.close()
 
 def objective_function(weights):
-    (w_hpb, w_bbpg, w_era, w_pct, w_kp9, w_wp9, w_whip, w_ops, w_in_house_pr) = weights
+    (w_hpb, w_bbpg, w_era, w_pct, w_kp9, w_wp9, w_whip, w_ops, w_pythag, w_in_house_pr) = weights
     
     modeling_stats['power_ranking'] = (
         w_hpb * modeling_stats['HPG'] +
@@ -349,6 +351,7 @@ def objective_function(weights):
         w_wp9 * modeling_stats['WP9'] +
         w_whip * modeling_stats['WHIP'] +
         w_ops * modeling_stats['OPS'] +
+        w_pythag * modeling_stats['PYTHAG'] + 
         w_in_house_pr * modeling_stats['in_house_pr']
     )
 
@@ -361,6 +364,7 @@ def objective_function(weights):
     return -spearman_corr
 
 bounds = [(-1,1),
+          (-1,1),
           (-1,1),
           (-1,1),
           (-1,1),
@@ -384,6 +388,9 @@ modeling_stats['Rating'] = round(modeling_stats['Rating'], 2)
 
 ending_data = pd.merge(baseball_stats, modeling_stats[['Team', 'Rating']], on="Team", how="inner").sort_values('Rating', ascending=False).reset_index(drop=True)
 ending_data.index = ending_data.index + 1
+ending_data[['Wins', 'Losses']] = ending_data['Rec'].str.split('-', expand=True).astype(int)
+ending_data['WIN%'] = round(ending_data['Wins'] / (ending_data['Wins'] + ending_data['Losses']), 3)
+ending_data['Wins_Over_Pythag'] = ending_data['WIN%'] - ending_data['PYTHAG']
 
 file_path = os.path.join(folder_path, f"baseball_{formatted_date}.csv")
 ending_data.to_csv(file_path)
