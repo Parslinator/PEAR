@@ -387,10 +387,603 @@ modeling_stats['Rating'] = round(modeling_stats['Rating'] - modeling_stats['Rati
 modeling_stats['Rating'] = round(modeling_stats['Rating'], 2)
 
 ending_data = pd.merge(baseball_stats, modeling_stats[['Team', 'Rating']], on="Team", how="inner").sort_values('Rating', ascending=False).reset_index(drop=True)
+ending_data = ending_data.drop(columns=['SOR', 'SOS'])
 ending_data.index = ending_data.index + 1
 ending_data[['Wins', 'Losses']] = ending_data['Rec'].str.split('-', expand=True).astype(int)
 ending_data['WIN%'] = round(ending_data['Wins'] / (ending_data['Wins'] + ending_data['Losses']), 3)
 ending_data['Wins_Over_Pythag'] = ending_data['WIN%'] - ending_data['PYTHAG']
 
+import requests # type: ignore
+from bs4 import BeautifulSoup # type: ignore
+import pandas as pd # type: ignore
+
+# URL of the page to scrape
+url = 'https://www.warrennolan.com/baseball/2025/elo'
+
+# Fetch the webpage content
+response = requests.get(url)
+soup = BeautifulSoup(response.text, 'html.parser')
+
+# Find the table with the specified class
+table = soup.find('table', class_='normal-grid alternating-rows stats-table')
+
+if table:
+    # Extract table headers
+    headers = [th.text.strip() for th in table.find('thead').find_all('th')]
+    headers.insert(1, "Team Link")  # Adding extra column for team link
+
+    # Extract table rows
+    data = []
+    for row in table.find('tbody').find_all('tr'):
+        cells = row.find_all('td')
+        row_data = []
+        for i, cell in enumerate(cells):
+            # If it's the first cell, extract team name and link from 'name-subcontainer'
+            if i == 0:
+                name_container = cell.find('div', class_='name-subcontainer')
+                if name_container:
+                    team_name = name_container.text.strip()
+                    team_link_tag = name_container.find('a')
+                    team_link = team_link_tag['href'] if team_link_tag else ''
+                else:
+                    team_name = cell.text.strip()
+                    team_link = ''
+                row_data.append(team_name)
+                row_data.append(team_link)  # Add team link separately
+            else:
+                row_data.append(cell.text.strip())
+        data.append(row_data)
+
+
+    elo_data = pd.DataFrame(data, columns=[headers])
+    elo_data.columns = elo_data.columns.get_level_values(0)
+    elo_data = elo_data.drop_duplicates(subset='Team', keep='first')
+    elo_data = elo_data.astype({col: 'str' for col in elo_data.columns if col not in ['ELO', 'Rank']})
+    elo_data['ELO'] = elo_data['ELO'].astype(float, errors='ignore')
+    elo_data['Rank'] = elo_data['Rank'].astype(int, errors='ignore')
+
+else:
+    print("Table not found on the page.")
+print("Elo Load Done")
+
+import requests # type: ignore
+from bs4 import BeautifulSoup # type: ignore
+import pandas as pd # type: ignore
+import time
+
+# Base URL for Warren Nolan
+BASE_URL = "https://www.warrennolan.com"
+
+# Initialize storage for schedule data
+schedule_data = []
+
+# Iterate over each team's schedule link
+for _, row in elo_data.iterrows():
+    team_name = row["Team"]
+    print(team_name)
+    team_schedule_url = BASE_URL + row["Team Link"]
+    
+    response = requests.get(team_schedule_url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    # Find the team name
+    # team_name = soup.find("h1").text.strip() if soup.find("h1") else "Unknown"
+
+    # Find the team schedule list
+    schedule_lists = soup.find_all("ul", class_="team-schedule")
+    if not schedule_lists:
+        continue  # Skip if no schedule is found
+
+    schedule_list = schedule_lists[0]
+
+    # Iterate over each game row in the schedule
+    for game in schedule_list.find_all('li', class_='team-schedule'):
+        # Extract Date
+        date_month = game.find('span', class_='team-schedule__game-date--month').text.strip()
+        date_day = game.find('span', class_='team-schedule__game-date--day').text.strip()
+        date_dow = game.find('span', class_='team-schedule__game-date--dow').text.strip()
+        game_date = f"{date_month} {date_day} ({date_dow})"
+
+        # Extract Opponent Name (Handle missing cases)
+        opponent_info = game.find('div', class_='team-schedule__opp')
+        if opponent_info:
+            opponent_link_element = opponent_info.find('a', class_='team-schedule__opp-line-link')
+            opponent_name = opponent_link_element.text.strip() if opponent_link_element else ""
+        else:
+            opponent_name = ""
+
+        # Extract Location
+        location_info = game.find('div', class_='team-schedule__info')
+        location = location_info.text.strip() if location_info else "Unknown"
+
+        # Extract Game Result
+        result_info = game.find('div', class_='team-schedule__result')
+        result_text = result_info.text.strip() if result_info else "N/A"
+
+        # Extract Home/Away Teams from Box Score and scores
+        home_score, away_score = "", ""  # Initialize scores as empty strings
+
+        box_score_table = game.find('table', class_='team-schedule-bottom__box-score')
+        if box_score_table:
+            rows = box_score_table.find_all('tr')
+            if len(rows) > 2:
+                away_team = rows[1].find_all('td')[0].text.strip()
+                home_team = rows[2].find_all('td')[0].text.strip()
+
+                # Extracting Runs
+                away_score = rows[1].find_all('td')[-3].text.strip()  # Away runs
+                home_score = rows[2].find_all('td')[-3].text.strip()  # Home runs
+            else:
+                home_team, away_team = "N/A", "N/A"
+        else:
+            home_team, away_team = "N/A", "N/A"
+
+        # Append to schedule data
+        schedule_data.append([team_name, game_date, opponent_name, location, result_text, home_team, away_team, home_score, away_score])
+
+# Convert to DataFrame
+columns = ["Team", "Date", "Opponent", "Location", "Result", "home_team", "away_team", "home_score", "away_score"]
+schedule_df = pd.DataFrame(schedule_data, columns=columns)
+schedule_df = schedule_df.astype({col: 'str' for col in schedule_df.columns if col not in ['home_score', 'away_score']})
+schedule_df['home_score'] = schedule_df['home_score'].astype(int, errors='ignore')
+schedule_df['away_score'] = schedule_df['away_score'].astype(int, errors='ignore')
+schedule_df = schedule_df.merge(elo_data[['Team', 'ELO']], left_on='home_team', right_on='Team', how='left')
+schedule_df.rename(columns={'ELO': 'home_elo'}, inplace=True)
+schedule_df = schedule_df.merge(elo_data[['Team', 'ELO']], left_on='away_team', right_on='Team', how='left')
+schedule_df.rename(columns={'ELO': 'away_elo'}, inplace=True)
+schedule_df.drop(columns=['Team', 'Team_y'], inplace=True)
+schedule_df.rename(columns={'Team_x':'Team'}, inplace=True)
+
+print("Schedule Load Done")
+
+import requests # type: ignore
+from bs4 import BeautifulSoup # type: ignore
+import pandas as pd # type: ignore
+
+# URL of the page to scrape
+url = 'https://www.warrennolan.com/baseball/2025/elo'
+
+# Fetch the webpage content
+response = requests.get(url)
+soup = BeautifulSoup(response.text, 'html.parser')
+
+# Find the table with the specified class
+table = soup.find('table', class_='normal-grid alternating-rows stats-table')
+
+if table:
+    # Extract table headers
+    headers = [th.text.strip() for th in table.find('thead').find_all('th')]
+    headers.insert(1, "Team Link")  # Adding extra column for team link
+
+    # Extract table rows
+    data = []
+    for row in table.find('tbody').find_all('tr'):
+        cells = row.find_all('td')
+        row_data = []
+        for i, cell in enumerate(cells):
+            # If it's the first cell, extract team name and link from 'name-subcontainer'
+            if i == 0:
+                name_container = cell.find('div', class_='name-subcontainer')
+                if name_container:
+                    team_name = name_container.text.strip()
+                    team_link_tag = name_container.find('a')
+                    team_link = team_link_tag['href'] if team_link_tag else ''
+                else:
+                    team_name = cell.text.strip()
+                    team_link = ''
+                row_data.append(team_name)
+                row_data.append(team_link)  # Add team link separately
+            else:
+                row_data.append(cell.text.strip())
+        data.append(row_data)
+
+
+    elo_data = pd.DataFrame(data, columns=[headers])
+    elo_data.columns = elo_data.columns.get_level_values(0)
+    elo_data = elo_data.drop_duplicates(subset='Team', keep='first')
+    elo_data = elo_data.astype({col: 'str' for col in elo_data.columns if col not in ['ELO', 'Rank']})
+    elo_data['ELO'] = elo_data['ELO'].astype(float, errors='ignore')
+    elo_data['Rank'] = elo_data['Rank'].astype(int, errors='ignore')
+
+else:
+    print("Table not found on the page.")
+
+elo_data['Team'] = elo_data['Team'].str.replace('State', 'St.', regex=False)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'NC State' if x == 'North Carolina St.' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Southern Miss.' if x == 'Southern Miss' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Southern California' if x == 'USC' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'DBU' if x == 'Dallas Baptist' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Col. of Charleston' if x == 'Charleston' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Ga. Southern' if x == 'Georgia Southern' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'UNC Greensboro' if x == 'UNCG' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'ETSU' if x == 'East Tennessee St.' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Lamar University' if x == 'Lamar' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: "Saint Mary's (CA)" if x == "Saint Mary's College" else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Western Ky.' if x == 'Western Kentucky' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Fla. Atlantic' if x == 'FAU' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'UConn' if x == 'Connecticut' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Southeast Mo. St.' if x == 'Southeast Missouri' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Alcorn' if x == 'Alcorn St.' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'App State' if x == 'Appalachian St.' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Ark.-Pine Bluff' if x == 'Arkansas-Pine Bluff' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Army West Point' if x == 'Army' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'CSU Bakersfield' if x == 'Cal St. Bakersfield' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'CSUN' if x == 'Cal St. Northridge' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Central Ark.' if x == 'Central Arkansas' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Central Mich.' if x == 'Central Michigan' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Charleston So.' if x == 'Charleston Southern' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Eastern Ill.' if x == 'Eastern Illinois' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Eastern Ky.' if x == 'Eastern Kentucky' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Eastern Mich.' if x == 'Eastern Michigan' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'FDU' if x == 'Fairleigh Dickinson' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Grambling' if x == 'Grambling St.' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'UIW' if x == 'Incarnate Word' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'LIU' if x == 'Long Island' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'UMES' if x == 'Maryland Eastern Shore' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Middle Tenn.' if x == 'Middle Tennessee' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Mississippi Val.' if x == 'Mississippi Valley St.' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: "Mount St. Mary's" if x == "Mount Saint Mary's" else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'North Ala.' if x == 'North Alabama' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'N.C. A&T' if x == 'North Carolina A&T' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Northern Colo.' if x == 'Northern Colorado' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Northern Ky.' if x == 'Northern Kentucky' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Prairie View' if x == 'Prairie View A&M' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Presbyterian' if x == 'Presbyterian College' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'St. Bonaventure' if x == 'Saint Bonaventure' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: "St. John's (NY)" if x == "Saint John's" else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Sam Houston' if x == 'Sam Houston St.' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Seattle U' if x == 'Seattle University' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'USC Upstate' if x == 'South Carolina Upstate' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'South Fla.' if x == 'South Florida' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Southeastern La.' if x == 'Southeastern Louisiana' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Southern U.' if x == 'Southern' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Southern Ill.' if x == 'Southern Illinois' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'SFA' if x == 'Stephen F. Austin' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'UT Martin' if x == 'Tennessee-Martin' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'A&M-Corpus Christi' if x == 'Texas A&M-Corpus Christi' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'UMass Lowell' if x == 'UMass-Lowell' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'UT Arlington' if x == 'UTA' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Western Caro.' if x == 'Western Carolina' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Western Ill.' if x == 'Western Illinois' else x)
+elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Western Mich.' if x == 'Western Michigan' else x)
+
+schedule_df['Team'] = schedule_df['Team'].str.replace('State', 'St.', regex=False)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'NC State' if x == 'North Carolina St.' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Southern Miss.' if x == 'Southern Miss' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Southern California' if x == 'USC' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'DBU' if x == 'Dallas Baptist' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Col. of Charleston' if x == 'Charleston' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Ga. Southern' if x == 'Georgia Southern' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'UNC Greensboro' if x == 'UNCG' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'ETSU' if x == 'East Tennessee St.' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Lamar University' if x == 'Lamar' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: "Saint Mary's (CA)" if x == "Saint Mary's College" else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Western Ky.' if x == 'Western Kentucky' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Fla. Atlantic' if x == 'FAU' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'UConn' if x == 'Connecticut' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Southeast Mo. St.' if x == 'Southeast Missouri' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Alcorn' if x == 'Alcorn St.' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'App State' if x == 'Appalachian St.' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Ark.-Pine Bluff' if x == 'Arkansas-Pine Bluff' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Army West Point' if x == 'Army' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'CSU Bakersfield' if x == 'Cal St. Bakersfield' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'CSUN' if x == 'Cal St. Northridge' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Central Ark.' if x == 'Central Arkansas' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Central Mich.' if x == 'Central Michigan' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Charleston So.' if x == 'Charleston Southern' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Eastern Ill.' if x == 'Eastern Illinois' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Eastern Ky.' if x == 'Eastern Kentucky' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Eastern Mich.' if x == 'Eastern Michigan' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'FDU' if x == 'Fairleigh Dickinson' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Grambling' if x == 'Grambling St.' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'UIW' if x == 'Incarnate Word' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'LIU' if x == 'Long Island' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'UMES' if x == 'Maryland Eastern Shore' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Middle Tenn.' if x == 'Middle Tennessee' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Mississippi Val.' if x == 'Mississippi Valley St.' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: "Mount St. Mary's" if x == "Mount Saint Mary's" else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'North Ala.' if x == 'North Alabama' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'N.C. A&T' if x == 'North Carolina A&T' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Northern Colo.' if x == 'Northern Colorado' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Northern Ky.' if x == 'Northern Kentucky' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Prairie View' if x == 'Prairie View A&M' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Presbyterian' if x == 'Presbyterian College' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'St. Bonaventure' if x == 'Saint Bonaventure' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: "St. John's (NY)" if x == "Saint John's" else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Sam Houston' if x == 'Sam Houston St.' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Seattle U' if x == 'Seattle University' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'USC Upstate' if x == 'South Carolina Upstate' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'South Fla.' if x == 'South Florida' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Southeastern La.' if x == 'Southeastern Louisiana' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Southern U.' if x == 'Southern' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Southern Ill.' if x == 'Southern Illinois' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'SFA' if x == 'Stephen F. Austin' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'UT Martin' if x == 'Tennessee-Martin' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'A&M-Corpus Christi' if x == 'Texas A&M-Corpus Christi' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'UMass Lowell' if x == 'UMass-Lowell' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'UT Arlington' if x == 'UTA' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Western Caro.' if x == 'Western Carolina' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Western Ill.' if x == 'Western Illinois' else x)
+schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Western Mich.' if x == 'Western Michigan' else x)
+
+schedule_df['home_team'] = schedule_df['home_team'].str.replace('State', 'St.', regex=False)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'NC State' if x == 'North Carolina St.' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Southern Miss.' if x == 'Southern Miss' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Southern California' if x == 'USC' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'DBU' if x == 'Dallas Baptist' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Col. of Charleston' if x == 'Charleston' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Ga. Southern' if x == 'Georgia Southern' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'UNC Greensboro' if x == 'UNCG' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'ETSU' if x == 'East Tennessee St.' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Lamar University' if x == 'Lamar' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: "Saint Mary's (CA)" if x == "Saint Mary's College" else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Western Ky.' if x == 'Western Kentucky' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Fla. Atlantic' if x == 'FAU' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'UConn' if x == 'Connecticut' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Southeast Mo. St.' if x == 'Southeast Missouri' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Alcorn' if x == 'Alcorn St.' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'App State' if x == 'Appalachian St.' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Ark.-Pine Bluff' if x == 'Arkansas-Pine Bluff' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Army West Point' if x == 'Army' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'CSU Bakersfield' if x == 'Cal St. Bakersfield' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'CSUN' if x == 'Cal St. Northridge' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Central Ark.' if x == 'Central Arkansas' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Central Mich.' if x == 'Central Michigan' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Charleston So.' if x == 'Charleston Southern' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Eastern Ill.' if x == 'Eastern Illinois' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Eastern Ky.' if x == 'Eastern Kentucky' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Eastern Mich.' if x == 'Eastern Michigan' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'FDU' if x == 'Fairleigh Dickinson' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Grambling' if x == 'Grambling St.' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'UIW' if x == 'Incarnate Word' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'LIU' if x == 'Long Island' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'UMES' if x == 'Maryland Eastern Shore' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Middle Tenn.' if x == 'Middle Tennessee' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Mississippi Val.' if x == 'Mississippi Valley St.' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: "Mount St. Mary's" if x == "Mount Saint Mary's" else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'North Ala.' if x == 'North Alabama' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'N.C. A&T' if x == 'North Carolina A&T' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Northern Colo.' if x == 'Northern Colorado' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Northern Ky.' if x == 'Northern Kentucky' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Prairie View' if x == 'Prairie View A&M' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Presbyterian' if x == 'Presbyterian College' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'St. Bonaventure' if x == 'Saint Bonaventure' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: "St. John's (NY)" if x == "Saint John's" else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Sam Houston' if x == 'Sam Houston St.' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Seattle U' if x == 'Seattle University' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'USC Upstate' if x == 'South Carolina Upstate' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'South Fla.' if x == 'South Florida' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Southeastern La.' if x == 'Southeastern Louisiana' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Southern U.' if x == 'Southern' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Southern Ill.' if x == 'Southern Illinois' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'SFA' if x == 'Stephen F. Austin' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'UT Martin' if x == 'Tennessee-Martin' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'A&M-Corpus Christi' if x == 'Texas A&M-Corpus Christi' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'UMass Lowell' if x == 'UMass-Lowell' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'UT Arlington' if x == 'UTA' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Western Caro.' if x == 'Western Carolina' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Western Ill.' if x == 'Western Illinois' else x)
+schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Western Mich.' if x == 'Western Michigan' else x)
+
+schedule_df['away_team'] = schedule_df['away_team'].str.replace('State', 'St.', regex=False)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'NC State' if x == 'North Carolina St.' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Southern Miss.' if x == 'Southern Miss' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Southern California' if x == 'USC' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'DBU' if x == 'Dallas Baptist' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Col. of Charleston' if x == 'Charleston' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Ga. Southern' if x == 'Georgia Southern' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'UNC Greensboro' if x == 'UNCG' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'ETSU' if x == 'East Tennessee St.' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Lamar University' if x == 'Lamar' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: "Saint Mary's (CA)" if x == "Saint Mary's College" else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Western Ky.' if x == 'Western Kentucky' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Fla. Atlantic' if x == 'FAU' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'UConn' if x == 'Connecticut' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Southeast Mo. St.' if x == 'Southeast Missouri' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Alcorn' if x == 'Alcorn St.' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'App State' if x == 'Appalachian St.' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Ark.-Pine Bluff' if x == 'Arkansas-Pine Bluff' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Army West Point' if x == 'Army' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'CSU Bakersfield' if x == 'Cal St. Bakersfield' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'CSUN' if x == 'Cal St. Northridge' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Central Ark.' if x == 'Central Arkansas' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Central Mich.' if x == 'Central Michigan' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Charleston So.' if x == 'Charleston Southern' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Eastern Ill.' if x == 'Eastern Illinois' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Eastern Ky.' if x == 'Eastern Kentucky' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Eastern Mich.' if x == 'Eastern Michigan' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'FDU' if x == 'Fairleigh Dickinson' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Grambling' if x == 'Grambling St.' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'UIW' if x == 'Incarnate Word' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'LIU' if x == 'Long Island' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'UMES' if x == 'Maryland Eastern Shore' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Middle Tenn.' if x == 'Middle Tennessee' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Mississippi Val.' if x == 'Mississippi Valley St.' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: "Mount St. Mary's" if x == "Mount Saint Mary's" else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'North Ala.' if x == 'North Alabama' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'N.C. A&T' if x == 'North Carolina A&T' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Northern Colo.' if x == 'Northern Colorado' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Northern Ky.' if x == 'Northern Kentucky' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Prairie View' if x == 'Prairie View A&M' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Presbyterian' if x == 'Presbyterian College' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'St. Bonaventure' if x == 'Saint Bonaventure' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: "St. John's (NY)" if x == "Saint John's" else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Sam Houston' if x == 'Sam Houston St.' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Seattle U' if x == 'Seattle University' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'USC Upstate' if x == 'South Carolina Upstate' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'South Fla.' if x == 'South Florida' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Southeastern La.' if x == 'Southeastern Louisiana' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Southern U.' if x == 'Southern' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Southern Ill.' if x == 'Southern Illinois' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'SFA' if x == 'Stephen F. Austin' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'UT Martin' if x == 'Tennessee-Martin' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'A&M-Corpus Christi' if x == 'Texas A&M-Corpus Christi' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'UMass Lowell' if x == 'UMass-Lowell' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'UT Arlington' if x == 'UTA' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Western Caro.' if x == 'Western Carolina' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Western Ill.' if x == 'Western Illinois' else x)
+schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Western Mich.' if x == 'Western Michigan' else x)
+
+import pandas as pd # type: ignore
+
+# Mapping months to numerical values
+month_mapping = {
+    "JAN": "01", "FEB": "02", "MAR": "03", "APR": "04",
+    "MAY": "05", "JUN": "06", "JUL": "07", "AUG": "08",
+    "SEP": "09", "OCT": "10", "NOV": "11", "DEC": "12"
+}
+
+current_season = 2025  # Set the current season
+
+# Function to convert "FEB 14 (FRI)" format to "mm-dd-yyyy"
+def convert_date(date_str):
+    # Ensure date is a string before splitting
+    if isinstance(date_str, pd.Timestamp):
+        date_str = date_str.strftime("%b %d (%a)").upper()  # Convert to same format
+    
+    parts = date_str.split()  # ["FEB", "14", "(FRI)"]
+    month = month_mapping[parts[0].upper()]  # Convert month to number
+    day = parts[1]  # Extract day
+    return f"{month}-{day}-{current_season}"
+
+# Apply function to convert date format
+schedule_df["Date"] = schedule_df["Date"].astype(str).apply(convert_date)
+schedule_df["Date"] = pd.to_datetime(schedule_df["Date"], format="%m-%d-%Y")
+comparison_date = pd.to_datetime(formatted_date, format="%m_%d_%Y")
+
+missing_rating = round(ending_data['Rating'].mean() - 1.5*ending_data['Rating'].std(),2)
+schedule_df = schedule_df.merge(ending_data[['Team', 'Rating']], left_on='home_team', right_on='Team', how='left')
+schedule_df.rename(columns={'Rating': 'home_rating'}, inplace=True)
+schedule_df = schedule_df.merge(ending_data[['Team', 'Rating']], left_on='away_team', right_on='Team', how='left')
+schedule_df.rename(columns={'Rating': 'away_rating'}, inplace=True)
+schedule_df.drop(columns=['Team', 'Team_y'], inplace=True)
+schedule_df.rename(columns={'Team_x':'Team'}, inplace=True)
+schedule_df['home_rating'].fillna(missing_rating, inplace=True)
+schedule_df['away_rating'].fillna(missing_rating, inplace=True)
+schedule_df['home_win_prob'] = schedule_df.apply(
+    lambda row: PEAR_Win_Prob(row['home_rating'], row['away_rating']) / 100, axis=1
+)
+completed_schedule = schedule_df[(schedule_df['home_score'] != 0) & (schedule_df['away_score'] != 0)]
+remaining_games = schedule_df[schedule_df["Date"] > comparison_date].reset_index(drop=True)
+
+def calculate_expected_wins(group):
+    # Initialize a variable to accumulate expected wins
+    expected_wins = 0
+    
+    # Iterate over the rows of the group
+    for _, row in group.iterrows():
+        if row['Team'] == row['home_team']:
+            expected_wins += row['home_win_prob']
+        else:
+            expected_wins += 1 - row['home_win_prob']
+    
+    # Return the total expected_wins for this group
+    return pd.Series({'Team': group['Team'].iloc[0], 'expected_wins': expected_wins})
+
+# Group by 'Team' and apply the calculation
+team_expected_wins = completed_schedule.groupby('Team').apply(calculate_expected_wins).reset_index(drop=True)
+team_expected_wins = pd.merge(ending_data[['Team', 'Wins']], team_expected_wins, on='Team', how='left')
+team_expected_wins['wins_above_expected'] = round(team_expected_wins['Wins'] - team_expected_wins['expected_wins'],2)
+team_expected_wins['SOR'] = team_expected_wins['wins_above_expected'].rank(method='min', ascending=False)
+max_SOR = team_expected_wins['SOR'].max()
+team_expected_wins['SOR'].fillna(max_SOR + 1, inplace=True)
+team_expected_wins['SOR'] = team_expected_wins['SOR'].astype(int)
+team_expected_wins = team_expected_wins.sort_values('SOR').reset_index(drop=True)
+
+def calculate_average_expected_wins(group, average_team):
+    avg_expected_wins = 0
+
+    for _, row in group.iterrows():
+        if row['Team'] == row['home_team']:
+            avg_expected_wins += PEAR_Win_Prob(average_team, row['away_rating']) / 100
+        else:
+            avg_expected_wins += 1 - PEAR_Win_Prob(row['home_rating'], average_team) / 100
+
+    return pd.Series({'Team': group['Team'].iloc[0], 'avg_expected_wins': avg_expected_wins})
+
+average_team = ending_data['Rating'].mean()
+avg_team_expected_wins = completed_schedule.groupby('Team').apply(calculate_average_expected_wins, average_team).reset_index(drop=True)
+avg_team_expected_wins['SOS'] = avg_team_expected_wins['avg_expected_wins'].rank(method='min', ascending=True)
+avg_team_expected_wins['SOS'] = avg_team_expected_wins['SOS'].astype(int)
+avg_team_expected_wins = avg_team_expected_wins.sort_values('SOS').reset_index(drop=True)
+
+rem_avg_expected_wins = remaining_games.groupby('Team').apply(calculate_average_expected_wins, average_team).reset_index(drop=True)
+rem_avg_expected_wins.rename(columns={"avg_expected_wins": "rem_avg_expected_wins"}, inplace=True)
+rem_avg_expected_wins['RemSOS'] = rem_avg_expected_wins['rem_avg_expected_wins'].rank(method='min', ascending=True)
+rem_avg_expected_wins['RemSOS'] = rem_avg_expected_wins['RemSOS'].astype(int)
+rem_avg_expected_wins = rem_avg_expected_wins.sort_values('RemSOS').reset_index(drop=True)
+
+quadrant_records = {}
+
+for team, group in completed_schedule.groupby('Team'):
+    Q1_win, Q1_loss = 0, 0  # Initialize counters
+    Q2_win, Q2_loss = 0, 0
+    Q3_win, Q3_loss = 0, 0
+    Q4_win, Q4_loss = 0, 0
+
+    for _, row in group.iterrows():
+        opponent = row['Opponent']
+        
+        if len(ending_data[ending_data['Team'] == opponent]) > 0:
+            opponent_index = ending_data[ending_data['Team'] == opponent].index.values[0]
+        else:
+            opponent_index = 300
+
+        team_is_home = row['Team'] == row['home_team']
+        team_won = (row['home_score'] > row['away_score'] and team_is_home) or \
+                    (row['away_score'] > row['home_score'] and not team_is_home)
+
+        # Apply quadrant logic
+        if team_is_home and opponent_index <= 25:
+            if team_won:
+                Q1_win += 1
+            else:
+                Q1_loss += 1
+        elif team_is_home and opponent_index <= 50:
+            if team_won:
+                Q2_win += 1
+            else:
+                Q2_loss += 1
+        elif team_is_home and opponent_index <= 100:
+            if team_won:
+                Q3_win += 1
+            else:
+                Q3_loss += 1
+        elif team_is_home:
+            if team_won:
+                Q4_win += 1
+            else:
+                Q4_loss += 1            
+        elif not team_is_home and opponent_index <= 60:
+            if team_won:
+                Q1_win += 1
+            else:
+                Q1_loss += 1
+        elif not team_is_home and opponent_index <= 120:
+            if team_won:
+                Q2_win += 1
+            else:
+                Q2_loss += 1
+        elif not team_is_home and opponent_index <= 240:
+            if team_won:
+                Q3_win += 1
+            else:
+                Q3_loss += 1
+        elif not team_is_home:
+            if team_won:
+                Q4_win += 1
+            else:
+                Q4_loss += 1
+            
+
+    # Store results for the team
+    quadrant_records[team] = {'Team': team, 'Q1': f"{Q1_win}-{Q1_loss}", 'Q2': f"{Q2_win}-{Q2_loss}", 'Q3': f"{Q3_win}-{Q3_loss}", 'Q4': f"{Q4_win}-{Q4_loss}"}
+quadrant_record_df = pd.DataFrame.from_dict(quadrant_records, orient='index').reset_index(drop=True)
+
+df_1 = pd.merge(ending_data, team_expected_wins[['Team', 'expected_wins', 'wins_above_expected', 'SOR']], on='Team', how='left')
+df_2 = pd.merge(df_1, avg_team_expected_wins[['Team', 'avg_expected_wins', 'SOS']], on='Team', how='left')
+df_3 = pd.merge(df_2, rem_avg_expected_wins[['Team', 'rem_avg_expected_wins', 'RemSOS']], on='Team', how='left')
+stats_and_metrics = pd.merge(df_3, quadrant_record_df, on='Team', how='left')
+
 file_path = os.path.join(folder_path, f"baseball_{formatted_date}.csv")
-ending_data.to_csv(file_path)
+stats_and_metrics.to_csv(file_path)
