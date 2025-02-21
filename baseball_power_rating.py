@@ -863,33 +863,43 @@ schedule_df['away_rating'].fillna(missing_rating, inplace=True)
 schedule_df['home_win_prob'] = schedule_df.apply(
     lambda row: PEAR_Win_Prob(row['home_rating'], row['away_rating']) / 100, axis=1
 )
-completed_schedule = schedule_df[(schedule_df['home_score'] != 0) & (schedule_df['away_score'] != 0)]
+completed_schedule = schedule_df[
+    (schedule_df["Date"] < comparison_date) & (schedule_df["home_score"] != schedule_df["away_score"])
+].reset_index(drop=True)
 remaining_games = schedule_df[schedule_df["Date"] > comparison_date].reset_index(drop=True)
 
 def calculate_expected_wins(group):
     # Initialize a variable to accumulate expected wins
     expected_wins = 0
+    schedule_wins = 0
+    schedule_losses = 0
     
     # Iterate over the rows of the group
     for _, row in group.iterrows():
         if row['Team'] == row['home_team']:
             expected_wins += row['home_win_prob']
+            if row['home_score'] > row['away_score']:
+                schedule_wins += 1
+            else:
+                schedule_losses += 1
         else:
             expected_wins += 1 - row['home_win_prob']
+            if row['away_score'] > row['home_score']:
+                schedule_wins += 1
+            else:
+                schedule_losses += 1
     
     # Return the total expected_wins for this group
-    return pd.Series({'Team': group['Team'].iloc[0], 'expected_wins': expected_wins})
+    return pd.Series({'Team': group['Team'].iloc[0], 'expected_wins': expected_wins, 'Wins':schedule_wins, 'Losses':schedule_losses})
 
 # Group by 'Team' and apply the calculation
 team_expected_wins = completed_schedule.groupby('Team').apply(calculate_expected_wins).reset_index(drop=True)
-team_expected_wins = pd.merge(ending_data[['Team', 'Wins']], team_expected_wins, on='Team', how='left')
 team_expected_wins['wins_above_expected'] = round(team_expected_wins['Wins'] - team_expected_wins['expected_wins'],2)
 team_expected_wins['SOR'] = team_expected_wins['wins_above_expected'].rank(method='min', ascending=False)
 max_SOR = team_expected_wins['SOR'].max()
 team_expected_wins['SOR'].fillna(max_SOR + 1, inplace=True)
 team_expected_wins['SOR'] = team_expected_wins['SOR'].astype(int)
 team_expected_wins = team_expected_wins.sort_values('SOR').reset_index(drop=True)
-
 def calculate_average_expected_wins(group, average_team):
     avg_expected_wins = 0
 
