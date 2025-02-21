@@ -1013,6 +1013,20 @@ stats_and_metrics['SOS'] = stats_and_metrics['SOS'].astype(int)
 stats_and_metrics = stats_and_metrics.sort_values('SOS').reset_index(drop=True)
 
 stats_and_metrics['ELO'].fillna(1200, inplace=True)
+
+bubble_rating = stats_and_metrics.loc[(stats_and_metrics["SOR"] >= 32) & (stats_and_metrics["SOR"] <= 40), "Rating"].mean()
+bubble_expected_wins = completed_schedule.groupby('Team').apply(calculate_average_expected_wins, bubble_rating).reset_index(drop=True)
+bubble_expected_wins.rename(columns={"avg_expected_wins": "bubble_expected_wins"}, inplace=True)
+
+stats_and_metrics = pd.merge(stats_and_metrics, bubble_expected_wins, on='Team', how='left')
+
+stats_and_metrics['wins_above_bubble'] = round(stats_and_metrics['Wins'] - stats_and_metrics['bubble_expected_wins'],2)
+stats_and_metrics['WAB'] = stats_and_metrics['wins_above_bubble'].rank(method='min', ascending=False)
+max_WAB = stats_and_metrics['WAB'].max()
+stats_and_metrics['WAB'].fillna(max_WAB + 1, inplace=True)
+stats_and_metrics['WAB'] = stats_and_metrics['WAB'].astype(int)
+stats_and_metrics = stats_and_metrics.sort_values('WAB').reset_index(drop=True)
+
 stats_and_metrics.fillna(0, inplace=True)
 stats_and_metrics = stats_and_metrics.sort_values('Rating', ascending=False).reset_index(drop=True)
 
