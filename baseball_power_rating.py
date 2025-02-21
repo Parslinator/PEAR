@@ -894,12 +894,7 @@ def calculate_expected_wins(group):
 
 # Group by 'Team' and apply the calculation
 team_expected_wins = completed_schedule.groupby('Team').apply(calculate_expected_wins).reset_index(drop=True)
-team_expected_wins['wins_above_expected'] = round(team_expected_wins['Wins'] - team_expected_wins['expected_wins'],2)
-team_expected_wins['SOR'] = team_expected_wins['wins_above_expected'].rank(method='min', ascending=False)
-max_SOR = team_expected_wins['SOR'].max()
-team_expected_wins['SOR'].fillna(max_SOR + 1, inplace=True)
-team_expected_wins['SOR'] = team_expected_wins['SOR'].astype(int)
-team_expected_wins = team_expected_wins.sort_values('SOR').reset_index(drop=True)
+
 def calculate_average_expected_wins(group, average_team):
     avg_expected_wins = 0
 
@@ -913,15 +908,9 @@ def calculate_average_expected_wins(group, average_team):
 
 average_team = ending_data['Rating'].mean()
 avg_team_expected_wins = completed_schedule.groupby('Team').apply(calculate_average_expected_wins, average_team).reset_index(drop=True)
-avg_team_expected_wins['SOS'] = avg_team_expected_wins['avg_expected_wins'].rank(method='min', ascending=True)
-avg_team_expected_wins['SOS'] = avg_team_expected_wins['SOS'].astype(int)
-avg_team_expected_wins = avg_team_expected_wins.sort_values('SOS').reset_index(drop=True)
 
 rem_avg_expected_wins = remaining_games.groupby('Team').apply(calculate_average_expected_wins, average_team).reset_index(drop=True)
 rem_avg_expected_wins.rename(columns={"avg_expected_wins": "rem_avg_expected_wins"}, inplace=True)
-rem_avg_expected_wins['RemSOS'] = rem_avg_expected_wins['rem_avg_expected_wins'].rank(method='min', ascending=True)
-rem_avg_expected_wins['RemSOS'] = rem_avg_expected_wins['RemSOS'].astype(int)
-rem_avg_expected_wins = rem_avg_expected_wins.sort_values('RemSOS').reset_index(drop=True)
 
 quadrant_records = {}
 
@@ -990,10 +979,30 @@ for team, group in completed_schedule.groupby('Team'):
     quadrant_records[team] = {'Team': team, 'Q1': f"{Q1_win}-{Q1_loss}", 'Q2': f"{Q2_win}-{Q2_loss}", 'Q3': f"{Q3_win}-{Q3_loss}", 'Q4': f"{Q4_win}-{Q4_loss}"}
 quadrant_record_df = pd.DataFrame.from_dict(quadrant_records, orient='index').reset_index(drop=True)
 
-df_1 = pd.merge(ending_data, team_expected_wins[['Team', 'expected_wins', 'wins_above_expected', 'SOR']], on='Team', how='left')
-df_2 = pd.merge(df_1, avg_team_expected_wins[['Team', 'avg_expected_wins', 'SOS']], on='Team', how='left')
-df_3 = pd.merge(df_2, rem_avg_expected_wins[['Team', 'rem_avg_expected_wins', 'RemSOS']], on='Team', how='left')
+df_1 = pd.merge(ending_data, team_expected_wins[['Team', 'expected_wins']], on='Team', how='left')
+df_2 = pd.merge(df_1, avg_team_expected_wins[['Team', 'avg_expected_wins']], on='Team', how='left')
+df_3 = pd.merge(df_2, rem_avg_expected_wins[['Team', 'rem_avg_expected_wins']], on='Team', how='left')
 stats_and_metrics = pd.merge(df_3, quadrant_record_df, on='Team', how='left')
+
+stats_and_metrics['wins_above_expected'] = round(stats_and_metrics['Wins'] - stats_and_metrics['expected_wins'],2)
+stats_and_metrics['SOR'] = stats_and_metrics['wins_above_expected'].rank(method='min', ascending=False)
+max_SOR = stats_and_metrics['SOR'].max()
+stats_and_metrics['SOR'].fillna(max_SOR + 1, inplace=True)
+stats_and_metrics['SOR'] = stats_and_metrics['SOR'].astype(int)
+stats_and_metrics = stats_and_metrics.sort_values('SOR').reset_index(drop=True)
+
+stats_and_metrics['RemSOS'] = stats_and_metrics['rem_avg_expected_wins'].rank(method='min', ascending=True)
+max_remSOS = stats_and_metrics['RemSOS'].max()
+stats_and_metrics['RemSOS'].fillna(max_remSOS + 1, inplace=True)
+stats_and_metrics['RemSOS'] = stats_and_metrics['RemSOS'].astype(int)
+stats_and_metrics = stats_and_metrics.sort_values('RemSOS').reset_index(drop=True)
+
+stats_and_metrics['SOS'] = stats_and_metrics['avg_expected_wins'].rank(method='min', ascending=True)
+max_SOS = stats_and_metrics['SOS'].max()
+stats_and_metrics['SOS'].fillna(max_SOS + 1, inplace=True)
+stats_and_metrics['SOS'] = stats_and_metrics['SOS'].astype(int)
+stats_and_metrics = stats_and_metrics.sort_values('SOS').reset_index(drop=True)
+stats_and_metrics.fillna(0, inplace=True)
 
 file_path = os.path.join(folder_path, f"baseball_{formatted_date}.csv")
 stats_and_metrics.to_csv(file_path)
