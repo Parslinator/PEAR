@@ -1014,6 +1014,7 @@ stats_and_metrics = stats_and_metrics.sort_values('SOS').reset_index(drop=True)
 
 stats_and_metrics['ELO'].fillna(1200, inplace=True)
 stats_and_metrics.fillna(0, inplace=True)
+stats_and_metrics = stats_and_metrics.sort_values('Rating', ascending=False).reset_index(drop=True)
 
 file_path = os.path.join(folder_path, f"baseball_{formatted_date}.csv")
 stats_and_metrics.to_csv(file_path)

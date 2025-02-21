@@ -2457,9 +2457,9 @@ Triton Park",9:00 PM,UC Santa Barbara,Seattle U,0,0,1535.5,1255.51,5.67,-3.68,0.
 1225,UC Santa Barbara,2025-02-22,San Diego State,"San Diego, CA
 Tony Gwynn Stadium",9:00 PM,San Diego St.,UC Santa Barbara,0,0,1339.67,1535.5,-2.88,5.67,0.1225,24.47,-9.32,UC Santa Barbara -9.32
 1226,UC Santa Barbara,2025-02-23,California Baptist,"San Diego, CA
-Tony Gwynn Stadium",3:00 PM,UC Santa Barbara,California Baptist,0,0,1535.5,1456.9,5.67,1.64,0.7167,61.12,4.36,UC Santa Barbara -4.36
+Tony Gwynn Stadium",3:00 PM,UC Santa Barbara,California Baptist,0,0,1535.5,1464.34,5.67,1.64,0.7167,60.1,4.33,UC Santa Barbara -4.33
 1227,UC Santa Barbara,2025-02-25,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",5:00 PM,Pepperdine,UC Santa Barbara,0,0,1249.42,1535.5,-2.75,5.67,0.1258,16.15,-9.44,UC Santa Barbara -9.44
+Eddy D. Field Stadium",5:00 PM,Pepperdine,UC Santa Barbara,0,0,1241.98,1535.5,-2.75,5.67,0.1258,15.58,-9.45,UC Santa Barbara -9.45
 1228,UC Santa Barbara,2025-02-28,Fresno State,"Santa Barbara, CA
 Caesar Uyesaka Stadium",7:05 PM,UC Santa Barbara,Fresno St.,0,0,1535.5,1352.44,5.67,0.66,0.7602,74.15,5.73,UC Santa Barbara -5.73
 1229,UC Santa Barbara,2025-03-01,Fresno State,"Santa Barbara, CA
@@ -2505,7 +2505,7 @@ Caesar Uyesaka Stadium",6:05 PM,UC Santa Barbara,UC Davis,0,0,1535.5,1413.16,5.6
 1249,UC Santa Barbara,2025-04-06,UC Davis,"Santa Barbara, CA
 Caesar Uyesaka Stadium",4:05 PM,UC Santa Barbara,UC Davis,0,0,1535.5,1413.16,5.67,0.59,0.7631,66.91,5.59,UC Santa Barbara -5.59
 1250,UC Santa Barbara,2025-04-08,Pepperdine,"Santa Barbara, CA
-Caesar Uyesaka Stadium",7:35 PM,UC Santa Barbara,Pepperdine,0,0,1535.5,1249.42,5.67,-2.75,0.8742,83.85,9.44,UC Santa Barbara -9.44
+Caesar Uyesaka Stadium",7:35 PM,UC Santa Barbara,Pepperdine,0,0,1535.5,1241.98,5.67,-2.75,0.8742,84.42,9.45,UC Santa Barbara -9.45
 1251,UC Santa Barbara,2025-04-11,UC Riverside,"Riverside, CA
 Riverside Sports Complex",9:00 PM,UC Riverside,UC Santa Barbara,0,0,1296.2,1535.5,-2.57,5.67,0.1304,20.14,-9.14,UC Santa Barbara -9.14
 1252,UC Santa Barbara,2025-04-12,UC Riverside,"Riverside, CA
@@ -2513,7 +2513,7 @@ Riverside Sports Complex",9:00 PM,UC Riverside,UC Santa Barbara,0,0,1296.2,1535.
 1253,UC Santa Barbara,2025-04-13,UC Riverside,"Riverside, CA
 Riverside Sports Complex",5:00 PM,UC Riverside,UC Santa Barbara,0,0,1296.2,1535.5,-2.57,5.67,0.1304,20.14,-9.14,UC Santa Barbara -9.14
 1254,UC Santa Barbara,2025-04-14,California Baptist,"Riverside, CA
-James W. Totman Stadium",8:00 PM,California Baptist,UC Santa Barbara,0,0,1456.9,1535.5,1.64,5.67,0.2833,38.88,-4.36,UC Santa Barbara -4.36
+James W. Totman Stadium",8:00 PM,California Baptist,UC Santa Barbara,0,0,1464.34,1535.5,1.64,5.67,0.2833,39.9,-4.33,UC Santa Barbara -4.33
 1255,UC Santa Barbara,2025-04-17,Cal Poly,"Santa Barbara, CA
 Caesar Uyesaka Stadium",7:35 PM,UC Santa Barbara,Cal Poly,0,0,1535.5,1415.44,5.67,0.94,0.7482,66.62,5.23,UC Santa Barbara -5.23
 1256,UC Santa Barbara,2025-04-18,Cal Poly,"Santa Barbara, CA
@@ -2521,7 +2521,7 @@ Caesar Uyesaka Stadium",6:05 PM,UC Santa Barbara,Cal Poly,0,0,1535.5,1415.44,5.6
 1257,UC Santa Barbara,2025-04-19,Cal Poly,"Santa Barbara, CA
 Caesar Uyesaka Stadium",4:05 PM,UC Santa Barbara,Cal Poly,0,0,1535.5,1415.44,5.67,0.94,0.7482,66.62,5.23,UC Santa Barbara -5.23
 1258,UC Santa Barbara,2025-04-21,California Baptist,"Santa Barbara, CA
-Caesar Uyesaka Stadium",7:35 PM,UC Santa Barbara,California Baptist,0,0,1535.5,1456.9,5.67,1.64,0.7167,61.12,4.36,UC Santa Barbara -4.36
+Caesar Uyesaka Stadium",7:35 PM,UC Santa Barbara,California Baptist,0,0,1535.5,1464.34,5.67,1.64,0.7167,60.1,4.33,UC Santa Barbara -4.33
 1259,UC Santa Barbara,2025-04-25,UC San Diego,"La Jolla, CA
 Triton Park",9:00 PM,UC San Diego,UC Santa Barbara,0,0,1366.54,1535.5,0.17,5.67,0.21989999999999998,27.44,-6.18,UC Santa Barbara -6.18
 1260,UC Santa Barbara,2025-04-26,UC San Diego,"La Jolla, CA
@@ -4352,9 +4352,9 @@ Jackie Robinson Stadium",5:00 PM,UCLA,Nebraska,0,0,1448.98,1502.7,0.18,4.38,0.27
 2171,Nebraska,2025-03-16,UCLA,"Los Angeles, CA
 Jackie Robinson Stadium",4:00 PM,UCLA,Nebraska,0,0,1448.98,1502.7,0.18,4.38,0.2755,42.33,-4.43,Nebraska -4.43
 2172,Nebraska,2025-03-18,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",2:30 PM,Pepperdine,Nebraska,0,0,1249.42,1502.7,-2.75,4.38,0.16219999999999998,18.88,-8.06,Nebraska -8.06
+Eddy D. Field Stadium",2:30 PM,Pepperdine,Nebraska,0,0,1241.98,1502.7,-2.75,4.38,0.16219999999999998,18.23,-8.08,Nebraska -8.08
 2173,Nebraska,2025-03-19,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",2:30 PM,Pepperdine,Nebraska,0,0,1249.42,1502.7,-2.75,4.38,0.16219999999999998,18.88,-8.06,Nebraska -8.06
+Eddy D. Field Stadium",2:30 PM,Pepperdine,Nebraska,0,0,1241.98,1502.7,-2.75,4.38,0.16219999999999998,18.23,-8.08,Nebraska -8.08
 2174,Nebraska,2025-03-21,USC,"Irvine, CA
 Great Park",9:30 PM,Southern California,Nebraska,0,0,1536.09,1502.7,3.03,4.38,0.4229,54.79,-1.21,Nebraska -1.21
 2175,Nebraska,2025-03-22,USC,"Irvine, CA
@@ -4664,11 +4664,11 @@ Greer Field at Turchin Stadium",2:00 PM,Tulane,Loyola-Marymount,0,0,1499.97,1387
 2327,Tulane,2025-02-25,Nicholls,"Thibodaux, LA
 Ben Meyer Diamond at Ray E. Didier Field",TBA,Nicholls,Tulane,0,0,1426.33,1499.97,1.86,2.81,0.44549999999999995,39.56,-1.26,Tulane -1.26
 2328,Tulane,2025-02-28,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Tulane,0,0,1249.42,1499.97,-2.75,2.81,0.2175,19.12,-6.49,Tulane -6.49
+Eddy D. Field Stadium",TBA,Pepperdine,Tulane,0,0,1241.98,1499.97,-2.75,2.81,0.2175,18.47,-6.51,Tulane -6.51
 2329,Tulane,2025-03-01,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Tulane,0,0,1249.42,1499.97,-2.75,2.81,0.2175,19.12,-6.49,Tulane -6.49
+Eddy D. Field Stadium",TBA,Pepperdine,Tulane,0,0,1241.98,1499.97,-2.75,2.81,0.2175,18.47,-6.51,Tulane -6.51
 2330,Tulane,2025-03-02,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Tulane,0,0,1249.42,1499.97,-2.75,2.81,0.2175,19.12,-6.49,Tulane -6.49
+Eddy D. Field Stadium",TBA,Pepperdine,Tulane,0,0,1241.98,1499.97,-2.75,2.81,0.2175,18.47,-6.51,Tulane -6.51
 2331,Tulane,2025-03-03,Long Beach State,"Long Beach, CA
 Blair Field",9:00 PM,Long Beach St.,Tulane,0,0,1330.1,1499.97,-1.03,2.81,0.2923,27.33,-4.52,Tulane -4.52
 2332,Tulane,2025-03-07,North Dakota State,"New Orleans, LA
@@ -5334,13 +5334,13 @@ Daikin Park",4:05 PM,Mississippi St.,Arizona,0,0,1547.63,1492.66,5.25,3.81,0.582
 2661,Arizona,2025-03-02,Tennessee,"Houston, TX
 Daikin Park",12:05 PM,Tennessee,Arizona,0,0,1654.54,1492.66,5.17,3.81,0.5777,71.75,2.01,Tennessee -2.01
 2662,Arizona,2025-03-06,Pepperdine,"Tucson, AZ
-Hi Corbett Field",8:00 PM,Arizona,Pepperdine,0,0,1492.66,1249.42,3.81,-2.75,0.8190999999999999,80.22,7.47,Arizona -7.47
+Hi Corbett Field",8:00 PM,Arizona,Pepperdine,0,0,1492.66,1241.98,3.81,-2.75,0.8190999999999999,80.89,7.49,Arizona -7.49
 2663,Arizona,2025-03-07,Pepperdine,"Tucson, AZ
-Hi Corbett Field",8:00 PM,Arizona,Pepperdine,0,0,1492.66,1249.42,3.81,-2.75,0.8190999999999999,80.22,7.47,Arizona -7.47
+Hi Corbett Field",8:00 PM,Arizona,Pepperdine,0,0,1492.66,1241.98,3.81,-2.75,0.8190999999999999,80.89,7.49,Arizona -7.49
 2664,Arizona,2025-03-08,Pepperdine,"Tucson, AZ
-Hi Corbett Field",8:00 PM,Arizona,Pepperdine,0,0,1492.66,1249.42,3.81,-2.75,0.8190999999999999,80.22,7.47,Arizona -7.47
+Hi Corbett Field",8:00 PM,Arizona,Pepperdine,0,0,1492.66,1241.98,3.81,-2.75,0.8190999999999999,80.89,7.49,Arizona -7.49
 2665,Arizona,2025-03-09,Pepperdine,"Tucson, AZ
-Hi Corbett Field",3:00 PM,Arizona,Pepperdine,0,0,1492.66,1249.42,3.81,-2.75,0.8190999999999999,80.22,7.47,Arizona -7.47
+Hi Corbett Field",3:00 PM,Arizona,Pepperdine,0,0,1492.66,1241.98,3.81,-2.75,0.8190999999999999,80.89,7.49,Arizona -7.49
 2666,Arizona,2025-03-11,Arizona State,"Tucson, AZ
 Hi Corbett Field",9:00 PM,Arizona,Arizona St.,0,0,1492.66,1528.59,3.81,1.5,0.6299,44.85,2.16,Arizona -2.16
 2667,Arizona,2025-03-14,Cincinnati,"Tucson, AZ
@@ -5620,7 +5620,7 @@ Cicerone Field at Anteater Ballpark",4:00 PM,UC Irvine,UC San Diego,0,0,1487.18,
 2804,UC Irvine,2025-05-04,UC San Diego,"Irvine, CA
 Cicerone Field at Anteater Ballpark",4:00 PM,UC Irvine,UC San Diego,0,0,1487.18,1366.54,3.81,0.17,0.6981,66.7,4.14,UC Irvine -4.14
 2805,UC Irvine,2025-05-06,California Baptist,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,UC Irvine,0,0,1456.9,1487.18,1.64,3.81,0.3776,45.65,-2.3,UC Irvine -2.3
+James W. Totman Stadium",9:00 PM,California Baptist,UC Irvine,0,0,1464.34,1487.18,1.64,3.81,0.3776,46.72,-2.27,UC Irvine -2.27
 2806,UC Irvine,2025-05-09,Cal State Bakersfield,"Bakersfield, CA
 Hardt Field",9:30 PM,CSU Bakersfield,UC Irvine,0,0,1289.08,1487.18,-5.42,3.81,0.1067,24.23,-10.0,UC Irvine -10.0
 2807,UC Irvine,2025-05-10,Cal State Bakersfield,"Bakersfield, CA
@@ -6945,13 +6945,13 @@ Bobcat Ballpark",7:00 PM,Texas St.,James Madison,0,0,1473.37,1451.9,2.57,1.94,0.
 3467,Texas St.,2025-05-17,James Madison,"San Marcos, TX
 Bobcat Ballpark",2:00 PM,Texas St.,James Madison,0,0,1473.37,1451.9,2.57,1.94,0.5362,53.09,0.72,Texas St. -0.72
 3468,Utah,2025-02-14,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",W   3 - 1 (10 Innings),Pepperdine,Utah,1,3,1249.42,1473.18,-2.75,2.52,0.2291,21.62,-6.12,Utah -6.12
+Eddy D. Field Stadium",W   3 - 1 (10 Innings),Pepperdine,Utah,1,3,1241.98,1473.18,-2.75,2.52,0.2291,20.9,-6.14,Utah -6.14
 3469,Utah,2025-02-15,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",W   11 - 2,Pepperdine,Utah,2,11,1249.42,1473.18,-2.75,2.52,0.2291,21.62,-6.12,Utah -6.12
+Eddy D. Field Stadium",W   11 - 2,Pepperdine,Utah,2,11,1241.98,1473.18,-2.75,2.52,0.2291,20.9,-6.14,Utah -6.14
 3470,Utah,2025-02-16,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",W   10 - 4,Pepperdine,Utah,4,10,1249.42,1473.18,-2.75,2.52,0.2291,21.62,-6.12,Utah -6.12
+Eddy D. Field Stadium",W   10 - 4,Pepperdine,Utah,4,10,1241.98,1473.18,-2.75,2.52,0.2291,20.9,-6.14,Utah -6.14
 3471,Utah,2025-02-17,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",W   6 - 1,Pepperdine,Utah,1,6,1249.42,1473.18,-2.75,2.52,0.2291,21.62,-6.12,Utah -6.12
+Eddy D. Field Stadium",W   6 - 1,Pepperdine,Utah,1,6,1241.98,1473.18,-2.75,2.52,0.2291,20.9,-6.14,Utah -6.14
 3472,Utah,2025-02-21,San Diego State,"San Diego, CA
 Tony Gwynn Stadium",9:00 PM,San Diego St.,Utah,0,0,1339.67,1473.18,-2.88,2.52,0.2238,31.68,-5.95,Utah -5.95
 3473,Utah,2025-02-22,Seattle University,"San Diego, CA
@@ -6961,11 +6961,11 @@ Triton Park",8:00 PM,UC San Diego,Utah,0,0,1366.54,1473.18,0.17,2.52,0.3679,35.1
 3475,Utah,2025-02-24,Long Beach State,"San Diego, CA
 Tony Gwynn Stadium",3:00 PM,Utah,Long Beach St.,0,0,1473.18,1330.1,2.52,-1.03,0.6937000000000001,69.5,4.14,Utah -4.14
 3476,Utah,2025-02-28,California Baptist,"Riverside, CA
-James W. Totman Stadium",5:00 PM,California Baptist,Utah,0,0,1456.9,1473.18,1.64,2.52,0.4495,47.66,-0.95,Utah -0.95
+James W. Totman Stadium",5:00 PM,California Baptist,Utah,0,0,1464.34,1473.18,1.64,2.52,0.4495,48.73,-0.92,Utah -0.92
 3477,Utah,2025-03-01,UC Riverside,"Riverside, CA
 Riverside Sports Complex",3:00 PM,UC Riverside,Utah,0,0,1296.2,1473.18,-2.57,2.52,0.2365,26.53,-5.79,Utah -5.79
 3478,Utah,2025-03-01,California Baptist,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,Utah,0,0,1456.9,1473.18,1.64,2.52,0.4495,47.66,-0.95,Utah -0.95
+James W. Totman Stadium",9:00 PM,California Baptist,Utah,0,0,1464.34,1473.18,1.64,2.52,0.4495,48.73,-0.92,Utah -0.92
 3479,Utah,2025-03-02,UC Riverside,"Riverside, CA
 Riverside Sports Complex",2:00 PM,UC Riverside,Utah,0,0,1296.2,1473.18,-2.57,2.52,0.2365,26.53,-5.79,Utah -5.79
 3480,Utah,2025-03-07,San Jose State,"San Jose, CA
@@ -7125,11 +7125,11 @@ Louis Guisto Field",4:00 PM,Saint Mary's (CA),San Diego,0,0,1468.82,1444.6,2.4,4
 3557,Saint Mary's (CA),2025-04-15,San Jose State,"San Jose, CA
 Excite Ballpark",9:05 PM,San Jose St.,Saint Mary's (CA),0,0,1431.6,1468.82,-0.32,2.4,0.3483,44.66,-2.88,Saint Mary's (CA) -2.88
 3558,Saint Mary's (CA),2025-04-17,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",6:00 PM,Pepperdine,Saint Mary's (CA),0,0,1249.42,1468.82,-2.75,2.4,0.23399999999999999,22.05,-5.99,Saint Mary's (CA) -5.99
+Eddy D. Field Stadium",6:00 PM,Pepperdine,Saint Mary's (CA),0,0,1241.98,1468.82,-2.75,2.4,0.23399999999999999,21.32,-6.01,Saint Mary's (CA) -6.01
 3559,Saint Mary's (CA),2025-04-18,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",4:00 PM,Pepperdine,Saint Mary's (CA),0,0,1249.42,1468.82,-2.75,2.4,0.23399999999999999,22.05,-5.99,Saint Mary's (CA) -5.99
+Eddy D. Field Stadium",4:00 PM,Pepperdine,Saint Mary's (CA),0,0,1241.98,1468.82,-2.75,2.4,0.23399999999999999,21.32,-6.01,Saint Mary's (CA) -6.01
 3560,Saint Mary's (CA),2025-04-19,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",4:00 PM,Pepperdine,Saint Mary's (CA),0,0,1249.42,1468.82,-2.75,2.4,0.23399999999999999,22.05,-5.99,Saint Mary's (CA) -5.99
+Eddy D. Field Stadium",4:00 PM,Pepperdine,Saint Mary's (CA),0,0,1241.98,1468.82,-2.75,2.4,0.23399999999999999,21.32,-6.01,Saint Mary's (CA) -6.01
 3561,Saint Mary's (CA),2025-04-22,California,"Berkeley, CA
 Evans Diamond",9:00 PM,California,Saint Mary's (CA),0,0,1503.08,1468.82,3.47,2.4,0.5613,54.91,1.22,California -1.22
 3562,Saint Mary's (CA),2025-04-25,Loyola-Marymount,"Moraga, CA
@@ -7815,450 +7815,450 @@ Reagan Field",6:00 PM,Murray St.,Missouri St.,0,0,1464.43,1364.13,2.8,2.2,0.5345
 Reagan Field",6:00 PM,Murray St.,Missouri St.,0,0,1464.43,1364.13,2.8,2.2,0.5345,64.05,1.02,Murray St. -1.02
 3903,Murray St.,2025-05-17,Missouri State,"Murray, KY
 Reagan Field",2:00 PM,Murray St.,Missouri St.,0,0,1464.43,1364.13,2.8,2.2,0.5345,64.05,1.02,Murray St. -1.02
-3904,Northeastern,2025-02-14,Charlotte,"Charlotte, NC
+3904,California Baptist,2025-02-14,Portland,"Riverside, CA
+James W. Totman Stadium",W   1 - 0,California Baptist,Portland,1,0,1464.34,1442.4,1.64,2.17,0.46950000000000003,53.15,-0.44,Portland -0.44
+3905,California Baptist,2025-02-15,Portland,"Riverside, CA
+James W. Totman Stadium",W   11 - 7,California Baptist,Portland,11,7,1464.34,1442.4,1.64,2.17,0.46950000000000003,53.15,-0.44,Portland -0.44
+3906,California Baptist,2025-02-16,Portland,"Riverside, CA
+James W. Totman Stadium",L   2 - 9,California Baptist,Portland,2,9,1464.34,1442.4,1.64,2.17,0.46950000000000003,53.15,-0.44,Portland -0.44
+3907,California Baptist,2025-02-17,Portland,"Riverside, CA
+James W. Totman Stadium",W   18 - 4,California Baptist,Portland,18,4,1464.34,1442.4,1.64,2.17,0.46950000000000003,53.15,-0.44,Portland -0.44
+3908,California Baptist,2025-02-20,Pepperdine,"Riverside, CA
+James W. Totman Stadium",W   12 - 2 (7 Innings),California Baptist,Pepperdine,12,2,1464.34,1241.98,1.64,-2.75,0.7332,78.25,5.24,California Baptist -5.24
+3909,California Baptist,2025-02-21,Long Beach State,"San Diego, CA
+Tony Gwynn Stadium",4:00 PM,Long Beach St.,California Baptist,0,0,1330.1,1464.34,-1.03,1.64,0.35100000000000003,31.59,-3.22,California Baptist -3.22
+3910,California Baptist,2025-02-22,UC San Diego,"La Jolla, CA
+Triton Park",9:00 PM,UC San Diego,California Baptist,0,0,1366.54,1464.34,0.17,1.64,0.41619999999999996,36.29,-1.88,California Baptist -1.88
+3911,California Baptist,2025-02-23,UC Santa Barbara,"San Diego, CA
+Tony Gwynn Stadium",3:00 PM,UC Santa Barbara,California Baptist,0,0,1535.5,1464.34,5.67,1.64,0.7167,60.1,4.33,UC Santa Barbara -4.33
+3912,California Baptist,2025-02-28,Utah,"Riverside, CA
+James W. Totman Stadium",5:00 PM,California Baptist,Utah,0,0,1464.34,1473.18,1.64,2.52,0.4495,48.73,-0.92,Utah -0.92
+3913,California Baptist,2025-02-28,UC Riverside,"Riverside, CA
+James W. Totman Stadium",9:00 PM,California Baptist,UC Riverside,0,0,1464.34,1296.2,1.64,-2.57,0.725,72.47,4.88,California Baptist -4.88
+3914,California Baptist,2025-03-01,Utah,"Riverside, CA
+James W. Totman Stadium",9:00 PM,California Baptist,Utah,0,0,1464.34,1473.18,1.64,2.52,0.4495,48.73,-0.92,Utah -0.92
+3915,California Baptist,2025-03-02,UC Riverside,"Riverside, CA
+Riverside Sports Complex",8:00 PM,UC Riverside,California Baptist,0,0,1296.2,1464.34,-2.57,1.64,0.275,27.53,-4.88,California Baptist -4.88
+3916,California Baptist,2025-03-04,Loyola-Marymount,"Riverside, CA
+James W. Totman Stadium",9:00 PM,California Baptist,Loyola-Marymount,0,0,1464.34,1387.5,1.64,-4.87,0.8173999999999999,60.88,6.84,California Baptist -6.84
+3917,California Baptist,2025-03-07,Air Force,"Riverside, CA
+James W. Totman Stadium",9:00 PM,California Baptist,Air Force,0,0,1464.34,1356.96,1.64,0.05,0.5905,64.98,2.04,California Baptist -2.04
+3918,California Baptist,2025-03-08,Air Force,"Riverside, CA
+James W. Totman Stadium",5:00 PM,California Baptist,Air Force,0,0,1464.34,1356.96,1.64,0.05,0.5905,64.98,2.04,California Baptist -2.04
+3919,California Baptist,2025-03-09,Air Force,"Riverside, CA
+James W. Totman Stadium",3:00 PM,California Baptist,Air Force,0,0,1464.34,1356.96,1.64,0.05,0.5905,64.98,2.04,California Baptist -2.04
+3920,California Baptist,2025-03-11,San Francisco,"Riverside, CA
+James W. Totman Stadium",9:00 PM,California Baptist,San Francisco,0,0,1464.34,1282.99,1.64,-3.41,0.7618,73.96,5.77,California Baptist -5.77
+3921,California Baptist,2025-03-14,Rutgers,"Piscataway, NJ
+Bainton Field",4:00 PM,Rutgers,California Baptist,0,0,1409.37,1464.34,3.56,1.64,0.6088,42.15,1.68,Rutgers -1.68
+3922,California Baptist,2025-03-15,Rutgers,"Piscataway, NJ
+Bainton Field",2:00 PM,Rutgers,California Baptist,0,0,1409.37,1464.34,3.56,1.64,0.6088,42.15,1.68,Rutgers -1.68
+3923,California Baptist,2025-03-16,Rutgers,"Piscataway, NJ
+Bainton Field",12:00 PM,Rutgers,California Baptist,0,0,1409.37,1464.34,3.56,1.64,0.6088,42.15,1.68,Rutgers -1.68
+3924,California Baptist,2025-03-18,San Diego State,"Riverside, CA
+James W. Totman Stadium",9:00 PM,California Baptist,San Diego St.,0,0,1464.34,1339.67,1.64,-2.88,0.7390000000000001,67.21,5.04,California Baptist -5.04
+3925,California Baptist,2025-03-21,Utah Tech,"Riverside, CA
+James W. Totman Stadium",9:00 PM,California Baptist,Utah Tech,0,0,1464.34,1265.18,1.64,-4.44,0.8022,75.89,6.86,California Baptist -6.86
+3926,California Baptist,2025-03-22,Utah Tech,"Riverside, CA
+James W. Totman Stadium",8:00 PM,California Baptist,Utah Tech,0,0,1464.34,1265.18,1.64,-4.44,0.8022,75.89,6.86,California Baptist -6.86
+3927,California Baptist,2025-03-23,Utah Tech,"Riverside, CA
+James W. Totman Stadium",3:00 PM,California Baptist,Utah Tech,0,0,1464.34,1265.18,1.64,-4.44,0.8022,75.89,6.86,California Baptist -6.86
+3928,California Baptist,2025-03-25,UC San Diego,"Riverside, CA
+James W. Totman Stadium",9:00 PM,California Baptist,UC San Diego,0,0,1464.34,1366.54,1.64,0.17,0.5838,63.71,1.88,California Baptist -1.88
+3929,California Baptist,2025-03-28,UTA,"Arlington, TX
+Clay Gould Ballpark",7:00 PM,UT Arlington,California Baptist,0,0,1341.71,1464.34,-1.06,1.64,0.3494,33.05,-3.21,California Baptist -3.21
+3930,California Baptist,2025-03-29,UTA,"Arlington, TX
+Clay Gould Ballpark",3:00 PM,UT Arlington,California Baptist,0,0,1341.71,1464.34,-1.06,1.64,0.3494,33.05,-3.21,California Baptist -3.21
+3931,California Baptist,2025-03-30,UTA,"Arlington, TX
+Clay Gould Ballpark",1:00 PM,UT Arlington,California Baptist,0,0,1341.71,1464.34,-1.06,1.64,0.3494,33.05,-3.21,California Baptist -3.21
+3932,California Baptist,2025-03-31,UNLV,"Riverside, CA
+James W. Totman Stadium",5:00 PM,California Baptist,UNLV,0,0,1464.34,1371.16,1.64,-2.21,0.7081999999999999,63.1,4.24,California Baptist -4.24
+3933,California Baptist,2025-04-04,Grand Canyon,"Riverside, CA
+James W. Totman Stadium",9:00 PM,California Baptist,Grand Canyon,0,0,1464.34,1455.86,1.64,2.51,0.4501,51.22,-0.83,Grand Canyon -0.83
+3934,California Baptist,2025-04-05,Grand Canyon,"Riverside, CA
+James W. Totman Stadium",8:00 PM,California Baptist,Grand Canyon,0,0,1464.34,1455.86,1.64,2.51,0.4501,51.22,-0.83,Grand Canyon -0.83
+3935,California Baptist,2025-04-06,Grand Canyon,"Riverside, CA
+James W. Totman Stadium",3:00 PM,California Baptist,Grand Canyon,0,0,1464.34,1455.86,1.64,2.51,0.4501,51.22,-0.83,Grand Canyon -0.83
+3936,California Baptist,2025-04-08,San Diego State,"San Diego, CA
+Tony Gwynn Stadium",9:00 PM,San Diego St.,California Baptist,0,0,1339.67,1464.34,-2.88,1.64,0.261,32.79,-5.04,California Baptist -5.04
+3937,California Baptist,2025-04-11,Pacific,"Riverside, CA
+James W. Totman Stadium",9:00 PM,California Baptist,Pacific,0,0,1464.34,1276.81,1.64,-4.26,0.7955,74.64,6.64,California Baptist -6.64
+3938,California Baptist,2025-04-12,Pacific,"Riverside, CA
+James W. Totman Stadium",8:00 PM,California Baptist,Pacific,0,0,1464.34,1276.81,1.64,-4.26,0.7955,74.64,6.64,California Baptist -6.64
+3939,California Baptist,2025-04-13,Pacific,"Riverside, CA
+James W. Totman Stadium",3:00 PM,California Baptist,Pacific,0,0,1464.34,1276.81,1.64,-4.26,0.7955,74.64,6.64,California Baptist -6.64
+3940,California Baptist,2025-04-14,UC Santa Barbara,"Riverside, CA
+James W. Totman Stadium",8:00 PM,California Baptist,UC Santa Barbara,0,0,1464.34,1535.5,1.64,5.67,0.2833,39.9,-4.33,UC Santa Barbara -4.33
+3941,California Baptist,2025-04-17,Sacramento State,"Sacramento, CA
+John Smith Field",9:00 PM,Sacramento St.,California Baptist,0,0,1311.83,1464.34,-2.08,1.64,0.2981,29.36,-4.34,California Baptist -4.34
+3942,California Baptist,2025-04-18,Sacramento State,"Sacramento, CA
+John Smith Field",7:00 PM,Sacramento St.,California Baptist,0,0,1311.83,1464.34,-2.08,1.64,0.2981,29.36,-4.34,California Baptist -4.34
+3943,California Baptist,2025-04-19,Sacramento State,"Sacramento, CA
+John Smith Field",3:00 PM,Sacramento St.,California Baptist,0,0,1311.83,1464.34,-2.08,1.64,0.2981,29.36,-4.34,California Baptist -4.34
+3944,California Baptist,2025-04-21,UC Santa Barbara,"Santa Barbara, CA
+Caesar Uyesaka Stadium",7:35 PM,UC Santa Barbara,California Baptist,0,0,1535.5,1464.34,5.67,1.64,0.7167,60.1,4.33,UC Santa Barbara -4.33
+3945,California Baptist,2025-04-25,Utah Valley,"Orem, UT
+UCCU Ballpark",8:05 PM,Utah Valley,California Baptist,0,0,1346.57,1464.34,0.36,1.64,0.4268,33.67,-1.77,California Baptist -1.77
+3946,California Baptist,2025-04-26,Utah Valley,"Orem, UT
+UCCU Ballpark",6:05 PM,Utah Valley,California Baptist,0,0,1346.57,1464.34,0.36,1.64,0.4268,33.67,-1.77,California Baptist -1.77
+3947,California Baptist,2025-04-27,Utah Valley,"Orem, UT
+UCCU Ballpark",2:05 PM,Utah Valley,California Baptist,0,0,1346.57,1464.34,0.36,1.64,0.4268,33.67,-1.77,California Baptist -1.77
+3948,California Baptist,2025-04-28,UC Riverside,"Riverside, CA
+Riverside Sports Complex",9:30 PM,UC Riverside,California Baptist,0,0,1296.2,1464.34,-2.57,1.64,0.275,27.53,-4.88,California Baptist -4.88
+3949,California Baptist,2025-05-02,Tarleton State,"Riverside, CA
+James W. Totman Stadium",9:00 PM,California Baptist,Tarleton St.,0,0,1464.34,1405.53,1.64,0.77,0.5499,58.38,1.12,California Baptist -1.12
+3950,California Baptist,2025-05-03,Tarleton State,"Riverside, CA
+James W. Totman Stadium",8:00 PM,California Baptist,Tarleton St.,0,0,1464.34,1405.53,1.64,0.77,0.5499,58.38,1.12,California Baptist -1.12
+3951,California Baptist,2025-05-04,Tarleton State,"Riverside, CA
+James W. Totman Stadium",3:00 PM,California Baptist,Tarleton St.,0,0,1464.34,1405.53,1.64,0.77,0.5499,58.38,1.12,California Baptist -1.12
+3952,California Baptist,2025-05-06,UC Irvine,"Riverside, CA
+James W. Totman Stadium",9:00 PM,California Baptist,UC Irvine,0,0,1464.34,1487.18,1.64,3.81,0.3776,46.72,-2.27,UC Irvine -2.27
+3953,California Baptist,2025-05-09,Seattle University,"Bellevue, WA
+Bannerwood Park",2:00 PM,Seattle U,California Baptist,0,0,1255.51,1464.34,-3.68,1.64,0.2271,23.11,-6.13,California Baptist -6.13
+3954,California Baptist,2025-05-10,Seattle University,"Bellevue, WA
+Bannerwood Park",TBA,Seattle U,California Baptist,0,0,1255.51,1464.34,-3.68,1.64,0.2271,23.11,-6.13,California Baptist -6.13
+3955,California Baptist,2025-05-11,Seattle University,"Bellevue, WA
+Bannerwood Park",3:00 PM,Seattle U,California Baptist,0,0,1255.51,1464.34,-3.68,1.64,0.2271,23.11,-6.13,California Baptist -6.13
+3956,California Baptist,2025-05-13,Long Beach State,"Riverside, CA
+James W. Totman Stadium",9:00 PM,California Baptist,Long Beach St.,0,0,1464.34,1330.1,1.64,-1.03,0.649,68.41,3.22,California Baptist -3.22
+3957,California Baptist,2025-05-15,Abilene Christian,"Riverside, CA
+James W. Totman Stadium",9:00 AM,California Baptist,Abilene Christian,0,0,1464.34,1376.09,1.64,-0.45,0.618,62.43,2.46,California Baptist -2.46
+3958,California Baptist,2025-05-16,Abilene Christian,"Riverside, CA
+James W. Totman Stadium",9:00 AM,California Baptist,Abilene Christian,0,0,1464.34,1376.09,1.64,-0.45,0.618,62.43,2.46,California Baptist -2.46
+3959,California Baptist,2025-05-17,Abilene Christian,"Riverside, CA
+James W. Totman Stadium",3:00 PM,California Baptist,Abilene Christian,0,0,1464.34,1376.09,1.64,-0.45,0.618,62.43,2.46,California Baptist -2.46
+3960,Northeastern,2025-02-14,Charlotte,"Charlotte, NC
 Robert and Mariam Hayes Stadium",L   1 - 6,Charlotte,Northeastern,6,1,1397.79,1461.5,1.66,4.64,0.33490000000000003,40.93,-3.25,Northeastern -3.25
-3905,Northeastern,2025-02-14,Charlotte,"Charlotte, NC
+3961,Northeastern,2025-02-14,Charlotte,"Charlotte, NC
 Robert and Mariam Hayes Stadium",W   3 - 1,Charlotte,Northeastern,1,3,1397.79,1461.5,1.66,4.64,0.33490000000000003,40.93,-3.25,Northeastern -3.25
-3906,Northeastern,2025-02-16,Charlotte,"Charlotte, NC
+3962,Northeastern,2025-02-16,Charlotte,"Charlotte, NC
 Robert and Mariam Hayes Stadium",Canceled,Charlotte,Northeastern,0,0,1397.79,1461.5,1.66,4.64,0.33490000000000003,40.93,-3.25,Northeastern -3.25
-3907,Northeastern,2025-02-22,Indiana State,"Port Charlotte, FL
+3963,Northeastern,2025-02-22,Indiana State,"Port Charlotte, FL
 Centennial Park",TBA,Northeastern,Indiana St.,0,0,1461.5,1494.67,4.64,4.24,0.523,45.24,0.26,Northeastern -0.26
-3908,Northeastern,2025-02-22,Indiana State,"Port Charlotte, FL
+3964,Northeastern,2025-02-22,Indiana State,"Port Charlotte, FL
 Centennial Park",TBA,Northeastern,Indiana St.,0,0,1461.5,1494.67,4.64,4.24,0.523,45.24,0.26,Northeastern -0.26
-3909,Northeastern,2025-02-23,Indiana State,"Port Charlotte, FL
+3965,Northeastern,2025-02-23,Indiana State,"Port Charlotte, FL
 Centennial Park",TBA,Northeastern,Indiana St.,0,0,1461.5,1494.67,4.64,4.24,0.523,45.24,0.26,Northeastern -0.26
-3910,Northeastern,2025-02-28,Hawaii,"Honolulu, HI
+3966,Northeastern,2025-02-28,Hawaii,"Honolulu, HI
 Les Murakami Stadium",11:35 PM,Hawaii,Northeastern,0,0,1521.18,1461.5,2.89,4.64,0.4006,58.51,-1.49,Northeastern -1.49
-3911,Northeastern,2025-03-01,Hawaii,"Honolulu, HI
+3967,Northeastern,2025-03-01,Hawaii,"Honolulu, HI
 Les Murakami Stadium",11:35 PM,Hawaii,Northeastern,0,0,1521.18,1461.5,2.89,4.64,0.4006,58.51,-1.49,Northeastern -1.49
-3912,Northeastern,2025-03-02,Hawaii,"Honolulu, HI
+3968,Northeastern,2025-03-02,Hawaii,"Honolulu, HI
 Les Murakami Stadium",6:05 PM,Hawaii,Northeastern,0,0,1521.18,1461.5,2.89,4.64,0.4006,58.51,-1.49,Northeastern -1.49
-3913,Northeastern,2025-03-03,Hawaii,"Honolulu, HI
+3969,Northeastern,2025-03-03,Hawaii,"Honolulu, HI
 Les Murakami Stadium",11:35 PM,Hawaii,Northeastern,0,0,1521.18,1461.5,2.89,4.64,0.4006,58.51,-1.49,Northeastern -1.49
-3914,Northeastern,2025-03-06,San Diego State,"San Diego, CA
+3970,Northeastern,2025-03-06,San Diego State,"San Diego, CA
 Tony Gwynn Stadium",9:00 PM,San Diego St.,Northeastern,0,0,1339.67,1461.5,-2.88,4.64,0.15039999999999998,33.15,-8.03,Northeastern -8.03
-3915,Northeastern,2025-03-07,San Diego State,"San Diego, CA
+3971,Northeastern,2025-03-07,San Diego State,"San Diego, CA
 Tony Gwynn Stadium",9:00 PM,San Diego St.,Northeastern,0,0,1339.67,1461.5,-2.88,4.64,0.15039999999999998,33.15,-8.03,Northeastern -8.03
-3916,Northeastern,2025-03-08,San Diego State,"San Diego, CA
+3972,Northeastern,2025-03-08,San Diego State,"San Diego, CA
 Tony Gwynn Stadium",7:00 PM,San Diego St.,Northeastern,0,0,1339.67,1461.5,-2.88,4.64,0.15039999999999998,33.15,-8.03,Northeastern -8.03
-3917,Northeastern,2025-03-09,San Diego State,"San Diego, CA
+3973,Northeastern,2025-03-09,San Diego State,"San Diego, CA
 Tony Gwynn Stadium",3:00 PM,San Diego St.,Northeastern,0,0,1339.67,1461.5,-2.88,4.64,0.15039999999999998,33.15,-8.03,Northeastern -8.03
-3918,Northeastern,2025-03-12,Bryant,"Smithfield, RI
+3974,Northeastern,2025-03-12,Bryant,"Smithfield, RI
 Conaty Park",3:00 PM,Bryant,Northeastern,0,0,1406.77,1461.5,1.56,4.64,0.3298,42.19,-3.31,Northeastern -3.31
-3919,Northeastern,2025-03-15,Harvard,"Brookline, MA
+3975,Northeastern,2025-03-15,Harvard,"Brookline, MA
 Friedman Diamond",11:00 AM,Northeastern,Harvard,0,0,1461.5,1276.75,4.64,-4.87,0.8993000000000001,74.34,10.24,Northeastern -10.24
-3920,Northeastern,2025-03-15,Harvard,"Brookline, MA
+3976,Northeastern,2025-03-15,Harvard,"Brookline, MA
 Friedman Diamond",12:00 PM,Northeastern,Harvard,0,0,1461.5,1276.75,4.64,-4.87,0.8993000000000001,74.34,10.24,Northeastern -10.24
-3921,Northeastern,2025-03-16,Harvard,"Brookline, MA
+3977,Northeastern,2025-03-16,Harvard,"Brookline, MA
 Friedman Diamond",1:00 PM,Northeastern,Harvard,0,0,1461.5,1276.75,4.64,-4.87,0.8993000000000001,74.34,10.24,Northeastern -10.24
-3922,Northeastern,2025-03-18,Merrimack,"Brookline, MA
+3978,Northeastern,2025-03-18,Merrimack,"Brookline, MA
 Friedman Diamond",2:30 PM,Northeastern,Merrimack,0,0,1461.5,1325.75,4.64,-2.91,0.8504999999999999,68.6,8.11,Northeastern -8.11
-3923,Northeastern,2025-03-19,Boston College,"Brookline, MA
+3979,Northeastern,2025-03-19,Boston College,"Brookline, MA
 Friedman Diamond",2:30 PM,Northeastern,Boston College,0,0,1461.5,1396.47,4.64,1.97,0.649,59.25,2.95,Northeastern -2.95
-3924,Northeastern,2025-03-21,Towson,"Brookline, MA
+3980,Northeastern,2025-03-21,Towson,"Brookline, MA
 Friedman Diamond",2:00 PM,Northeastern,Towson,0,0,1461.5,1285.44,4.64,-2.63,0.8421,73.37,7.97,Northeastern -7.97
-3925,Northeastern,2025-03-22,Towson,"Brookline, MA
+3981,Northeastern,2025-03-22,Towson,"Brookline, MA
 Friedman Diamond",1:00 PM,Northeastern,Towson,0,0,1461.5,1285.44,4.64,-2.63,0.8421,73.37,7.97,Northeastern -7.97
-3926,Northeastern,2025-03-23,Towson,"Brookline, MA
+3982,Northeastern,2025-03-23,Towson,"Brookline, MA
 Friedman Diamond",1:00 PM,Northeastern,Towson,0,0,1461.5,1285.44,4.64,-2.63,0.8421,73.37,7.97,Northeastern -7.97
-3927,Northeastern,2025-03-26,Connecticut,"Brookline, MA
+3983,Northeastern,2025-03-26,Connecticut,"Brookline, MA
 Friedman Diamond",2:30 PM,Northeastern,UConn,0,0,1461.5,1430.97,4.64,3.1,0.5877,54.38,1.67,Northeastern -1.67
-3928,Northeastern,2025-03-28,Stony Brook,"Stony Brook, NY
+3984,Northeastern,2025-03-28,Stony Brook,"Stony Brook, NY
 Joe Nathan Field",2:00 PM,Stony Brook,Northeastern,0,0,1376.54,1461.5,0.17,4.64,0.2632,38.01,-4.83,Northeastern -4.83
-3929,Northeastern,2025-03-29,Stony Brook,"Stony Brook, NY
+3985,Northeastern,2025-03-29,Stony Brook,"Stony Brook, NY
 Joe Nathan Field",1:00 PM,Stony Brook,Northeastern,0,0,1376.54,1461.5,0.17,4.64,0.2632,38.01,-4.83,Northeastern -4.83
-3930,Northeastern,2025-03-30,Stony Brook,"Stony Brook, NY
+3986,Northeastern,2025-03-30,Stony Brook,"Stony Brook, NY
 Joe Nathan Field",1:00 PM,Stony Brook,Northeastern,0,0,1376.54,1461.5,0.17,4.64,0.2632,38.01,-4.83,Northeastern -4.83
-3931,Northeastern,2025-04-01,Boston College,"Brighton, MA
+3987,Northeastern,2025-04-01,Boston College,"Brighton, MA
 Eddie Pellagrini Diamond",2:30 PM,Boston College,Northeastern,0,0,1396.47,1461.5,1.97,4.64,0.35100000000000003,40.75,-2.95,Northeastern -2.95
-3932,Northeastern,2025-04-04,Campbell,"Buies Creek, NC
+3988,Northeastern,2025-04-04,Campbell,"Buies Creek, NC
 Jim Perry Stadium",6:00 PM,Campbell,Northeastern,0,0,1416.5,1461.5,1.7,4.64,0.3369,43.56,-3.13,Northeastern -3.13
-3933,Northeastern,2025-04-05,Campbell,"Buies Creek, NC
+3989,Northeastern,2025-04-05,Campbell,"Buies Creek, NC
 Jim Perry Stadium",3:00 PM,Campbell,Northeastern,0,0,1416.5,1461.5,1.7,4.64,0.3369,43.56,-3.13,Northeastern -3.13
-3934,Northeastern,2025-04-06,Campbell,"Buies Creek, NC
+3990,Northeastern,2025-04-06,Campbell,"Buies Creek, NC
 Jim Perry Stadium",12:00 PM,Campbell,Northeastern,0,0,1416.5,1461.5,1.7,4.64,0.3369,43.56,-3.13,Northeastern -3.13
-3935,Northeastern,2025-04-09,Central Connecticut,"New Britain, CT
+3991,Northeastern,2025-04-09,Central Connecticut,"New Britain, CT
 Balf-Savin Field",3:00 PM,Central Connecticut,Northeastern,0,0,1286.25,1461.5,-4.87,4.64,0.1007,26.72,-10.21,Northeastern -10.21
-3936,Northeastern,2025-04-11,Hofstra,"Brookline, MA
+3992,Northeastern,2025-04-11,Hofstra,"Brookline, MA
 Friedman Diamond",3:00 PM,Northeastern,Hofstra,0,0,1461.5,1363.02,4.64,-3.63,0.8704000000000001,63.8,8.68,Northeastern -8.68
-3937,Northeastern,2025-04-12,Hofstra,"Brookline, MA
+3993,Northeastern,2025-04-12,Hofstra,"Brookline, MA
 Friedman Diamond",1:00 PM,Northeastern,Hofstra,0,0,1461.5,1363.02,4.64,-3.63,0.8704000000000001,63.8,8.68,Northeastern -8.68
-3938,Northeastern,2025-04-13,Hofstra,"Brookline, MA
+3994,Northeastern,2025-04-13,Hofstra,"Brookline, MA
 Friedman Diamond",1:00 PM,Northeastern,Hofstra,0,0,1461.5,1363.02,4.64,-3.63,0.8704000000000001,63.8,8.68,Northeastern -8.68
-3939,Northeastern,2025-04-15,Kansas State,"Brookline, MA
+3995,Northeastern,2025-04-15,Kansas State,"Brookline, MA
 Friedman Diamond",2:00 PM,Northeastern,Kansas St.,0,0,1461.5,1435.63,4.64,3.05,0.5905,53.72,1.7,Northeastern -1.7
-3940,Northeastern,2025-04-16,Kansas State,"Brookline, MA
+3996,Northeastern,2025-04-16,Kansas State,"Brookline, MA
 Friedman Diamond",2:00 PM,Northeastern,Kansas St.,0,0,1461.5,1435.63,4.64,3.05,0.5905,53.72,1.7,Northeastern -1.7
-3941,Northeastern,2025-04-18,Charleston,"Brookline, MA
+3997,Northeastern,2025-04-18,Charleston,"Brookline, MA
 Friedman Diamond",3:00 PM,Northeastern,Col. of Charleston,0,0,1461.5,1518.22,4.64,2.67,0.6114999999999999,41.91,1.73,Northeastern -1.73
-3942,Northeastern,2025-04-19,Charleston,"Brookline, MA
+3998,Northeastern,2025-04-19,Charleston,"Brookline, MA
 Friedman Diamond",1:00 PM,Northeastern,Col. of Charleston,0,0,1461.5,1518.22,4.64,2.67,0.6114999999999999,41.91,1.73,Northeastern -1.73
-3943,Northeastern,2025-04-20,Charleston,"Brookline, MA
+3999,Northeastern,2025-04-20,Charleston,"Brookline, MA
 Friedman Diamond",1:00 PM,Northeastern,Col. of Charleston,0,0,1461.5,1518.22,4.64,2.67,0.6114999999999999,41.91,1.73,Northeastern -1.73
-3944,Northeastern,2025-04-25,Monmouth,"West Long Branch, NJ
+4000,Northeastern,2025-04-25,Monmouth,"West Long Branch, NJ
 Monmouth Baseball Field",3:00 PM,Monmouth,Northeastern,0,0,1340.9,1461.5,-1.16,4.64,0.20829999999999999,33.31,-6.3,Northeastern -6.3
-3945,Northeastern,2025-04-26,Monmouth,"West Long Branch, NJ
+4001,Northeastern,2025-04-26,Monmouth,"West Long Branch, NJ
 Monmouth Baseball Field",1:00 PM,Monmouth,Northeastern,0,0,1340.9,1461.5,-1.16,4.64,0.20829999999999999,33.31,-6.3,Northeastern -6.3
-3946,Northeastern,2025-04-27,Monmouth,"West Long Branch, NJ
+4002,Northeastern,2025-04-27,Monmouth,"West Long Branch, NJ
 Monmouth Baseball Field",1:00 PM,Monmouth,Northeastern,0,0,1340.9,1461.5,-1.16,4.64,0.20829999999999999,33.31,-6.3,Northeastern -6.3
-3947,Northeastern,2025-04-29,TBD,"Brookline, MA
+4003,Northeastern,2025-04-29,TBD,"Brookline, MA
 Friedman Diamond",TBA,Northeastern,TBD,0,0,1461.5,,4.64,-4.87,0.8993000000000001,,,Northeastern nan
-3948,Northeastern,2025-05-02,Delaware,"Brookline, MA
+4004,Northeastern,2025-05-02,Delaware,"Brookline, MA
 Friedman Diamond",3:00 PM,Northeastern,Delaware,0,0,1461.5,1379.43,4.64,-0.4,0.7614,61.6,5.39,Northeastern -5.39
-3949,Northeastern,2025-05-03,Delaware,"Brookline, MA
+4005,Northeastern,2025-05-03,Delaware,"Brookline, MA
 Friedman Diamond",1:00 PM,Northeastern,Delaware,0,0,1461.5,1379.43,4.64,-0.4,0.7614,61.6,5.39,Northeastern -5.39
-3950,Northeastern,2025-05-04,Delaware,"Brookline, MA
+4006,Northeastern,2025-05-04,Delaware,"Brookline, MA
 Friedman Diamond",1:00 PM,Northeastern,Delaware,0,0,1461.5,1379.43,4.64,-0.4,0.7614,61.6,5.39,Northeastern -5.39
-3951,Northeastern,2025-05-07,UMass-Lowell,"Brookline, MA
+4007,Northeastern,2025-05-07,UMass-Lowell,"Brookline, MA
 Friedman Diamond",2:00 PM,Northeastern,UMass Lowell,0,0,1461.5,1315.26,4.64,-2.0,0.8218000000000001,69.88,7.24,Northeastern -7.24
-3952,Northeastern,2025-05-09,William & Mary,"Williamsburg, VA
+4008,Northeastern,2025-05-09,William & Mary,"Williamsburg, VA
 Plumeri Park",6:15 PM,William & Mary,Northeastern,0,0,1358.14,1461.5,-1.54,4.64,0.1942,35.55,-6.61,Northeastern -6.61
-3953,Northeastern,2025-05-10,William & Mary,"Williamsburg, VA
+4009,Northeastern,2025-05-10,William & Mary,"Williamsburg, VA
 Plumeri Park",1:00 PM,William & Mary,Northeastern,0,0,1358.14,1461.5,-1.54,4.64,0.1942,35.55,-6.61,Northeastern -6.61
-3954,Northeastern,2025-05-11,William & Mary,"Williamsburg, VA
+4010,Northeastern,2025-05-11,William & Mary,"Williamsburg, VA
 Plumeri Park",1:00 PM,William & Mary,Northeastern,0,0,1358.14,1461.5,-1.54,4.64,0.1942,35.55,-6.61,Northeastern -6.61
-3955,Northeastern,2025-05-13,Connecticut,"Storrs, CT
+4011,Northeastern,2025-05-13,Connecticut,"Storrs, CT
 Elliot Ballpark",6:05 PM,UConn,Northeastern,0,0,1430.97,1461.5,3.1,4.64,0.41229999999999994,45.62,-1.67,Northeastern -1.67
-3956,Northeastern,2025-05-15,North Carolina A&T,"Brookline, MA
+4012,Northeastern,2025-05-15,North Carolina A&T,"Brookline, MA
 Friedman Diamond",2:00 PM,Northeastern,N.C. A&T,0,0,1461.5,1355.66,4.64,0.07,0.7412000000000001,64.78,5.01,Northeastern -5.01
-3957,Northeastern,2025-05-16,North Carolina A&T,"Brookline, MA
+4013,Northeastern,2025-05-16,North Carolina A&T,"Brookline, MA
 Friedman Diamond",2:00 PM,Northeastern,N.C. A&T,0,0,1461.5,1355.66,4.64,0.07,0.7412000000000001,64.78,5.01,Northeastern -5.01
-3958,Northeastern,2025-05-17,North Carolina A&T,"Brookline, MA
+4014,Northeastern,2025-05-17,North Carolina A&T,"Brookline, MA
 Friedman Diamond",1:00 PM,Northeastern,N.C. A&T,0,0,1461.5,1355.66,4.64,0.07,0.7412000000000001,64.78,5.01,Northeastern -5.01
-3959,Penn St.,2025-02-14,Missouri,"Caguas, Puerto Rico
+4015,Penn St.,2025-02-14,Missouri,"Caguas, Puerto Rico
 Yldefonso Sola Morales Stadium",W   10 - 0,Penn St.,Missouri,10,0,1459.9,1412.89,1.98,1.89,0.5052,56.72,0.29,Penn St. -0.29
-3960,Penn St.,2025-02-15,Stetson,"Caguas, Puerto Rico
+4016,Penn St.,2025-02-15,Stetson,"Caguas, Puerto Rico
 Yldefonso Sola Morales Stadium",L   4 - 8,Penn St.,Stetson,4,8,1459.9,1493.72,1.98,2.04,0.4965,45.15,-0.21,Stetson -0.21
-3961,Penn St.,2025-02-16,Connecticut,"Caguas, Puerto Rico
+4017,Penn St.,2025-02-16,Connecticut,"Caguas, Puerto Rico
 Yldefonso Sola Morales Stadium",W   7 - 6,UConn,Penn St.,6,7,1430.97,1459.9,3.1,1.98,0.5640999999999999,45.85,1.0,UConn -1.0
-3962,Penn St.,2025-02-21,Longwood,"Farmville, VA
+4018,Penn St.,2025-02-21,Longwood,"Farmville, VA
 Bolding Stadium",3:00 PM,Longwood,Penn St.,0,0,1310.99,1459.9,-3.17,1.98,0.23399999999999999,29.79,-5.76,Penn St. -5.76
-3963,Penn St.,2025-02-22,Longwood,"Farmville, VA
+4019,Penn St.,2025-02-22,Longwood,"Farmville, VA
 Bolding Stadium",12:00 PM,Longwood,Penn St.,0,0,1310.99,1459.9,-3.17,1.98,0.23399999999999999,29.79,-5.76,Penn St. -5.76
-3964,Penn St.,2025-02-22,Longwood,"Farmville, VA
+4020,Penn St.,2025-02-22,Longwood,"Farmville, VA
 Bolding Stadium",4:00 PM,Longwood,Penn St.,0,0,1310.99,1459.9,-3.17,1.98,0.23399999999999999,29.79,-5.76,Penn St. -5.76
-3965,Penn St.,2025-02-23,Longwood,"Farmville, VA
+4021,Penn St.,2025-02-23,Longwood,"Farmville, VA
 Bolding Stadium",1:00 PM,Longwood,Penn St.,0,0,1310.99,1459.9,-3.17,1.98,0.23399999999999999,29.79,-5.76,Penn St. -5.76
-3966,Penn St.,2025-02-28,Richmond,"Richmond, VA
+4022,Penn St.,2025-02-28,Richmond,"Richmond, VA
 Malcolm U. Pitt Field",1:30 PM,Richmond,Penn St.,0,0,1403.51,1459.9,-1.31,1.98,0.31920000000000004,41.96,-3.53,Penn St. -3.53
-3967,Penn St.,2025-03-01,VCU,"Richmond, VA
+4023,Penn St.,2025-03-01,VCU,"Richmond, VA
 The Diamond",2:00 PM,VCU,Penn St.,0,0,1413.68,1459.9,0.8,1.98,0.4325,43.39,-1.38,Penn St. -1.38
-3968,Penn St.,2025-03-02,William & Mary,"Williamsburg, VA
+4024,Penn St.,2025-03-02,William & Mary,"Williamsburg, VA
 Plumeri Park",1:00 PM,William & Mary,Penn St.,0,0,1358.14,1459.9,-1.54,1.98,0.3078,35.76,-3.95,Penn St. -3.95
-3969,Penn St.,2025-03-07,Indiana,"University Park, PA
+4025,Penn St.,2025-03-07,Indiana,"University Park, PA
 Medlar Field at Lubrano Park",6:00 PM,Penn St.,Indiana,0,0,1459.9,1405.05,1.98,2.23,0.48560000000000003,57.83,-0.02,Indiana -0.02
-3970,Penn St.,2025-03-08,Indiana,"University Park, PA
+4026,Penn St.,2025-03-08,Indiana,"University Park, PA
 Medlar Field at Lubrano Park",2:00 PM,Penn St.,Indiana,0,0,1459.9,1405.05,1.98,2.23,0.48560000000000003,57.83,-0.02,Indiana -0.02
-3971,Penn St.,2025-03-09,Indiana,"University Park, PA
+4027,Penn St.,2025-03-09,Indiana,"University Park, PA
 Medlar Field at Lubrano Park",1:00 PM,Penn St.,Indiana,0,0,1459.9,1405.05,1.98,2.23,0.48560000000000003,57.83,-0.02,Indiana -0.02
-3972,Penn St.,2025-03-11,Georgetown,"Tysons, VA
+4028,Penn St.,2025-03-11,Georgetown,"Tysons, VA
 Capital One Park",3:00 PM,Georgetown,Penn St.,0,0,1444.9,1459.9,2.53,1.98,0.5316,47.84,0.49,Georgetown -0.49
-3973,Penn St.,2025-03-12,Georgetown,"Tysons, VA
+4029,Penn St.,2025-03-12,Georgetown,"Tysons, VA
 Capital One Park",3:00 PM,Georgetown,Penn St.,0,0,1444.9,1459.9,2.53,1.98,0.5316,47.84,0.49,Georgetown -0.49
-3974,Penn St.,2025-03-14,Northwestern,"Evanston, IL
+4030,Penn St.,2025-03-14,Northwestern,"Evanston, IL
 Rocky Miller Park",4:00 PM,Northwestern,Penn St.,0,0,1344.53,1459.9,-1.6,1.98,0.3048,33.98,-4.06,Penn St. -4.06
-3975,Penn St.,2025-03-15,Northwestern,"Evanston, IL
+4031,Penn St.,2025-03-15,Northwestern,"Evanston, IL
 Rocky Miller Park",2:00 PM,Northwestern,Penn St.,0,0,1344.53,1459.9,-1.6,1.98,0.3048,33.98,-4.06,Penn St. -4.06
-3976,Penn St.,2025-03-16,Northwestern,"Evanston, IL
+4032,Penn St.,2025-03-16,Northwestern,"Evanston, IL
 Rocky Miller Park",2:00 PM,Northwestern,Penn St.,0,0,1344.53,1459.9,-1.6,1.98,0.3048,33.98,-4.06,Penn St. -4.06
-3977,Penn St.,2025-03-18,Saint Bonaventure,"University Park, PA
+4033,Penn St.,2025-03-18,Saint Bonaventure,"University Park, PA
 Medlar Field at Lubrano Park",5:00 PM,Penn St.,St. Bonaventure,0,0,1459.9,1311.96,1.98,-1.9,0.7095999999999999,70.09,4.48,Penn St. -4.48
-3978,Penn St.,2025-03-19,Lafayette,"University Park, PA
+4034,Penn St.,2025-03-19,Lafayette,"University Park, PA
 Medlar Field at Lubrano Park",5:00 PM,Penn St.,Lafayette,0,0,1459.9,1235.12,1.98,-3.85,0.7929,78.48,6.68,Penn St. -6.68
-3979,Penn St.,2025-03-21,Michigan State,"University Park, PA
+4035,Penn St.,2025-03-21,Michigan State,"University Park, PA
 Medlar Field at Lubrano Park",5:30 PM,Penn St.,Michigan St.,0,0,1459.9,1468.31,1.98,1.73,0.5144,48.79,0.21,Penn St. -0.21
-3980,Penn St.,2025-03-22,Michigan State,"University Park, PA
+4036,Penn St.,2025-03-22,Michigan State,"University Park, PA
 Medlar Field at Lubrano Park",2:00 PM,Penn St.,Michigan St.,0,0,1459.9,1468.31,1.98,1.73,0.5144,48.79,0.21,Penn St. -0.21
-3981,Penn St.,2025-03-23,Michigan State,"University Park, PA
+4037,Penn St.,2025-03-23,Michigan State,"University Park, PA
 Medlar Field at Lubrano Park",1:00 PM,Penn St.,Michigan St.,0,0,1459.9,1468.31,1.98,1.73,0.5144,48.79,0.21,Penn St. -0.21
-3982,Penn St.,2025-03-25,Pittsburgh,"University Park, PA
+4038,Penn St.,2025-03-25,Pittsburgh,"University Park, PA
 Medlar Field at Lubrano Park",5:00 PM,Penn St.,Pittsburgh,0,0,1459.9,1481.03,1.98,2.6,0.4644,46.96,-0.71,Pittsburgh -0.71
-3983,Penn St.,2025-03-26,Bucknell,"University Park, PA
+4039,Penn St.,2025-03-26,Bucknell,"University Park, PA
 Medlar Field at Lubrano Park",5:00 PM,Penn St.,Bucknell,0,0,1459.9,1340.99,1.98,-4.72,0.8239,66.47,7.19,Penn St. -7.19
-3984,Penn St.,2025-03-28,Michigan,"Ann Arbor, MI
+4040,Penn St.,2025-03-28,Michigan,"Ann Arbor, MI
 Ray Fisher Stadium",4:00 PM,Michigan,Penn St.,0,0,1521.46,1459.9,3.8,1.98,0.6033,58.77,2.08,Michigan -2.08
-3985,Penn St.,2025-03-29,Michigan,"Ann Arbor, MI
+4041,Penn St.,2025-03-29,Michigan,"Ann Arbor, MI
 Ray Fisher Stadium",2:00 PM,Michigan,Penn St.,0,0,1521.46,1459.9,3.8,1.98,0.6033,58.77,2.08,Michigan -2.08
-3986,Penn St.,2025-03-30,Michigan,"Ann Arbor, MI
+4042,Penn St.,2025-03-30,Michigan,"Ann Arbor, MI
 Ray Fisher Stadium",1:00 PM,Michigan,Penn St.,0,0,1521.46,1459.9,3.8,1.98,0.6033,58.77,2.08,Michigan -2.08
-3987,Penn St.,2025-04-01,Bucknell,"University Park, PA
+4043,Penn St.,2025-04-01,Bucknell,"University Park, PA
 Medlar Field at Lubrano Park",5:00 PM,Penn St.,Bucknell,0,0,1459.9,1340.99,1.98,-4.72,0.8239,66.47,7.19,Penn St. -7.19
-3988,Penn St.,2025-04-02,Fairleigh Dickinson,"University Park, PA
+4044,Penn St.,2025-04-02,Fairleigh Dickinson,"University Park, PA
 Medlar Field at Lubrano Park",5:00 PM,Penn St.,FDU,0,0,1459.9,1260.76,1.98,-4.15,0.804,75.88,6.91,Penn St. -6.91
-3989,Penn St.,2025-04-04,Minnesota,"Minneapolis, MN
+4045,Penn St.,2025-04-04,Minnesota,"Minneapolis, MN
 Siebert Field",7:00 PM,Minnesota,Penn St.,0,0,1402.39,1459.9,1.0,1.98,0.44380000000000003,41.8,-1.23,Penn St. -1.23
-3990,Penn St.,2025-04-05,Minnesota,"Minneapolis, MN
+4046,Penn St.,2025-04-05,Minnesota,"Minneapolis, MN
 Siebert Field",4:00 PM,Minnesota,Penn St.,0,0,1402.39,1459.9,1.0,1.98,0.44380000000000003,41.8,-1.23,Penn St. -1.23
-3991,Penn St.,2025-04-06,Minnesota,"Minneapolis, MN
+4047,Penn St.,2025-04-06,Minnesota,"Minneapolis, MN
 Siebert Field",2:00 PM,Minnesota,Penn St.,0,0,1402.39,1459.9,1.0,1.98,0.44380000000000003,41.8,-1.23,Penn St. -1.23
-3992,Penn St.,2025-04-08,West Virginia,"Granville, WV
+4048,Penn St.,2025-04-08,West Virginia,"Granville, WV
 Monongalia County Ballpark",6:30 PM,West Virginia,Penn St.,0,0,1514.09,1459.9,4.17,1.98,0.6235,57.74,2.42,West Virginia -2.42
-3993,Penn St.,2025-04-11,USC,"University Park, PA
+4049,Penn St.,2025-04-11,USC,"University Park, PA
 Medlar Field at Lubrano Park",TBA,Penn St.,Southern California,0,0,1459.9,1536.09,1.98,3.03,0.43979999999999997,39.21,-1.37,Southern California -1.37
-3994,Penn St.,2025-04-12,USC,"University Park, PA
+4050,Penn St.,2025-04-12,USC,"University Park, PA
 Medlar Field at Lubrano Park",TBA,Penn St.,Southern California,0,0,1459.9,1536.09,1.98,3.03,0.43979999999999997,39.21,-1.37,Southern California -1.37
-3995,Penn St.,2025-04-13,USC,"University Park, PA
+4051,Penn St.,2025-04-13,USC,"University Park, PA
 Medlar Field at Lubrano Park",TBA,Penn St.,Southern California,0,0,1459.9,1536.09,1.98,3.03,0.43979999999999997,39.21,-1.37,Southern California -1.37
-3996,Penn St.,2025-04-15,Delaware,"University Park, PA
+4052,Penn St.,2025-04-15,Delaware,"University Park, PA
 Medlar Field at Lubrano Park",5:30 PM,Penn St.,Delaware,0,0,1459.9,1379.43,1.98,-0.4,0.6336999999999999,61.38,2.72,Penn St. -2.72
-3997,Penn St.,2025-04-18,Purdue,"University Park, PA
+4053,Penn St.,2025-04-18,Purdue,"University Park, PA
 Medlar Field at Lubrano Park",5:30 PM,Penn St.,Purdue,0,0,1459.9,1449.44,1.98,2.16,0.48960000000000004,51.5,-0.14,Purdue -0.14
-3998,Penn St.,2025-04-19,Purdue,"University Park, PA
+4054,Penn St.,2025-04-19,Purdue,"University Park, PA
 Medlar Field at Lubrano Park",2:00 PM,Penn St.,Purdue,0,0,1459.9,1449.44,1.98,2.16,0.48960000000000004,51.5,-0.14,Purdue -0.14
-3999,Penn St.,2025-04-20,Purdue,"University Park, PA
+4055,Penn St.,2025-04-20,Purdue,"University Park, PA
 Medlar Field at Lubrano Park",1:00 PM,Penn St.,Purdue,0,0,1459.9,1449.44,1.98,2.16,0.48960000000000004,51.5,-0.14,Purdue -0.14
-4000,Penn St.,2025-04-22,West Virginia,"University Park, PA
+4056,Penn St.,2025-04-22,West Virginia,"University Park, PA
 Medlar Field at Lubrano Park",5:30 PM,Penn St.,West Virginia,0,0,1459.9,1514.09,1.98,4.17,0.3765,42.26,-2.42,West Virginia -2.42
-4001,Penn St.,2025-04-25,UCLA,"Los Angeles, CA
+4057,Penn St.,2025-04-25,UCLA,"Los Angeles, CA
 Jackie Robinson Stadium",9:00 PM,UCLA,Penn St.,0,0,1448.98,1459.9,0.18,1.98,0.3978,48.43,-1.85,Penn St. -1.85
-4002,Penn St.,2025-04-26,UCLA,"Los Angeles, CA
+4058,Penn St.,2025-04-26,UCLA,"Los Angeles, CA
 Jackie Robinson Stadium",5:00 PM,UCLA,Penn St.,0,0,1448.98,1459.9,0.18,1.98,0.3978,48.43,-1.85,Penn St. -1.85
-4003,Penn St.,2025-04-27,UCLA,"Los Angeles, CA
+4059,Penn St.,2025-04-27,UCLA,"Los Angeles, CA
 Jackie Robinson Stadium",4:00 PM,UCLA,Penn St.,0,0,1448.98,1459.9,0.18,1.98,0.3978,48.43,-1.85,Penn St. -1.85
-4004,Penn St.,2025-04-30,Rider,"University Park, PA
+4060,Penn St.,2025-04-30,Rider,"University Park, PA
 Medlar Field at Lubrano Park",5:30 PM,Penn St.,Rider,0,0,1459.9,1360.35,1.98,-4.87,0.8288,63.95,7.27,Penn St. -7.27
-4005,Penn St.,2025-05-02,Maryland,"University Park, PA
+4061,Penn St.,2025-05-02,Maryland,"University Park, PA
 Medlar Field at Lubrano Park",TBA,Penn St.,Maryland,0,0,1459.9,1438.14,1.98,3.95,0.3885,53.13,-1.88,Maryland -1.88
-4006,Penn St.,2025-05-03,Maryland,"University Park, PA
+4062,Penn St.,2025-05-03,Maryland,"University Park, PA
 Medlar Field at Lubrano Park",TBA,Penn St.,Maryland,0,0,1459.9,1438.14,1.98,3.95,0.3885,53.13,-1.88,Maryland -1.88
-4007,Penn St.,2025-05-04,Maryland,"University Park, PA
+4063,Penn St.,2025-05-04,Maryland,"University Park, PA
 Medlar Field at Lubrano Park",TBA,Penn St.,Maryland,0,0,1459.9,1438.14,1.98,3.95,0.3885,53.13,-1.88,Maryland -1.88
-4008,Penn St.,2025-05-09,Rutgers,"Piscataway, NJ
+4064,Penn St.,2025-05-09,Rutgers,"Piscataway, NJ
 Bainton Field",6:00 PM,Rutgers,Penn St.,0,0,1409.37,1459.9,3.56,1.98,0.59,42.78,1.36,Rutgers -1.36
-4009,Penn St.,2025-05-10,Rutgers,"Piscataway, NJ
+4065,Penn St.,2025-05-10,Rutgers,"Piscataway, NJ
 Bainton Field",6:00 PM,Rutgers,Penn St.,0,0,1409.37,1459.9,3.56,1.98,0.59,42.78,1.36,Rutgers -1.36
-4010,Penn St.,2025-05-11,Rutgers,"Piscataway, NJ
+4066,Penn St.,2025-05-11,Rutgers,"Piscataway, NJ
 Bainton Field",2:00 PM,Rutgers,Penn St.,0,0,1409.37,1459.9,3.56,1.98,0.59,42.78,1.36,Rutgers -1.36
-4011,Penn St.,2025-05-13,Pittsburgh,"Pittsburgh, PA
+4067,Penn St.,2025-05-13,Pittsburgh,"Pittsburgh, PA
 Charles L. Cost Field",6:00 PM,Pittsburgh,Penn St.,0,0,1481.03,1459.9,2.6,1.98,0.5356000000000001,53.04,0.71,Pittsburgh -0.71
-4012,Penn St.,2025-05-15,Xavier,"University Park, PA
+4068,Penn St.,2025-05-15,Xavier,"University Park, PA
 Medlar Field at Lubrano Park",5:30 PM,Penn St.,Xavier,0,0,1459.9,1448.0,1.98,1.63,0.5201,51.71,0.4,Penn St. -0.4
-4013,Penn St.,2025-05-16,Xavier,"University Park, PA
+4069,Penn St.,2025-05-16,Xavier,"University Park, PA
 Medlar Field at Lubrano Park",6:00 PM,Penn St.,Xavier,0,0,1459.9,1448.0,1.98,1.63,0.5201,51.71,0.4,Penn St. -0.4
-4014,Penn St.,2025-05-17,Xavier,"University Park, PA
+4070,Penn St.,2025-05-17,Xavier,"University Park, PA
 Medlar Field at Lubrano Park",1:00 PM,Penn St.,Xavier,0,0,1459.9,1448.0,1.98,1.63,0.5201,51.71,0.4,Penn St. -0.4
-4015,Fla. Atlantic,2025-02-14,Delaware,"Boca Raton, FL
+4071,Fla. Atlantic,2025-02-14,Delaware,"Boca Raton, FL
 FAU Baseball Stadium",W   9 - 4,Fla. Atlantic,Delaware,9,4,1458.0,1379.43,1.66,-0.4,0.6164000000000001,61.12,2.39,Fla. Atlantic -2.39
-4016,Fla. Atlantic,2025-02-15,Delaware,"Boca Raton, FL
+4072,Fla. Atlantic,2025-02-15,Delaware,"Boca Raton, FL
 FAU Baseball Stadium",W   19 - 1,Fla. Atlantic,Delaware,19,1,1458.0,1379.43,1.66,-0.4,0.6164000000000001,61.12,2.39,Fla. Atlantic -2.39
-4017,Fla. Atlantic,2025-02-16,Delaware,"Boca Raton, FL
+4073,Fla. Atlantic,2025-02-16,Delaware,"Boca Raton, FL
 FAU Baseball Stadium",W   7 - 0,Fla. Atlantic,Delaware,7,0,1458.0,1379.43,1.66,-0.4,0.6164000000000001,61.12,2.39,Fla. Atlantic -2.39
-4018,Fla. Atlantic,2025-02-18,Miami (FL),"Boca Raton, FL
+4074,Fla. Atlantic,2025-02-18,Miami (FL),"Boca Raton, FL
 FAU Baseball Stadium",W   2 - 1,Fla. Atlantic,Miami (FL),2,1,1458.0,1483.27,1.66,4.09,0.36369999999999997,46.37,-2.54,Miami (FL) -2.54
-4019,Fla. Atlantic,2025-02-21,Connecticut,"Boca Raton, FL
+4075,Fla. Atlantic,2025-02-21,Connecticut,"Boca Raton, FL
 FAU Baseball Stadium",6:30 PM,Fla. Atlantic,UConn,0,0,1458.0,1430.97,1.66,3.1,0.4179,53.88,-1.32,UConn -1.32
-4020,Fla. Atlantic,2025-02-22,Connecticut,"Boca Raton, FL
+4076,Fla. Atlantic,2025-02-22,Connecticut,"Boca Raton, FL
 FAU Baseball Stadium",4:00 PM,Fla. Atlantic,UConn,0,0,1458.0,1430.97,1.66,3.1,0.4179,53.88,-1.32,UConn -1.32
-4021,Fla. Atlantic,2025-02-23,Connecticut,"Boca Raton, FL
+4077,Fla. Atlantic,2025-02-23,Connecticut,"Boca Raton, FL
 FAU Baseball Stadium",12:00 PM,Fla. Atlantic,UConn,0,0,1458.0,1430.97,1.66,3.1,0.4179,53.88,-1.32,UConn -1.32
-4022,Fla. Atlantic,2025-02-25,UCF,"Orlando, FL
+4078,Fla. Atlantic,2025-02-25,UCF,"Orlando, FL
 John Euliano Park",6:30 PM,UCF,Fla. Atlantic,0,0,1516.21,1458.0,4.96,1.66,0.6812999999999999,58.3,3.55,UCF -3.55
-4023,Fla. Atlantic,2025-02-28,Fordham,"Boca Raton, FL
+4079,Fla. Atlantic,2025-02-28,Fordham,"Boca Raton, FL
 FAU Baseball Stadium",6:30 PM,Fla. Atlantic,Fordham,0,0,1458.0,1249.64,1.66,-5.9,0.8508,76.84,8.37,Fla. Atlantic -8.37
-4024,Fla. Atlantic,2025-03-01,Fordham,"Boca Raton, FL
+4080,Fla. Atlantic,2025-03-01,Fordham,"Boca Raton, FL
 FAU Baseball Stadium",4:00 PM,Fla. Atlantic,Fordham,0,0,1458.0,1249.64,1.66,-5.9,0.8508,76.84,8.37,Fla. Atlantic -8.37
-4025,Fla. Atlantic,2025-03-02,Fordham,"Boca Raton, FL
+4081,Fla. Atlantic,2025-03-02,Fordham,"Boca Raton, FL
 FAU Baseball Stadium",12:00 PM,Fla. Atlantic,Fordham,0,0,1458.0,1249.64,1.66,-5.9,0.8508,76.84,8.37,Fla. Atlantic -8.37
-4026,Fla. Atlantic,2025-03-05,Florida,"Gainesville, FL
+4082,Fla. Atlantic,2025-03-05,Florida,"Gainesville, FL
 Condron Family Ballpark",TBA,Florida,Fla. Atlantic,0,0,1622.25,1458.0,6.85,1.66,0.7676000000000001,72.02,5.85,Florida -5.85
-4027,Fla. Atlantic,2025-03-07,FIU,"Miami, FL
+4083,Fla. Atlantic,2025-03-07,FIU,"Miami, FL
 FIU Baseball Stadium",6:30 PM,FIU,Fla. Atlantic,0,0,1431.08,1458.0,1.62,1.66,0.49770000000000003,46.13,-0.16,Fla. Atlantic -0.16
-4028,Fla. Atlantic,2025-03-08,FIU,"Boca Raton, FL
+4084,Fla. Atlantic,2025-03-08,FIU,"Boca Raton, FL
 FAU Baseball Stadium",4:00 PM,Fla. Atlantic,FIU,0,0,1458.0,1431.08,1.66,1.62,0.5023,53.87,0.16,Fla. Atlantic -0.16
-4029,Fla. Atlantic,2025-03-09,FIU,"Miami, FL
+4085,Fla. Atlantic,2025-03-09,FIU,"Miami, FL
 FIU Baseball Stadium",12:00 PM,FIU,Fla. Atlantic,0,0,1431.08,1458.0,1.62,1.66,0.49770000000000003,46.13,-0.16,Fla. Atlantic -0.16
-4030,Fla. Atlantic,2025-03-11,Bucknell,"Boca Raton, FL
+4086,Fla. Atlantic,2025-03-11,Bucknell,"Boca Raton, FL
 FAU Baseball Stadium",6:30 PM,Fla. Atlantic,Bucknell,0,0,1458.0,1340.99,1.66,-4.72,0.8129000000000001,66.23,6.87,Fla. Atlantic -6.87
-4031,Fla. Atlantic,2025-03-12,Bucknell,"Boca Raton, FL
+4087,Fla. Atlantic,2025-03-12,Bucknell,"Boca Raton, FL
 FAU Baseball Stadium",4:00 PM,Fla. Atlantic,Bucknell,0,0,1458.0,1340.99,1.66,-4.72,0.8129000000000001,66.23,6.87,Fla. Atlantic -6.87
-4032,Fla. Atlantic,2025-03-14,Bradley,"Boca Raton, FL
+4088,Fla. Atlantic,2025-03-14,Bradley,"Boca Raton, FL
 FAU Baseball Stadium",6:30 PM,Fla. Atlantic,Bradley,0,0,1458.0,1237.15,1.66,-3.87,0.7813,78.1,6.37,Fla. Atlantic -6.37
-4033,Fla. Atlantic,2025-03-15,Bradley,"Boca Raton, FL
+4089,Fla. Atlantic,2025-03-15,Bradley,"Boca Raton, FL
 FAU Baseball Stadium",4:00 PM,Fla. Atlantic,Bradley,0,0,1458.0,1237.15,1.66,-3.87,0.7813,78.1,6.37,Fla. Atlantic -6.37
-4034,Fla. Atlantic,2025-03-16,Bradley,"Boca Raton, FL
+4090,Fla. Atlantic,2025-03-16,Bradley,"Boca Raton, FL
 FAU Baseball Stadium",12:00 PM,Fla. Atlantic,Bradley,0,0,1458.0,1237.15,1.66,-3.87,0.7813,78.1,6.37,Fla. Atlantic -6.37
-4035,Fla. Atlantic,2025-03-18,Miami (FL),"Boca Raton, FL
+4091,Fla. Atlantic,2025-03-18,Miami (FL),"Boca Raton, FL
 FAU Baseball Stadium",6:30 PM,Fla. Atlantic,Miami (FL),0,0,1458.0,1483.27,1.66,4.09,0.36369999999999997,46.37,-2.54,Miami (FL) -2.54
-4036,Fla. Atlantic,2025-03-21,Rice,"Boca Raton, FL
+4092,Fla. Atlantic,2025-03-21,Rice,"Boca Raton, FL
 FAU Baseball Stadium",6:30 PM,Fla. Atlantic,Rice,0,0,1458.0,1374.94,1.66,-0.22,0.6065999999999999,61.73,2.23,Fla. Atlantic -2.23
-4037,Fla. Atlantic,2025-03-22,Rice,"Boca Raton, FL
+4093,Fla. Atlantic,2025-03-22,Rice,"Boca Raton, FL
 FAU Baseball Stadium",4:00 PM,Fla. Atlantic,Rice,0,0,1458.0,1374.94,1.66,-0.22,0.6065999999999999,61.73,2.23,Fla. Atlantic -2.23
-4038,Fla. Atlantic,2025-03-23,Rice,"Boca Raton, FL
+4094,Fla. Atlantic,2025-03-23,Rice,"Boca Raton, FL
 FAU Baseball Stadium",12:00 PM,Fla. Atlantic,Rice,0,0,1458.0,1374.94,1.66,-0.22,0.6065999999999999,61.73,2.23,Fla. Atlantic -2.23
-4039,Fla. Atlantic,2025-03-25,FGCU,"Fort Myers, FL
+4095,Fla. Atlantic,2025-03-25,FGCU,"Fort Myers, FL
 Swanson Stadium",6:30 PM,FGCU,Fla. Atlantic,0,0,1389.32,1458.0,0.69,1.66,0.44439999999999996,40.24,-1.26,Fla. Atlantic -1.26
-4040,Fla. Atlantic,2025-03-28,UTSA,"San Antonio, TX
+4096,Fla. Atlantic,2025-03-28,UTSA,"San Antonio, TX
 Roadrunner Field",7:00 PM,UTSA,Fla. Atlantic,0,0,1384.63,1458.0,2.07,1.66,0.5236,39.6,0.1,UTSA -0.1
-4041,Fla. Atlantic,2025-03-29,UTSA,"San Antonio, TX
+4097,Fla. Atlantic,2025-03-29,UTSA,"San Antonio, TX
 Roadrunner Field",5:00 PM,UTSA,Fla. Atlantic,0,0,1384.63,1458.0,2.07,1.66,0.5236,39.6,0.1,UTSA -0.1
-4042,Fla. Atlantic,2025-03-30,UTSA,"San Antonio, TX
+4098,Fla. Atlantic,2025-03-30,UTSA,"San Antonio, TX
 Roadrunner Field",1:00 PM,UTSA,Fla. Atlantic,0,0,1384.63,1458.0,2.07,1.66,0.5236,39.6,0.1,UTSA -0.1
-4043,Fla. Atlantic,2025-04-01,FGCU,"Fort Myers, FL
+4099,Fla. Atlantic,2025-04-01,FGCU,"Fort Myers, FL
 Hammond Stadium",TBA,FGCU,Fla. Atlantic,0,0,1389.32,1458.0,0.69,1.66,0.44439999999999996,40.24,-1.26,Fla. Atlantic -1.26
-4044,Fla. Atlantic,2025-04-04,East Carolina,"Greenville, NC
+4100,Fla. Atlantic,2025-04-04,East Carolina,"Greenville, NC
 Clark-LeClair Stadium",6:00 PM,East Carolina,Fla. Atlantic,0,0,1466.99,1458.0,3.7,1.66,0.6153,51.29,2.08,East Carolina -2.08
-4045,Fla. Atlantic,2025-04-05,East Carolina,"Greenville, NC
+4101,Fla. Atlantic,2025-04-05,East Carolina,"Greenville, NC
 Clark-LeClair Stadium",4:00 PM,East Carolina,Fla. Atlantic,0,0,1466.99,1458.0,3.7,1.66,0.6153,51.29,2.08,East Carolina -2.08
-4046,Fla. Atlantic,2025-04-06,East Carolina,"Greenville, NC
+4102,Fla. Atlantic,2025-04-06,East Carolina,"Greenville, NC
 Clark-LeClair Stadium",1:00 PM,East Carolina,Fla. Atlantic,0,0,1466.99,1458.0,3.7,1.66,0.6153,51.29,2.08,East Carolina -2.08
-4047,Fla. Atlantic,2025-04-11,Memphis,"Boca Raton, FL
+4103,Fla. Atlantic,2025-04-11,Memphis,"Boca Raton, FL
 FAU Baseball Stadium",6:30 PM,Fla. Atlantic,Memphis,0,0,1458.0,1381.85,1.66,-1.87,0.6927,60.79,3.85,Fla. Atlantic -3.85
-4048,Fla. Atlantic,2025-04-12,Memphis,"Boca Raton, FL
+4104,Fla. Atlantic,2025-04-12,Memphis,"Boca Raton, FL
 FAU Baseball Stadium",4:00 PM,Fla. Atlantic,Memphis,0,0,1458.0,1381.85,1.66,-1.87,0.6927,60.79,3.85,Fla. Atlantic -3.85
-4049,Fla. Atlantic,2025-04-13,Memphis,"Boca Raton, FL
+4105,Fla. Atlantic,2025-04-13,Memphis,"Boca Raton, FL
 FAU Baseball Stadium",12:00 PM,Fla. Atlantic,Memphis,0,0,1458.0,1381.85,1.66,-1.87,0.6927,60.79,3.85,Fla. Atlantic -3.85
-4050,Fla. Atlantic,2025-04-15,Miami (FL),"Coral Gables, FL
+4106,Fla. Atlantic,2025-04-15,Miami (FL),"Coral Gables, FL
 Alex Rodriguez Park at Mark Light Field",6:00 PM,Miami (FL),Fla. Atlantic,0,0,1483.27,1458.0,4.09,1.66,0.6363,53.63,2.54,Miami (FL) -2.54
-4051,Fla. Atlantic,2025-04-17,Wichita State,"Boca Raton, FL
+4107,Fla. Atlantic,2025-04-17,Wichita State,"Boca Raton, FL
 FAU Baseball Stadium",6:30 PM,Fla. Atlantic,Wichita St.,0,0,1458.0,1435.65,1.66,1.68,0.4988,53.21,0.08,Fla. Atlantic -0.08
-4052,Fla. Atlantic,2025-04-18,Wichita State,"Boca Raton, FL
+4108,Fla. Atlantic,2025-04-18,Wichita State,"Boca Raton, FL
 FAU Baseball Stadium",4:00 PM,Fla. Atlantic,Wichita St.,0,0,1458.0,1435.65,1.66,1.68,0.4988,53.21,0.08,Fla. Atlantic -0.08
-4053,Fla. Atlantic,2025-04-19,Wichita State,"Boca Raton, FL
+4109,Fla. Atlantic,2025-04-19,Wichita State,"Boca Raton, FL
 FAU Baseball Stadium",12:00 PM,Fla. Atlantic,Wichita St.,0,0,1458.0,1435.65,1.66,1.68,0.4988,53.21,0.08,Fla. Atlantic -0.08
-4054,Fla. Atlantic,2025-04-22,UCF,"Boca Raton, FL
+4110,Fla. Atlantic,2025-04-22,UCF,"Boca Raton, FL
 FAU Baseball Stadium",6:30 PM,Fla. Atlantic,UCF,0,0,1458.0,1516.21,1.66,4.96,0.3187,41.7,-3.55,UCF -3.55
-4055,Fla. Atlantic,2025-04-25,Charlotte,"Charlotte, NC
+4111,Fla. Atlantic,2025-04-25,Charlotte,"Charlotte, NC
 Robert and Mariam Hayes Stadium",6:00 PM,Charlotte,Fla. Atlantic,0,0,1397.79,1458.0,1.66,1.66,0.5,41.42,-0.26,Fla. Atlantic -0.26
-4056,Fla. Atlantic,2025-04-26,Charlotte,"Charlotte, NC
+4112,Fla. Atlantic,2025-04-26,Charlotte,"Charlotte, NC
 Robert and Mariam Hayes Stadium",4:00 PM,Charlotte,Fla. Atlantic,0,0,1397.79,1458.0,1.66,1.66,0.5,41.42,-0.26,Fla. Atlantic -0.26
-4057,Fla. Atlantic,2025-04-27,Charlotte,"Charlotte, NC
+4113,Fla. Atlantic,2025-04-27,Charlotte,"Charlotte, NC
 Robert and Mariam Hayes Stadium",1:00 PM,Charlotte,Fla. Atlantic,0,0,1397.79,1458.0,1.66,1.66,0.5,41.42,-0.26,Fla. Atlantic -0.26
-4058,Fla. Atlantic,2025-04-29,FIU,"Boca Raton, FL
+4114,Fla. Atlantic,2025-04-29,FIU,"Boca Raton, FL
 FAU Baseball Stadium",6:30 PM,Fla. Atlantic,FIU,0,0,1458.0,1431.08,1.66,1.62,0.5023,53.87,0.16,Fla. Atlantic -0.16
-4059,Fla. Atlantic,2025-05-02,Tulane,"New Orleans, LA
+4115,Fla. Atlantic,2025-05-02,Tulane,"New Orleans, LA
 Greer Field at Turchin Stadium",7:30 PM,Tulane,Fla. Atlantic,0,0,1499.97,1458.0,2.81,1.66,0.5658,56.01,1.33,Tulane -1.33
-4060,Fla. Atlantic,2025-05-03,Tulane,"New Orleans, LA
+4116,Fla. Atlantic,2025-05-03,Tulane,"New Orleans, LA
 Greer Field at Turchin Stadium",7:30 PM,Tulane,Fla. Atlantic,0,0,1499.97,1458.0,2.81,1.66,0.5658,56.01,1.33,Tulane -1.33
-4061,Fla. Atlantic,2025-05-04,Tulane,"New Orleans, LA
+4117,Fla. Atlantic,2025-05-04,Tulane,"New Orleans, LA
 Greer Field at Turchin Stadium",1:00 PM,Tulane,Fla. Atlantic,0,0,1499.97,1458.0,2.81,1.66,0.5658,56.01,1.33,Tulane -1.33
-4062,Fla. Atlantic,2025-05-06,FGCU,"Boca Raton, FL
+4118,Fla. Atlantic,2025-05-06,FGCU,"Boca Raton, FL
 FAU Baseball Stadium",6:30 PM,Fla. Atlantic,FGCU,0,0,1458.0,1389.32,1.66,0.69,0.5556,59.76,1.26,Fla. Atlantic -1.26
-4063,Fla. Atlantic,2025-05-09,South Florida,"Boca Raton, FL
+4119,Fla. Atlantic,2025-05-09,South Florida,"Boca Raton, FL
 FAU Baseball Stadium",6:30 PM,Fla. Atlantic,South Fla.,0,0,1458.0,1383.44,1.66,0.79,0.5499,60.57,1.19,Fla. Atlantic -1.19
-4064,Fla. Atlantic,2025-05-10,South Florida,"Boca Raton, FL
+4120,Fla. Atlantic,2025-05-10,South Florida,"Boca Raton, FL
 FAU Baseball Stadium",4:00 PM,Fla. Atlantic,South Fla.,0,0,1458.0,1383.44,1.66,0.79,0.5499,60.57,1.19,Fla. Atlantic -1.19
-4065,Fla. Atlantic,2025-05-11,South Florida,"Boca Raton, FL
+4121,Fla. Atlantic,2025-05-11,South Florida,"Boca Raton, FL
 FAU Baseball Stadium",12:00 PM,Fla. Atlantic,South Fla.,0,0,1458.0,1383.44,1.66,0.79,0.5499,60.57,1.19,Fla. Atlantic -1.19
-4066,Fla. Atlantic,2025-05-13,FGCU,"Boca Raton, FL
+4122,Fla. Atlantic,2025-05-13,FGCU,"Boca Raton, FL
 FAU Baseball Stadium",3:00 PM,Fla. Atlantic,FGCU,0,0,1458.0,1389.32,1.66,0.69,0.5556,59.76,1.26,Fla. Atlantic -1.26
-4067,Fla. Atlantic,2025-05-15,UAB,"Birmingham, AL
+4123,Fla. Atlantic,2025-05-15,UAB,"Birmingham, AL
 Jerry D. Young Memorial Field",6:00 PM,UAB,Fla. Atlantic,0,0,1399.24,1458.0,-0.37,1.66,0.38520000000000004,41.62,-2.28,Fla. Atlantic -2.28
-4068,Fla. Atlantic,2025-05-16,UAB,"Birmingham, AL
+4124,Fla. Atlantic,2025-05-16,UAB,"Birmingham, AL
 Jerry D. Young Memorial Field",6:00 PM,UAB,Fla. Atlantic,0,0,1399.24,1458.0,-0.37,1.66,0.38520000000000004,41.62,-2.28,Fla. Atlantic -2.28
-4069,Fla. Atlantic,2025-05-17,UAB,"Birmingham, AL
+4125,Fla. Atlantic,2025-05-17,UAB,"Birmingham, AL
 Jerry D. Young Memorial Field",2:00 PM,UAB,Fla. Atlantic,0,0,1399.24,1458.0,-0.37,1.66,0.38520000000000004,41.62,-2.28,Fla. Atlantic -2.28
-4070,California Baptist,2025-02-14,Portland,"Riverside, CA
-James W. Totman Stadium",W   1 - 0,California Baptist,Portland,1,0,1456.9,1442.4,1.64,2.17,0.46950000000000003,52.09,-0.47,Portland -0.47
-4071,California Baptist,2025-02-15,Portland,"Riverside, CA
-James W. Totman Stadium",W   11 - 7,California Baptist,Portland,11,7,1456.9,1442.4,1.64,2.17,0.46950000000000003,52.09,-0.47,Portland -0.47
-4072,California Baptist,2025-02-16,Portland,"Riverside, CA
-James W. Totman Stadium",L   2 - 9,California Baptist,Portland,2,9,1456.9,1442.4,1.64,2.17,0.46950000000000003,52.09,-0.47,Portland -0.47
-4073,California Baptist,2025-02-17,Portland,"Riverside, CA
-James W. Totman Stadium",W   18 - 4,California Baptist,Portland,18,4,1456.9,1442.4,1.64,2.17,0.46950000000000003,52.09,-0.47,Portland -0.47
-4074,California Baptist,2025-02-20,Pepperdine,"Riverside, CA
-James W. Totman Stadium",Bottom 6th10 - 2,California Baptist,Pepperdine,10,2,1456.9,1249.42,1.64,-2.75,0.7332,76.75,5.19,California Baptist -5.19
-4075,California Baptist,2025-02-21,Long Beach State,"San Diego, CA
-Tony Gwynn Stadium",4:00 PM,Long Beach St.,California Baptist,0,0,1330.1,1456.9,-1.03,1.64,0.35100000000000003,32.52,-3.19,California Baptist -3.19
-4076,California Baptist,2025-02-22,UC San Diego,"La Jolla, CA
-Triton Park",9:00 PM,UC San Diego,California Baptist,0,0,1366.54,1456.9,0.17,1.64,0.41619999999999996,37.28,-1.85,California Baptist -1.85
-4077,California Baptist,2025-02-23,UC Santa Barbara,"San Diego, CA
-Tony Gwynn Stadium",3:00 PM,UC Santa Barbara,California Baptist,0,0,1535.5,1456.9,5.67,1.64,0.7167,61.12,4.36,UC Santa Barbara -4.36
-4078,California Baptist,2025-02-28,Utah,"Riverside, CA
-James W. Totman Stadium",5:00 PM,California Baptist,Utah,0,0,1456.9,1473.18,1.64,2.52,0.4495,47.66,-0.95,Utah -0.95
-4079,California Baptist,2025-02-28,UC Riverside,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,UC Riverside,0,0,1456.9,1296.2,1.64,-2.57,0.725,71.61,4.86,California Baptist -4.86
-4080,California Baptist,2025-03-01,Utah,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,Utah,0,0,1456.9,1473.18,1.64,2.52,0.4495,47.66,-0.95,Utah -0.95
-4081,California Baptist,2025-03-02,UC Riverside,"Riverside, CA
-Riverside Sports Complex",8:00 PM,UC Riverside,California Baptist,0,0,1296.2,1456.9,-2.57,1.64,0.275,28.39,-4.86,California Baptist -4.86
-4082,California Baptist,2025-03-04,Loyola-Marymount,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,Loyola-Marymount,0,0,1456.9,1387.5,1.64,-4.87,0.8173999999999999,59.86,6.81,California Baptist -6.81
-4083,California Baptist,2025-03-07,Air Force,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,Air Force,0,0,1456.9,1356.96,1.64,0.05,0.5905,64.0,2.01,California Baptist -2.01
-4084,California Baptist,2025-03-08,Air Force,"Riverside, CA
-James W. Totman Stadium",5:00 PM,California Baptist,Air Force,0,0,1456.9,1356.96,1.64,0.05,0.5905,64.0,2.01,California Baptist -2.01
-4085,California Baptist,2025-03-09,Air Force,"Riverside, CA
-James W. Totman Stadium",3:00 PM,California Baptist,Air Force,0,0,1456.9,1356.96,1.64,0.05,0.5905,64.0,2.01,California Baptist -2.01
-4086,California Baptist,2025-03-11,San Francisco,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,San Francisco,0,0,1456.9,1282.99,1.64,-3.41,0.7618,73.13,5.74,California Baptist -5.74
-4087,California Baptist,2025-03-14,Rutgers,"Piscataway, NJ
-Bainton Field",4:00 PM,Rutgers,California Baptist,0,0,1409.37,1456.9,3.56,1.64,0.6088,43.2,1.72,Rutgers -1.72
-4088,California Baptist,2025-03-15,Rutgers,"Piscataway, NJ
-Bainton Field",2:00 PM,Rutgers,California Baptist,0,0,1409.37,1456.9,3.56,1.64,0.6088,43.2,1.72,Rutgers -1.72
-4089,California Baptist,2025-03-16,Rutgers,"Piscataway, NJ
-Bainton Field",12:00 PM,Rutgers,California Baptist,0,0,1409.37,1456.9,3.56,1.64,0.6088,43.2,1.72,Rutgers -1.72
-4090,California Baptist,2025-03-18,San Diego State,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,San Diego St.,0,0,1456.9,1339.67,1.64,-2.88,0.7390000000000001,66.26,5.01,California Baptist -5.01
-4091,California Baptist,2025-03-21,Utah Tech,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,Utah Tech,0,0,1456.9,1265.18,1.64,-4.44,0.8022,75.09,6.83,California Baptist -6.83
-4092,California Baptist,2025-03-22,Utah Tech,"Riverside, CA
-James W. Totman Stadium",8:00 PM,California Baptist,Utah Tech,0,0,1456.9,1265.18,1.64,-4.44,0.8022,75.09,6.83,California Baptist -6.83
-4093,California Baptist,2025-03-23,Utah Tech,"Riverside, CA
-James W. Totman Stadium",3:00 PM,California Baptist,Utah Tech,0,0,1456.9,1265.18,1.64,-4.44,0.8022,75.09,6.83,California Baptist -6.83
-4094,California Baptist,2025-03-25,UC San Diego,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,UC San Diego,0,0,1456.9,1366.54,1.64,0.17,0.5838,62.72,1.85,California Baptist -1.85
-4095,California Baptist,2025-03-28,UTA,"Arlington, TX
-Clay Gould Ballpark",7:00 PM,UT Arlington,California Baptist,0,0,1341.71,1456.9,-1.06,1.64,0.3494,34.0,-3.18,California Baptist -3.18
-4096,California Baptist,2025-03-29,UTA,"Arlington, TX
-Clay Gould Ballpark",3:00 PM,UT Arlington,California Baptist,0,0,1341.71,1456.9,-1.06,1.64,0.3494,34.0,-3.18,California Baptist -3.18
-4097,California Baptist,2025-03-30,UTA,"Arlington, TX
-Clay Gould Ballpark",1:00 PM,UT Arlington,California Baptist,0,0,1341.71,1456.9,-1.06,1.64,0.3494,34.0,-3.18,California Baptist -3.18
-4098,California Baptist,2025-03-31,UNLV,"Riverside, CA
-James W. Totman Stadium",5:00 PM,California Baptist,UNLV,0,0,1456.9,1371.16,1.64,-2.21,0.7081999999999999,62.09,4.21,California Baptist -4.21
-4099,California Baptist,2025-04-04,Grand Canyon,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,Grand Canyon,0,0,1456.9,1455.86,1.64,2.51,0.4501,50.15,-0.87,Grand Canyon -0.87
-4100,California Baptist,2025-04-05,Grand Canyon,"Riverside, CA
-James W. Totman Stadium",8:00 PM,California Baptist,Grand Canyon,0,0,1456.9,1455.86,1.64,2.51,0.4501,50.15,-0.87,Grand Canyon -0.87
-4101,California Baptist,2025-04-06,Grand Canyon,"Riverside, CA
-James W. Totman Stadium",3:00 PM,California Baptist,Grand Canyon,0,0,1456.9,1455.86,1.64,2.51,0.4501,50.15,-0.87,Grand Canyon -0.87
-4102,California Baptist,2025-04-08,San Diego State,"San Diego, CA
-Tony Gwynn Stadium",9:00 PM,San Diego St.,California Baptist,0,0,1339.67,1456.9,-2.88,1.64,0.261,33.74,-5.01,California Baptist -5.01
-4103,California Baptist,2025-04-11,Pacific,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,Pacific,0,0,1456.9,1276.81,1.64,-4.26,0.7955,73.82,6.61,California Baptist -6.61
-4104,California Baptist,2025-04-12,Pacific,"Riverside, CA
-James W. Totman Stadium",8:00 PM,California Baptist,Pacific,0,0,1456.9,1276.81,1.64,-4.26,0.7955,73.82,6.61,California Baptist -6.61
-4105,California Baptist,2025-04-13,Pacific,"Riverside, CA
-James W. Totman Stadium",3:00 PM,California Baptist,Pacific,0,0,1456.9,1276.81,1.64,-4.26,0.7955,73.82,6.61,California Baptist -6.61
-4106,California Baptist,2025-04-14,UC Santa Barbara,"Riverside, CA
-James W. Totman Stadium",8:00 PM,California Baptist,UC Santa Barbara,0,0,1456.9,1535.5,1.64,5.67,0.2833,38.88,-4.36,UC Santa Barbara -4.36
-4107,California Baptist,2025-04-17,Sacramento State,"Sacramento, CA
-John Smith Field",9:00 PM,Sacramento St.,California Baptist,0,0,1311.83,1456.9,-2.08,1.64,0.2981,30.26,-4.31,California Baptist -4.31
-4108,California Baptist,2025-04-18,Sacramento State,"Sacramento, CA
-John Smith Field",7:00 PM,Sacramento St.,California Baptist,0,0,1311.83,1456.9,-2.08,1.64,0.2981,30.26,-4.31,California Baptist -4.31
-4109,California Baptist,2025-04-19,Sacramento State,"Sacramento, CA
-John Smith Field",3:00 PM,Sacramento St.,California Baptist,0,0,1311.83,1456.9,-2.08,1.64,0.2981,30.26,-4.31,California Baptist -4.31
-4110,California Baptist,2025-04-21,UC Santa Barbara,"Santa Barbara, CA
-Caesar Uyesaka Stadium",7:35 PM,UC Santa Barbara,California Baptist,0,0,1535.5,1456.9,5.67,1.64,0.7167,61.12,4.36,UC Santa Barbara -4.36
-4111,California Baptist,2025-04-25,Utah Valley,"Orem, UT
-UCCU Ballpark",8:05 PM,Utah Valley,California Baptist,0,0,1346.57,1456.9,0.36,1.64,0.4268,34.64,-1.74,California Baptist -1.74
-4112,California Baptist,2025-04-26,Utah Valley,"Orem, UT
-UCCU Ballpark",6:05 PM,Utah Valley,California Baptist,0,0,1346.57,1456.9,0.36,1.64,0.4268,34.64,-1.74,California Baptist -1.74
-4113,California Baptist,2025-04-27,Utah Valley,"Orem, UT
-UCCU Ballpark",2:05 PM,Utah Valley,California Baptist,0,0,1346.57,1456.9,0.36,1.64,0.4268,34.64,-1.74,California Baptist -1.74
-4114,California Baptist,2025-04-28,UC Riverside,"Riverside, CA
-Riverside Sports Complex",9:30 PM,UC Riverside,California Baptist,0,0,1296.2,1456.9,-2.57,1.64,0.275,28.39,-4.86,California Baptist -4.86
-4115,California Baptist,2025-05-02,Tarleton State,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,Tarleton St.,0,0,1456.9,1405.53,1.64,0.77,0.5499,57.34,1.09,California Baptist -1.09
-4116,California Baptist,2025-05-03,Tarleton State,"Riverside, CA
-James W. Totman Stadium",8:00 PM,California Baptist,Tarleton St.,0,0,1456.9,1405.53,1.64,0.77,0.5499,57.34,1.09,California Baptist -1.09
-4117,California Baptist,2025-05-04,Tarleton State,"Riverside, CA
-James W. Totman Stadium",3:00 PM,California Baptist,Tarleton St.,0,0,1456.9,1405.53,1.64,0.77,0.5499,57.34,1.09,California Baptist -1.09
-4118,California Baptist,2025-05-06,UC Irvine,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,UC Irvine,0,0,1456.9,1487.18,1.64,3.81,0.3776,45.65,-2.3,UC Irvine -2.3
-4119,California Baptist,2025-05-09,Seattle University,"Bellevue, WA
-Bannerwood Park",2:00 PM,Seattle U,California Baptist,0,0,1255.51,1456.9,-3.68,1.64,0.2271,23.88,-6.1,California Baptist -6.1
-4120,California Baptist,2025-05-10,Seattle University,"Bellevue, WA
-Bannerwood Park",TBA,Seattle U,California Baptist,0,0,1255.51,1456.9,-3.68,1.64,0.2271,23.88,-6.1,California Baptist -6.1
-4121,California Baptist,2025-05-11,Seattle University,"Bellevue, WA
-Bannerwood Park",3:00 PM,Seattle U,California Baptist,0,0,1255.51,1456.9,-3.68,1.64,0.2271,23.88,-6.1,California Baptist -6.1
-4122,California Baptist,2025-05-13,Long Beach State,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,Long Beach St.,0,0,1456.9,1330.1,1.64,-1.03,0.649,67.48,3.19,California Baptist -3.19
-4123,California Baptist,2025-05-15,Abilene Christian,"Riverside, CA
-James W. Totman Stadium",9:00 AM,California Baptist,Abilene Christian,0,0,1456.9,1376.09,1.64,-0.45,0.618,61.42,2.43,California Baptist -2.43
-4124,California Baptist,2025-05-16,Abilene Christian,"Riverside, CA
-James W. Totman Stadium",9:00 AM,California Baptist,Abilene Christian,0,0,1456.9,1376.09,1.64,-0.45,0.618,61.42,2.43,California Baptist -2.43
-4125,California Baptist,2025-05-17,Abilene Christian,"Riverside, CA
-James W. Totman Stadium",3:00 PM,California Baptist,Abilene Christian,0,0,1456.9,1376.09,1.64,-0.45,0.618,61.42,2.43,California Baptist -2.43
 4126,Grand Canyon,2025-02-14,Vanderbilt,"Phoenix, AZ
 Brazell Field at GCU Ballpark",L   3 - 4,Grand Canyon,Vanderbilt,3,4,1455.86,1581.52,2.51,5.54,0.3323,32.67,-3.55,Vanderbilt -3.55
 4127,Grand Canyon,2025-02-15,San Diego State,"Mesa, AZ
@@ -8282,7 +8282,7 @@ Bobcat Ballpark",3:30 PM,Texas St.,Grand Canyon,0,0,1473.37,1455.86,2.57,2.51,0.
 4136,Grand Canyon,2025-03-02,Texas State,"San Marcos, TX
 Bobcat Ballpark",2:00 PM,Texas St.,Grand Canyon,0,0,1473.37,1455.86,2.57,2.51,0.5035000000000001,52.52,0.14,Texas St. -0.14
 4137,Grand Canyon,2025-03-04,Pepperdine,"Phoenix, AZ
-Brazell Field at GCU Ballpark",8:00 PM,Grand Canyon,Pepperdine,0,0,1455.86,1249.42,2.51,-2.75,0.7705,76.64,6.06,Grand Canyon -6.06
+Brazell Field at GCU Ballpark",8:00 PM,Grand Canyon,Pepperdine,0,0,1455.86,1241.98,2.51,-2.75,0.7705,77.4,6.08,Grand Canyon -6.08
 4138,Grand Canyon,2025-03-07,Texas Tech,"Phoenix, AZ
 Brazell Field at GCU Ballpark",8:00 PM,Grand Canyon,Texas Tech,0,0,1455.86,1428.69,2.51,3.25,0.4575,53.9,-0.62,Texas Tech -0.62
 4139,Grand Canyon,2025-03-08,Texas Tech,"Phoenix, AZ
@@ -8318,11 +8318,11 @@ Brazell Field at GCU Ballpark",9:00 PM,Grand Canyon,Arizona,0,0,1455.86,1492.66,
 4154,Grand Canyon,2025-04-02,Cal State Fullerton,"Phoenix, AZ
 Brazell Field at GCU Ballpark",9:00 PM,Grand Canyon,Cal St. Fullerton,0,0,1455.86,1259.01,2.51,-2.85,0.7746,75.64,6.13,Grand Canyon -6.13
 4155,Grand Canyon,2025-04-04,California Baptist,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,Grand Canyon,0,0,1456.9,1455.86,1.64,2.51,0.4501,50.15,-0.87,Grand Canyon -0.87
+James W. Totman Stadium",9:00 PM,California Baptist,Grand Canyon,0,0,1464.34,1455.86,1.64,2.51,0.4501,51.22,-0.83,Grand Canyon -0.83
 4156,Grand Canyon,2025-04-05,California Baptist,"Riverside, CA
-James W. Totman Stadium",8:00 PM,California Baptist,Grand Canyon,0,0,1456.9,1455.86,1.64,2.51,0.4501,50.15,-0.87,Grand Canyon -0.87
+James W. Totman Stadium",8:00 PM,California Baptist,Grand Canyon,0,0,1464.34,1455.86,1.64,2.51,0.4501,51.22,-0.83,Grand Canyon -0.83
 4157,Grand Canyon,2025-04-06,California Baptist,"Riverside, CA
-James W. Totman Stadium",3:00 PM,California Baptist,Grand Canyon,0,0,1456.9,1455.86,1.64,2.51,0.4501,50.15,-0.87,Grand Canyon -0.87
+James W. Totman Stadium",3:00 PM,California Baptist,Grand Canyon,0,0,1464.34,1455.86,1.64,2.51,0.4501,51.22,-0.83,Grand Canyon -0.83
 4158,Grand Canyon,2025-04-11,Utah Valley,"Phoenix, AZ
 Brazell Field at GCU Ballpark",10:00 PM,Grand Canyon,Utah Valley,0,0,1455.86,1346.57,2.51,0.36,0.6213000000000001,65.23,2.61,Grand Canyon -2.61
 4159,Grand Canyon,2025-04-12,Utah Valley,"Phoenix, AZ
@@ -8867,7 +8867,7 @@ Alexander Field",2:00 PM,Purdue,UCLA,0,0,1449.44,1448.98,2.16,0.18,0.612,50.07,1
 4427,UCLA,2025-03-30,Purdue,"West Lafayette, IN
 Alexander Field",12:00 PM,Purdue,UCLA,0,0,1449.44,1448.98,2.16,0.18,0.612,50.07,1.98,Purdue -1.98
 4428,UCLA,2025-04-01,Pepperdine,"Los Angeles, CA
-Jackie Robinson Stadium",9:00 PM,UCLA,Pepperdine,0,0,1448.98,1249.42,0.18,-2.75,0.6625,75.93,3.71,UCLA -3.71
+Jackie Robinson Stadium",9:00 PM,UCLA,Pepperdine,0,0,1448.98,1241.98,0.18,-2.75,0.6625,76.7,3.73,UCLA -3.73
 4429,UCLA,2025-04-04,San Diego,"Los Angeles, CA
 Jackie Robinson Stadium",9:00 PM,UCLA,San Diego,0,0,1448.98,1444.6,0.18,4.86,0.254,50.63,-4.66,San Diego -4.66
 4430,UCLA,2025-04-05,San Diego,"Los Angeles, CA
@@ -9193,11 +9193,11 @@ George C. Page Stadium",4:00 PM,Loyola-Marymount,San Diego,0,0,1387.5,1444.6,-4.
 4590,San Diego,2025-03-25,Cal State Fullerton,"Fullerton, CA
 Goodwin Field",9:00 PM,Cal St. Fullerton,San Diego,0,0,1259.01,1444.6,-2.85,4.86,0.1449,25.57,-8.44,San Diego -8.44
 4591,San Diego,2025-03-28,Pepperdine,"San Diego, CA
-Fowler Park",9:00 PM,San Diego,Pepperdine,0,0,1444.6,1249.42,4.86,-2.75,0.8522,75.46,8.37,San Diego -8.37
+Fowler Park",9:00 PM,San Diego,Pepperdine,0,0,1444.6,1241.98,4.86,-2.75,0.8522,76.25,8.4,San Diego -8.4
 4592,San Diego,2025-03-29,Pepperdine,"San Diego, CA
-Fowler Park",8:00 PM,San Diego,Pepperdine,0,0,1444.6,1249.42,4.86,-2.75,0.8522,75.46,8.37,San Diego -8.37
+Fowler Park",8:00 PM,San Diego,Pepperdine,0,0,1444.6,1241.98,4.86,-2.75,0.8522,76.25,8.4,San Diego -8.4
 4593,San Diego,2025-03-30,Pepperdine,"San Diego, CA
-Fowler Park",4:00 PM,San Diego,Pepperdine,0,0,1444.6,1249.42,4.86,-2.75,0.8522,75.46,8.37,San Diego -8.37
+Fowler Park",4:00 PM,San Diego,Pepperdine,0,0,1444.6,1241.98,4.86,-2.75,0.8522,76.25,8.4,San Diego -8.4
 4594,San Diego,2025-04-01,UC Irvine,"Irvine, CA
 Cicerone Field at Anteater Ballpark",9:00 PM,UC Irvine,San Diego,0,0,1487.18,1444.6,3.81,4.86,0.43979999999999997,56.1,-0.87,San Diego -0.87
 4595,San Diego,2025-04-04,UCLA,"Los Angeles, CA
@@ -9253,13 +9253,13 @@ Fowler Park",9:00 PM,San Diego,Pacific,0,0,1444.6,1276.81,4.86,-4.26,0.8909,72.4
 4620,San Diego,2025-05-17,Pacific,"San Diego, CA
 Fowler Park",4:00 PM,San Diego,Pacific,0,0,1444.6,1276.81,4.86,-4.26,0.8909,72.43,9.79,San Diego -9.79
 4621,Portland,2025-02-14,California Baptist,"Riverside, CA
-James W. Totman Stadium",L   0 - 1,California Baptist,Portland,1,0,1456.9,1442.4,1.64,2.17,0.46950000000000003,52.09,-0.47,Portland -0.47
+James W. Totman Stadium",L   0 - 1,California Baptist,Portland,1,0,1464.34,1442.4,1.64,2.17,0.46950000000000003,53.15,-0.44,Portland -0.44
 4622,Portland,2025-02-15,California Baptist,"Riverside, CA
-James W. Totman Stadium",L   7 - 11,California Baptist,Portland,11,7,1456.9,1442.4,1.64,2.17,0.46950000000000003,52.09,-0.47,Portland -0.47
+James W. Totman Stadium",L   7 - 11,California Baptist,Portland,11,7,1464.34,1442.4,1.64,2.17,0.46950000000000003,53.15,-0.44,Portland -0.44
 4623,Portland,2025-02-16,California Baptist,"Riverside, CA
-James W. Totman Stadium",W   9 - 2,California Baptist,Portland,2,9,1456.9,1442.4,1.64,2.17,0.46950000000000003,52.09,-0.47,Portland -0.47
+James W. Totman Stadium",W   9 - 2,California Baptist,Portland,2,9,1464.34,1442.4,1.64,2.17,0.46950000000000003,53.15,-0.44,Portland -0.44
 4624,Portland,2025-02-17,California Baptist,"Riverside, CA
-James W. Totman Stadium",L   4 - 18,California Baptist,Portland,18,4,1456.9,1442.4,1.64,2.17,0.46950000000000003,52.09,-0.47,Portland -0.47
+James W. Totman Stadium",L   4 - 18,California Baptist,Portland,18,4,1464.34,1442.4,1.64,2.17,0.46950000000000003,53.15,-0.44,Portland -0.44
 4625,Portland,2025-02-21,Creighton,"Portland, OR
 Joe Etzel Field",6:00 PM,Portland,Creighton,0,0,1442.4,1434.09,2.17,3.21,0.4404,51.2,-1.0,Creighton -1.0
 4626,Portland,2025-02-22,Creighton,"Portland, OR
@@ -9323,11 +9323,11 @@ Tonkin Field",8:30 PM,Oregon St.,Portland,0,0,1644.7,1442.4,4.76,2.17,0.6448,76.
 4655,Portland,2025-04-08,Oregon State,"Portland, OR
 Joe Etzel Field",8:35 PM,Portland,Oregon St.,0,0,1442.4,1644.7,2.17,4.76,0.3552,23.78,-3.38,Oregon St. -3.38
 4656,Portland,2025-04-11,Pepperdine,"Portland, OR
-Joe Etzel Field",9:00 PM,Portland,Pepperdine,0,0,1442.4,1249.42,2.17,-2.75,0.7564,75.23,5.68,Portland -5.68
+Joe Etzel Field",9:00 PM,Portland,Pepperdine,0,0,1442.4,1241.98,2.17,-2.75,0.7564,76.02,5.7,Portland -5.7
 4657,Portland,2025-04-12,Pepperdine,"Portland, OR
-Joe Etzel Field",6:00 PM,Portland,Pepperdine,0,0,1442.4,1249.42,2.17,-2.75,0.7564,75.23,5.68,Portland -5.68
+Joe Etzel Field",6:00 PM,Portland,Pepperdine,0,0,1442.4,1241.98,2.17,-2.75,0.7564,76.02,5.7,Portland -5.7
 4658,Portland,2025-04-13,Pepperdine,"Portland, OR
-Joe Etzel Field",4:00 PM,Portland,Pepperdine,0,0,1442.4,1249.42,2.17,-2.75,0.7564,75.23,5.68,Portland -5.68
+Joe Etzel Field",4:00 PM,Portland,Pepperdine,0,0,1442.4,1241.98,2.17,-2.75,0.7564,76.02,5.7,Portland -5.7
 4659,Portland,2025-04-15,Cal State Northridge,"Northridge, CA
 Matador Field",9:00 PM,CSUN,Portland,0,0,1409.8,1442.4,0.68,2.17,0.41509999999999997,45.32,-1.63,Portland -1.63
 4660,Portland,2025-04-17,San Diego,"San Diego, CA
@@ -11675,7 +11675,7 @@ Robin Baggett Stadium",6:00 PM,Cal Poly,Oregon St.,0,0,1415.44,1644.7,0.94,4.76,
 5830,Cal Poly,2025-03-23,Oregon State,"San Luis Obispo, CA
 Robin Baggett Stadium",4:00 PM,Cal Poly,Oregon St.,0,0,1415.44,1644.7,0.94,4.76,0.2933,21.09,-4.69,Oregon St. -4.69
 5831,Cal Poly,2025-03-25,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",5:30 PM,Pepperdine,Cal Poly,0,0,1249.42,1415.44,-2.75,0.94,0.2995,27.77,-4.36,Cal Poly -4.36
+Eddy D. Field Stadium",5:30 PM,Pepperdine,Cal Poly,0,0,1241.98,1415.44,-2.75,0.94,0.2995,26.92,-4.38,Cal Poly -4.38
 5832,Cal Poly,2025-03-28,UC Davis,"Davis, CA
 Dobbins Stadium",9:00 PM,UC Davis,Cal Poly,0,0,1413.16,1415.44,0.59,0.94,0.4799,49.67,-0.36,Cal Poly -0.36
 5833,Cal Poly,2025-03-29,UC Davis,"Davis, CA
@@ -11723,7 +11723,7 @@ Hardt Field",9:30 PM,CSU Bakersfield,Cal Poly,0,0,1289.08,1415.44,-5.42,0.94,0.1
 5854,Cal Poly,2025-05-04,Cal State Bakersfield,"Bakersfield, CA
 Hardt Field",4:00 PM,CSU Bakersfield,Cal Poly,0,0,1289.08,1415.44,-5.42,0.94,0.18780000000000002,32.58,-6.88,Cal Poly -6.88
 5855,Cal Poly,2025-05-06,Pepperdine,"San Luis Obispo, CA
-Robin Baggett Stadium",8:00 PM,Cal Poly,Pepperdine,0,0,1415.44,1249.42,0.94,-2.75,0.7005,72.23,4.36,Cal Poly -4.36
+Robin Baggett Stadium",8:00 PM,Cal Poly,Pepperdine,0,0,1415.44,1241.98,0.94,-2.75,0.7005,73.08,4.38,Cal Poly -4.38
 5856,Cal Poly,2025-05-09,Cal State Northridge,"Northridge, CA
 Matador Field",9:00 PM,CSUN,Cal Poly,0,0,1409.8,1415.44,0.68,0.94,0.485,49.19,-0.28,Cal Poly -0.28
 5857,Cal Poly,2025-05-10,Cal State Northridge,"Northridge, CA
@@ -12736,11 +12736,11 @@ Meiklejohn Stadium",3:00 PM,Penn,Rutgers,0,0,1348.0,1409.37,-4.87,3.56,0.1255,41
 6359,Rutgers,2025-03-12,Wagner,"Piscataway, NJ
 Bainton Field",3:00 PM,Rutgers,Wagner,0,0,1409.37,1293.48,3.56,-3.67,0.8409,66.09,7.71,Rutgers -7.71
 6360,Rutgers,2025-03-14,California Baptist,"Piscataway, NJ
-Bainton Field",4:00 PM,Rutgers,California Baptist,0,0,1409.37,1456.9,3.56,1.64,0.6088,43.2,1.72,Rutgers -1.72
+Bainton Field",4:00 PM,Rutgers,California Baptist,0,0,1409.37,1464.34,3.56,1.64,0.6088,42.15,1.68,Rutgers -1.68
 6361,Rutgers,2025-03-15,California Baptist,"Piscataway, NJ
-Bainton Field",2:00 PM,Rutgers,California Baptist,0,0,1409.37,1456.9,3.56,1.64,0.6088,43.2,1.72,Rutgers -1.72
+Bainton Field",2:00 PM,Rutgers,California Baptist,0,0,1409.37,1464.34,3.56,1.64,0.6088,42.15,1.68,Rutgers -1.68
 6362,Rutgers,2025-03-16,California Baptist,"Piscataway, NJ
-Bainton Field",12:00 PM,Rutgers,California Baptist,0,0,1409.37,1456.9,3.56,1.64,0.6088,43.2,1.72,Rutgers -1.72
+Bainton Field",12:00 PM,Rutgers,California Baptist,0,0,1409.37,1464.34,3.56,1.64,0.6088,42.15,1.68,Rutgers -1.68
 6363,Rutgers,2025-03-18,Oregon State,"Corvallis, OR
 Goss Stadium at Coleman Field",8:30 PM,Oregon St.,Rutgers,0,0,1644.7,1409.37,4.76,3.56,0.5686,79.49,2.08,Oregon St. -2.08
 6364,Rutgers,2025-03-21,Oregon,"Eugene, OR
@@ -13233,11 +13233,11 @@ Cecil Ballow Baseball Complex",1:00 PM,Tarleton St.,Utah Tech,0,0,1405.53,1265.1
 6608,Tarleton St.,2025-04-30,Houston Christian,"Houston, TX
 Husky Field",7:00 PM,Houston Christian,Tarleton St.,0,0,1333.84,1405.53,-2.5,0.77,0.32020000000000004,39.83,-3.58,Tarleton St. -3.58
 6609,Tarleton St.,2025-05-02,California Baptist,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,Tarleton St.,0,0,1456.9,1405.53,1.64,0.77,0.5499,57.34,1.09,California Baptist -1.09
+James W. Totman Stadium",9:00 PM,California Baptist,Tarleton St.,0,0,1464.34,1405.53,1.64,0.77,0.5499,58.38,1.12,California Baptist -1.12
 6610,Tarleton St.,2025-05-03,California Baptist,"Riverside, CA
-James W. Totman Stadium",8:00 PM,California Baptist,Tarleton St.,0,0,1456.9,1405.53,1.64,0.77,0.5499,57.34,1.09,California Baptist -1.09
+James W. Totman Stadium",8:00 PM,California Baptist,Tarleton St.,0,0,1464.34,1405.53,1.64,0.77,0.5499,58.38,1.12,California Baptist -1.12
 6611,Tarleton St.,2025-05-04,California Baptist,"Riverside, CA
-James W. Totman Stadium",3:00 PM,California Baptist,Tarleton St.,0,0,1456.9,1405.53,1.64,0.77,0.5499,57.34,1.09,California Baptist -1.09
+James W. Totman Stadium",3:00 PM,California Baptist,Tarleton St.,0,0,1464.34,1405.53,1.64,0.77,0.5499,58.38,1.12,California Baptist -1.12
 6612,Tarleton St.,2025-05-09,Abilene Christian,"Abilene, TX
 Crutcher Scott Field",7:00 PM,Abilene Christian,Tarleton St.,0,0,1376.09,1405.53,-0.45,0.77,0.4302,45.77,-1.35,Tarleton St. -1.35
 6613,Tarleton St.,2025-05-10,Abilene Christian,"Abilene, TX
@@ -13713,11 +13713,11 @@ Stephen Schott Stadium",3:00 PM,Santa Clara,UC San Diego,0,0,1402.1,1366.54,-0.6
 6848,Santa Clara,2025-04-01,Stanford,"Stanford, CA
 Klein Field at Sunken Diamond",9:05 PM,Stanford,Santa Clara,0,0,1441.74,1402.1,0.43,-0.67,0.563,55.68,1.27,Stanford -1.27
 6849,Santa Clara,2025-04-04,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Santa Clara,0,0,1249.42,1402.1,-2.75,-0.67,0.3825,29.34,-2.7,Santa Clara -2.7
+Eddy D. Field Stadium",TBA,Pepperdine,Santa Clara,0,0,1241.98,1402.1,-2.75,-0.67,0.3825,28.46,-2.73,Santa Clara -2.73
 6850,Santa Clara,2025-04-05,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Santa Clara,0,0,1249.42,1402.1,-2.75,-0.67,0.3825,29.34,-2.7,Santa Clara -2.7
+Eddy D. Field Stadium",TBA,Pepperdine,Santa Clara,0,0,1241.98,1402.1,-2.75,-0.67,0.3825,28.46,-2.73,Santa Clara -2.73
 6851,Santa Clara,2025-04-06,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Santa Clara,0,0,1249.42,1402.1,-2.75,-0.67,0.3825,29.34,-2.7,Santa Clara -2.7
+Eddy D. Field Stadium",TBA,Pepperdine,Santa Clara,0,0,1241.98,1402.1,-2.75,-0.67,0.3825,28.46,-2.73,Santa Clara -2.73
 6852,Santa Clara,2025-04-08,Hawaii,"Santa Clara, CA
 Stephen Schott Stadium",9:00 PM,Santa Clara,Hawaii,0,0,1402.1,1521.18,-0.67,2.89,0.30579999999999996,33.5,-4.06,Hawaii -4.06
 6853,Santa Clara,2025-04-11,Gonzaga,"Santa Clara, CA
@@ -15334,7 +15334,7 @@ George C. Page Stadium",6:00 PM,Loyola-Marymount,Saint Louis,0,0,1387.5,1383.86,
 7657,Loyola-Marymount,2025-03-02,Saint Louis,"Los Angeles, CA
 George C. Page Stadium",4:00 PM,Loyola-Marymount,Saint Louis,0,0,1387.5,1383.86,-4.87,-1.3,0.3053,50.52,-3.55,Saint Louis -3.55
 7658,Loyola-Marymount,2025-03-04,California Baptist,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,Loyola-Marymount,0,0,1456.9,1387.5,1.64,-4.87,0.8173999999999999,59.86,6.81,California Baptist -6.81
+James W. Totman Stadium",9:00 PM,California Baptist,Loyola-Marymount,0,0,1464.34,1387.5,1.64,-4.87,0.8173999999999999,60.88,6.84,California Baptist -6.84
 7659,Loyola-Marymount,2025-03-07,Baylor,"Waco, TX
 Baylor Ballpark",7:30 PM,Baylor,Loyola-Marymount,0,0,1450.15,1387.5,2.1,-4.87,0.8327,58.92,7.24,Baylor -7.24
 7660,Loyola-Marymount,2025-03-08,Baylor,"Waco, TX
@@ -15412,11 +15412,11 @@ Caesar Uyesaka Stadium",6:05 PM,UC Santa Barbara,Loyola-Marymount,0,0,1535.5,138
 7696,Loyola-Marymount,2025-05-11,UC Santa Barbara,"Santa Barbara, CA
 Caesar Uyesaka Stadium",4:05 PM,UC Santa Barbara,Loyola-Marymount,0,0,1535.5,1387.5,5.67,-4.87,0.9189,70.1,11.14,UC Santa Barbara -11.14
 7697,Loyola-Marymount,2025-05-15,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Loyola-Marymount,0,0,1249.42,1387.5,-2.75,-4.87,0.6197,31.11,1.55,Pepperdine -1.55
+Eddy D. Field Stadium",TBA,Pepperdine,Loyola-Marymount,0,0,1241.98,1387.5,-2.75,-4.87,0.6197,30.2,1.53,Pepperdine -1.53
 7698,Loyola-Marymount,2025-05-16,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Loyola-Marymount,0,0,1249.42,1387.5,-2.75,-4.87,0.6197,31.11,1.55,Pepperdine -1.55
+Eddy D. Field Stadium",TBA,Pepperdine,Loyola-Marymount,0,0,1241.98,1387.5,-2.75,-4.87,0.6197,30.2,1.53,Pepperdine -1.53
 7699,Loyola-Marymount,2025-05-17,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Loyola-Marymount,0,0,1249.42,1387.5,-2.75,-4.87,0.6197,31.11,1.55,Pepperdine -1.55
+Eddy D. Field Stadium",TBA,Pepperdine,Loyola-Marymount,0,0,1241.98,1387.5,-2.75,-4.87,0.6197,30.2,1.53,Pepperdine -1.53
 7700,Niagara,2025-02-14,Miami (FL),"Coral Gables, FL
 Alex Rodriguez Park at Mark Light Field",L   2 - 14,Miami (FL),Niagara,14,2,1483.27,1386.71,4.09,-0.44,0.7394,63.55,4.94,Miami (FL) -4.94
 7701,Niagara,2025-02-15,Miami (FL),"Coral Gables, FL
@@ -17240,11 +17240,11 @@ Crutcher Scott Field",4:00 PM,Abilene Christian,Tarleton St.,0,0,1376.09,1405.53
 8610,Abilene Christian,2025-05-11,Tarleton State,"Abilene, TX
 Crutcher Scott Field",2:00 PM,Abilene Christian,Tarleton St.,0,0,1376.09,1405.53,-0.45,0.77,0.4302,45.77,-1.35,Tarleton St. -1.35
 8611,Abilene Christian,2025-05-15,California Baptist,"Riverside, CA
-James W. Totman Stadium",9:00 AM,California Baptist,Abilene Christian,0,0,1456.9,1376.09,1.64,-0.45,0.618,61.42,2.43,California Baptist -2.43
+James W. Totman Stadium",9:00 AM,California Baptist,Abilene Christian,0,0,1464.34,1376.09,1.64,-0.45,0.618,62.43,2.46,California Baptist -2.46
 8612,Abilene Christian,2025-05-16,California Baptist,"Riverside, CA
-James W. Totman Stadium",9:00 AM,California Baptist,Abilene Christian,0,0,1456.9,1376.09,1.64,-0.45,0.618,61.42,2.43,California Baptist -2.43
+James W. Totman Stadium",9:00 AM,California Baptist,Abilene Christian,0,0,1464.34,1376.09,1.64,-0.45,0.618,62.43,2.46,California Baptist -2.46
 8613,Abilene Christian,2025-05-17,California Baptist,"Riverside, CA
-James W. Totman Stadium",3:00 PM,California Baptist,Abilene Christian,0,0,1456.9,1376.09,1.64,-0.45,0.618,61.42,2.43,California Baptist -2.43
+James W. Totman Stadium",3:00 PM,California Baptist,Abilene Christian,0,0,1464.34,1376.09,1.64,-0.45,0.618,62.43,2.46,California Baptist -2.46
 8614,Rice,2025-02-14,Villanova,"Caguas, Puerto Rico
 Yldefonso Sola Morales Stadium",L   6 - 10,Rice,Villanova,6,10,1374.94,1313.45,-0.22,-1.61,0.5793,58.76,1.65,Rice -1.65
 8615,Rice,2025-02-15,Michigan,"Caguas, Puerto Rico
@@ -17668,11 +17668,11 @@ Jaycees Field",2:05 PM,SFA,Northwestern St.,0,0,1214.26,1374.25,-4.34,-0.29,0.28
 8824,Northwestern St.,2025-04-29,ULM,"Monroe, LA
 Lou St. Amant Field",7:00 PM,ULM,Northwestern St.,0,0,1399.23,1374.25,0.54,-0.29,0.5476,53.59,0.94,ULM -0.94
 8825,Northwestern St.,2025-05-02,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Northwestern St.,0,0,1249.42,1374.25,-2.75,-0.29,0.36210000000000003,32.77,-2.98,Northwestern St. -2.98
+Eddy D. Field Stadium",TBA,Pepperdine,Northwestern St.,0,0,1241.98,1374.25,-2.75,-0.29,0.36210000000000003,31.83,-3.01,Northwestern St. -3.01
 8826,Northwestern St.,2025-05-03,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Northwestern St.,0,0,1249.42,1374.25,-2.75,-0.29,0.36210000000000003,32.77,-2.98,Northwestern St. -2.98
+Eddy D. Field Stadium",TBA,Pepperdine,Northwestern St.,0,0,1241.98,1374.25,-2.75,-0.29,0.36210000000000003,31.83,-3.01,Northwestern St. -3.01
 8827,Northwestern St.,2025-05-04,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Northwestern St.,0,0,1249.42,1374.25,-2.75,-0.29,0.36210000000000003,32.77,-2.98,Northwestern St. -2.98
+Eddy D. Field Stadium",TBA,Pepperdine,Northwestern St.,0,0,1241.98,1374.25,-2.75,-0.29,0.36210000000000003,31.83,-3.01,Northwestern St. -3.01
 8828,Northwestern St.,2025-05-08,McNeese,"Natchitoches, LA
 H. Alvin Brown-C. C. Stroud Field",7:30 PM,Northwestern St.,McNeese,0,0,1374.25,1439.9,-0.29,1.19,0.4156,40.66,-1.76,McNeese -1.76
 8829,Northwestern St.,2025-05-09,McNeese,"Natchitoches, LA
@@ -17826,7 +17826,7 @@ Tony Gwynn Stadium",7:00 PM,San Diego St.,UNLV,0,0,1339.67,1371.16,-2.88,-2.21,0
 8903,UNLV,2025-03-30,San Diego State,"San Diego, CA
 Tony Gwynn Stadium",3:00 PM,San Diego St.,UNLV,0,0,1339.67,1371.16,-2.88,-2.21,0.46149999999999997,45.48,-0.81,UNLV -0.81
 8904,UNLV,2025-03-31,California Baptist,"Riverside, CA
-James W. Totman Stadium",5:00 PM,California Baptist,UNLV,0,0,1456.9,1371.16,1.64,-2.21,0.7081999999999999,62.09,4.21,California Baptist -4.21
+James W. Totman Stadium",5:00 PM,California Baptist,UNLV,0,0,1464.34,1371.16,1.64,-2.21,0.7081999999999999,63.1,4.24,California Baptist -4.24
 8905,UNLV,2025-04-04,Nevada,"Paradise, NV
 Earl Wilson Stadium",9:05 PM,UNLV,Nevada,0,0,1371.16,1377.22,-2.21,-1.93,0.4839,49.13,-0.31,Nevada -0.31
 8906,UNLV,2025-04-05,Nevada,"Paradise, NV
@@ -18226,9 +18226,9 @@ Klein Family Field",L   3 - 6,Pacific,UC San Diego,6,3,1276.81,1366.54,-4.26,0
 9103,UC San Diego,2025-02-18,San Diego State,"La Jolla, CA
 Triton Park",L   7 - 10,UC San Diego,San Diego St.,7,10,1366.54,1339.67,0.17,-2.88,0.6687000000000001,53.86,3.17,UC San Diego -3.17
 9104,UC San Diego,2025-02-21,Pepperdine,"La Jolla, CA
-Triton Park",9:00 PM,UC San Diego,Pepperdine,0,0,1366.54,1249.42,0.17,-2.75,0.662,66.24,3.41,UC San Diego -3.41
+Triton Park",9:00 PM,UC San Diego,Pepperdine,0,0,1366.54,1241.98,0.17,-2.75,0.662,67.2,3.44,UC San Diego -3.44
 9105,UC San Diego,2025-02-22,California Baptist,"La Jolla, CA
-Triton Park",9:00 PM,UC San Diego,California Baptist,0,0,1366.54,1456.9,0.17,1.64,0.41619999999999996,37.28,-1.85,California Baptist -1.85
+Triton Park",9:00 PM,UC San Diego,California Baptist,0,0,1366.54,1464.34,0.17,1.64,0.41619999999999996,36.29,-1.88,California Baptist -1.88
 9106,UC San Diego,2025-02-23,Utah,"La Jolla, CA
 Triton Park",8:00 PM,UC San Diego,Utah,0,0,1366.54,1473.18,0.17,2.52,0.3679,35.12,-2.8,Utah -2.8
 9107,UC San Diego,2025-02-27,Cincinnati,"La Jolla, CA
@@ -18262,7 +18262,7 @@ Triton Park",5:00 PM,UC San Diego,Long Beach St.,0,0,1366.54,1330.1,0.17,-1.03,0
 9121,UC San Diego,2025-03-23,Long Beach State,"La Jolla, CA
 Triton Park",4:00 PM,UC San Diego,Long Beach St.,0,0,1366.54,1330.1,0.17,-1.03,0.5686,55.22,1.36,UC San Diego -1.36
 9122,UC San Diego,2025-03-25,California Baptist,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,UC San Diego,0,0,1456.9,1366.54,1.64,0.17,0.5838,62.72,1.85,California Baptist -1.85
+James W. Totman Stadium",9:00 PM,California Baptist,UC San Diego,0,0,1464.34,1366.54,1.64,0.17,0.5838,63.71,1.88,California Baptist -1.88
 9123,UC San Diego,2025-03-27,Santa Clara,"Santa Clara, CA
 Stephen Schott Stadium",9:00 PM,Santa Clara,UC San Diego,0,0,1402.1,1366.54,-0.67,0.17,0.4518,55.1,-0.69,UC San Diego -0.69
 9124,UC San Diego,2025-03-28,Santa Clara,"Santa Clara, CA
@@ -19833,11 +19833,11 @@ Lupton Stadium",7:00 PM,TCU,Air Force,0,0,1570.55,1356.96,3.93,0.05,0.7095999999
 9905,Air Force,2025-03-05,TCU,"Fort Worth, TX
 Lupton Stadium",4:00 PM,TCU,Air Force,0,0,1570.55,1356.96,3.93,0.05,0.7095999999999999,77.37,4.7,TCU -4.7
 9906,Air Force,2025-03-07,California Baptist,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,Air Force,0,0,1456.9,1356.96,1.64,0.05,0.5905,64.0,2.01,California Baptist -2.01
+James W. Totman Stadium",9:00 PM,California Baptist,Air Force,0,0,1464.34,1356.96,1.64,0.05,0.5905,64.98,2.04,California Baptist -2.04
 9907,Air Force,2025-03-08,California Baptist,"Riverside, CA
-James W. Totman Stadium",5:00 PM,California Baptist,Air Force,0,0,1456.9,1356.96,1.64,0.05,0.5905,64.0,2.01,California Baptist -2.01
+James W. Totman Stadium",5:00 PM,California Baptist,Air Force,0,0,1464.34,1356.96,1.64,0.05,0.5905,64.98,2.04,California Baptist -2.04
 9908,Air Force,2025-03-09,California Baptist,"Riverside, CA
-James W. Totman Stadium",3:00 PM,California Baptist,Air Force,0,0,1456.9,1356.96,1.64,0.05,0.5905,64.0,2.01,California Baptist -2.01
+James W. Totman Stadium",3:00 PM,California Baptist,Air Force,0,0,1464.34,1356.96,1.64,0.05,0.5905,64.98,2.04,California Baptist -2.04
 9909,Air Force,2025-03-12,South Dakota State,"Colorado Springs, CO
 Erdle Field",3:00 PM,Air Force,South Dakota St.,0,0,1356.96,1257.75,0.05,-4.87,0.7564,63.9,5.34,Air Force -5.34
 9910,Air Force,2025-03-14,Washington State,"Colorado Springs, CO
@@ -20625,11 +20625,11 @@ UCCU Ballpark",8:05 PM,Utah Valley,BYU,0,0,1346.57,1382.5,0.36,-1.02,0.5788,44.8
 10301,Utah Valley,2025-04-22,Utah,"Orem, UT
 UCCU Ballpark",8:00 PM,Utah Valley,Utah,0,0,1346.57,1473.18,0.36,2.52,0.3782,32.55,-2.68,Utah -2.68
 10302,Utah Valley,2025-04-25,California Baptist,"Orem, UT
-UCCU Ballpark",8:05 PM,Utah Valley,California Baptist,0,0,1346.57,1456.9,0.36,1.64,0.4268,34.64,-1.74,California Baptist -1.74
+UCCU Ballpark",8:05 PM,Utah Valley,California Baptist,0,0,1346.57,1464.34,0.36,1.64,0.4268,33.67,-1.77,California Baptist -1.77
 10303,Utah Valley,2025-04-26,California Baptist,"Orem, UT
-UCCU Ballpark",6:05 PM,Utah Valley,California Baptist,0,0,1346.57,1456.9,0.36,1.64,0.4268,34.64,-1.74,California Baptist -1.74
+UCCU Ballpark",6:05 PM,Utah Valley,California Baptist,0,0,1346.57,1464.34,0.36,1.64,0.4268,33.67,-1.77,California Baptist -1.77
 10304,Utah Valley,2025-04-27,California Baptist,"Orem, UT
-UCCU Ballpark",2:05 PM,Utah Valley,California Baptist,0,0,1346.57,1456.9,0.36,1.64,0.4268,34.64,-1.74,California Baptist -1.74
+UCCU Ballpark",2:05 PM,Utah Valley,California Baptist,0,0,1346.57,1464.34,0.36,1.64,0.4268,33.67,-1.77,California Baptist -1.77
 10305,Utah Valley,2025-05-02,UTA,"Arlington, TX
 Clay Gould Ballpark",7:00 PM,UT Arlington,Utah Valley,0,0,1341.71,1346.57,-1.06,0.36,0.419,49.3,-1.44,Utah Valley -1.44
 10306,Utah Valley,2025-05-03,UTA,"Arlington, TX
@@ -21229,11 +21229,11 @@ John Smith Field",4:00 PM,Sacramento St.,UT Arlington,0,0,1311.83,1341.71,-2.08,
 10603,UT Arlington,2025-03-25,Baylor,"Waco, TX
 Baylor Ballpark",7:30 PM,Baylor,UT Arlington,0,0,1450.15,1341.71,2.1,-1.06,0.6743000000000001,65.12,3.61,Baylor -3.61
 10604,UT Arlington,2025-03-28,California Baptist,"Arlington, TX
-Clay Gould Ballpark",7:00 PM,UT Arlington,California Baptist,0,0,1341.71,1456.9,-1.06,1.64,0.3494,34.0,-3.18,California Baptist -3.18
+Clay Gould Ballpark",7:00 PM,UT Arlington,California Baptist,0,0,1341.71,1464.34,-1.06,1.64,0.3494,33.05,-3.21,California Baptist -3.21
 10605,UT Arlington,2025-03-29,California Baptist,"Arlington, TX
-Clay Gould Ballpark",3:00 PM,UT Arlington,California Baptist,0,0,1341.71,1456.9,-1.06,1.64,0.3494,34.0,-3.18,California Baptist -3.18
+Clay Gould Ballpark",3:00 PM,UT Arlington,California Baptist,0,0,1341.71,1464.34,-1.06,1.64,0.3494,33.05,-3.21,California Baptist -3.21
 10606,UT Arlington,2025-03-30,California Baptist,"Arlington, TX
-Clay Gould Ballpark",1:00 PM,UT Arlington,California Baptist,0,0,1341.71,1456.9,-1.06,1.64,0.3494,34.0,-3.18,California Baptist -3.18
+Clay Gould Ballpark",1:00 PM,UT Arlington,California Baptist,0,0,1341.71,1464.34,-1.06,1.64,0.3494,33.05,-3.21,California Baptist -3.21
 10607,UT Arlington,2025-04-01,Dallas Baptist,"Dallas, TX
 Horner Ballpark",7:30 PM,DBU,UT Arlington,0,0,1530.69,1341.71,4.71,-1.06,0.7906,74.8,6.51,DBU -6.51
 10608,UT Arlington,2025-04-04,Lamar,"Beaumont, TX
@@ -21611,13 +21611,13 @@ Sloan Park",L   0 - 13,Nebraska,San Diego St.,13,0,1502.7,1339.67,4.38,-2.88,0
 10794,San Diego St.,2025-02-18,UC San Diego,"La Jolla, CA
 Triton Park",W   10 - 7,UC San Diego,San Diego St.,7,10,1366.54,1339.67,0.17,-2.88,0.6687000000000001,53.86,3.17,UC San Diego -3.17
 10795,San Diego St.,2025-02-20,Seattle University,"San Diego, CA
-Tony Gwynn Stadium",Bottom 6th2 - 1,San Diego St.,Seattle U,2,1,1339.67,1255.51,-2.88,-3.68,0.5459,61.88,1.16,San Diego St. -1.16
+Tony Gwynn Stadium",Top 8th3 - 1,San Diego St.,Seattle U,3,1,1339.67,1255.51,-2.88,-3.68,0.5459,61.88,1.16,San Diego St. -1.16
 10796,San Diego St.,2025-02-21,Utah,"San Diego, CA
 Tony Gwynn Stadium",9:00 PM,San Diego St.,Utah,0,0,1339.67,1473.18,-2.88,2.52,0.2238,31.68,-5.95,Utah -5.95
 10797,San Diego St.,2025-02-22,UC Santa Barbara,"San Diego, CA
 Tony Gwynn Stadium",9:00 PM,San Diego St.,UC Santa Barbara,0,0,1339.67,1535.5,-2.88,5.67,0.1225,24.47,-9.32,UC Santa Barbara -9.32
 10798,San Diego St.,2025-02-23,Pepperdine,"San Diego, CA
-Tony Gwynn Stadium",8:00 PM,San Diego St.,Pepperdine,0,0,1339.67,1249.42,-2.88,-2.75,0.4925,62.7,0.25,San Diego St. -0.25
+Tony Gwynn Stadium",8:00 PM,San Diego St.,Pepperdine,0,0,1339.67,1241.98,-2.88,-2.75,0.4925,63.7,0.28,San Diego St. -0.28
 10799,San Diego St.,2025-02-25,San Diego,"San Diego, CA
 Tony Gwynn Stadium",9:00 PM,San Diego St.,San Diego,0,0,1339.67,1444.6,-2.88,4.86,0.14400000000000002,35.34,-8.18,San Diego -8.18
 10800,San Diego St.,2025-02-28,Saint Mary's College,"Moraga, CA
@@ -21643,7 +21643,7 @@ Tony Gwynn Stadium",7:00 PM,San Diego St.,San Jose St.,0,0,1339.67,1431.6,-2.88,
 10810,San Diego St.,2025-03-16,San Jose State,"San Diego, CA
 Tony Gwynn Stadium",3:05 PM,San Diego St.,San Jose St.,0,0,1339.67,1431.6,-2.88,-0.32,0.3568,37.07,-2.95,San Jose St. -2.95
 10811,San Diego St.,2025-03-18,California Baptist,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,San Diego St.,0,0,1456.9,1339.67,1.64,-2.88,0.7390000000000001,66.26,5.01,California Baptist -5.01
+James W. Totman Stadium",9:00 PM,California Baptist,San Diego St.,0,0,1464.34,1339.67,1.64,-2.88,0.7390000000000001,67.21,5.04,California Baptist -5.04
 10812,San Diego St.,2025-03-21,Washington State,"Pullman, WA
 Bailey-Brayton Field",7:05 PM,Washington St.,San Diego St.,0,0,1309.82,1339.67,-2.38,-2.88,0.5288,45.71,0.37,Washington St. -0.37
 10813,San Diego St.,2025-03-22,Washington State,"Pullman, WA
@@ -21667,7 +21667,7 @@ Erdle Field",3:00 PM,Air Force,San Diego St.,0,0,1356.96,1339.67,0.05,-2.88,0.66
 10822,San Diego St.,2025-04-06,Air Force,"Colorado Springs, CO
 Erdle Field",2:00 PM,Air Force,San Diego St.,0,0,1356.96,1339.67,0.05,-2.88,0.6625,52.49,3.0,Air Force -3.0
 10823,San Diego St.,2025-04-08,California Baptist,"San Diego, CA
-Tony Gwynn Stadium",9:00 PM,San Diego St.,California Baptist,0,0,1339.67,1456.9,-2.88,1.64,0.261,33.74,-5.01,California Baptist -5.01
+Tony Gwynn Stadium",9:00 PM,San Diego St.,California Baptist,0,0,1339.67,1464.34,-2.88,1.64,0.261,32.79,-5.04,California Baptist -5.04
 10824,San Diego St.,2025-04-11,Fresno State,"San Diego, CA
 Tony Gwynn Stadium",9:00 PM,San Diego St.,Fresno St.,0,0,1339.67,1352.44,-2.88,0.66,0.3068,48.16,-3.6,Fresno St. -3.6
 10825,San Diego St.,2025-04-12,Fresno State,"San Diego, CA
@@ -21751,11 +21751,11 @@ Husky Ballpark",4:05 PM,Washington,Gonzaga,0,0,1409.72,1338.4,-0.66,0.26,0.4472,
 10864,Gonzaga,2025-03-17,Seattle University,"Bellevue, WA
 Bannerwood Park",4:00 PM,Seattle U,Gonzaga,0,0,1255.51,1338.4,-3.68,0.26,0.2876,38.29,-4.29,Gonzaga -4.29
 10865,Gonzaga,2025-03-21,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",6:00 PM,Pepperdine,Gonzaga,0,0,1249.42,1338.4,-2.75,0.26,0.3333,37.47,-3.39,Gonzaga -3.39
+Eddy D. Field Stadium",6:00 PM,Pepperdine,Gonzaga,0,0,1241.98,1338.4,-2.75,0.26,0.3333,36.47,-3.42,Gonzaga -3.42
 10866,Gonzaga,2025-03-22,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",6:00 PM,Pepperdine,Gonzaga,0,0,1249.42,1338.4,-2.75,0.26,0.3333,37.47,-3.39,Gonzaga -3.39
+Eddy D. Field Stadium",6:00 PM,Pepperdine,Gonzaga,0,0,1241.98,1338.4,-2.75,0.26,0.3333,36.47,-3.42,Gonzaga -3.42
 10867,Gonzaga,2025-03-23,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",4:00 PM,Pepperdine,Gonzaga,0,0,1249.42,1338.4,-2.75,0.26,0.3333,37.47,-3.39,Gonzaga -3.39
+Eddy D. Field Stadium",4:00 PM,Pepperdine,Gonzaga,0,0,1241.98,1338.4,-2.75,0.26,0.3333,36.47,-3.42,Gonzaga -3.42
 10868,Gonzaga,2025-03-25,Washington State,"Pullman, WA
 Bailey-Brayton Field",9:05 PM,Washington St.,Gonzaga,0,0,1309.82,1338.4,-2.38,0.26,0.3525,45.9,-2.76,Gonzaga -2.76
 10869,Gonzaga,2025-03-28,Pacific,"Spokane, WA
@@ -22478,9 +22478,9 @@ Blair Field",L   3 - 4,Long Beach St.,Northwestern,3,4,1330.1,1344.53,-1.03,-1
 11226,Long Beach St.,2025-02-18,Loyola-Marymount,"Los Angeles, CA
 George C. Page Stadium",L   4 - 7,Loyola-Marymount,Long Beach St.,7,4,1387.5,1330.1,-4.87,-1.03,0.2923,58.19,-3.59,Long Beach St. -3.59
 11227,Long Beach St.,2025-02-21,California Baptist,"San Diego, CA
-Tony Gwynn Stadium",4:00 PM,Long Beach St.,California Baptist,0,0,1330.1,1456.9,-1.03,1.64,0.35100000000000003,32.52,-3.19,California Baptist -3.19
+Tony Gwynn Stadium",4:00 PM,Long Beach St.,California Baptist,0,0,1330.1,1464.34,-1.03,1.64,0.35100000000000003,31.59,-3.22,California Baptist -3.22
 11228,Long Beach St.,2025-02-22,Pepperdine,"La Jolla, CA
-Triton Park",4:00 PM,Pepperdine,Long Beach St.,0,0,1249.42,1330.1,-2.75,-1.03,0.4023,38.59,-2.06,Long Beach St. -2.06
+Triton Park",4:00 PM,Pepperdine,Long Beach St.,0,0,1241.98,1330.1,-2.75,-1.03,0.4023,37.58,-2.09,Long Beach St. -2.09
 11229,Long Beach St.,2025-02-23,Seattle University,"La Jolla, CA
 Triton Park",3:00 PM,Long Beach St.,Seattle U,0,0,1330.1,1255.51,-1.03,-3.68,0.648,60.57,2.97,Long Beach St. -2.97
 11230,Long Beach St.,2025-02-24,Utah,"San Diego, CA
@@ -22500,7 +22500,7 @@ Cicerone Field at Anteater Ballpark",4:00 PM,UC Irvine,Long Beach St.,0,0,1487.1
 11237,Long Beach St.,2025-03-09,UC Irvine,"Irvine, CA
 Cicerone Field at Anteater Ballpark",4:00 PM,UC Irvine,Long Beach St.,0,0,1487.18,1330.1,3.81,-1.03,0.753,71.18,5.48,UC Irvine -5.48
 11238,Long Beach St.,2025-03-11,Pepperdine,"Long Beach, CA
-Blair Field",9:00 PM,Long Beach St.,Pepperdine,0,0,1330.1,1249.42,-1.03,-2.75,0.5977,61.41,2.06,Long Beach St. -2.06
+Blair Field",9:00 PM,Long Beach St.,Pepperdine,0,0,1330.1,1241.98,-1.03,-2.75,0.5977,62.42,2.09,Long Beach St. -2.09
 11239,Long Beach St.,2025-03-14,Cal Poly,"Long Beach, CA
 Blair Field",9:00 PM,Long Beach St.,Cal Poly,0,0,1330.1,1415.44,-1.03,0.94,0.3885,37.96,-2.33,Cal Poly -2.33
 11240,Long Beach St.,2025-03-15,Cal Poly,"Long Beach, CA
@@ -22568,7 +22568,7 @@ Riverside Sports Complex",9:00 PM,UC Riverside,Long Beach St.,0,0,1296.2,1330.1,
 11271,Long Beach St.,2025-05-11,UC Riverside,"Riverside, CA
 Riverside Sports Complex",4:00 PM,UC Riverside,Long Beach St.,0,0,1296.2,1330.1,-2.57,-1.03,0.41229999999999994,45.14,-1.69,Long Beach St. -1.69
 11272,Long Beach St.,2025-05-13,California Baptist,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,Long Beach St.,0,0,1456.9,1330.1,1.64,-1.03,0.649,67.48,3.19,California Baptist -3.19
+James W. Totman Stadium",9:00 PM,California Baptist,Long Beach St.,0,0,1464.34,1330.1,1.64,-1.03,0.649,68.41,3.22,California Baptist -3.22
 11273,Long Beach St.,2025-05-15,Oregon State,"Corvallis, OR
 Goss Stadium at Coleman Field",8:35 PM,Oregon St.,Long Beach St.,0,0,1644.7,1330.1,4.76,-1.03,0.7914,85.95,6.87,Oregon St. -6.87
 11274,Long Beach St.,2025-05-16,Oregon State,"Corvallis, OR
@@ -24123,11 +24123,11 @@ John Smith Field",4:00 PM,Sacramento St.,Seattle U,0,0,1311.83,1255.51,-2.08,-3.
 12049,Sacramento St.,2025-04-15,UC Davis,"Davis, CA
 Dobbins Stadium",9:00 PM,UC Davis,Sacramento St.,0,0,1413.16,1311.83,0.59,-2.08,0.649,64.18,3.1,UC Davis -3.1
 12050,Sacramento St.,2025-04-17,California Baptist,"Sacramento, CA
-John Smith Field",9:00 PM,Sacramento St.,California Baptist,0,0,1311.83,1456.9,-2.08,1.64,0.2981,30.26,-4.31,California Baptist -4.31
+John Smith Field",9:00 PM,Sacramento St.,California Baptist,0,0,1311.83,1464.34,-2.08,1.64,0.2981,29.36,-4.34,California Baptist -4.34
 12051,Sacramento St.,2025-04-18,California Baptist,"Sacramento, CA
-John Smith Field",7:00 PM,Sacramento St.,California Baptist,0,0,1311.83,1456.9,-2.08,1.64,0.2981,30.26,-4.31,California Baptist -4.31
+John Smith Field",7:00 PM,Sacramento St.,California Baptist,0,0,1311.83,1464.34,-2.08,1.64,0.2981,29.36,-4.34,California Baptist -4.34
 12052,Sacramento St.,2025-04-19,California Baptist,"Sacramento, CA
-John Smith Field",3:00 PM,Sacramento St.,California Baptist,0,0,1311.83,1456.9,-2.08,1.64,0.2981,30.26,-4.31,California Baptist -4.31
+John Smith Field",3:00 PM,Sacramento St.,California Baptist,0,0,1311.83,1464.34,-2.08,1.64,0.2981,29.36,-4.34,California Baptist -4.34
 12053,Sacramento St.,2025-04-22,Nevada,"Reno, NV
 William Peccole Park",9:05 PM,Nevada,Sacramento St.,0,0,1377.22,1311.83,-1.93,-2.08,0.5085999999999999,59.3,0.43,Nevada -0.43
 12054,Sacramento St.,2025-04-25,UC Riverside,"Sacramento, CA
@@ -25648,13 +25648,13 @@ Bruce Hurst Field",2:05 PM,Utah Tech,UC Riverside,0,0,1265.18,1296.2,-4.44,-2.57
 12810,UC Riverside,2025-02-26,Loyola-Marymount,"Riverside, CA
 Riverside Sports Complex",9:30 PM,UC Riverside,Loyola-Marymount,0,0,1296.2,1387.5,-2.57,-4.87,0.6294,37.16,1.91,UC Riverside -1.91
 12811,UC Riverside,2025-02-28,California Baptist,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,UC Riverside,0,0,1456.9,1296.2,1.64,-2.57,0.725,71.61,4.86,California Baptist -4.86
+James W. Totman Stadium",9:00 PM,California Baptist,UC Riverside,0,0,1464.34,1296.2,1.64,-2.57,0.725,72.47,4.88,California Baptist -4.88
 12812,UC Riverside,2025-03-01,Utah,"Riverside, CA
 Riverside Sports Complex",3:00 PM,UC Riverside,Utah,0,0,1296.2,1473.18,-2.57,2.52,0.2365,26.53,-5.79,Utah -5.79
 12813,UC Riverside,2025-03-02,Utah,"Riverside, CA
 Riverside Sports Complex",2:00 PM,UC Riverside,Utah,0,0,1296.2,1473.18,-2.57,2.52,0.2365,26.53,-5.79,Utah -5.79
 12814,UC Riverside,2025-03-02,California Baptist,"Riverside, CA
-Riverside Sports Complex",8:00 PM,UC Riverside,California Baptist,0,0,1296.2,1456.9,-2.57,1.64,0.275,28.39,-4.86,California Baptist -4.86
+Riverside Sports Complex",8:00 PM,UC Riverside,California Baptist,0,0,1296.2,1464.34,-2.57,1.64,0.275,27.53,-4.88,California Baptist -4.88
 12815,UC Riverside,2025-03-05,Michigan,"Riverside, CA
 Riverside Sports Complex",9:30 PM,UC Riverside,Michigan,0,0,1296.2,1521.46,-2.57,3.8,0.18739999999999998,21.47,-7.23,Michigan -7.23
 12816,UC Riverside,2025-03-07,Hawaii,"Riverside, CA
@@ -25714,7 +25714,7 @@ John Smith Field",9:00 PM,Sacramento St.,UC Riverside,0,0,1311.83,1296.2,-2.08,-
 12843,UC Riverside,2025-04-27,Sacramento State,"Sacramento, CA
 John Smith Field",4:00 PM,Sacramento St.,UC Riverside,0,0,1311.83,1296.2,-2.08,-2.57,0.5282,52.25,0.56,Sacramento St. -0.56
 12844,UC Riverside,2025-04-28,California Baptist,"Riverside, CA
-Riverside Sports Complex",9:30 PM,UC Riverside,California Baptist,0,0,1296.2,1456.9,-2.57,1.64,0.275,28.39,-4.86,California Baptist -4.86
+Riverside Sports Complex",9:30 PM,UC Riverside,California Baptist,0,0,1296.2,1464.34,-2.57,1.64,0.275,27.53,-4.88,California Baptist -4.88
 12845,UC Riverside,2025-04-29,San Diego State,"Riverside, CA
 Riverside Sports Complex",9:30 PM,UC Riverside,San Diego St.,0,0,1296.2,1339.67,-2.57,-2.88,0.5178,43.78,0.12,UC Riverside -0.12
 12846,UC Riverside,2025-05-02,Cal State Northridge,"Northridge, CA
@@ -26360,9 +26360,9 @@ Hardt Field",9:30 PM,CSU Bakersfield,UC Davis,0,0,1289.08,1413.16,-5.42,0.59,0.2
 13166,CSU Bakersfield,2025-04-19,UC Davis,"Bakersfield, CA
 Hardt Field",4:00 PM,CSU Bakersfield,UC Davis,0,0,1289.08,1413.16,-5.42,0.59,0.2004,32.87,-6.52,UC Davis -6.52
 13167,CSU Bakersfield,2025-04-21,Pepperdine,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,CSU Bakersfield,0,0,1249.42,1289.08,-2.75,-5.42,0.649,44.32,2.5,Pepperdine -2.5
+Eddy D. Field Stadium",TBA,Pepperdine,CSU Bakersfield,0,0,1241.98,1289.08,-2.75,-5.42,0.649,43.26,2.47,Pepperdine -2.47
 13168,CSU Bakersfield,2025-04-22,Pepperdine,"Bakersfield, CA
-Hardt Field",9:30 PM,CSU Bakersfield,Pepperdine,0,0,1289.08,1249.42,-5.42,-2.75,0.35100000000000003,55.68,-2.5,Pepperdine -2.5
+Hardt Field",9:30 PM,CSU Bakersfield,Pepperdine,0,0,1289.08,1241.98,-5.42,-2.75,0.35100000000000003,56.74,-2.47,Pepperdine -2.47
 13169,CSU Bakersfield,2025-04-25,Hawaii,"Honolulu, HI
 Les Murakami Stadium",11:59 PM,Hawaii,CSU Bakersfield,0,0,1521.18,1289.08,2.89,-5.42,0.8714,79.18,9.19,Hawaii -9.19
 13170,CSU Bakersfield,2025-04-26,Hawaii,"Honolulu, HI
@@ -26955,7 +26955,7 @@ Dante Benedetti Diamond",4:00 PM,San Francisco,Nevada,0,0,1282.99,1377.22,-3.41,
 13462,San Francisco,2025-03-09,Nevada,"San Francisco, CA
 Dante Benedetti Diamond",4:00 PM,San Francisco,Nevada,0,0,1282.99,1377.22,-3.41,-1.93,0.4156,36.76,-1.88,Nevada -1.88
 13463,San Francisco,2025-03-11,California Baptist,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,San Francisco,0,0,1456.9,1282.99,1.64,-3.41,0.7618,73.13,5.74,California Baptist -5.74
+James W. Totman Stadium",9:00 PM,California Baptist,San Francisco,0,0,1464.34,1282.99,1.64,-3.41,0.7618,73.96,5.77,California Baptist -5.77
 13464,San Francisco,2025-03-12,UC Riverside,"Riverside, CA
 Riverside Sports Complex",9:30 PM,UC Riverside,San Francisco,0,0,1296.2,1282.99,-2.57,-3.41,0.5482,51.9,0.9,UC Riverside -0.9
 13465,San Francisco,2025-03-14,Creighton,"San Francisco, CA
@@ -27005,11 +27005,11 @@ Klein Family Field",4:00 PM,Pacific,San Francisco,0,0,1276.81,1282.99,-4.26,-3.4
 13487,San Francisco,2025-04-22,San Jose State,"San Francisco, CA
 Dante Benedetti Diamond",5:00 PM,San Francisco,San Jose St.,0,0,1282.99,1431.6,-3.41,-0.32,0.3293,29.83,-3.7,San Jose St. -3.7
 13488,San Francisco,2025-04-25,Pepperdine,"San Francisco, CA
-Dante Benedetti Diamond",5:00 PM,San Francisco,Pepperdine,0,0,1282.99,1249.42,-3.41,-2.75,0.4621,54.82,-0.52,Pepperdine -0.52
+Dante Benedetti Diamond",5:00 PM,San Francisco,Pepperdine,0,0,1282.99,1241.98,-3.41,-2.75,0.4621,55.87,-0.48,Pepperdine -0.48
 13489,San Francisco,2025-04-26,Pepperdine,"San Francisco, CA
-Dante Benedetti Diamond",4:00 PM,San Francisco,Pepperdine,0,0,1282.99,1249.42,-3.41,-2.75,0.4621,54.82,-0.52,Pepperdine -0.52
+Dante Benedetti Diamond",4:00 PM,San Francisco,Pepperdine,0,0,1282.99,1241.98,-3.41,-2.75,0.4621,55.87,-0.48,Pepperdine -0.48
 13490,San Francisco,2025-04-27,Pepperdine,"San Francisco, CA
-Dante Benedetti Diamond",5:00 PM,San Francisco,Pepperdine,0,0,1282.99,1249.42,-3.41,-2.75,0.4621,54.82,-0.52,Pepperdine -0.52
+Dante Benedetti Diamond",5:00 PM,San Francisco,Pepperdine,0,0,1282.99,1241.98,-3.41,-2.75,0.4621,55.87,-0.48,Pepperdine -0.48
 13491,San Francisco,2025-04-29,California,"Berkeley, CA
 Evans Diamond",9:00 PM,California,San Francisco,0,0,1503.08,1282.99,3.47,-3.41,0.8298000000000001,78.02,7.72,California -7.72
 13492,San Francisco,2025-05-02,San Diego,"San Diego, CA
@@ -27429,11 +27429,11 @@ George C. Page Stadium",4:00 PM,Loyola-Marymount,Pacific,0,0,1387.5,1276.81,-4.8
 13699,Pacific,2025-04-08,California,"Berkeley, CA
 Evans Diamond",9:00 PM,California,Pacific,0,0,1503.08,1276.81,3.47,-4.26,0.8556999999999999,78.63,8.59,California -8.59
 13700,Pacific,2025-04-11,California Baptist,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,Pacific,0,0,1456.9,1276.81,1.64,-4.26,0.7955,73.82,6.61,California Baptist -6.61
+James W. Totman Stadium",9:00 PM,California Baptist,Pacific,0,0,1464.34,1276.81,1.64,-4.26,0.7955,74.64,6.64,California Baptist -6.64
 13701,Pacific,2025-04-12,California Baptist,"Riverside, CA
-James W. Totman Stadium",8:00 PM,California Baptist,Pacific,0,0,1456.9,1276.81,1.64,-4.26,0.7955,73.82,6.61,California Baptist -6.61
+James W. Totman Stadium",8:00 PM,California Baptist,Pacific,0,0,1464.34,1276.81,1.64,-4.26,0.7955,74.64,6.64,California Baptist -6.64
 13702,Pacific,2025-04-13,California Baptist,"Riverside, CA
-James W. Totman Stadium",3:00 PM,California Baptist,Pacific,0,0,1456.9,1276.81,1.64,-4.26,0.7955,73.82,6.61,California Baptist -6.61
+James W. Totman Stadium",3:00 PM,California Baptist,Pacific,0,0,1464.34,1276.81,1.64,-4.26,0.7955,74.64,6.64,California Baptist -6.64
 13703,Pacific,2025-04-15,Cal State Bakersfield,"Stockton, CA
 Klein Family Field",8:05 PM,Pacific,CSU Bakersfield,0,0,1276.81,1289.08,-4.26,-5.42,0.5664,48.23,1.11,Pacific -1.11
 13704,Pacific,2025-04-17,San Francisco,"Stockton, CA
@@ -27459,11 +27459,11 @@ Klein Family Field",4:00 PM,Pacific,Saint Mary's (CA),0,0,1276.81,1468.82,-4.26,
 13714,Pacific,2025-05-06,California,"Stockton, CA
 Klein Family Field",9:00 PM,Pacific,California,0,0,1276.81,1503.08,-4.26,3.47,0.14429999999999998,21.37,-8.59,California -8.59
 13715,Pacific,2025-05-09,Pepperdine,"Stockton, CA
-Klein Family Field",9:00 PM,Pacific,Pepperdine,0,0,1276.81,1249.42,-4.26,-2.75,0.4139,53.93,-1.39,Pepperdine -1.39
+Klein Family Field",9:00 PM,Pacific,Pepperdine,0,0,1276.81,1241.98,-4.26,-2.75,0.4139,55.0,-1.36,Pepperdine -1.36
 13716,Pacific,2025-05-10,Pepperdine,"Stockton, CA
-Klein Family Field",9:00 PM,Pacific,Pepperdine,0,0,1276.81,1249.42,-4.26,-2.75,0.4139,53.93,-1.39,Pepperdine -1.39
+Klein Family Field",9:00 PM,Pacific,Pepperdine,0,0,1276.81,1241.98,-4.26,-2.75,0.4139,55.0,-1.36,Pepperdine -1.36
 13717,Pacific,2025-05-11,Pepperdine,"Stockton, CA
-Klein Family Field",4:00 PM,Pacific,Pepperdine,0,0,1276.81,1249.42,-4.26,-2.75,0.4139,53.93,-1.39,Pepperdine -1.39
+Klein Family Field",4:00 PM,Pacific,Pepperdine,0,0,1276.81,1241.98,-4.26,-2.75,0.4139,55.0,-1.36,Pepperdine -1.36
 13718,Pacific,2025-05-13,Fresno State,"Fresno, CA
 Pete Beiden Field at Bob Bennett Stadium",8:05 PM,Fresno St.,Pacific,0,0,1352.44,1276.81,0.66,-4.26,0.7564,60.72,5.24,Fresno St. -5.24
 13719,Pacific,2025-05-15,San Diego,"San Diego, CA
@@ -28647,11 +28647,11 @@ Bruce Hurst Field",3:00 PM,Utah Tech,CSU Bakersfield,0,0,1265.18,1289.08,-4.44,-
 14305,Utah Tech,2025-03-18,BYU,"Provo, UT
 Larry H. Miller Field",6:00 PM,BYU,Utah Tech,0,0,1382.5,1265.18,-1.02,-4.44,0.6873,66.27,3.91,BYU -3.91
 14306,Utah Tech,2025-03-21,California Baptist,"Riverside, CA
-James W. Totman Stadium",9:00 PM,California Baptist,Utah Tech,0,0,1456.9,1265.18,1.64,-4.44,0.8022,75.09,6.83,California Baptist -6.83
+James W. Totman Stadium",9:00 PM,California Baptist,Utah Tech,0,0,1464.34,1265.18,1.64,-4.44,0.8022,75.89,6.86,California Baptist -6.86
 14307,Utah Tech,2025-03-22,California Baptist,"Riverside, CA
-James W. Totman Stadium",8:00 PM,California Baptist,Utah Tech,0,0,1456.9,1265.18,1.64,-4.44,0.8022,75.09,6.83,California Baptist -6.83
+James W. Totman Stadium",8:00 PM,California Baptist,Utah Tech,0,0,1464.34,1265.18,1.64,-4.44,0.8022,75.89,6.86,California Baptist -6.86
 14308,Utah Tech,2025-03-23,California Baptist,"Riverside, CA
-James W. Totman Stadium",3:00 PM,California Baptist,Utah Tech,0,0,1456.9,1265.18,1.64,-4.44,0.8022,75.09,6.83,California Baptist -6.83
+James W. Totman Stadium",3:00 PM,California Baptist,Utah Tech,0,0,1464.34,1265.18,1.64,-4.44,0.8022,75.89,6.86,California Baptist -6.86
 14309,Utah Tech,2025-03-25,Utah,"Saint George, UT
 Bruce Hurst Field",6:05 PM,Utah Tech,Utah,0,0,1265.18,1473.18,-4.44,2.52,0.16760000000000003,23.19,-7.76,Utah -7.76
 14310,Utah Tech,2025-04-01,Utah,"Salt Lake City, UT
@@ -29205,7 +29205,7 @@ Goodwin Field",8:00 PM,Cal St. Fullerton,Oregon St.,0,0,1259.01,1644.7,-2.85,4.7
 14584,Cal St. Fullerton,2025-04-13,Oregon State,"Fullerton, CA
 Goodwin Field",4:00 PM,Cal St. Fullerton,Oregon St.,0,0,1259.01,1644.7,-2.85,4.76,0.1478,9.8,-8.82,Oregon St. -8.82
 14585,Cal St. Fullerton,2025-04-15,Pepperdine,"Fullerton, CA
-Goodwin Field",9:00 PM,Cal St. Fullerton,Pepperdine,0,0,1259.01,1249.42,-2.85,-2.75,0.49420000000000003,51.38,-0.06,Pepperdine -0.06
+Goodwin Field",9:00 PM,Cal St. Fullerton,Pepperdine,0,0,1259.01,1241.98,-2.85,-2.75,0.49420000000000003,52.45,-0.03,Pepperdine -0.03
 14586,Cal St. Fullerton,2025-04-17,Long Beach State,"Fullerton, CA
 Goodwin Field",9:00 PM,Cal St. Fullerton,Long Beach St.,0,0,1259.01,1330.1,-2.85,-1.03,0.3967,39.91,-2.12,Long Beach St. -2.12
 14587,Cal St. Fullerton,2025-04-18,Long Beach State,"Fullerton, CA
@@ -29449,7 +29449,7 @@ George C. Page Stadium",L   6 - 12,Loyola-Marymount,Seattle U,12,6,1387.5,1255
 14706,Seattle U,2025-02-18,,"Bellevue, WA
 Bannerwood Park",Postponed,Seattle U,Non Div I - British Columbia,0,0,1255.51,,-3.68,-4.87,0.5681,,,Seattle U nan
 14707,Seattle U,2025-02-20,San Diego State,"San Diego, CA
-Tony Gwynn Stadium",End 6th,San Diego St.,Seattle U,2,1,1339.67,1255.51,-2.88,-3.68,0.5459,61.88,1.16,San Diego St. -1.16
+Tony Gwynn Stadium",Top 8th1 - 3,San Diego St.,Seattle U,3,1,1339.67,1255.51,-2.88,-3.68,0.5459,61.88,1.16,San Diego St. -1.16
 14708,Seattle U,2025-02-21,UC Santa Barbara,"La Jolla, CA
 Triton Park",9:00 PM,UC Santa Barbara,Seattle U,0,0,1535.5,1255.51,5.67,-3.68,0.8959,83.37,10.35,UC Santa Barbara -10.35
 14709,Seattle U,2025-02-22,Utah,"San Diego, CA
@@ -29533,11 +29533,11 @@ Bruce Hurst Field",2:05 PM,Utah Tech,Seattle U,0,0,1265.18,1255.51,-4.44,-3.68,0
 14748,Seattle U,2025-05-06,Washington State,"Bellevue, WA
 Bannerwood Park",2:00 PM,Seattle U,Washington St.,0,0,1255.51,1309.82,-3.68,-2.38,0.4257,42.25,-1.53,Washington St. -1.53
 14749,Seattle U,2025-05-09,California Baptist,"Bellevue, WA
-Bannerwood Park",2:00 PM,Seattle U,California Baptist,0,0,1255.51,1456.9,-3.68,1.64,0.2271,23.88,-6.1,California Baptist -6.1
+Bannerwood Park",2:00 PM,Seattle U,California Baptist,0,0,1255.51,1464.34,-3.68,1.64,0.2271,23.11,-6.13,California Baptist -6.13
 14750,Seattle U,2025-05-10,California Baptist,"Bellevue, WA
-Bannerwood Park",TBA,Seattle U,California Baptist,0,0,1255.51,1456.9,-3.68,1.64,0.2271,23.88,-6.1,California Baptist -6.1
+Bannerwood Park",TBA,Seattle U,California Baptist,0,0,1255.51,1464.34,-3.68,1.64,0.2271,23.11,-6.13,California Baptist -6.13
 14751,Seattle U,2025-05-11,California Baptist,"Bellevue, WA
-Bannerwood Park",3:00 PM,Seattle U,California Baptist,0,0,1255.51,1456.9,-3.68,1.64,0.2271,23.88,-6.1,California Baptist -6.1
+Bannerwood Park",3:00 PM,Seattle U,California Baptist,0,0,1255.51,1464.34,-3.68,1.64,0.2271,23.11,-6.13,California Baptist -6.13
 14752,Seattle U,2025-05-15,UTA,"Arlington, TX
 Clay Gould Ballpark",7:00 PM,UT Arlington,Seattle U,0,0,1341.71,1255.51,-1.06,-3.68,0.6464,62.16,2.98,UT Arlington -2.98
 14753,Seattle U,2025-05-16,UTA,"Arlington, TX
@@ -30112,544 +30112,544 @@ Spuhler Field",3:00 PM,George Mason,Fordham,0,0,1280.92,1249.64,-3.0,-5.9,0.6609
 Spuhler Field",2:00 PM,George Mason,Fordham,0,0,1280.92,1249.64,-3.0,-5.9,0.6609999999999999,54.49,3.03,George Mason -3.03
 15038,Fordham,2025-05-17,George Mason,"Fairfax, VA
 Spuhler Field",1:00 PM,George Mason,Fordham,0,0,1280.92,1249.64,-3.0,-5.9,0.6609999999999999,54.49,3.03,George Mason -3.03
-15039,Pepperdine,2025-02-14,Utah,"Malibu, CA
-Eddy D. Field Stadium",L   1 - 3 (10 Innings),Pepperdine,Utah,1,3,1249.42,1473.18,-2.75,2.52,0.2291,21.62,-6.12,Utah -6.12
-15040,Pepperdine,2025-02-15,Utah,"Malibu, CA
-Eddy D. Field Stadium",L   2 - 11,Pepperdine,Utah,2,11,1249.42,1473.18,-2.75,2.52,0.2291,21.62,-6.12,Utah -6.12
-15041,Pepperdine,2025-02-16,Utah,"Malibu, CA
-Eddy D. Field Stadium",L   4 - 10,Pepperdine,Utah,4,10,1249.42,1473.18,-2.75,2.52,0.2291,21.62,-6.12,Utah -6.12
-15042,Pepperdine,2025-02-17,Utah,"Malibu, CA
-Eddy D. Field Stadium",L   1 - 6,Pepperdine,Utah,1,6,1249.42,1473.18,-2.75,2.52,0.2291,21.62,-6.12,Utah -6.12
-15043,Pepperdine,2025-02-20,California Baptist,"Riverside, CA
-James W. Totman Stadium",Bottom 6th2 - 10,California Baptist,Pepperdine,10,2,1456.9,1249.42,1.64,-2.75,0.7332,76.75,5.19,California Baptist -5.19
-15044,Pepperdine,2025-02-21,UC San Diego,"La Jolla, CA
-Triton Park",9:00 PM,UC San Diego,Pepperdine,0,0,1366.54,1249.42,0.17,-2.75,0.662,66.24,3.41,UC San Diego -3.41
-15045,Pepperdine,2025-02-22,Long Beach State,"La Jolla, CA
-Triton Park",4:00 PM,Pepperdine,Long Beach St.,0,0,1249.42,1330.1,-2.75,-1.03,0.4023,38.59,-2.06,Long Beach St. -2.06
-15046,Pepperdine,2025-02-23,San Diego State,"San Diego, CA
-Tony Gwynn Stadium",8:00 PM,San Diego St.,Pepperdine,0,0,1339.67,1249.42,-2.88,-2.75,0.4925,62.7,0.25,San Diego St. -0.25
-15047,Pepperdine,2025-02-25,UC Santa Barbara,"Malibu, CA
-Eddy D. Field Stadium",5:00 PM,Pepperdine,UC Santa Barbara,0,0,1249.42,1535.5,-2.75,5.67,0.1258,16.15,-9.44,UC Santa Barbara -9.44
-15048,Pepperdine,2025-02-28,Tulane,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Tulane,0,0,1249.42,1499.97,-2.75,2.81,0.2175,19.12,-6.49,Tulane -6.49
-15049,Pepperdine,2025-03-01,Tulane,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Tulane,0,0,1249.42,1499.97,-2.75,2.81,0.2175,19.12,-6.49,Tulane -6.49
-15050,Pepperdine,2025-03-02,Tulane,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Tulane,0,0,1249.42,1499.97,-2.75,2.81,0.2175,19.12,-6.49,Tulane -6.49
-15051,Pepperdine,2025-03-04,Grand Canyon,"Phoenix, AZ
-Brazell Field at GCU Ballpark",8:00 PM,Grand Canyon,Pepperdine,0,0,1455.86,1249.42,2.51,-2.75,0.7705,76.64,6.06,Grand Canyon -6.06
-15052,Pepperdine,2025-03-06,Arizona,"Tucson, AZ
-Hi Corbett Field",8:00 PM,Arizona,Pepperdine,0,0,1492.66,1249.42,3.81,-2.75,0.8190999999999999,80.22,7.47,Arizona -7.47
-15053,Pepperdine,2025-03-07,Arizona,"Tucson, AZ
-Hi Corbett Field",8:00 PM,Arizona,Pepperdine,0,0,1492.66,1249.42,3.81,-2.75,0.8190999999999999,80.22,7.47,Arizona -7.47
-15054,Pepperdine,2025-03-08,Arizona,"Tucson, AZ
-Hi Corbett Field",8:00 PM,Arizona,Pepperdine,0,0,1492.66,1249.42,3.81,-2.75,0.8190999999999999,80.22,7.47,Arizona -7.47
-15055,Pepperdine,2025-03-09,Arizona,"Tucson, AZ
-Hi Corbett Field",3:00 PM,Arizona,Pepperdine,0,0,1492.66,1249.42,3.81,-2.75,0.8190999999999999,80.22,7.47,Arizona -7.47
-15056,Pepperdine,2025-03-11,Long Beach State,"Long Beach, CA
-Blair Field",9:00 PM,Long Beach St.,Pepperdine,0,0,1330.1,1249.42,-1.03,-2.75,0.5977,61.41,2.06,Long Beach St. -2.06
-15057,Pepperdine,2025-03-18,Nebraska,"Malibu, CA
-Eddy D. Field Stadium",2:30 PM,Pepperdine,Nebraska,0,0,1249.42,1502.7,-2.75,4.38,0.16219999999999998,18.88,-8.06,Nebraska -8.06
-15058,Pepperdine,2025-03-19,Nebraska,"Malibu, CA
-Eddy D. Field Stadium",2:30 PM,Pepperdine,Nebraska,0,0,1249.42,1502.7,-2.75,4.38,0.16219999999999998,18.88,-8.06,Nebraska -8.06
-15059,Pepperdine,2025-03-21,Gonzaga,"Malibu, CA
-Eddy D. Field Stadium",6:00 PM,Pepperdine,Gonzaga,0,0,1249.42,1338.4,-2.75,0.26,0.3333,37.47,-3.39,Gonzaga -3.39
-15060,Pepperdine,2025-03-22,Gonzaga,"Malibu, CA
-Eddy D. Field Stadium",6:00 PM,Pepperdine,Gonzaga,0,0,1249.42,1338.4,-2.75,0.26,0.3333,37.47,-3.39,Gonzaga -3.39
-15061,Pepperdine,2025-03-23,Gonzaga,"Malibu, CA
-Eddy D. Field Stadium",4:00 PM,Pepperdine,Gonzaga,0,0,1249.42,1338.4,-2.75,0.26,0.3333,37.47,-3.39,Gonzaga -3.39
-15062,Pepperdine,2025-03-25,Cal Poly,"Malibu, CA
-Eddy D. Field Stadium",5:30 PM,Pepperdine,Cal Poly,0,0,1249.42,1415.44,-2.75,0.94,0.2995,27.77,-4.36,Cal Poly -4.36
-15063,Pepperdine,2025-03-28,San Diego,"San Diego, CA
-Fowler Park",9:00 PM,San Diego,Pepperdine,0,0,1444.6,1249.42,4.86,-2.75,0.8522,75.46,8.37,San Diego -8.37
-15064,Pepperdine,2025-03-29,San Diego,"San Diego, CA
-Fowler Park",8:00 PM,San Diego,Pepperdine,0,0,1444.6,1249.42,4.86,-2.75,0.8522,75.46,8.37,San Diego -8.37
-15065,Pepperdine,2025-03-30,San Diego,"San Diego, CA
-Fowler Park",4:00 PM,San Diego,Pepperdine,0,0,1444.6,1249.42,4.86,-2.75,0.8522,75.46,8.37,San Diego -8.37
-15066,Pepperdine,2025-04-01,UCLA,"Los Angeles, CA
-Jackie Robinson Stadium",9:00 PM,UCLA,Pepperdine,0,0,1448.98,1249.42,0.18,-2.75,0.6625,75.93,3.71,UCLA -3.71
-15067,Pepperdine,2025-04-04,Santa Clara,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Santa Clara,0,0,1249.42,1402.1,-2.75,-0.67,0.3825,29.34,-2.7,Santa Clara -2.7
-15068,Pepperdine,2025-04-05,Santa Clara,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Santa Clara,0,0,1249.42,1402.1,-2.75,-0.67,0.3825,29.34,-2.7,Santa Clara -2.7
-15069,Pepperdine,2025-04-06,Santa Clara,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Santa Clara,0,0,1249.42,1402.1,-2.75,-0.67,0.3825,29.34,-2.7,Santa Clara -2.7
-15070,Pepperdine,2025-04-08,UC Santa Barbara,"Santa Barbara, CA
-Caesar Uyesaka Stadium",7:35 PM,UC Santa Barbara,Pepperdine,0,0,1535.5,1249.42,5.67,-2.75,0.8742,83.85,9.44,UC Santa Barbara -9.44
-15071,Pepperdine,2025-04-11,Portland,"Portland, OR
-Joe Etzel Field",9:00 PM,Portland,Pepperdine,0,0,1442.4,1249.42,2.17,-2.75,0.7564,75.23,5.68,Portland -5.68
-15072,Pepperdine,2025-04-12,Portland,"Portland, OR
-Joe Etzel Field",6:00 PM,Portland,Pepperdine,0,0,1442.4,1249.42,2.17,-2.75,0.7564,75.23,5.68,Portland -5.68
-15073,Pepperdine,2025-04-13,Portland,"Portland, OR
-Joe Etzel Field",4:00 PM,Portland,Pepperdine,0,0,1442.4,1249.42,2.17,-2.75,0.7564,75.23,5.68,Portland -5.68
-15074,Pepperdine,2025-04-15,Cal State Fullerton,"Fullerton, CA
-Goodwin Field",9:00 PM,Cal St. Fullerton,Pepperdine,0,0,1259.01,1249.42,-2.85,-2.75,0.49420000000000003,51.38,-0.06,Pepperdine -0.06
-15075,Pepperdine,2025-04-17,Saint Mary's College,"Malibu, CA
-Eddy D. Field Stadium",6:00 PM,Pepperdine,Saint Mary's (CA),0,0,1249.42,1468.82,-2.75,2.4,0.23399999999999999,22.05,-5.99,Saint Mary's (CA) -5.99
-15076,Pepperdine,2025-04-18,Saint Mary's College,"Malibu, CA
-Eddy D. Field Stadium",4:00 PM,Pepperdine,Saint Mary's (CA),0,0,1249.42,1468.82,-2.75,2.4,0.23399999999999999,22.05,-5.99,Saint Mary's (CA) -5.99
-15077,Pepperdine,2025-04-19,Saint Mary's College,"Malibu, CA
-Eddy D. Field Stadium",4:00 PM,Pepperdine,Saint Mary's (CA),0,0,1249.42,1468.82,-2.75,2.4,0.23399999999999999,22.05,-5.99,Saint Mary's (CA) -5.99
-15078,Pepperdine,2025-04-21,Cal State Bakersfield,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,CSU Bakersfield,0,0,1249.42,1289.08,-2.75,-5.42,0.649,44.32,2.5,Pepperdine -2.5
-15079,Pepperdine,2025-04-22,Cal State Bakersfield,"Bakersfield, CA
-Hardt Field",9:30 PM,CSU Bakersfield,Pepperdine,0,0,1289.08,1249.42,-5.42,-2.75,0.35100000000000003,55.68,-2.5,Pepperdine -2.5
-15080,Pepperdine,2025-04-25,San Francisco,"San Francisco, CA
-Dante Benedetti Diamond",5:00 PM,San Francisco,Pepperdine,0,0,1282.99,1249.42,-3.41,-2.75,0.4621,54.82,-0.52,Pepperdine -0.52
-15081,Pepperdine,2025-04-26,San Francisco,"San Francisco, CA
-Dante Benedetti Diamond",4:00 PM,San Francisco,Pepperdine,0,0,1282.99,1249.42,-3.41,-2.75,0.4621,54.82,-0.52,Pepperdine -0.52
-15082,Pepperdine,2025-04-27,San Francisco,"San Francisco, CA
-Dante Benedetti Diamond",5:00 PM,San Francisco,Pepperdine,0,0,1282.99,1249.42,-3.41,-2.75,0.4621,54.82,-0.52,Pepperdine -0.52
-15083,Pepperdine,2025-05-02,Northwestern State,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Northwestern St.,0,0,1249.42,1374.25,-2.75,-0.29,0.36210000000000003,32.77,-2.98,Northwestern St. -2.98
-15084,Pepperdine,2025-05-03,Northwestern State,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Northwestern St.,0,0,1249.42,1374.25,-2.75,-0.29,0.36210000000000003,32.77,-2.98,Northwestern St. -2.98
-15085,Pepperdine,2025-05-04,Northwestern State,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Northwestern St.,0,0,1249.42,1374.25,-2.75,-0.29,0.36210000000000003,32.77,-2.98,Northwestern St. -2.98
-15086,Pepperdine,2025-05-06,Cal Poly,"San Luis Obispo, CA
-Robin Baggett Stadium",8:00 PM,Cal Poly,Pepperdine,0,0,1415.44,1249.42,0.94,-2.75,0.7005,72.23,4.36,Cal Poly -4.36
-15087,Pepperdine,2025-05-09,Pacific,"Stockton, CA
-Klein Family Field",9:00 PM,Pacific,Pepperdine,0,0,1276.81,1249.42,-4.26,-2.75,0.4139,53.93,-1.39,Pepperdine -1.39
-15088,Pepperdine,2025-05-10,Pacific,"Stockton, CA
-Klein Family Field",9:00 PM,Pacific,Pepperdine,0,0,1276.81,1249.42,-4.26,-2.75,0.4139,53.93,-1.39,Pepperdine -1.39
-15089,Pepperdine,2025-05-11,Pacific,"Stockton, CA
-Klein Family Field",4:00 PM,Pacific,Pepperdine,0,0,1276.81,1249.42,-4.26,-2.75,0.4139,53.93,-1.39,Pepperdine -1.39
-15090,Pepperdine,2025-05-15,Loyola-Marymount,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Loyola-Marymount,0,0,1249.42,1387.5,-2.75,-4.87,0.6197,31.11,1.55,Pepperdine -1.55
-15091,Pepperdine,2025-05-16,Loyola-Marymount,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Loyola-Marymount,0,0,1249.42,1387.5,-2.75,-4.87,0.6197,31.11,1.55,Pepperdine -1.55
-15092,Pepperdine,2025-05-17,Loyola-Marymount,"Malibu, CA
-Eddy D. Field Stadium",TBA,Pepperdine,Loyola-Marymount,0,0,1249.42,1387.5,-2.75,-4.87,0.6197,31.11,1.55,Pepperdine -1.55
-15093,North Dakota St.,2025-02-14,Dallas Baptist,"Dallas, TX
+15039,North Dakota St.,2025-02-14,Dallas Baptist,"Dallas, TX
 Horner Ballpark",L   6 - 11,DBU,North Dakota St.,11,6,1530.69,1249.17,4.71,-3.56,0.8704000000000001,83.49,9.27,DBU -9.27
-15094,North Dakota St.,2025-02-15,Dallas Baptist,"Dallas, TX
+15040,North Dakota St.,2025-02-15,Dallas Baptist,"Dallas, TX
 Horner Ballpark",L   2 - 5,DBU,North Dakota St.,5,2,1530.69,1249.17,4.71,-3.56,0.8704000000000001,83.49,9.27,DBU -9.27
-15095,North Dakota St.,2025-02-16,Dallas Baptist,"Dallas, TX
+15041,North Dakota St.,2025-02-16,Dallas Baptist,"Dallas, TX
 Horner Ballpark",L   1 - 11,DBU,North Dakota St.,11,1,1530.69,1249.17,4.71,-3.56,0.8704000000000001,83.49,9.27,DBU -9.27
-15096,North Dakota St.,2025-02-18,Lamar,"Beaumont, TX
+15042,North Dakota St.,2025-02-18,Lamar,"Beaumont, TX
 Vincent-Beck Stadium",L   3 - 10,Lamar University,North Dakota St.,10,3,1473.52,1249.17,3.17,-3.56,0.8249,78.44,7.58,Lamar University -7.58
-15097,North Dakota St.,2025-02-19,Lamar,"Beaumont, TX
+15043,North Dakota St.,2025-02-19,Lamar,"Beaumont, TX
 Vincent-Beck Stadium",L   2 - 13 (7 Innings),Lamar University,North Dakota St.,13,2,1473.52,1249.17,3.17,-3.56,0.8249,78.44,7.58,Lamar University -7.58
-15098,North Dakota St.,2025-02-21,UTRGV,"Edinburg, TX
+15044,North Dakota St.,2025-02-21,UTRGV,"Edinburg, TX
 UTRGV Baseball Stadium",7:30 PM,UTRGV,North Dakota St.,0,0,1428.97,1249.17,-1.19,-3.56,0.6331,73.79,3.08,UTRGV -3.08
-15099,North Dakota St.,2025-02-22,UTRGV,"Edinburg, TX
+15045,North Dakota St.,2025-02-22,UTRGV,"Edinburg, TX
 UTRGV Baseball Stadium",7:30 PM,UTRGV,North Dakota St.,0,0,1428.97,1249.17,-1.19,-3.56,0.6331,73.79,3.08,UTRGV -3.08
-15100,North Dakota St.,2025-02-23,UTRGV,"Edinburg, TX
+15046,North Dakota St.,2025-02-23,UTRGV,"Edinburg, TX
 UTRGV Baseball Stadium",1:00 PM,UTRGV,North Dakota St.,0,0,1428.97,1249.17,-1.19,-3.56,0.6331,73.79,3.08,UTRGV -3.08
-15101,North Dakota St.,2025-02-28,Alabama,"Tuscaloosa, AL
+15047,North Dakota St.,2025-02-28,Alabama,"Tuscaloosa, AL
 Sewell-Thomas Stadium",5:00 PM,Alabama,North Dakota St.,0,0,1514.46,1249.17,4.07,-3.56,0.8528,82.16,8.59,Alabama -8.59
-15102,North Dakota St.,2025-03-01,Alabama,"Tuscaloosa, AL
+15048,North Dakota St.,2025-03-01,Alabama,"Tuscaloosa, AL
 Sewell-Thomas Stadium",3:00 PM,Alabama,North Dakota St.,0,0,1514.46,1249.17,4.07,-3.56,0.8528,82.16,8.59,Alabama -8.59
-15103,North Dakota St.,2025-03-02,Alabama,"Tuscaloosa, AL
+15049,North Dakota St.,2025-03-02,Alabama,"Tuscaloosa, AL
 Sewell-Thomas Stadium",2:00 PM,Alabama,North Dakota St.,0,0,1514.46,1249.17,4.07,-3.56,0.8528,82.16,8.59,Alabama -8.59
-15104,North Dakota St.,2025-03-04,LSU,"Baton Rouge, LA
+15050,North Dakota St.,2025-03-04,LSU,"Baton Rouge, LA
 Alex Box Stadium",7:30 PM,LSU,North Dakota St.,0,0,1650.78,1249.17,6.34,-3.56,0.9072,90.99,11.13,LSU -11.13
-15105,North Dakota St.,2025-03-05,LSU,"Baton Rouge, LA
+15051,North Dakota St.,2025-03-05,LSU,"Baton Rouge, LA
 Alex Box Stadium",7:30 PM,LSU,North Dakota St.,0,0,1650.78,1249.17,6.34,-3.56,0.9072,90.99,11.13,LSU -11.13
-15106,North Dakota St.,2025-03-07,Tulane,"New Orleans, LA
+15052,North Dakota St.,2025-03-07,Tulane,"New Orleans, LA
 Greer Field at Turchin Stadium",7:30 PM,Tulane,North Dakota St.,0,0,1499.97,1249.17,2.81,-3.56,0.8126000000000001,80.9,7.3,Tulane -7.3
-15107,North Dakota St.,2025-03-08,Tulane,"New Orleans, LA
+15053,North Dakota St.,2025-03-08,Tulane,"New Orleans, LA
 Greer Field at Turchin Stadium",3:00 PM,Tulane,North Dakota St.,0,0,1499.97,1249.17,2.81,-3.56,0.8126000000000001,80.9,7.3,Tulane -7.3
-15108,North Dakota St.,2025-03-09,Tulane,"New Orleans, LA
+15054,North Dakota St.,2025-03-09,Tulane,"New Orleans, LA
 Greer Field at Turchin Stadium",2:00 PM,Tulane,North Dakota St.,0,0,1499.97,1249.17,2.81,-3.56,0.8126000000000001,80.9,7.3,Tulane -7.3
-15109,North Dakota St.,2025-03-14,Oral Roberts,"Tulsa, OK
+15055,North Dakota St.,2025-03-14,Oral Roberts,"Tulsa, OK
 J. L. Johnson Stadium",7:00 PM,Oral Roberts,North Dakota St.,0,0,1377.81,1249.17,-1.71,-3.56,0.6049,67.71,2.38,Oral Roberts -2.38
-15110,North Dakota St.,2025-03-15,Oral Roberts,"Tulsa, OK
+15056,North Dakota St.,2025-03-15,Oral Roberts,"Tulsa, OK
 J. L. Johnson Stadium",3:00 PM,Oral Roberts,North Dakota St.,0,0,1377.81,1249.17,-1.71,-3.56,0.6049,67.71,2.38,Oral Roberts -2.38
-15111,North Dakota St.,2025-03-16,Oral Roberts,"Tulsa, OK
+15057,North Dakota St.,2025-03-16,Oral Roberts,"Tulsa, OK
 J. L. Johnson Stadium",2:00 PM,Oral Roberts,North Dakota St.,0,0,1377.81,1249.17,-1.71,-3.56,0.6049,67.71,2.38,Oral Roberts -2.38
-15112,North Dakota St.,2025-03-18,Oklahoma State,"Stillwater, OK
+15058,North Dakota St.,2025-03-18,Oklahoma State,"Stillwater, OK
 O'Brate Stadium",TBA,Oklahoma St.,North Dakota St.,0,0,1516.31,1249.17,4.81,-3.56,0.8729,82.31,9.34,Oklahoma St. -9.34
-15113,North Dakota St.,2025-03-19,Oklahoma State,"Stillwater, OK
+15059,North Dakota St.,2025-03-19,Oklahoma State,"Stillwater, OK
 O'Brate Stadium",TBA,Oklahoma St.,North Dakota St.,0,0,1516.31,1249.17,4.81,-3.56,0.8729,82.31,9.34,Oklahoma St. -9.34
-15114,North Dakota St.,2025-03-21,Northern Colorado,"Greeley, CO
+15060,North Dakota St.,2025-03-21,Northern Colorado,"Greeley, CO
 Jackson Field",4:00 PM,Northern Colo.,North Dakota St.,0,0,1273.12,1249.17,-5.1,-3.56,0.41229999999999994,53.44,-1.44,North Dakota St. -1.44
-15115,North Dakota St.,2025-03-22,Northern Colorado,"Greeley, CO
+15061,North Dakota St.,2025-03-22,Northern Colorado,"Greeley, CO
 Jackson Field",2:00 PM,Northern Colo.,North Dakota St.,0,0,1273.12,1249.17,-5.1,-3.56,0.41229999999999994,53.44,-1.44,North Dakota St. -1.44
-15116,North Dakota St.,2025-03-23,Northern Colorado,"Greeley, CO
+15062,North Dakota St.,2025-03-23,Northern Colorado,"Greeley, CO
 Jackson Field",2:00 PM,Northern Colo.,North Dakota St.,0,0,1273.12,1249.17,-5.1,-3.56,0.41229999999999994,53.44,-1.44,North Dakota St. -1.44
-15117,North Dakota St.,2025-03-28,South Dakota State,"Fargo, ND
+15063,North Dakota St.,2025-03-28,South Dakota State,"Fargo, ND
 Newman Outdoor Field",4:00 PM,North Dakota St.,South Dakota St.,0,0,1249.17,1257.75,-3.56,-4.87,0.5748,48.77,1.27,North Dakota St. -1.27
-15118,North Dakota St.,2025-03-29,South Dakota State,"Fargo, ND
+15064,North Dakota St.,2025-03-29,South Dakota State,"Fargo, ND
 Newman Outdoor Field",3:00 PM,North Dakota St.,South Dakota St.,0,0,1249.17,1257.75,-3.56,-4.87,0.5748,48.77,1.27,North Dakota St. -1.27
-15119,North Dakota St.,2025-03-30,South Dakota State,"Fargo, ND
+15065,North Dakota St.,2025-03-30,South Dakota State,"Fargo, ND
 Newman Outdoor Field",2:00 PM,North Dakota St.,South Dakota St.,0,0,1249.17,1257.75,-3.56,-4.87,0.5748,48.77,1.27,North Dakota St. -1.27
-15120,North Dakota St.,2025-04-04,Omaha,"Omaha, NE
+15066,North Dakota St.,2025-04-04,Omaha,"Omaha, NE
 Tal Anderson Field at Maverick Park",TBA,Omaha,North Dakota St.,0,0,1267.5,1249.17,-4.69,-3.56,0.4353,52.64,-1.05,North Dakota St. -1.05
-15121,North Dakota St.,2025-04-05,Omaha,"Omaha, NE
+15067,North Dakota St.,2025-04-05,Omaha,"Omaha, NE
 Tal Anderson Field at Maverick Park",TBA,Omaha,North Dakota St.,0,0,1267.5,1249.17,-4.69,-3.56,0.4353,52.64,-1.05,North Dakota St. -1.05
-15122,North Dakota St.,2025-04-06,Omaha,"Omaha, NE
+15068,North Dakota St.,2025-04-06,Omaha,"Omaha, NE
 Tal Anderson Field at Maverick Park",TBA,Omaha,North Dakota St.,0,0,1267.5,1249.17,-4.69,-3.56,0.4353,52.64,-1.05,North Dakota St. -1.05
-15123,North Dakota St.,2025-04-08,Creighton,"Omaha, NE
+15069,North Dakota St.,2025-04-08,Creighton,"Omaha, NE
 Charles Schwab Field Omaha",7:00 PM,Creighton,North Dakota St.,0,0,1434.09,1249.17,3.21,-3.56,0.8262,74.35,7.5,Creighton -7.5
-15124,North Dakota St.,2025-04-11,Saint Thomas,"Fargo, ND
+15070,North Dakota St.,2025-04-11,Saint Thomas,"Fargo, ND
 Newman Outdoor Field",TBA,North Dakota St.,Saint Thomas,0,0,1249.17,1317.12,-3.56,-4.87,0.5748,40.34,1.02,North Dakota St. -1.02
-15125,North Dakota St.,2025-04-12,Saint Thomas,"Fargo, ND
+15071,North Dakota St.,2025-04-12,Saint Thomas,"Fargo, ND
 Newman Outdoor Field",3:00 PM,North Dakota St.,Saint Thomas,0,0,1249.17,1317.12,-3.56,-4.87,0.5748,40.34,1.02,North Dakota St. -1.02
-15126,North Dakota St.,2025-04-13,Saint Thomas,"Fargo, ND
+15072,North Dakota St.,2025-04-13,Saint Thomas,"Fargo, ND
 Newman Outdoor Field",2:00 PM,North Dakota St.,Saint Thomas,0,0,1249.17,1317.12,-3.56,-4.87,0.5748,40.34,1.02,North Dakota St. -1.02
-15127,North Dakota St.,2025-04-15,Minnesota,"Minneapolis, MN
+15073,North Dakota St.,2025-04-15,Minnesota,"Minneapolis, MN
 Siebert Field",7:00 PM,Minnesota,North Dakota St.,0,0,1402.39,1249.17,1.0,-3.56,0.7408,70.72,5.18,Minnesota -5.18
-15128,North Dakota St.,2025-04-17,Northern Colorado,"Fargo, ND
+15074,North Dakota St.,2025-04-17,Northern Colorado,"Fargo, ND
 Newman Outdoor Field",7:30 PM,North Dakota St.,Northern Colo.,0,0,1249.17,1273.12,-3.56,-5.1,0.5877,46.56,1.44,North Dakota St. -1.44
-15129,North Dakota St.,2025-04-18,Northern Colorado,"Fargo, ND
+15075,North Dakota St.,2025-04-18,Northern Colorado,"Fargo, ND
 Newman Outdoor Field",7:30 PM,North Dakota St.,Northern Colo.,0,0,1249.17,1273.12,-3.56,-5.1,0.5877,46.56,1.44,North Dakota St. -1.44
-15130,North Dakota St.,2025-04-19,Northern Colorado,"Fargo, ND
+15076,North Dakota St.,2025-04-19,Northern Colorado,"Fargo, ND
 Newman Outdoor Field",2:00 PM,North Dakota St.,Northern Colo.,0,0,1249.17,1273.12,-3.56,-5.1,0.5877,46.56,1.44,North Dakota St. -1.44
-15131,North Dakota St.,2025-04-22,Creighton,"Omaha, NE
+15077,North Dakota St.,2025-04-22,Creighton,"Omaha, NE
 Charles Schwab Field Omaha",7:00 PM,Creighton,North Dakota St.,0,0,1434.09,1249.17,3.21,-3.56,0.8262,74.35,7.5,Creighton -7.5
-15132,North Dakota St.,2025-04-25,South Dakota State,"Brookings, SD
+15078,North Dakota St.,2025-04-25,South Dakota State,"Brookings, SD
 Erv Huether Field",4:00 PM,South Dakota St.,North Dakota St.,0,0,1257.75,1249.17,-4.87,-3.56,0.4252,51.23,-1.27,North Dakota St. -1.27
-15133,North Dakota St.,2025-04-26,South Dakota State,"Brookings, SD
+15079,North Dakota St.,2025-04-26,South Dakota State,"Brookings, SD
 Erv Huether Field",2:00 PM,South Dakota St.,North Dakota St.,0,0,1257.75,1249.17,-4.87,-3.56,0.4252,51.23,-1.27,North Dakota St. -1.27
-15134,North Dakota St.,2025-04-27,South Dakota State,"Brookings, SD
+15080,North Dakota St.,2025-04-27,South Dakota State,"Brookings, SD
 Erv Huether Field",2:00 PM,South Dakota St.,North Dakota St.,0,0,1257.75,1249.17,-4.87,-3.56,0.4252,51.23,-1.27,North Dakota St. -1.27
-15135,North Dakota St.,2025-04-29,Minnesota,"Minneapolis, MN
+15081,North Dakota St.,2025-04-29,Minnesota,"Minneapolis, MN
 Siebert Field",TBA,Minnesota,North Dakota St.,0,0,1402.39,1249.17,1.0,-3.56,0.7408,70.72,5.18,Minnesota -5.18
-15136,North Dakota St.,2025-05-02,Oral Roberts,"Fargo, ND
+15082,North Dakota St.,2025-05-02,Oral Roberts,"Fargo, ND
 Newman Outdoor Field",7:30 PM,North Dakota St.,Oral Roberts,0,0,1249.17,1377.81,-3.56,-1.71,0.3951,32.29,-2.38,Oral Roberts -2.38
-15137,North Dakota St.,2025-05-03,Oral Roberts,"Fargo, ND
+15083,North Dakota St.,2025-05-03,Oral Roberts,"Fargo, ND
 Newman Outdoor Field",3:00 PM,North Dakota St.,Oral Roberts,0,0,1249.17,1377.81,-3.56,-1.71,0.3951,32.29,-2.38,Oral Roberts -2.38
-15138,North Dakota St.,2025-05-04,Oral Roberts,"Fargo, ND
+15084,North Dakota St.,2025-05-04,Oral Roberts,"Fargo, ND
 Newman Outdoor Field",2:00 PM,North Dakota St.,Oral Roberts,0,0,1249.17,1377.81,-3.56,-1.71,0.3951,32.29,-2.38,Oral Roberts -2.38
-15139,North Dakota St.,2025-05-09,Saint Thomas,"St. Paul, MN
+15085,North Dakota St.,2025-05-09,Saint Thomas,"St. Paul, MN
 Koch Diamond",4:00 PM,Saint Thomas,North Dakota St.,0,0,1317.12,1249.17,-4.87,-3.56,0.4252,59.66,-1.02,North Dakota St. -1.02
-15140,North Dakota St.,2025-05-10,Saint Thomas,"St. Paul, MN
+15086,North Dakota St.,2025-05-10,Saint Thomas,"St. Paul, MN
 Koch Diamond",2:00 PM,Saint Thomas,North Dakota St.,0,0,1317.12,1249.17,-4.87,-3.56,0.4252,59.66,-1.02,North Dakota St. -1.02
-15141,North Dakota St.,2025-05-11,Saint Thomas,"St. Paul, MN
+15087,North Dakota St.,2025-05-11,Saint Thomas,"St. Paul, MN
 Koch Diamond",2:00 PM,Saint Thomas,North Dakota St.,0,0,1317.12,1249.17,-4.87,-3.56,0.4252,59.66,-1.02,North Dakota St. -1.02
-15142,North Dakota St.,2025-05-15,Omaha,"Fargo, ND
+15088,North Dakota St.,2025-05-15,Omaha,"Fargo, ND
 Newman Outdoor Field",7:30 PM,North Dakota St.,Omaha,0,0,1249.17,1267.5,-3.56,-4.69,0.5647,47.36,1.05,North Dakota St. -1.05
-15143,North Dakota St.,2025-05-16,Omaha,"Fargo, ND
+15089,North Dakota St.,2025-05-16,Omaha,"Fargo, ND
 Newman Outdoor Field",7:30 PM,North Dakota St.,Omaha,0,0,1249.17,1267.5,-3.56,-4.69,0.5647,47.36,1.05,North Dakota St. -1.05
-15144,North Dakota St.,2025-05-17,Omaha,"Fargo, ND
+15090,North Dakota St.,2025-05-17,Omaha,"Fargo, ND
 Newman Outdoor Field",2:00 PM,North Dakota St.,Omaha,0,0,1249.17,1267.5,-3.56,-4.69,0.5647,47.36,1.05,North Dakota St. -1.05
-15145,Radford,2025-02-14,Akron,"Radford, VA
+15091,Radford,2025-02-14,Akron,"Radford, VA
 Sherman Carter Memorial Stadium",L   11 - 12 (10 Innings),Radford,Akron,11,12,1245.29,1281.2,-3.9,-3.41,0.4718,44.85,-0.64,Akron -0.64
-15146,Radford,2025-02-14,Akron,"Radford, VA
+15092,Radford,2025-02-14,Akron,"Radford, VA
 Sherman Carter Memorial Stadium",W   10 - 9 (11 Innings),Radford,Akron,10,9,1245.29,1281.2,-3.9,-3.41,0.4718,44.85,-0.64,Akron -0.64
-15147,Radford,2025-02-16,Akron,"Radford, VA
+15093,Radford,2025-02-16,Akron,"Radford, VA
 Sherman Carter Memorial Stadium",L   4 - 17 (8 Innings),Radford,Akron,4,17,1245.29,1281.2,-3.9,-3.41,0.4718,44.85,-0.64,Akron -0.64
-15148,Radford,2025-02-18,James Madison,"Harrisonburg, VA
+15094,Radford,2025-02-18,James Madison,"Harrisonburg, VA
 Eagle Field at Veterans Memorial Park",L   3 - 7,James Madison,Radford,7,3,1451.9,1245.29,1.94,-3.9,0.7933,76.66,6.64,James Madison -6.64
-15149,Radford,2025-02-21,Quinnipiac,"Radford, VA
+15095,Radford,2025-02-21,Quinnipiac,"Radford, VA
 Sherman Carter Memorial Stadium",3:00 PM,Radford,Quinnipiac,0,0,1245.29,1287.83,-3.9,-4.38,0.5276,43.91,0.3,Radford -0.3
-15150,Radford,2025-02-22,Quinnipiac,"Radford, VA
+15096,Radford,2025-02-22,Quinnipiac,"Radford, VA
 Sherman Carter Memorial Stadium",2:00 PM,Radford,Quinnipiac,0,0,1245.29,1287.83,-3.9,-4.38,0.5276,43.91,0.3,Radford -0.3
-15151,Radford,2025-02-23,Quinnipiac,"Radford, VA
+15097,Radford,2025-02-23,Quinnipiac,"Radford, VA
 Sherman Carter Memorial Stadium",1:00 PM,Radford,Quinnipiac,0,0,1245.29,1287.83,-3.9,-4.38,0.5276,43.91,0.3,Radford -0.3
-15152,Radford,2025-02-28,Mercyhurst,"Radford, VA
+15098,Radford,2025-02-28,Mercyhurst,"Radford, VA
 Sherman Carter Memorial Stadium",3:00 PM,Radford,Mercyhurst,0,0,1245.29,1263.28,-3.9,-4.87,0.5556,47.41,0.89,Radford -0.89
-15153,Radford,2025-03-01,Mercyhurst,"Radford, VA
+15099,Radford,2025-03-01,Mercyhurst,"Radford, VA
 Sherman Carter Memorial Stadium",2:00 PM,Radford,Mercyhurst,0,0,1245.29,1263.28,-3.9,-4.87,0.5556,47.41,0.89,Radford -0.89
-15154,Radford,2025-03-02,Mercyhurst,"Radford, VA
+15100,Radford,2025-03-02,Mercyhurst,"Radford, VA
 Sherman Carter Memorial Stadium",12:00 PM,Radford,Mercyhurst,0,0,1245.29,1263.28,-3.9,-4.87,0.5556,47.41,0.89,Radford -0.89
-15155,Radford,2025-03-04,Tennessee,"Knoxville, TN
+15101,Radford,2025-03-04,Tennessee,"Knoxville, TN
 Lindsey Nelson Stadium",6:00 PM,Tennessee,Radford,0,0,1654.54,1245.29,5.17,-3.9,0.8898,91.34,10.31,Tennessee -10.31
-15156,Radford,2025-03-07,UNCG,"Greensboro, NC
+15102,Radford,2025-03-07,UNCG,"Greensboro, NC
 UNCG Baseball Stadium",4:00 PM,UNC Greensboro,Radford,0,0,1490.63,1245.29,3.29,-3.9,0.8395999999999999,80.41,8.1,UNC Greensboro -8.1
-15157,Radford,2025-03-08,UNCG,"Greensboro, NC
+15103,Radford,2025-03-08,UNCG,"Greensboro, NC
 UNCG Baseball Stadium",2:00 PM,UNC Greensboro,Radford,0,0,1490.63,1245.29,3.29,-3.9,0.8395999999999999,80.41,8.1,UNC Greensboro -8.1
-15158,Radford,2025-03-09,UNCG,"Greensboro, NC
+15104,Radford,2025-03-09,UNCG,"Greensboro, NC
 UNCG Baseball Stadium",1:00 PM,UNC Greensboro,Radford,0,0,1490.63,1245.29,3.29,-3.9,0.8395999999999999,80.41,8.1,UNC Greensboro -8.1
-15159,Radford,2025-03-11,Elon,"Elon, NC
+15105,Radford,2025-03-11,Elon,"Elon, NC
 Walter C. Latham Park",4:00 PM,Elon,Radford,0,0,1362.45,1245.29,-1.3,-3.9,0.6454000000000001,66.25,3.09,Elon -3.09
-15160,Radford,2025-03-14,South Carolina Upstate,"Spartanburg, SC
+15106,Radford,2025-03-14,South Carolina Upstate,"Spartanburg, SC
 Cleveland S. Harley Baseball Park",3:00 PM,USC Upstate,Radford,0,0,1406.72,1245.29,0.88,-3.9,0.7504000000000001,71.69,5.43,USC Upstate -5.43
-15161,Radford,2025-03-15,South Carolina Upstate,"Spartanburg, SC
+15107,Radford,2025-03-15,South Carolina Upstate,"Spartanburg, SC
 Cleveland S. Harley Baseball Park",2:00 PM,USC Upstate,Radford,0,0,1406.72,1245.29,0.88,-3.9,0.7504000000000001,71.69,5.43,USC Upstate -5.43
-15162,Radford,2025-03-16,South Carolina Upstate,"Spartanburg, SC
+15108,Radford,2025-03-16,South Carolina Upstate,"Spartanburg, SC
 Cleveland S. Harley Baseball Park",1:00 PM,USC Upstate,Radford,0,0,1406.72,1245.29,0.88,-3.9,0.7504000000000001,71.69,5.43,USC Upstate -5.43
-15163,Radford,2025-03-19,North Carolina A&T,"Greensboro, NC
+15109,Radford,2025-03-19,North Carolina A&T,"Greensboro, NC
 World War Memorial Stadium",6:00 PM,N.C. A&T,Radford,0,0,1355.66,1245.29,0.07,-3.9,0.7138,65.37,4.43,N.C. A&T -4.43
-15164,Radford,2025-03-21,Georgetown,"Tysons, VA
+15110,Radford,2025-03-21,Georgetown,"Tysons, VA
 Capital One Park",4:00 PM,Georgetown,Radford,0,0,1444.9,1245.29,2.53,-3.9,0.8147,75.93,7.21,Georgetown -7.21
-15165,Radford,2025-03-22,Georgetown,"Tysons, VA
+15111,Radford,2025-03-22,Georgetown,"Tysons, VA
 Capital One Park",3:00 PM,Georgetown,Radford,0,0,1444.9,1245.29,2.53,-3.9,0.8147,75.93,7.21,Georgetown -7.21
-15166,Radford,2025-03-23,Georgetown,"Tysons, VA
+15112,Radford,2025-03-23,Georgetown,"Tysons, VA
 Capital One Park",1:00 PM,Georgetown,Radford,0,0,1444.9,1245.29,2.53,-3.9,0.8147,75.93,7.21,Georgetown -7.21
-15167,Radford,2025-03-25,Virginia Tech,"Radford, VA
+15113,Radford,2025-03-25,Virginia Tech,"Radford, VA
 Sherman Carter Memorial Stadium",6:00 PM,Radford,Virginia Tech,0,0,1245.29,1465.23,-3.9,3.82,0.1446,21.99,-8.56,Virginia Tech -8.56
-15168,Radford,2025-03-28,High Point,"Radford, VA
+15114,Radford,2025-03-28,High Point,"Radford, VA
 Sherman Carter Memorial Stadium",6:00 PM,Radford,High Point,0,0,1245.29,1501.38,-3.9,1.93,0.2071,18.63,-6.77,High Point -6.77
-15169,Radford,2025-03-29,High Point,"Radford, VA
+15115,Radford,2025-03-29,High Point,"Radford, VA
 Sherman Carter Memorial Stadium",4:00 PM,Radford,High Point,0,0,1245.29,1501.38,-3.9,1.93,0.2071,18.63,-6.77,High Point -6.77
-15170,Radford,2025-03-30,High Point,"Radford, VA
+15116,Radford,2025-03-30,High Point,"Radford, VA
 Sherman Carter Memorial Stadium",1:00 PM,Radford,High Point,0,0,1245.29,1501.38,-3.9,1.93,0.2071,18.63,-6.77,High Point -6.77
-15171,Radford,2025-04-01,Virginia Tech,"Blacksburg, VA
+15117,Radford,2025-04-01,Virginia Tech,"Blacksburg, VA
 English Field",1:00 PM,Virginia Tech,Radford,0,0,1465.23,1245.29,3.82,-3.9,0.8554,78.01,8.56,Virginia Tech -8.56
-15172,Radford,2025-04-02,East Tennessee State,"Johnson City, TN
+15118,Radford,2025-04-02,East Tennessee State,"Johnson City, TN
 Thomas Stadium",5:00 PM,ETSU,Radford,0,0,1474.24,1245.29,3.27,-3.9,0.8390000000000001,78.88,8.04,ETSU -8.04
-15173,Radford,2025-04-04,Charleston Southern,"Radford, VA
+15119,Radford,2025-04-04,Charleston Southern,"Radford, VA
 Sherman Carter Memorial Stadium",6:00 PM,Radford,Charleston So.,0,0,1245.29,1359.54,-3.9,-2.31,0.40950000000000003,34.13,-2.07,Charleston So. -2.07
-15174,Radford,2025-04-05,Charleston Southern,"Radford, VA
+15120,Radford,2025-04-05,Charleston Southern,"Radford, VA
 Sherman Carter Memorial Stadium",4:00 PM,Radford,Charleston So.,0,0,1245.29,1359.54,-3.9,-2.31,0.40950000000000003,34.13,-2.07,Charleston So. -2.07
-15175,Radford,2025-04-06,Charleston Southern,"Radford, VA
+15121,Radford,2025-04-06,Charleston Southern,"Radford, VA
 Sherman Carter Memorial Stadium",1:00 PM,Radford,Charleston So.,0,0,1245.29,1359.54,-3.9,-2.31,0.40950000000000003,34.13,-2.07,Charleston So. -2.07
-15176,Radford,2025-04-08,East Tennessee State,"Radford, VA
+15122,Radford,2025-04-08,East Tennessee State,"Radford, VA
 Sherman Carter Memorial Stadium",5:00 PM,Radford,ETSU,0,0,1245.29,1474.24,-3.9,3.27,0.161,21.12,-8.04,ETSU -8.04
-15177,Radford,2025-04-09,VMI,"Lexington, VA
+15123,Radford,2025-04-09,VMI,"Lexington, VA
 Gray-Minor Stadium",6:00 PM,VMI,Radford,0,0,1381.22,1245.29,0.34,-3.9,0.7264,68.62,4.8,VMI -4.8
-15178,Radford,2025-04-11,Gardner-Webb,"Boiling Springs, NC
+15124,Radford,2025-04-11,Gardner-Webb,"Boiling Springs, NC
 John Henry Moss Stadium",6:00 PM,Gardner-Webb,Radford,0,0,1331.78,1245.29,-1.5,-3.9,0.6347,62.2,2.77,Gardner-Webb -2.77
-15179,Radford,2025-04-12,Gardner-Webb,"Boiling Springs, NC
+15125,Radford,2025-04-12,Gardner-Webb,"Boiling Springs, NC
 John Henry Moss Stadium",3:00 PM,Gardner-Webb,Radford,0,0,1331.78,1245.29,-1.5,-3.9,0.6347,62.2,2.77,Gardner-Webb -2.77
-15180,Radford,2025-04-13,Gardner-Webb,"Boiling Springs, NC
+15126,Radford,2025-04-13,Gardner-Webb,"Boiling Springs, NC
 John Henry Moss Stadium",1:00 PM,Gardner-Webb,Radford,0,0,1331.78,1245.29,-1.5,-3.9,0.6347,62.2,2.77,Gardner-Webb -2.77
-15181,Radford,2025-04-15,Queens,"Radford, VA
+15127,Radford,2025-04-15,Queens,"Radford, VA
 Sherman Carter Memorial Stadium",6:00 PM,Radford,Queens,0,0,1245.29,1282.81,-3.9,-4.87,0.5556,44.62,0.81,Radford -0.81
-15182,Radford,2025-04-17,Presbyterian College,"Radford, VA
+15128,Radford,2025-04-17,Presbyterian College,"Radford, VA
 Sherman Carter Memorial Stadium",6:00 PM,Radford,Presbyterian,0,0,1245.29,1378.24,-3.9,-1.61,0.3711,31.75,-2.84,Presbyterian -2.84
-15183,Radford,2025-04-18,Presbyterian College,"Radford, VA
+15129,Radford,2025-04-18,Presbyterian College,"Radford, VA
 Sherman Carter Memorial Stadium",4:00 PM,Radford,Presbyterian,0,0,1245.29,1378.24,-3.9,-1.61,0.3711,31.75,-2.84,Presbyterian -2.84
-15184,Radford,2025-04-19,Presbyterian College,"Radford, VA
+15130,Radford,2025-04-19,Presbyterian College,"Radford, VA
 Sherman Carter Memorial Stadium",1:00 PM,Radford,Presbyterian,0,0,1245.29,1378.24,-3.9,-1.61,0.3711,31.75,-2.84,Presbyterian -2.84
-15185,Radford,2025-04-22,North Carolina A&T,"Radford, VA
+15131,Radford,2025-04-22,North Carolina A&T,"Radford, VA
 Sherman Carter Memorial Stadium",6:00 PM,Radford,N.C. A&T,0,0,1245.29,1355.66,-3.9,0.07,0.2862,34.63,-4.43,N.C. A&T -4.43
-15186,Radford,2025-04-23,VMI,"Radford, VA
+15132,Radford,2025-04-23,VMI,"Radford, VA
 Sherman Carter Memorial Stadium",6:00 PM,Radford,VMI,0,0,1245.29,1381.22,-3.9,0.34,0.2736,31.38,-4.8,VMI -4.8
-15187,Radford,2025-04-25,UNC Asheville,"Asheville, NC
+15133,Radford,2025-04-25,UNC Asheville,"Asheville, NC
 Greenwood Baseball Field",5:00 PM,UNC Asheville,Radford,0,0,1361.58,1245.29,-3.4,-3.9,0.5288,66.14,0.98,UNC Asheville -0.98
-15188,Radford,2025-04-26,UNC Asheville,"Asheville, NC
+15134,Radford,2025-04-26,UNC Asheville,"Asheville, NC
 Greenwood Baseball Field",2:00 PM,UNC Asheville,Radford,0,0,1361.58,1245.29,-3.4,-3.9,0.5288,66.14,0.98,UNC Asheville -0.98
-15189,Radford,2025-04-27,UNC Asheville,"Asheville, NC
+15135,Radford,2025-04-27,UNC Asheville,"Asheville, NC
 Greenwood Baseball Field",12:00 PM,UNC Asheville,Radford,0,0,1361.58,1245.29,-3.4,-3.9,0.5288,66.14,0.98,UNC Asheville -0.98
-15190,Radford,2025-05-04,Duke,"Durham, NC
+15136,Radford,2025-05-04,Duke,"Durham, NC
 Jack Coombs Field",TBA,Duke,Radford,0,0,1573.02,1245.29,3.31,-3.9,0.8403,86.84,8.32,Duke -8.32
-15191,Radford,2025-05-04,Duke,"Durham, NC
+15137,Radford,2025-05-04,Duke,"Durham, NC
 Jack Coombs Field",1:00 PM,Duke,Radford,0,0,1573.02,1245.29,3.31,-3.9,0.8403,86.84,8.32,Duke -8.32
-15192,Radford,2025-05-06,James Madison,"Radford, VA
+15138,Radford,2025-05-06,James Madison,"Radford, VA
 Sherman Carter Memorial Stadium",6:00 PM,Radford,James Madison,0,0,1245.29,1451.9,-3.9,1.94,0.20670000000000002,23.34,-6.64,James Madison -6.64
-15193,Radford,2025-05-09,Winthrop,"Radford, VA
+15139,Radford,2025-05-09,Winthrop,"Radford, VA
 Sherman Carter Memorial Stadium",6:00 PM,Radford,Winthrop,0,0,1245.29,1361.69,-3.9,-0.57,0.3172,33.85,-3.81,Winthrop -3.81
-15194,Radford,2025-05-10,Winthrop,"Radford, VA
+15140,Radford,2025-05-10,Winthrop,"Radford, VA
 Sherman Carter Memorial Stadium",4:00 PM,Radford,Winthrop,0,0,1245.29,1361.69,-3.9,-0.57,0.3172,33.85,-3.81,Winthrop -3.81
-15195,Radford,2025-05-11,Winthrop,"Radford, VA
+15141,Radford,2025-05-11,Winthrop,"Radford, VA
 Sherman Carter Memorial Stadium",1:00 PM,Radford,Winthrop,0,0,1245.29,1361.69,-3.9,-0.57,0.3172,33.85,-3.81,Winthrop -3.81
-15196,Radford,2025-05-13,Queens,"Charlotte, NC
+15142,Radford,2025-05-13,Queens,"Charlotte, NC
 Tuckaseegee Dream Fields",5:00 PM,Queens,Radford,0,0,1282.81,1245.29,-4.87,-3.9,0.44439999999999996,55.38,-0.81,Radford -0.81
-15197,Radford,2025-05-15,Longwood,"Farmville, VA
+15143,Radford,2025-05-15,Longwood,"Farmville, VA
 Bolding Stadium",6:00 PM,Longwood,Radford,0,0,1310.99,1245.29,-3.17,-3.9,0.5418999999999999,59.34,1.01,Longwood -1.01
-15198,Radford,2025-05-16,Longwood,"Farmville, VA
+15144,Radford,2025-05-16,Longwood,"Farmville, VA
 Bolding Stadium",2:00 PM,Longwood,Radford,0,0,1310.99,1245.29,-3.17,-3.9,0.5418999999999999,59.34,1.01,Longwood -1.01
-15199,Radford,2025-05-17,Longwood,"Farmville, VA
+15145,Radford,2025-05-17,Longwood,"Farmville, VA
 Bolding Stadium",1:00 PM,Longwood,Radford,0,0,1310.99,1245.29,-3.17,-3.9,0.5418999999999999,59.34,1.01,Longwood -1.01
-15200,Youngstown St.,2025-02-14,Baylor,"Waco, TX
+15146,Youngstown St.,2025-02-14,Baylor,"Waco, TX
 Baylor Ballpark",L   3 - 10,Baylor,Youngstown St.,10,3,1450.15,1244.96,2.1,-6.24,0.8722,76.52,9.14,Baylor -9.14
-15201,Youngstown St.,2025-02-15,Baylor,"Waco, TX
+15147,Youngstown St.,2025-02-15,Baylor,"Waco, TX
 Baylor Ballpark",L   4 - 16 (7 Innings),Baylor,Youngstown St.,16,4,1450.15,1244.96,2.1,-6.24,0.8722,76.52,9.14,Baylor -9.14
-15202,Youngstown St.,2025-02-15,Baylor,"Waco, TX
+15148,Youngstown St.,2025-02-15,Baylor,"Waco, TX
 Baylor Ballpark",L   4 - 12,Baylor,Youngstown St.,12,4,1450.15,1244.96,2.1,-6.24,0.8722,76.52,9.14,Baylor -9.14
-15203,Youngstown St.,2025-02-21,Abilene Christian,"Abilene, TX
+15149,Youngstown St.,2025-02-21,Abilene Christian,"Abilene, TX
 Crutcher Scott Field",4:00 PM,Abilene Christian,Youngstown St.,0,0,1376.09,1244.96,-0.45,-6.24,0.7914,68.02,6.33,Abilene Christian -6.33
-15204,Youngstown St.,2025-02-22,Abilene Christian,"Abilene, TX
+15150,Youngstown St.,2025-02-22,Abilene Christian,"Abilene, TX
 Crutcher Scott Field",2:00 PM,Abilene Christian,Youngstown St.,0,0,1376.09,1244.96,-0.45,-6.24,0.7914,68.02,6.33,Abilene Christian -6.33
-15205,Youngstown St.,2025-02-22,Abilene Christian,"Abilene, TX
+15151,Youngstown St.,2025-02-22,Abilene Christian,"Abilene, TX
 Crutcher Scott Field",5:00 PM,Abilene Christian,Youngstown St.,0,0,1376.09,1244.96,-0.45,-6.24,0.7914,68.02,6.33,Abilene Christian -6.33
-15206,Youngstown St.,2025-02-23,Abilene Christian,"Abilene, TX
+15152,Youngstown St.,2025-02-23,Abilene Christian,"Abilene, TX
 Crutcher Scott Field",2:00 PM,Abilene Christian,Youngstown St.,0,0,1376.09,1244.96,-0.45,-6.24,0.7914,68.02,6.33,Abilene Christian -6.33
-15207,Youngstown St.,2025-02-28,UTSA,"San Antonio, TX
+15153,Youngstown St.,2025-02-28,UTSA,"San Antonio, TX
 Roadrunner Field",7:00 PM,UTSA,Youngstown St.,0,0,1384.63,1244.96,2.07,-6.24,0.8714,69.08,8.88,UTSA -8.88
-15208,Youngstown St.,2025-03-01,UTSA,"San Antonio, TX
+15154,Youngstown St.,2025-03-01,UTSA,"San Antonio, TX
 Roadrunner Field",1:00 PM,UTSA,Youngstown St.,0,0,1384.63,1244.96,2.07,-6.24,0.8714,69.08,8.88,UTSA -8.88
-15209,Youngstown St.,2025-03-01,UTSA,"San Antonio, TX
+15155,Youngstown St.,2025-03-01,UTSA,"San Antonio, TX
 Roadrunner Field",5:00 PM,UTSA,Youngstown St.,0,0,1384.63,1244.96,2.07,-6.24,0.8714,69.08,8.88,UTSA -8.88
-15210,Youngstown St.,2025-03-02,UTSA,"San Antonio, TX
+15156,Youngstown St.,2025-03-02,UTSA,"San Antonio, TX
 Roadrunner Field",12:00 PM,UTSA,Youngstown St.,0,0,1384.63,1244.96,2.07,-6.24,0.8714,69.08,8.88,UTSA -8.88
-15211,Youngstown St.,2025-03-07,Gardner-Webb,"Boiling Springs, NC
+15157,Youngstown St.,2025-03-07,Gardner-Webb,"Boiling Springs, NC
 John Henry Moss Stadium",4:00 PM,Gardner-Webb,Youngstown St.,0,0,1331.78,1244.96,-1.5,-6.24,0.7487,62.24,5.11,Gardner-Webb -5.11
-15212,Youngstown St.,2025-03-08,Gardner-Webb,"Boiling Springs, NC
+15158,Youngstown St.,2025-03-08,Gardner-Webb,"Boiling Springs, NC
 John Henry Moss Stadium",2:00 PM,Gardner-Webb,Youngstown St.,0,0,1331.78,1244.96,-1.5,-6.24,0.7487,62.24,5.11,Gardner-Webb -5.11
-15213,Youngstown St.,2025-03-09,Gardner-Webb,"Boiling Springs, NC
+15159,Youngstown St.,2025-03-09,Gardner-Webb,"Boiling Springs, NC
 John Henry Moss Stadium",1:00 PM,Gardner-Webb,Youngstown St.,0,0,1331.78,1244.96,-1.5,-6.24,0.7487,62.24,5.11,Gardner-Webb -5.11
-15214,Youngstown St.,2025-03-12,Pittsburgh,"Pittsburgh, PA
+15160,Youngstown St.,2025-03-12,Pittsburgh,"Pittsburgh, PA
 Charles L. Cost Field",3:00 PM,Pittsburgh,Youngstown St.,0,0,1481.03,1244.96,2.6,-6.24,0.8845000000000001,79.56,9.73,Pittsburgh -9.73
-15215,Youngstown St.,2025-03-14,Milwaukee,"Niles, OH
+15161,Youngstown St.,2025-03-14,Milwaukee,"Niles, OH
 Eastwood Field",7:00 PM,Youngstown St.,Milwaukee,0,0,1244.96,1264.95,-6.24,-4.1,0.37920000000000004,47.13,-2.23,Milwaukee -2.23
-15216,Youngstown St.,2025-03-15,Milwaukee,"Niles, OH
+15162,Youngstown St.,2025-03-15,Milwaukee,"Niles, OH
 Eastwood Field",3:00 PM,Youngstown St.,Milwaukee,0,0,1244.96,1264.95,-6.24,-4.1,0.37920000000000004,47.13,-2.23,Milwaukee -2.23
-15217,Youngstown St.,2025-03-16,Milwaukee,"Niles, OH
+15163,Youngstown St.,2025-03-16,Milwaukee,"Niles, OH
 Eastwood Field",12:00 PM,Youngstown St.,Milwaukee,0,0,1244.96,1264.95,-6.24,-4.1,0.37920000000000004,47.13,-2.23,Milwaukee -2.23
-15218,Youngstown St.,2025-03-18,Mercyhurst,"Niles, OH
+15164,Youngstown St.,2025-03-18,Mercyhurst,"Niles, OH
 Eastwood Field",5:00 PM,Youngstown St.,Mercyhurst,0,0,1244.96,1263.28,-6.24,-4.87,0.4218,47.37,-1.45,Mercyhurst -1.45
-15219,Youngstown St.,2025-03-21,Purdue Fort Wayne,"Niles, OH
+15165,Youngstown St.,2025-03-21,Purdue Fort Wayne,"Niles, OH
 Eastwood Field",5:00 PM,Youngstown St.,Purdue Fort Wayne,0,0,1244.96,1250.2,-6.24,-4.93,0.4252,49.25,-1.33,Purdue Fort Wayne -1.33
-15220,Youngstown St.,2025-03-22,Purdue Fort Wayne,"Niles, OH
+15166,Youngstown St.,2025-03-22,Purdue Fort Wayne,"Niles, OH
 Eastwood Field",3:00 PM,Youngstown St.,Purdue Fort Wayne,0,0,1244.96,1250.2,-6.24,-4.93,0.4252,49.25,-1.33,Purdue Fort Wayne -1.33
-15221,Youngstown St.,2025-03-23,Purdue Fort Wayne,"Niles, OH
+15167,Youngstown St.,2025-03-23,Purdue Fort Wayne,"Niles, OH
 Eastwood Field",1:00 PM,Youngstown St.,Purdue Fort Wayne,0,0,1244.96,1250.2,-6.24,-4.93,0.4252,49.25,-1.33,Purdue Fort Wayne -1.33
-15222,Youngstown St.,2025-03-25,Bowling Green,"Bowling Green, OH
+15168,Youngstown St.,2025-03-25,Bowling Green,"Bowling Green, OH
 Steller Field",3:00 PM,Bowling Green,Youngstown St.,0,0,1407.07,1244.96,1.48,-6.24,0.8554,71.77,8.37,Bowling Green -8.37
-15223,Youngstown St.,2025-03-28,Wright State,"Dayton, OH
+15169,Youngstown St.,2025-03-28,Wright State,"Dayton, OH
 Nischwitz Stadium",3:00 PM,Wright St.,Youngstown St.,0,0,1391.28,1244.96,2.39,-6.24,0.8794,69.89,9.23,Wright St. -9.23
-15224,Youngstown St.,2025-03-29,Wright State,"Dayton, OH
+15170,Youngstown St.,2025-03-29,Wright State,"Dayton, OH
 Nischwitz Stadium",2:00 PM,Wright St.,Youngstown St.,0,0,1391.28,1244.96,2.39,-6.24,0.8794,69.89,9.23,Wright St. -9.23
-15225,Youngstown St.,2025-03-30,Wright State,"Dayton, OH
+15171,Youngstown St.,2025-03-30,Wright State,"Dayton, OH
 Nischwitz Stadium",1:00 PM,Wright St.,Youngstown St.,0,0,1391.28,1244.96,2.39,-6.24,0.8794,69.89,9.23,Wright St. -9.23
-15226,Youngstown St.,2025-04-01,Toledo,"Niles, OH
+15172,Youngstown St.,2025-04-01,Toledo,"Niles, OH
 Eastwood Field",5:00 PM,Youngstown St.,Toledo,0,0,1244.96,1320.91,-6.24,-1.77,0.2632,39.24,-4.79,Toledo -4.79
-15227,Youngstown St.,2025-04-04,Oakland,"Rochester, MI
+15173,Youngstown St.,2025-04-04,Oakland,"Rochester, MI
 Oakland Baseball Field",3:00 PM,Oakland,Youngstown St.,0,0,1300.25,1244.96,-2.36,-6.24,0.7095999999999999,57.89,4.12,Oakland -4.12
-15228,Youngstown St.,2025-04-05,Oakland,"Rochester, MI
+15174,Youngstown St.,2025-04-05,Oakland,"Rochester, MI
 Oakland Baseball Field",2:00 PM,Oakland,Youngstown St.,0,0,1300.25,1244.96,-2.36,-6.24,0.7095999999999999,57.89,4.12,Oakland -4.12
-15229,Youngstown St.,2025-04-06,Oakland,"Rochester, MI
+15175,Youngstown St.,2025-04-06,Oakland,"Rochester, MI
 Oakland Baseball Field",1:00 PM,Oakland,Youngstown St.,0,0,1300.25,1244.96,-2.36,-6.24,0.7095999999999999,57.89,4.12,Oakland -4.12
-15230,Youngstown St.,2025-04-08,Pittsburgh,"Niles, OH
+15176,Youngstown St.,2025-04-08,Pittsburgh,"Niles, OH
 Eastwood Field",5:00 PM,Youngstown St.,Pittsburgh,0,0,1244.96,1481.03,-6.24,2.6,0.1155,20.44,-9.73,Pittsburgh -9.73
-15231,Youngstown St.,2025-04-09,Bowling Green,"Niles, OH
+15177,Youngstown St.,2025-04-09,Bowling Green,"Niles, OH
 Eastwood Field",5:00 PM,Youngstown St.,Bowling Green,0,0,1244.96,1407.07,-6.24,1.48,0.1446,28.23,-8.37,Bowling Green -8.37
-15232,Youngstown St.,2025-04-11,Northern Kentucky,"Niles, OH
+15178,Youngstown St.,2025-04-11,Northern Kentucky,"Niles, OH
 Eastwood Field",6:00 PM,Youngstown St.,Northern Ky.,0,0,1244.96,1344.3,-6.24,-0.93,0.2275,36.08,-5.73,Northern Ky. -5.73
-15233,Youngstown St.,2025-04-12,Northern Kentucky,"Niles, OH
+15179,Youngstown St.,2025-04-12,Northern Kentucky,"Niles, OH
 Eastwood Field",3:00 PM,Youngstown St.,Northern Ky.,0,0,1244.96,1344.3,-6.24,-0.93,0.2275,36.08,-5.73,Northern Ky. -5.73
-15234,Youngstown St.,2025-04-13,Northern Kentucky,"Niles, OH
+15180,Youngstown St.,2025-04-13,Northern Kentucky,"Niles, OH
 Eastwood Field",1:00 PM,Youngstown St.,Northern Ky.,0,0,1244.96,1344.3,-6.24,-0.93,0.2275,36.08,-5.73,Northern Ky. -5.73
-15235,Youngstown St.,2025-04-15,Mercyhurst,"Erie, PA
+15181,Youngstown St.,2025-04-15,Mercyhurst,"Erie, PA
 Mercyhurst Baseball Field",2:00 PM,Mercyhurst,Youngstown St.,0,0,1263.28,1244.96,-4.87,-6.24,0.5782,52.63,1.45,Mercyhurst -1.45
-15236,Youngstown St.,2025-04-17,Milwaukee,"Franklin, WI
+15182,Youngstown St.,2025-04-17,Milwaukee,"Franklin, WI
 Franklin Field",6:00 PM,Milwaukee,Youngstown St.,0,0,1264.95,1244.96,-4.1,-6.24,0.6208,52.87,2.23,Milwaukee -2.23
-15237,Youngstown St.,2025-04-18,Milwaukee,"Franklin, WI
+15183,Youngstown St.,2025-04-18,Milwaukee,"Franklin, WI
 Franklin Field",6:00 PM,Milwaukee,Youngstown St.,0,0,1264.95,1244.96,-4.1,-6.24,0.6208,52.87,2.23,Milwaukee -2.23
-15238,Youngstown St.,2025-04-19,Milwaukee,"Franklin, WI
+15184,Youngstown St.,2025-04-19,Milwaukee,"Franklin, WI
 Franklin Field",1:00 PM,Milwaukee,Youngstown St.,0,0,1264.95,1244.96,-4.1,-6.24,0.6208,52.87,2.23,Milwaukee -2.23
-15239,Youngstown St.,2025-04-22,Eastern Michigan,"Ypsilanti, MI
+15185,Youngstown St.,2025-04-22,Eastern Michigan,"Ypsilanti, MI
 Oestrike Stadium",3:00 PM,Eastern Mich.,Youngstown St.,0,0,1222.57,1244.96,-4.73,-6.24,0.5861,46.78,1.41,Eastern Mich. -1.41
-15240,Youngstown St.,2025-04-23,Kent State,"Kent, OH
+15186,Youngstown St.,2025-04-23,Kent State,"Kent, OH
 Olga Mural Field at Schoonover Stadium",6:00 PM,Kent St.,Youngstown St.,0,0,1345.64,1244.96,0.08,-6.24,0.8108,64.1,6.74,Kent St. -6.74
-15241,Youngstown St.,2025-04-25,Purdue Fort Wayne,"Fort Wayne, IN
+15187,Youngstown St.,2025-04-25,Purdue Fort Wayne,"Fort Wayne, IN
 Mastodon Field",3:00 PM,Purdue Fort Wayne,Youngstown St.,0,0,1250.2,1244.96,-4.93,-6.24,0.5748,50.75,1.33,Purdue Fort Wayne -1.33
-15242,Youngstown St.,2025-04-26,Purdue Fort Wayne,"Fort Wayne, IN
+15188,Youngstown St.,2025-04-26,Purdue Fort Wayne,"Fort Wayne, IN
 Mastodon Field",2:00 PM,Purdue Fort Wayne,Youngstown St.,0,0,1250.2,1244.96,-4.93,-6.24,0.5748,50.75,1.33,Purdue Fort Wayne -1.33
-15243,Youngstown St.,2025-04-27,Purdue Fort Wayne,"Fort Wayne, IN
+15189,Youngstown St.,2025-04-27,Purdue Fort Wayne,"Fort Wayne, IN
 Mastodon Field",1:00 PM,Purdue Fort Wayne,Youngstown St.,0,0,1250.2,1244.96,-4.93,-6.24,0.5748,50.75,1.33,Purdue Fort Wayne -1.33
-15244,Youngstown St.,2025-05-02,Wright State,"Niles, OH
+15190,Youngstown St.,2025-05-02,Wright State,"Niles, OH
 Eastwood Field",6:00 PM,Youngstown St.,Wright St.,0,0,1244.96,1391.28,-6.24,2.39,0.1206,30.11,-9.23,Wright St. -9.23
-15245,Youngstown St.,2025-05-03,Wright State,"Niles, OH
+15191,Youngstown St.,2025-05-03,Wright State,"Niles, OH
 Eastwood Field",3:00 PM,Youngstown St.,Wright St.,0,0,1244.96,1391.28,-6.24,2.39,0.1206,30.11,-9.23,Wright St. -9.23
-15246,Youngstown St.,2025-05-04,Wright State,"Niles, OH
+15192,Youngstown St.,2025-05-04,Wright State,"Niles, OH
 Eastwood Field",1:00 PM,Youngstown St.,Wright St.,0,0,1244.96,1391.28,-6.24,2.39,0.1206,30.11,-9.23,Wright St. -9.23
-15247,Youngstown St.,2025-05-06,Toledo,"Toledo, OH
+15193,Youngstown St.,2025-05-06,Toledo,"Toledo, OH
 Scott Park Baseball Complex",3:00 PM,Toledo,Youngstown St.,0,0,1320.91,1244.96,-1.77,-6.24,0.7368000000000001,60.76,4.79,Toledo -4.79
-15248,Youngstown St.,2025-05-09,Oakland,"Niles, OH
+15194,Youngstown St.,2025-05-09,Oakland,"Niles, OH
 Eastwood Field",11:00 AM,Youngstown St.,Oakland,0,0,1244.96,1300.25,-6.24,-2.36,0.2904,42.11,-4.12,Oakland -4.12
-15249,Youngstown St.,2025-05-10,Oakland,"Niles, OH
+15195,Youngstown St.,2025-05-10,Oakland,"Niles, OH
 Eastwood Field",3:00 PM,Youngstown St.,Oakland,0,0,1244.96,1300.25,-6.24,-2.36,0.2904,42.11,-4.12,Oakland -4.12
-15250,Youngstown St.,2025-05-11,Oakland,"Niles, OH
+15196,Youngstown St.,2025-05-11,Oakland,"Niles, OH
 Eastwood Field",1:00 PM,Youngstown St.,Oakland,0,0,1244.96,1300.25,-6.24,-2.36,0.2904,42.11,-4.12,Oakland -4.12
-15251,Youngstown St.,2025-05-13,Akron,"Akron, Oh
+15197,Youngstown St.,2025-05-13,Akron,"Akron, Oh
 Canal Park",10:30 AM,Akron,Youngstown St.,0,0,1281.2,1244.96,-3.41,-6.24,0.6574,55.2,2.99,Akron -2.99
-15252,Youngstown St.,2025-05-15,Northern Kentucky,"Highland Heights, KY
+15198,Youngstown St.,2025-05-15,Northern Kentucky,"Highland Heights, KY
 Bill Aker Baseball Complex",3:00 PM,Northern Ky.,Youngstown St.,0,0,1344.3,1244.96,-0.93,-6.24,0.7725,63.92,5.73,Northern Ky. -5.73
-15253,Youngstown St.,2025-05-16,Northern Kentucky,"Highland Heights, KY
+15199,Youngstown St.,2025-05-16,Northern Kentucky,"Highland Heights, KY
 Bill Aker Baseball Complex",1:00 PM,Northern Ky.,Youngstown St.,0,0,1344.3,1244.96,-0.93,-6.24,0.7725,63.92,5.73,Northern Ky. -5.73
-15254,Youngstown St.,2025-05-17,Northern Kentucky,"Highland Heights, KY
+15200,Youngstown St.,2025-05-17,Northern Kentucky,"Highland Heights, KY
 Bill Aker Baseball Complex",1:00 PM,Northern Ky.,Youngstown St.,0,0,1344.3,1244.96,-0.93,-6.24,0.7725,63.92,5.73,Northern Ky. -5.73
-15255,Iona,2025-02-14,Coppin State,"Hanover, MD
+15201,Iona,2025-02-14,Coppin State,"Hanover, MD
 Joe Cannon Stadium",L   10 - 11 (11 Innings),Coppin St.,Iona,11,10,1238.31,1242.04,-6.77,-3.69,0.3298,49.46,-3.1,Iona -3.1
-15256,Iona,2025-02-15,Coppin State,"Hanover, MD
+15202,Iona,2025-02-15,Coppin State,"Hanover, MD
 Joe Cannon Stadium",Canceled,Coppin St.,Iona,0,0,1238.31,1242.04,-6.77,-3.69,0.3298,49.46,-3.1,Iona -3.1
-15257,Iona,2025-02-16,Coppin State,"Hanover, MD
+15203,Iona,2025-02-16,Coppin State,"Hanover, MD
 Joe Cannon Stadium",W   18 - 2 (7 Innings),Coppin St.,Iona,2,18,1238.31,1242.04,-6.77,-3.69,0.3298,49.46,-3.1,Iona -3.1
-15258,Iona,2025-02-21,Hofstra,"Hempstead, NY
+15204,Iona,2025-02-21,Hofstra,"Hempstead, NY
 University Field",2:00 PM,Hofstra,Iona,0,0,1363.02,1242.04,-3.63,-3.69,0.5035000000000001,66.74,0.56,Hofstra -0.56
-15259,Iona,2025-02-22,Hofstra,"Hempstead, NY
+15205,Iona,2025-02-22,Hofstra,"Hempstead, NY
 University Field",1:00 PM,Hofstra,Iona,0,0,1363.02,1242.04,-3.63,-3.69,0.5035000000000001,66.74,0.56,Hofstra -0.56
-15260,Iona,2025-02-23,Hofstra,"Hempstead, NY
+15206,Iona,2025-02-23,Hofstra,"Hempstead, NY
 University Field",12:00 PM,Hofstra,Iona,0,0,1363.02,1242.04,-3.63,-3.69,0.5035000000000001,66.74,0.56,Hofstra -0.56
-15261,Iona,2025-02-26,Fordham,"Bronx, NY
+15207,Iona,2025-02-26,Fordham,"Bronx, NY
 Jim Houlihan Park",3:00 PM,Fordham,Iona,0,0,1249.64,1242.04,-5.9,-3.69,0.37549999999999994,51.09,-2.18,Iona -2.18
-15262,Iona,2025-02-28,NJIT,"Little Falls, NJ
+15208,Iona,2025-02-28,NJIT,"Little Falls, NJ
 Yogi Berra Stadium",3:00 PM,NJIT,Iona,0,0,1299.16,1242.04,-3.81,-3.69,0.49310000000000004,58.15,0.12,NJIT -0.12
-15263,Iona,2025-03-01,NJIT,"Little Falls, NJ
+15209,Iona,2025-03-01,NJIT,"Little Falls, NJ
 Yogi Berra Stadium",6:00 PM,NJIT,Iona,0,0,1299.16,1242.04,-3.81,-3.69,0.49310000000000004,58.15,0.12,NJIT -0.12
-15264,Iona,2025-03-02,NJIT,"Little Falls, NJ
+15210,Iona,2025-03-02,NJIT,"Little Falls, NJ
 Yogi Berra Stadium",1:00 PM,NJIT,Iona,0,0,1299.16,1242.04,-3.81,-3.69,0.49310000000000004,58.15,0.12,NJIT -0.12
-15265,Iona,2025-03-05,Fairleigh Dickinson,"Teaneck, NJ
+15211,Iona,2025-03-05,Fairleigh Dickinson,"Teaneck, NJ
 Naimoli Family Baseball Complex",2:30 PM,FDU,Iona,0,0,1260.76,1242.04,-4.15,-3.69,0.47350000000000003,52.69,-0.38,Iona -0.38
-15266,Iona,2025-03-07,Quinnipiac,"Hamden, CT
+15212,Iona,2025-03-07,Quinnipiac,"Hamden, CT
 Quinnipiac Baseball Field",3:00 PM,Quinnipiac,Iona,0,0,1287.83,1242.04,-4.38,-3.69,0.4604,56.55,-0.49,Iona -0.49
-15267,Iona,2025-03-08,Quinnipiac,"Hamden, CT
+15213,Iona,2025-03-08,Quinnipiac,"Hamden, CT
 Quinnipiac Baseball Field",2:00 PM,Quinnipiac,Iona,0,0,1287.83,1242.04,-4.38,-3.69,0.4604,56.55,-0.49,Iona -0.49
-15268,Iona,2025-03-09,Quinnipiac,"Hamden, CT
+15214,Iona,2025-03-09,Quinnipiac,"Hamden, CT
 Quinnipiac Baseball Field",1:00 PM,Quinnipiac,Iona,0,0,1287.83,1242.04,-4.38,-3.69,0.4604,56.55,-0.49,Iona -0.49
-15269,Iona,2025-03-12,Maine,"New Rochelle, NY
+15215,Iona,2025-03-12,Maine,"New Rochelle, NY
 City Park",3:00 PM,Iona,Maine,0,0,1242.04,1223.24,-3.69,-5.66,0.6114999999999999,52.7,2.05,Iona -2.05
-15270,Iona,2025-03-14,Mount Saint Mary's,"New Rochelle, NY
+15216,Iona,2025-03-14,Mount Saint Mary's,"New Rochelle, NY
 City Park",3:00 PM,Iona,Mount St. Mary's,0,0,1242.04,1328.12,-3.69,-1.32,0.3669,37.86,-2.73,Mount St. Mary's -2.73
-15271,Iona,2025-03-15,Mount Saint Mary's,"New Rochelle, NY
+15217,Iona,2025-03-15,Mount Saint Mary's,"New Rochelle, NY
 City Park",1:00 PM,Iona,Mount St. Mary's,0,0,1242.04,1328.12,-3.69,-1.32,0.3669,37.86,-2.73,Mount St. Mary's -2.73
-15272,Iona,2025-03-16,Mount Saint Mary's,"New Rochelle, NY
+15218,Iona,2025-03-16,Mount Saint Mary's,"New Rochelle, NY
 City Park",12:00 PM,Iona,Mount St. Mary's,0,0,1242.04,1328.12,-3.69,-1.32,0.3669,37.86,-2.73,Mount St. Mary's -2.73
-15273,Iona,2025-03-19,Wagner,"Staten Island, NY
+15219,Iona,2025-03-19,Wagner,"Staten Island, NY
 SIUH Community Park",3:30 PM,Wagner,Iona,0,0,1293.48,1242.04,-3.67,-3.69,0.5012,57.35,0.24,Wagner -0.24
-15274,Iona,2025-03-21,Seton Hall,"South Orange, NJ
+15220,Iona,2025-03-21,Seton Hall,"South Orange, NJ
 Owen T. Carroll Field",4:00 PM,Seton Hall,Iona,0,0,1331.63,1242.04,-1.35,-3.69,0.6315,62.61,2.72,Seton Hall -2.72
-15275,Iona,2025-03-22,Seton Hall,"South Orange, NJ
+15221,Iona,2025-03-22,Seton Hall,"South Orange, NJ
 Owen T. Carroll Field",1:00 PM,Seton Hall,Iona,0,0,1331.63,1242.04,-1.35,-3.69,0.6315,62.61,2.72,Seton Hall -2.72
-15276,Iona,2025-03-23,Seton Hall,"South Orange, NJ
+15222,Iona,2025-03-23,Seton Hall,"South Orange, NJ
 Owen T. Carroll Field",1:00 PM,Seton Hall,Iona,0,0,1331.63,1242.04,-1.35,-3.69,0.6315,62.61,2.72,Seton Hall -2.72
-15277,Iona,2025-03-25,Stony Brook,"Stony Brook, NY
+15223,Iona,2025-03-25,Stony Brook,"Stony Brook, NY
 Joe Nathan Field",3:00 PM,Stony Brook,Iona,0,0,1376.54,1242.04,0.17,-3.69,0.7086,68.44,4.41,Stony Brook -4.41
-15278,Iona,2025-03-28,Rider,"New Rochelle, NY
+15224,Iona,2025-03-28,Rider,"New Rochelle, NY
 City Park",3:00 PM,Iona,Rider,0,0,1242.04,1360.35,-3.69,-4.87,0.5675,33.6,0.69,Iona -0.69
-15279,Iona,2025-03-29,Rider,"New Rochelle, NY
+15225,Iona,2025-03-29,Rider,"New Rochelle, NY
 City Park",1:00 PM,Iona,Rider,0,0,1242.04,1360.35,-3.69,-4.87,0.5675,33.6,0.69,Iona -0.69
-15280,Iona,2025-03-30,Rider,"New Rochelle, NY
+15226,Iona,2025-03-30,Rider,"New Rochelle, NY
 City Park",12:00 PM,Iona,Rider,0,0,1242.04,1360.35,-3.69,-4.87,0.5675,33.6,0.69,Iona -0.69
-15281,Iona,2025-04-01,Fairleigh Dickinson,"New Rochelle, NY
+15227,Iona,2025-04-01,Fairleigh Dickinson,"New Rochelle, NY
 City Park",3:00 PM,Iona,FDU,0,0,1242.04,1260.76,-3.69,-4.15,0.5265,47.31,0.38,Iona -0.38
-15282,Iona,2025-04-04,Manhattan,"Pomona, NY
+15228,Iona,2025-04-04,Manhattan,"Pomona, NY
 Clover Stadium",3:00 PM,Manhattan,Iona,0,0,1296.75,1242.04,-4.28,-3.69,0.4661,57.81,-0.36,Iona -0.36
-15283,Iona,2025-04-05,Manhattan,"Pomona, NY
+15229,Iona,2025-04-05,Manhattan,"Pomona, NY
 Clover Stadium",1:00 PM,Manhattan,Iona,0,0,1296.75,1242.04,-4.28,-3.69,0.4661,57.81,-0.36,Iona -0.36
-15284,Iona,2025-04-06,Manhattan,"Pomona, NY
+15230,Iona,2025-04-06,Manhattan,"Pomona, NY
 Clover Stadium",12:00 PM,Manhattan,Iona,0,0,1296.75,1242.04,-4.28,-3.69,0.4661,57.81,-0.36,Iona -0.36
-15285,Iona,2025-04-08,Saint John's,"New Rochelle, NY
+15231,Iona,2025-04-08,Saint John's,"New Rochelle, NY
 City Park",3:00 PM,Iona,St. John's (NY),0,0,1242.04,1410.3,-3.69,2.0,0.2125,27.52,-6.36,St. John's (NY) -6.36
-15286,Iona,2025-04-09,Wagner,"New Rochelle, NY
+15232,Iona,2025-04-09,Wagner,"New Rochelle, NY
 City Park",3:30 PM,Iona,Wagner,0,0,1242.04,1293.48,-3.69,-3.67,0.4988,42.65,-0.24,Wagner -0.24
-15287,Iona,2025-04-11,Fairfield,"New Rochelle, NY
+15233,Iona,2025-04-11,Fairfield,"New Rochelle, NY
 City Park",3:00 PM,Iona,Fairfield,0,0,1242.04,1417.83,-3.69,-0.12,0.3053,26.66,-4.27,Fairfield -4.27
-15288,Iona,2025-04-12,Fairfield,"New Rochelle, NY
+15234,Iona,2025-04-12,Fairfield,"New Rochelle, NY
 City Park",1:00 PM,Iona,Fairfield,0,0,1242.04,1417.83,-3.69,-0.12,0.3053,26.66,-4.27,Fairfield -4.27
-15289,Iona,2025-04-13,Fairfield,"New Rochelle, NY
+15235,Iona,2025-04-13,Fairfield,"New Rochelle, NY
 City Park",1:00 PM,Iona,Fairfield,0,0,1242.04,1417.83,-3.69,-0.12,0.3053,26.66,-4.27,Fairfield -4.27
-15290,Iona,2025-04-17,Canisius,"Buffalo, NY
+15236,Iona,2025-04-17,Canisius,"Buffalo, NY
 Demske Sports Complex",3:00 PM,Canisius,Iona,0,0,1253.95,1242.04,-4.87,-3.69,0.4325,51.71,-1.13,Iona -1.13
-15291,Iona,2025-04-18,Canisius,"Buffalo, NY
+15237,Iona,2025-04-18,Canisius,"Buffalo, NY
 Demske Sports Complex",3:00 PM,Canisius,Iona,0,0,1253.95,1242.04,-4.87,-3.69,0.4325,51.71,-1.13,Iona -1.13
-15292,Iona,2025-04-19,Canisius,"Buffalo, NY
+15238,Iona,2025-04-19,Canisius,"Buffalo, NY
 Demske Sports Complex",4:00 PM,Canisius,Iona,0,0,1253.95,1242.04,-4.87,-3.69,0.4325,51.71,-1.13,Iona -1.13
-15293,Iona,2025-04-23,Long Island,"Brooklyn, NY
+15239,Iona,2025-04-23,Long Island,"Brooklyn, NY
 Long Island University Field",TBA,LIU,Iona,0,0,1388.84,1242.04,-2.32,-3.69,0.5782,69.95,1.97,LIU -1.97
-15294,Iona,2025-04-25,Siena,"New Rochelle, NY
+15240,Iona,2025-04-25,Siena,"New Rochelle, NY
 City Park",3:00 PM,Iona,Siena,0,0,1242.04,1225.48,-3.69,-6.95,0.6793,52.38,3.33,Iona -3.33
-15295,Iona,2025-04-26,Siena,"New Rochelle, NY
+15241,Iona,2025-04-26,Siena,"New Rochelle, NY
 City Park",1:00 PM,Iona,Siena,0,0,1242.04,1225.48,-3.69,-6.95,0.6793,52.38,3.33,Iona -3.33
-15296,Iona,2025-04-27,Siena,"New Rochelle, NY
+15242,Iona,2025-04-27,Siena,"New Rochelle, NY
 City Park",12:00 PM,Iona,Siena,0,0,1242.04,1225.48,-3.69,-6.95,0.6793,52.38,3.33,Iona -3.33
-15297,Iona,2025-04-30,Saint John's,"Queens, NY
+15243,Iona,2025-04-30,Saint John's,"Queens, NY
 Jack Kaiser Stadium",3:00 PM,St. John's (NY),Iona,0,0,1410.3,1242.04,2.0,-3.69,0.7875,72.48,6.36,St. John's (NY) -6.36
-15298,Iona,2025-05-02,Sacred Heart,"Fairfield, CT
+15244,Iona,2025-05-02,Sacred Heart,"Fairfield, CT
 Veterans Park",3:00 PM,Sacred Heart,Iona,0,0,1340.44,1242.04,-2.49,-3.69,0.5686,63.79,1.61,Sacred Heart -1.61
-15299,Iona,2025-05-03,Sacred Heart,"Fairfield, CT
+15245,Iona,2025-05-03,Sacred Heart,"Fairfield, CT
 Veterans Park",1:00 PM,Sacred Heart,Iona,0,0,1340.44,1242.04,-2.49,-3.69,0.5686,63.79,1.61,Sacred Heart -1.61
-15300,Iona,2025-05-04,Sacred Heart,"Fairfield, CT
+15246,Iona,2025-05-04,Sacred Heart,"Fairfield, CT
 Veterans Park",1:00 PM,Sacred Heart,Iona,0,0,1340.44,1242.04,-2.49,-3.69,0.5686,63.79,1.61,Sacred Heart -1.61
-15301,Iona,2025-05-07,Yale,"West Haven, CT
+15247,Iona,2025-05-07,Yale,"West Haven, CT
 George H.W. Bush 48 Field",6:00 PM,Yale,Iona,0,0,1311.9,1242.04,-4.87,-3.69,0.4325,59.92,-0.88,Iona -0.88
-15302,Iona,2025-05-09,Merrimack,"Andover, MA
+15248,Iona,2025-05-09,Merrimack,"Andover, MA
 Warrior Baseball Diamond",3:00 PM,Merrimack,Iona,0,0,1325.75,1242.04,-2.91,-3.69,0.5448,61.82,1.13,Merrimack -1.13
-15303,Iona,2025-05-10,Merrimack,"Andover, MA
+15249,Iona,2025-05-10,Merrimack,"Andover, MA
 Warrior Baseball Diamond",1:00 PM,Merrimack,Iona,0,0,1325.75,1242.04,-2.91,-3.69,0.5448,61.82,1.13,Merrimack -1.13
-15304,Iona,2025-05-11,Merrimack,"Andover, MA
+15250,Iona,2025-05-11,Merrimack,"Andover, MA
 Warrior Baseball Diamond",12:00 PM,Merrimack,Iona,0,0,1325.75,1242.04,-2.91,-3.69,0.5448,61.82,1.13,Merrimack -1.13
-15305,Iona,2025-05-15,Saint Peter's,"New Rochelle, NY
+15251,Iona,2025-05-15,Saint Peter's,"New Rochelle, NY
 City Park",3:00 PM,Iona,Saint Peter's,0,0,1242.04,1224.99,-3.69,-5.69,0.6131,52.45,2.07,Iona -2.07
-15306,Iona,2025-05-16,Saint Peter's,"New Rochelle, NY
+15252,Iona,2025-05-16,Saint Peter's,"New Rochelle, NY
 City Park",3:00 PM,Iona,Saint Peter's,0,0,1242.04,1224.99,-3.69,-5.69,0.6131,52.45,2.07,Iona -2.07
-15307,Iona,2025-05-17,Saint Peter's,"New Rochelle, NY
+15253,Iona,2025-05-17,Saint Peter's,"New Rochelle, NY
 City Park",12:00 PM,Iona,Saint Peter's,0,0,1242.04,1224.99,-3.69,-5.69,0.6131,52.45,2.07,Iona -2.07
+15254,Pepperdine,2025-02-14,Utah,"Malibu, CA
+Eddy D. Field Stadium",L   1 - 3 (10 Innings),Pepperdine,Utah,1,3,1241.98,1473.18,-2.75,2.52,0.2291,20.9,-6.14,Utah -6.14
+15255,Pepperdine,2025-02-15,Utah,"Malibu, CA
+Eddy D. Field Stadium",L   2 - 11,Pepperdine,Utah,2,11,1241.98,1473.18,-2.75,2.52,0.2291,20.9,-6.14,Utah -6.14
+15256,Pepperdine,2025-02-16,Utah,"Malibu, CA
+Eddy D. Field Stadium",L   4 - 10,Pepperdine,Utah,4,10,1241.98,1473.18,-2.75,2.52,0.2291,20.9,-6.14,Utah -6.14
+15257,Pepperdine,2025-02-17,Utah,"Malibu, CA
+Eddy D. Field Stadium",L   1 - 6,Pepperdine,Utah,1,6,1241.98,1473.18,-2.75,2.52,0.2291,20.9,-6.14,Utah -6.14
+15258,Pepperdine,2025-02-20,California Baptist,"Riverside, CA
+James W. Totman Stadium",L   2 - 12 (7 Innings),California Baptist,Pepperdine,12,2,1464.34,1241.98,1.64,-2.75,0.7332,78.25,5.24,California Baptist -5.24
+15259,Pepperdine,2025-02-21,UC San Diego,"La Jolla, CA
+Triton Park",9:00 PM,UC San Diego,Pepperdine,0,0,1366.54,1241.98,0.17,-2.75,0.662,67.2,3.44,UC San Diego -3.44
+15260,Pepperdine,2025-02-22,Long Beach State,"La Jolla, CA
+Triton Park",4:00 PM,Pepperdine,Long Beach St.,0,0,1241.98,1330.1,-2.75,-1.03,0.4023,37.58,-2.09,Long Beach St. -2.09
+15261,Pepperdine,2025-02-23,San Diego State,"San Diego, CA
+Tony Gwynn Stadium",8:00 PM,San Diego St.,Pepperdine,0,0,1339.67,1241.98,-2.88,-2.75,0.4925,63.7,0.28,San Diego St. -0.28
+15262,Pepperdine,2025-02-25,UC Santa Barbara,"Malibu, CA
+Eddy D. Field Stadium",5:00 PM,Pepperdine,UC Santa Barbara,0,0,1241.98,1535.5,-2.75,5.67,0.1258,15.58,-9.45,UC Santa Barbara -9.45
+15263,Pepperdine,2025-02-28,Tulane,"Malibu, CA
+Eddy D. Field Stadium",TBA,Pepperdine,Tulane,0,0,1241.98,1499.97,-2.75,2.81,0.2175,18.47,-6.51,Tulane -6.51
+15264,Pepperdine,2025-03-01,Tulane,"Malibu, CA
+Eddy D. Field Stadium",TBA,Pepperdine,Tulane,0,0,1241.98,1499.97,-2.75,2.81,0.2175,18.47,-6.51,Tulane -6.51
+15265,Pepperdine,2025-03-02,Tulane,"Malibu, CA
+Eddy D. Field Stadium",TBA,Pepperdine,Tulane,0,0,1241.98,1499.97,-2.75,2.81,0.2175,18.47,-6.51,Tulane -6.51
+15266,Pepperdine,2025-03-04,Grand Canyon,"Phoenix, AZ
+Brazell Field at GCU Ballpark",8:00 PM,Grand Canyon,Pepperdine,0,0,1455.86,1241.98,2.51,-2.75,0.7705,77.4,6.08,Grand Canyon -6.08
+15267,Pepperdine,2025-03-06,Arizona,"Tucson, AZ
+Hi Corbett Field",8:00 PM,Arizona,Pepperdine,0,0,1492.66,1241.98,3.81,-2.75,0.8190999999999999,80.89,7.49,Arizona -7.49
+15268,Pepperdine,2025-03-07,Arizona,"Tucson, AZ
+Hi Corbett Field",8:00 PM,Arizona,Pepperdine,0,0,1492.66,1241.98,3.81,-2.75,0.8190999999999999,80.89,7.49,Arizona -7.49
+15269,Pepperdine,2025-03-08,Arizona,"Tucson, AZ
+Hi Corbett Field",8:00 PM,Arizona,Pepperdine,0,0,1492.66,1241.98,3.81,-2.75,0.8190999999999999,80.89,7.49,Arizona -7.49
+15270,Pepperdine,2025-03-09,Arizona,"Tucson, AZ
+Hi Corbett Field",3:00 PM,Arizona,Pepperdine,0,0,1492.66,1241.98,3.81,-2.75,0.8190999999999999,80.89,7.49,Arizona -7.49
+15271,Pepperdine,2025-03-11,Long Beach State,"Long Beach, CA
+Blair Field",9:00 PM,Long Beach St.,Pepperdine,0,0,1330.1,1241.98,-1.03,-2.75,0.5977,62.42,2.09,Long Beach St. -2.09
+15272,Pepperdine,2025-03-18,Nebraska,"Malibu, CA
+Eddy D. Field Stadium",2:30 PM,Pepperdine,Nebraska,0,0,1241.98,1502.7,-2.75,4.38,0.16219999999999998,18.23,-8.08,Nebraska -8.08
+15273,Pepperdine,2025-03-19,Nebraska,"Malibu, CA
+Eddy D. Field Stadium",2:30 PM,Pepperdine,Nebraska,0,0,1241.98,1502.7,-2.75,4.38,0.16219999999999998,18.23,-8.08,Nebraska -8.08
+15274,Pepperdine,2025-03-21,Gonzaga,"Malibu, CA
+Eddy D. Field Stadium",6:00 PM,Pepperdine,Gonzaga,0,0,1241.98,1338.4,-2.75,0.26,0.3333,36.47,-3.42,Gonzaga -3.42
+15275,Pepperdine,2025-03-22,Gonzaga,"Malibu, CA
+Eddy D. Field Stadium",6:00 PM,Pepperdine,Gonzaga,0,0,1241.98,1338.4,-2.75,0.26,0.3333,36.47,-3.42,Gonzaga -3.42
+15276,Pepperdine,2025-03-23,Gonzaga,"Malibu, CA
+Eddy D. Field Stadium",4:00 PM,Pepperdine,Gonzaga,0,0,1241.98,1338.4,-2.75,0.26,0.3333,36.47,-3.42,Gonzaga -3.42
+15277,Pepperdine,2025-03-25,Cal Poly,"Malibu, CA
+Eddy D. Field Stadium",5:30 PM,Pepperdine,Cal Poly,0,0,1241.98,1415.44,-2.75,0.94,0.2995,26.92,-4.38,Cal Poly -4.38
+15278,Pepperdine,2025-03-28,San Diego,"San Diego, CA
+Fowler Park",9:00 PM,San Diego,Pepperdine,0,0,1444.6,1241.98,4.86,-2.75,0.8522,76.25,8.4,San Diego -8.4
+15279,Pepperdine,2025-03-29,San Diego,"San Diego, CA
+Fowler Park",8:00 PM,San Diego,Pepperdine,0,0,1444.6,1241.98,4.86,-2.75,0.8522,76.25,8.4,San Diego -8.4
+15280,Pepperdine,2025-03-30,San Diego,"San Diego, CA
+Fowler Park",4:00 PM,San Diego,Pepperdine,0,0,1444.6,1241.98,4.86,-2.75,0.8522,76.25,8.4,San Diego -8.4
+15281,Pepperdine,2025-04-01,UCLA,"Los Angeles, CA
+Jackie Robinson Stadium",9:00 PM,UCLA,Pepperdine,0,0,1448.98,1241.98,0.18,-2.75,0.6625,76.7,3.73,UCLA -3.73
+15282,Pepperdine,2025-04-04,Santa Clara,"Malibu, CA
+Eddy D. Field Stadium",TBA,Pepperdine,Santa Clara,0,0,1241.98,1402.1,-2.75,-0.67,0.3825,28.46,-2.73,Santa Clara -2.73
+15283,Pepperdine,2025-04-05,Santa Clara,"Malibu, CA
+Eddy D. Field Stadium",TBA,Pepperdine,Santa Clara,0,0,1241.98,1402.1,-2.75,-0.67,0.3825,28.46,-2.73,Santa Clara -2.73
+15284,Pepperdine,2025-04-06,Santa Clara,"Malibu, CA
+Eddy D. Field Stadium",TBA,Pepperdine,Santa Clara,0,0,1241.98,1402.1,-2.75,-0.67,0.3825,28.46,-2.73,Santa Clara -2.73
+15285,Pepperdine,2025-04-08,UC Santa Barbara,"Santa Barbara, CA
+Caesar Uyesaka Stadium",7:35 PM,UC Santa Barbara,Pepperdine,0,0,1535.5,1241.98,5.67,-2.75,0.8742,84.42,9.45,UC Santa Barbara -9.45
+15286,Pepperdine,2025-04-11,Portland,"Portland, OR
+Joe Etzel Field",9:00 PM,Portland,Pepperdine,0,0,1442.4,1241.98,2.17,-2.75,0.7564,76.02,5.7,Portland -5.7
+15287,Pepperdine,2025-04-12,Portland,"Portland, OR
+Joe Etzel Field",6:00 PM,Portland,Pepperdine,0,0,1442.4,1241.98,2.17,-2.75,0.7564,76.02,5.7,Portland -5.7
+15288,Pepperdine,2025-04-13,Portland,"Portland, OR
+Joe Etzel Field",4:00 PM,Portland,Pepperdine,0,0,1442.4,1241.98,2.17,-2.75,0.7564,76.02,5.7,Portland -5.7
+15289,Pepperdine,2025-04-15,Cal State Fullerton,"Fullerton, CA
+Goodwin Field",9:00 PM,Cal St. Fullerton,Pepperdine,0,0,1259.01,1241.98,-2.85,-2.75,0.49420000000000003,52.45,-0.03,Pepperdine -0.03
+15290,Pepperdine,2025-04-17,Saint Mary's College,"Malibu, CA
+Eddy D. Field Stadium",6:00 PM,Pepperdine,Saint Mary's (CA),0,0,1241.98,1468.82,-2.75,2.4,0.23399999999999999,21.32,-6.01,Saint Mary's (CA) -6.01
+15291,Pepperdine,2025-04-18,Saint Mary's College,"Malibu, CA
+Eddy D. Field Stadium",4:00 PM,Pepperdine,Saint Mary's (CA),0,0,1241.98,1468.82,-2.75,2.4,0.23399999999999999,21.32,-6.01,Saint Mary's (CA) -6.01
+15292,Pepperdine,2025-04-19,Saint Mary's College,"Malibu, CA
+Eddy D. Field Stadium",4:00 PM,Pepperdine,Saint Mary's (CA),0,0,1241.98,1468.82,-2.75,2.4,0.23399999999999999,21.32,-6.01,Saint Mary's (CA) -6.01
+15293,Pepperdine,2025-04-21,Cal State Bakersfield,"Malibu, CA
+Eddy D. Field Stadium",TBA,Pepperdine,CSU Bakersfield,0,0,1241.98,1289.08,-2.75,-5.42,0.649,43.26,2.47,Pepperdine -2.47
+15294,Pepperdine,2025-04-22,Cal State Bakersfield,"Bakersfield, CA
+Hardt Field",9:30 PM,CSU Bakersfield,Pepperdine,0,0,1289.08,1241.98,-5.42,-2.75,0.35100000000000003,56.74,-2.47,Pepperdine -2.47
+15295,Pepperdine,2025-04-25,San Francisco,"San Francisco, CA
+Dante Benedetti Diamond",5:00 PM,San Francisco,Pepperdine,0,0,1282.99,1241.98,-3.41,-2.75,0.4621,55.87,-0.48,Pepperdine -0.48
+15296,Pepperdine,2025-04-26,San Francisco,"San Francisco, CA
+Dante Benedetti Diamond",4:00 PM,San Francisco,Pepperdine,0,0,1282.99,1241.98,-3.41,-2.75,0.4621,55.87,-0.48,Pepperdine -0.48
+15297,Pepperdine,2025-04-27,San Francisco,"San Francisco, CA
+Dante Benedetti Diamond",5:00 PM,San Francisco,Pepperdine,0,0,1282.99,1241.98,-3.41,-2.75,0.4621,55.87,-0.48,Pepperdine -0.48
+15298,Pepperdine,2025-05-02,Northwestern State,"Malibu, CA
+Eddy D. Field Stadium",TBA,Pepperdine,Northwestern St.,0,0,1241.98,1374.25,-2.75,-0.29,0.36210000000000003,31.83,-3.01,Northwestern St. -3.01
+15299,Pepperdine,2025-05-03,Northwestern State,"Malibu, CA
+Eddy D. Field Stadium",TBA,Pepperdine,Northwestern St.,0,0,1241.98,1374.25,-2.75,-0.29,0.36210000000000003,31.83,-3.01,Northwestern St. -3.01
+15300,Pepperdine,2025-05-04,Northwestern State,"Malibu, CA
+Eddy D. Field Stadium",TBA,Pepperdine,Northwestern St.,0,0,1241.98,1374.25,-2.75,-0.29,0.36210000000000003,31.83,-3.01,Northwestern St. -3.01
+15301,Pepperdine,2025-05-06,Cal Poly,"San Luis Obispo, CA
+Robin Baggett Stadium",8:00 PM,Cal Poly,Pepperdine,0,0,1415.44,1241.98,0.94,-2.75,0.7005,73.08,4.38,Cal Poly -4.38
+15302,Pepperdine,2025-05-09,Pacific,"Stockton, CA
+Klein Family Field",9:00 PM,Pacific,Pepperdine,0,0,1276.81,1241.98,-4.26,-2.75,0.4139,55.0,-1.36,Pepperdine -1.36
+15303,Pepperdine,2025-05-10,Pacific,"Stockton, CA
+Klein Family Field",9:00 PM,Pacific,Pepperdine,0,0,1276.81,1241.98,-4.26,-2.75,0.4139,55.0,-1.36,Pepperdine -1.36
+15304,Pepperdine,2025-05-11,Pacific,"Stockton, CA
+Klein Family Field",4:00 PM,Pacific,Pepperdine,0,0,1276.81,1241.98,-4.26,-2.75,0.4139,55.0,-1.36,Pepperdine -1.36
+15305,Pepperdine,2025-05-15,Loyola-Marymount,"Malibu, CA
+Eddy D. Field Stadium",TBA,Pepperdine,Loyola-Marymount,0,0,1241.98,1387.5,-2.75,-4.87,0.6197,30.2,1.53,Pepperdine -1.53
+15306,Pepperdine,2025-05-16,Loyola-Marymount,"Malibu, CA
+Eddy D. Field Stadium",TBA,Pepperdine,Loyola-Marymount,0,0,1241.98,1387.5,-2.75,-4.87,0.6197,30.2,1.53,Pepperdine -1.53
+15307,Pepperdine,2025-05-17,Loyola-Marymount,"Malibu, CA
+Eddy D. Field Stadium",TBA,Pepperdine,Loyola-Marymount,0,0,1241.98,1387.5,-2.75,-4.87,0.6197,30.2,1.53,Pepperdine -1.53
 15308,Mississippi Val.,2025-02-14,Western Illinois,"Itta Bena, MS
 Magnolia Field",Canceled,Mississippi Val.,Western Ill.,0,0,1241.6,1233.47,-3.95,-5.28,0.5760000000000001,51.17,1.37,Mississippi Val. -1.37
 15309,Mississippi Val.,2025-02-15,Western Illinois,"Itta Bena, MS

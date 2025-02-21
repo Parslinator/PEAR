@@ -2,9 +2,11 @@ from datetime import datetime # type: ignore
 import os # type: ignore
 import pandas as pd # type: ignore
 import streamlit as st # type: ignore
+import pytz # type: ignore
 
-
-formatted_date = datetime.today().strftime('%m_%d_%Y')
+central_tz = pytz.timezone('America/Chicago')
+formatted_date = datetime.now(central_tz).strftime('%m_%d_%Y')
+formatted_date = central_tz.localize(datetime.strptime(formatted_date, '%m_%d_%Y'))
 current_season = datetime.today().year
 schedule_df = pd.read_csv(f"./PEAR/PEAR Baseball/y{current_season}/schedule_{current_season}.csv")
 schedule_df["Date"] = pd.to_datetime(schedule_df["Date"])
@@ -12,7 +14,7 @@ comparison_date = pd.to_datetime(formatted_date, format="%m_%d_%Y")
 # formatted_date_dt = pd.to_datetime(comparison_date, format="%m_%d_%Y")
 subset_games = schedule_df[
     (schedule_df["Date"] >= comparison_date) &
-    (schedule_df["Date"] <= comparison_date + pd.Timedelta(days=1))
+    (schedule_df["Date"] <= comparison_date + pd.Timedelta(days=0))
 ].sort_values('Date').reset_index(drop=True)
 
 folder_path = f"./PEAR/PEAR Baseball/y{current_season}"
