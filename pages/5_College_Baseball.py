@@ -7,6 +7,7 @@ import streamlit as st # type: ignore
 formatted_date = datetime.today().strftime('%m_%d_%Y')
 current_season = datetime.today().year
 schedule_df = pd.read_csv(f"./PEAR/PEAR Baseball/y{current_season}/schedule_{current_season}.csv")
+schedule_df["Date"] = pd.to_datetime(schedule_df["Date"], format="%m-%d-%Y")
 comparison_date = pd.to_datetime(formatted_date, format="%m_%d_%Y")
 formatted_date_dt = pd.to_datetime(comparison_date, format="%m_%d_%Y")
 subset_games = schedule_df[
