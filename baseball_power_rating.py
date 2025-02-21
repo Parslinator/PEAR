@@ -868,6 +868,14 @@ completed_schedule = schedule_df[
 ].reset_index(drop=True)
 remaining_games = schedule_df[schedule_df["Date"] > comparison_date].reset_index(drop=True)
 
+def adjust_home_pr(home_win_prob):
+    return ((home_win_prob - 50) / 50) * 1.5
+schedule_df['elo_win_prob'] = round((10**((schedule_df['home_elo'] - schedule_df['away_elo']) / 400)) / ((10**((schedule_df['home_elo'] - schedule_df['away_elo']) / 400)) + 1)*100,2)
+schedule_df['Spread'] = (schedule_df['home_rating'] + (schedule_df['elo_win_prob'].apply(adjust_home_pr)) - schedule_df['away_rating']).round(2)
+schedule_df['PEAR'] = schedule_df.apply(
+    lambda row: f"{row['away_team']} {-abs(row['Spread'])}" if ((row['Spread'] <= 0)) 
+    else f"{row['home_team']} {-abs(row['Spread'])}", axis=1)
+
 def calculate_expected_wins(group):
     # Initialize a variable to accumulate expected wins
     expected_wins = 0
@@ -982,7 +990,8 @@ quadrant_record_df = pd.DataFrame.from_dict(quadrant_records, orient='index').re
 df_1 = pd.merge(ending_data, team_expected_wins[['Team', 'expected_wins']], on='Team', how='left')
 df_2 = pd.merge(df_1, avg_team_expected_wins[['Team', 'avg_expected_wins']], on='Team', how='left')
 df_3 = pd.merge(df_2, rem_avg_expected_wins[['Team', 'rem_avg_expected_wins']], on='Team', how='left')
-stats_and_metrics = pd.merge(df_3, quadrant_record_df, on='Team', how='left')
+df_4 = pd.merge(df_3, elo_data[['Team', 'ELO']], on='Team', how='left')
+stats_and_metrics = pd.merge(df_4, quadrant_record_df, on='Team', how='left')
 
 stats_and_metrics['wins_above_expected'] = round(stats_and_metrics['Wins'] - stats_and_metrics['expected_wins'],2)
 stats_and_metrics['SOR'] = stats_and_metrics['wins_above_expected'].rank(method='min', ascending=False)
@@ -1002,8 +1011,12 @@ max_SOS = stats_and_metrics['SOS'].max()
 stats_and_metrics['SOS'].fillna(max_SOS + 1, inplace=True)
 stats_and_metrics['SOS'] = stats_and_metrics['SOS'].astype(int)
 stats_and_metrics = stats_and_metrics.sort_values('SOS').reset_index(drop=True)
-stats_and_metrics = stats_and_metrics.sort_values('Rating', ascending=False).reset_index(drop=True)
+
+stats_and_metrics['ELO'].fillna(1200, inplace=True)
 stats_and_metrics.fillna(0, inplace=True)
 
 file_path = os.path.join(folder_path, f"baseball_{formatted_date}.csv")
 stats_and_metrics.to_csv(file_path)
+
+file_path = os.path.join(folder_path, f"schedule_{current_season}.csv")
+schedule_df.to_csv(file_path)

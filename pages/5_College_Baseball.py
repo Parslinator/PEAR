@@ -3,8 +3,16 @@ import os # type: ignore
 import pandas as pd # type: ignore
 import streamlit as st # type: ignore
 
+
 formatted_date = datetime.today().strftime('%m_%d_%Y')
 current_season = datetime.today().year
+schedule_df = pd.read_csv(f"./PEAR/PEAR Baseball/y{current_season}/schedule_{current_season}.csv")
+comparison_date = pd.to_datetime(formatted_date, format="%m_%d_%Y")
+formatted_date_dt = pd.to_datetime(comparison_date, format="%m_%d_%Y")
+subset_games = schedule_df[
+    (schedule_df["Date"] >= formatted_date_dt) &
+    (schedule_df["Date"] <= formatted_date_dt + pd.Timedelta(days=0))
+].reset_index(drop=True).sort_values('Date')
 
 folder_path = f"./PEAR/PEAR Baseball/y{current_season}"
 
@@ -32,12 +40,16 @@ else:
     modeling_stats = None  # No valid files found
 formatted_latest_date = latest_date.strftime("%B %d, %Y")
 
-def find_spread(home_team, away_team, neutrality):
+def adjust_home_pr(home_win_prob):
+    return ((home_win_prob - 50) / 50) * 1.5
+
+def find_spread(home_team, away_team):
     home_pr = modeling_stats[modeling_stats['Team'] == home_team]['Rating'].values[0]
     away_pr = modeling_stats[modeling_stats['Team'] == away_team]['Rating'].values[0]
-    raw_spread = 0.35 + home_pr - away_pr
-    if neutrality:
-        raw_spread -= 0.35
+    home_elo = modeling_stats[modeling_stats['Team'] == home_team]['ELO'].values[0]
+    away_elo = modeling_stats[modeling_stats['Team'] == away_team]['ELO'].values[0]
+    win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1)*100,2)
+    raw_spread = adjust_home_pr(win_prob) + home_pr - away_pr
     spread = round(raw_spread,2)
     if spread >= 0:
         return f"{home_team} -{spread}"
@@ -53,17 +65,9 @@ st.subheader("Calculate Spread Between Any Two Teams")
 with st.form(key='calculate_spread'):
     away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
     home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
-    neutrality = st.radio(
-        "Game Location",
-        ["Neutral Field", "On Campus"]
-    )
     spread_button = st.form_submit_button("Calculate Spread")
     if spread_button:
-        if neutrality == 'Neutral Field':
-            neutrality = True
-        else:
-            neutrality = False
-        st.write(find_spread(home_team, away_team, neutrality))
+        st.write(find_spread(home_team, away_team))
 
 st.divider()
 
@@ -78,3 +82,10 @@ st.subheader("CBASE Stats")
 with st.container(border=True, height=440):
     st.dataframe(modeling_stats[['Team', 'ERA', 'WHIP', 'KP9', 'BA', 'OBP', 'SLG', 'OPS']], use_container_width=True)
 st.caption("ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
+
+st.divider()
+st.subheader(f"{formatted_latest_date} Games")
+subset_games['Home'] = subset_games['home_team']
+subset_games['Away'] = subset_games['away_team']
+with st.container(border=True, height=440):
+    st.dataframe(subset_games[['Home', 'Away', 'Pear']])
