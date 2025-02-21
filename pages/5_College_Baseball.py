@@ -13,7 +13,7 @@ comparison_date = pd.to_datetime(formatted_date, format="%m_%d_%Y")
 subset_games = schedule_df[
     (schedule_df["Date"] >= comparison_date) &
     (schedule_df["Date"] <= comparison_date + pd.Timedelta(days=0))
-].sort_values('Date').reset_index(drop=True)
+].sort_values('Date').drop_duplicates().reset_index(drop=True)
 
 folder_path = f"./PEAR/PEAR Baseball/y{current_season}"
 
