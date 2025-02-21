@@ -588,241 +588,75 @@ if table:
 else:
     print("Table not found on the page.")
 
+# Define mapping for team name replacements
+team_replacements = {
+    'North Carolina St.': 'NC State',
+    'Southern Miss': 'Southern Miss.',
+    'USC': 'Southern California',
+    'Dallas Baptist': 'DBU',
+    'Charleston': 'Col. of Charleston',
+    'Georgia Southern': 'Ga. Southern',
+    'UNCG': 'UNC Greensboro',
+    'East Tennessee St.': 'ETSU',
+    'Lamar': 'Lamar University',
+    "Saint Mary's College": "Saint Mary's (CA)",
+    'Western Kentucky': 'Western Ky.',
+    'FAU': 'Fla. Atlantic',
+    'Connecticut': 'UConn',
+    'Southeast Missouri': 'Southeast Mo. St.',
+    'Alcorn St.': 'Alcorn',
+    'Appalachian St.': 'App State',
+    'Arkansas-Pine Bluff': 'Ark.-Pine Bluff',
+    'Army': 'Army West Point',
+    'Cal St. Bakersfield': 'CSU Bakersfield',
+    'Cal St. Northridge': 'CSUN',
+    'Central Arkansas': 'Central Ark.',
+    'Central Michigan': 'Central Mich.',
+    'Charleston Southern': 'Charleston So.',
+    'Eastern Illinois': 'Eastern Ill.',
+    'Eastern Kentucky': 'Eastern Ky.',
+    'Eastern Michigan': 'Eastern Mich.',
+    'Fairleigh Dickinson': 'FDU',
+    'Grambling St.': 'Grambling',
+    'Incarnate Word': 'UIW',
+    'Long Island': 'LIU',
+    'Maryland Eastern Shore': 'UMES',
+    'Middle Tennessee': 'Middle Tenn.',
+    'Mississippi Valley St.': 'Mississippi Val.',
+    "Mount Saint Mary's": "Mount St. Mary's",
+    'North Alabama': 'North Ala.',
+    'North Carolina A&T': 'N.C. A&T',
+    'Northern Colorado': 'Northern Colo.',
+    'Northern Kentucky': 'Northern Ky.',
+    'Prairie View A&M': 'Prairie View',
+    'Presbyterian College': 'Presbyterian',
+    'Saint Bonaventure': 'St. Bonaventure',
+    "Saint John's": "St. John's (NY)",
+    'Sam Houston St.': 'Sam Houston',
+    'Seattle University': 'Seattle U',
+    'South Carolina Upstate': 'USC Upstate',
+    'South Florida': 'South Fla.',
+    'Southeastern Louisiana': 'Southeastern La.',
+    'Southern': 'Southern U.',
+    'Southern Illinois': 'Southern Ill.',
+    'Stephen F. Austin': 'SFA',
+    'Tennessee-Martin': 'UT Martin',
+    'Texas A&M-Corpus Christi': 'A&M-Corpus Christi',
+    'UMass-Lowell': 'UMass Lowell',
+    'UTA': 'UT Arlington',
+    'Western Carolina': 'Western Caro.',
+    'Western Illinois': 'Western Ill.',
+    'Western Michigan': 'Western Mich.',
+}
+
+# Apply replacements and standardize 'State' to 'St.'
+columns_to_replace = ['Team', 'home_team', 'away_team', 'Opponent']
+
+for col in columns_to_replace:
+    schedule_df[col] = schedule_df[col].str.replace('State', 'St.', regex=False)
+    schedule_df[col] = schedule_df[col].replace(team_replacements)
 elo_data['Team'] = elo_data['Team'].str.replace('State', 'St.', regex=False)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'NC State' if x == 'North Carolina St.' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Southern Miss.' if x == 'Southern Miss' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Southern California' if x == 'USC' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'DBU' if x == 'Dallas Baptist' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Col. of Charleston' if x == 'Charleston' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Ga. Southern' if x == 'Georgia Southern' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'UNC Greensboro' if x == 'UNCG' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'ETSU' if x == 'East Tennessee St.' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Lamar University' if x == 'Lamar' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: "Saint Mary's (CA)" if x == "Saint Mary's College" else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Western Ky.' if x == 'Western Kentucky' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Fla. Atlantic' if x == 'FAU' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'UConn' if x == 'Connecticut' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Southeast Mo. St.' if x == 'Southeast Missouri' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Alcorn' if x == 'Alcorn St.' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'App State' if x == 'Appalachian St.' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Ark.-Pine Bluff' if x == 'Arkansas-Pine Bluff' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Army West Point' if x == 'Army' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'CSU Bakersfield' if x == 'Cal St. Bakersfield' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'CSUN' if x == 'Cal St. Northridge' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Central Ark.' if x == 'Central Arkansas' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Central Mich.' if x == 'Central Michigan' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Charleston So.' if x == 'Charleston Southern' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Eastern Ill.' if x == 'Eastern Illinois' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Eastern Ky.' if x == 'Eastern Kentucky' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Eastern Mich.' if x == 'Eastern Michigan' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'FDU' if x == 'Fairleigh Dickinson' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Grambling' if x == 'Grambling St.' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'UIW' if x == 'Incarnate Word' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'LIU' if x == 'Long Island' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'UMES' if x == 'Maryland Eastern Shore' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Middle Tenn.' if x == 'Middle Tennessee' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Mississippi Val.' if x == 'Mississippi Valley St.' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: "Mount St. Mary's" if x == "Mount Saint Mary's" else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'North Ala.' if x == 'North Alabama' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'N.C. A&T' if x == 'North Carolina A&T' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Northern Colo.' if x == 'Northern Colorado' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Northern Ky.' if x == 'Northern Kentucky' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Prairie View' if x == 'Prairie View A&M' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Presbyterian' if x == 'Presbyterian College' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'St. Bonaventure' if x == 'Saint Bonaventure' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: "St. John's (NY)" if x == "Saint John's" else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Sam Houston' if x == 'Sam Houston St.' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Seattle U' if x == 'Seattle University' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'USC Upstate' if x == 'South Carolina Upstate' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'South Fla.' if x == 'South Florida' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Southeastern La.' if x == 'Southeastern Louisiana' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Southern U.' if x == 'Southern' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Southern Ill.' if x == 'Southern Illinois' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'SFA' if x == 'Stephen F. Austin' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'UT Martin' if x == 'Tennessee-Martin' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'A&M-Corpus Christi' if x == 'Texas A&M-Corpus Christi' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'UMass Lowell' if x == 'UMass-Lowell' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'UT Arlington' if x == 'UTA' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Western Caro.' if x == 'Western Carolina' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Western Ill.' if x == 'Western Illinois' else x)
-elo_data['Team'] = elo_data['Team'].apply(lambda x: 'Western Mich.' if x == 'Western Michigan' else x)
-
-schedule_df['Team'] = schedule_df['Team'].str.replace('State', 'St.', regex=False)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'NC State' if x == 'North Carolina St.' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Southern Miss.' if x == 'Southern Miss' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Southern California' if x == 'USC' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'DBU' if x == 'Dallas Baptist' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Col. of Charleston' if x == 'Charleston' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Ga. Southern' if x == 'Georgia Southern' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'UNC Greensboro' if x == 'UNCG' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'ETSU' if x == 'East Tennessee St.' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Lamar University' if x == 'Lamar' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: "Saint Mary's (CA)" if x == "Saint Mary's College" else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Western Ky.' if x == 'Western Kentucky' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Fla. Atlantic' if x == 'FAU' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'UConn' if x == 'Connecticut' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Southeast Mo. St.' if x == 'Southeast Missouri' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Alcorn' if x == 'Alcorn St.' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'App State' if x == 'Appalachian St.' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Ark.-Pine Bluff' if x == 'Arkansas-Pine Bluff' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Army West Point' if x == 'Army' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'CSU Bakersfield' if x == 'Cal St. Bakersfield' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'CSUN' if x == 'Cal St. Northridge' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Central Ark.' if x == 'Central Arkansas' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Central Mich.' if x == 'Central Michigan' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Charleston So.' if x == 'Charleston Southern' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Eastern Ill.' if x == 'Eastern Illinois' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Eastern Ky.' if x == 'Eastern Kentucky' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Eastern Mich.' if x == 'Eastern Michigan' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'FDU' if x == 'Fairleigh Dickinson' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Grambling' if x == 'Grambling St.' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'UIW' if x == 'Incarnate Word' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'LIU' if x == 'Long Island' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'UMES' if x == 'Maryland Eastern Shore' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Middle Tenn.' if x == 'Middle Tennessee' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Mississippi Val.' if x == 'Mississippi Valley St.' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: "Mount St. Mary's" if x == "Mount Saint Mary's" else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'North Ala.' if x == 'North Alabama' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'N.C. A&T' if x == 'North Carolina A&T' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Northern Colo.' if x == 'Northern Colorado' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Northern Ky.' if x == 'Northern Kentucky' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Prairie View' if x == 'Prairie View A&M' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Presbyterian' if x == 'Presbyterian College' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'St. Bonaventure' if x == 'Saint Bonaventure' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: "St. John's (NY)" if x == "Saint John's" else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Sam Houston' if x == 'Sam Houston St.' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Seattle U' if x == 'Seattle University' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'USC Upstate' if x == 'South Carolina Upstate' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'South Fla.' if x == 'South Florida' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Southeastern La.' if x == 'Southeastern Louisiana' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Southern U.' if x == 'Southern' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Southern Ill.' if x == 'Southern Illinois' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'SFA' if x == 'Stephen F. Austin' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'UT Martin' if x == 'Tennessee-Martin' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'A&M-Corpus Christi' if x == 'Texas A&M-Corpus Christi' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'UMass Lowell' if x == 'UMass-Lowell' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'UT Arlington' if x == 'UTA' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Western Caro.' if x == 'Western Carolina' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Western Ill.' if x == 'Western Illinois' else x)
-schedule_df['Team'] = schedule_df['Team'].apply(lambda x: 'Western Mich.' if x == 'Western Michigan' else x)
-
-schedule_df['home_team'] = schedule_df['home_team'].str.replace('State', 'St.', regex=False)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'NC State' if x == 'North Carolina St.' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Southern Miss.' if x == 'Southern Miss' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Southern California' if x == 'USC' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'DBU' if x == 'Dallas Baptist' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Col. of Charleston' if x == 'Charleston' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Ga. Southern' if x == 'Georgia Southern' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'UNC Greensboro' if x == 'UNCG' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'ETSU' if x == 'East Tennessee St.' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Lamar University' if x == 'Lamar' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: "Saint Mary's (CA)" if x == "Saint Mary's College" else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Western Ky.' if x == 'Western Kentucky' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Fla. Atlantic' if x == 'FAU' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'UConn' if x == 'Connecticut' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Southeast Mo. St.' if x == 'Southeast Missouri' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Alcorn' if x == 'Alcorn St.' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'App State' if x == 'Appalachian St.' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Ark.-Pine Bluff' if x == 'Arkansas-Pine Bluff' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Army West Point' if x == 'Army' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'CSU Bakersfield' if x == 'Cal St. Bakersfield' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'CSUN' if x == 'Cal St. Northridge' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Central Ark.' if x == 'Central Arkansas' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Central Mich.' if x == 'Central Michigan' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Charleston So.' if x == 'Charleston Southern' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Eastern Ill.' if x == 'Eastern Illinois' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Eastern Ky.' if x == 'Eastern Kentucky' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Eastern Mich.' if x == 'Eastern Michigan' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'FDU' if x == 'Fairleigh Dickinson' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Grambling' if x == 'Grambling St.' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'UIW' if x == 'Incarnate Word' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'LIU' if x == 'Long Island' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'UMES' if x == 'Maryland Eastern Shore' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Middle Tenn.' if x == 'Middle Tennessee' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Mississippi Val.' if x == 'Mississippi Valley St.' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: "Mount St. Mary's" if x == "Mount Saint Mary's" else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'North Ala.' if x == 'North Alabama' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'N.C. A&T' if x == 'North Carolina A&T' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Northern Colo.' if x == 'Northern Colorado' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Northern Ky.' if x == 'Northern Kentucky' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Prairie View' if x == 'Prairie View A&M' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Presbyterian' if x == 'Presbyterian College' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'St. Bonaventure' if x == 'Saint Bonaventure' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: "St. John's (NY)" if x == "Saint John's" else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Sam Houston' if x == 'Sam Houston St.' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Seattle U' if x == 'Seattle University' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'USC Upstate' if x == 'South Carolina Upstate' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'South Fla.' if x == 'South Florida' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Southeastern La.' if x == 'Southeastern Louisiana' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Southern U.' if x == 'Southern' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Southern Ill.' if x == 'Southern Illinois' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'SFA' if x == 'Stephen F. Austin' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'UT Martin' if x == 'Tennessee-Martin' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'A&M-Corpus Christi' if x == 'Texas A&M-Corpus Christi' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'UMass Lowell' if x == 'UMass-Lowell' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'UT Arlington' if x == 'UTA' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Western Caro.' if x == 'Western Carolina' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Western Ill.' if x == 'Western Illinois' else x)
-schedule_df['home_team'] = schedule_df['home_team'].apply(lambda x: 'Western Mich.' if x == 'Western Michigan' else x)
-
-schedule_df['away_team'] = schedule_df['away_team'].str.replace('State', 'St.', regex=False)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'NC State' if x == 'North Carolina St.' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Southern Miss.' if x == 'Southern Miss' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Southern California' if x == 'USC' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'DBU' if x == 'Dallas Baptist' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Col. of Charleston' if x == 'Charleston' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Ga. Southern' if x == 'Georgia Southern' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'UNC Greensboro' if x == 'UNCG' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'ETSU' if x == 'East Tennessee St.' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Lamar University' if x == 'Lamar' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: "Saint Mary's (CA)" if x == "Saint Mary's College" else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Western Ky.' if x == 'Western Kentucky' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Fla. Atlantic' if x == 'FAU' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'UConn' if x == 'Connecticut' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Southeast Mo. St.' if x == 'Southeast Missouri' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Alcorn' if x == 'Alcorn St.' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'App State' if x == 'Appalachian St.' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Ark.-Pine Bluff' if x == 'Arkansas-Pine Bluff' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Army West Point' if x == 'Army' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'CSU Bakersfield' if x == 'Cal St. Bakersfield' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'CSUN' if x == 'Cal St. Northridge' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Central Ark.' if x == 'Central Arkansas' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Central Mich.' if x == 'Central Michigan' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Charleston So.' if x == 'Charleston Southern' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Eastern Ill.' if x == 'Eastern Illinois' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Eastern Ky.' if x == 'Eastern Kentucky' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Eastern Mich.' if x == 'Eastern Michigan' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'FDU' if x == 'Fairleigh Dickinson' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Grambling' if x == 'Grambling St.' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'UIW' if x == 'Incarnate Word' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'LIU' if x == 'Long Island' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'UMES' if x == 'Maryland Eastern Shore' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Middle Tenn.' if x == 'Middle Tennessee' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Mississippi Val.' if x == 'Mississippi Valley St.' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: "Mount St. Mary's" if x == "Mount Saint Mary's" else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'North Ala.' if x == 'North Alabama' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'N.C. A&T' if x == 'North Carolina A&T' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Northern Colo.' if x == 'Northern Colorado' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Northern Ky.' if x == 'Northern Kentucky' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Prairie View' if x == 'Prairie View A&M' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Presbyterian' if x == 'Presbyterian College' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'St. Bonaventure' if x == 'Saint Bonaventure' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: "St. John's (NY)" if x == "Saint John's" else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Sam Houston' if x == 'Sam Houston St.' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Seattle U' if x == 'Seattle University' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'USC Upstate' if x == 'South Carolina Upstate' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'South Fla.' if x == 'South Florida' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Southeastern La.' if x == 'Southeastern Louisiana' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Southern U.' if x == 'Southern' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Southern Ill.' if x == 'Southern Illinois' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'SFA' if x == 'Stephen F. Austin' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'UT Martin' if x == 'Tennessee-Martin' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'A&M-Corpus Christi' if x == 'Texas A&M-Corpus Christi' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'UMass Lowell' if x == 'UMass-Lowell' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'UT Arlington' if x == 'UTA' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Western Caro.' if x == 'Western Carolina' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Western Ill.' if x == 'Western Illinois' else x)
-schedule_df['away_team'] = schedule_df['away_team'].apply(lambda x: 'Western Mich.' if x == 'Western Michigan' else x)
+elo_data['Team'] = elo_data['Team'].replace(team_replacements)
 
 import pandas as pd # type: ignore
 
