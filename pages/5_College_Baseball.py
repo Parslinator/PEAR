@@ -75,8 +75,8 @@ st.divider()
 st.subheader("CBASE Power Ratings")
 modeling_stats.index = modeling_stats.index + 1
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats[['Team', 'Rating', 'KPI', 'WAB', 'SOR', 'SOS', 'RemSOS', 'Conf']], use_container_width=True)
-st.caption("SOR - Strength of Record, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
+    st.dataframe(modeling_stats[['Team', 'Rating', 'KPI', 'WAB', 'SOR', 'AVG', 'SOS', 'RemSOS', 'Conf']], use_container_width=True)
+st.caption("KPI - Kevin Pauga Index, WAB - Wins Above Bubble, SOR - Strength of Record, AVG - Average Resume Rank, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
 
 st.divider()
 st.subheader("CBASE Stats")

@@ -925,6 +925,8 @@ max_KPI = stats_and_metrics['KPI'].max()
 stats_and_metrics['KPI'].fillna(max_KPI + 1, inplace=True)
 stats_and_metrics['KPI'] = stats_and_metrics['KPI'].astype(int)
 
+stats_and_metrics['AVG'] = round(stats_and_metrics[['KPI', 'WAB', 'SOR']].mean(axis=1),1)
+
 stats_and_metrics.fillna(0, inplace=True)
 stats_and_metrics = stats_and_metrics.sort_values('Rating', ascending=False).reset_index(drop=True)
 
