@@ -85,7 +85,8 @@ with st.container(border=True, height=440):
 st.caption("ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
 
 st.divider()
-st.subheader(f"{formatted_latest_date} Games")
+comparison_date = comparison_date.strftime("%B %d, %Y")
+st.subheader(f"{comparison_date} Games")
 subset_games['Home'] = subset_games['home_team']
 subset_games['Away'] = subset_games['away_team']
 with st.container(border=True, height=440):
