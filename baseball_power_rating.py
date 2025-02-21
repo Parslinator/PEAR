@@ -1052,7 +1052,7 @@ df_4 = pd.merge(df_3, elo_data[['Team', 'ELO']], on='Team', how='left')
 df_5 = pd.merge(df_4, kpi_results, on='Team', how='left')
 stats_and_metrics = pd.merge(df_5, quadrant_record_df, on='Team', how='left')
 
-stats_and_metrics['wins_above_expected'] = round(stats_and_metrics['Wins'] - stats_and_metrics['expected_wins'],2)
+stats_and_metrics['wins_above_expected'] = round(stats_and_metrics['Wins'] - stats_and_metrics['avg_expected_wins'],2)
 stats_and_metrics['SOR'] = stats_and_metrics['wins_above_expected'].rank(method='min', ascending=False)
 max_SOR = stats_and_metrics['SOR'].max()
 stats_and_metrics['SOR'].fillna(max_SOR + 1, inplace=True)
