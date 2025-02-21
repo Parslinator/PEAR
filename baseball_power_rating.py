@@ -987,11 +987,70 @@ for team, group in completed_schedule.groupby('Team'):
     quadrant_records[team] = {'Team': team, 'Q1': f"{Q1_win}-{Q1_loss}", 'Q2': f"{Q2_win}-{Q2_loss}", 'Q3': f"{Q3_win}-{Q3_loss}", 'Q4': f"{Q4_win}-{Q4_loss}"}
 quadrant_record_df = pd.DataFrame.from_dict(quadrant_records, orient='index').reset_index(drop=True)
 
+def calculate_kpi(completed_schedule, ending_data):
+    def get_team_rank(team):
+        match = ending_data.loc[ending_data["Team"] == team]
+        return match.index[0] if not match.empty else len(ending_data) + 1
+
+    def get_opponent_rank(opponent):
+        match = ending_data.loc[ending_data["Team"] == opponent]
+        return match.index[0] if not match.empty else len(ending_data) + 1
+
+    kpi_scores = []
+
+    for _, game in completed_schedule.iterrows():
+        team = game["Team"]
+        opponent = game["Opponent"]
+        home_team = game["home_team"]
+        
+        # Team strength
+        team_rank = get_team_rank(team)
+        opponent_rank = get_opponent_rank(opponent)
+
+        # Opponent strength calculation
+        opponent_strength = 1 - (opponent_rank / (len(ending_data) + 1))
+        
+        # Determine if the team is home
+        is_home = team == home_team
+        
+        # Scoring margin
+        margin = game["home_score"] - game["away_score"]
+        if not is_home:
+            margin = -margin  # Flip if the team is away
+
+        # Win or loss multiplier
+        result_multiplier = 1.5 if margin > 0 else -1.5
+
+        # Margin factor
+        if margin > 0:
+            margin_factor = 1 + (min(margin, 20) / 20)
+        else:
+            margin_factor = max(0.1, 1 - (min(abs(margin), 20) / 20))
+
+        # Team strength adjustment
+        team_strength_adj = 1 - (team_rank / (len(ending_data) + 1))
+
+        # Adjusted KPI formula
+        adj_grv = (opponent_strength * result_multiplier * margin_factor / 1.5) * (1 + (team_strength_adj / 2))
+        
+        # Store result
+        kpi_scores.append({"Team": team, "KPI_Score": adj_grv})
+
+    # Convert to DataFrame and get average per team
+    kpi_df = pd.DataFrame(kpi_scores)
+    kpi_avg = kpi_df.groupby("Team")["KPI_Score"].mean().reset_index()
+
+    return kpi_avg
+
+# Call function
+kpi_results = calculate_kpi(completed_schedule, ending_data).sort_values('KPI_Score', ascending=False).reset_index(drop=True)
+
 df_1 = pd.merge(ending_data, team_expected_wins[['Team', 'expected_wins']], on='Team', how='left')
 df_2 = pd.merge(df_1, avg_team_expected_wins[['Team', 'avg_expected_wins']], on='Team', how='left')
 df_3 = pd.merge(df_2, rem_avg_expected_wins[['Team', 'rem_avg_expected_wins']], on='Team', how='left')
 df_4 = pd.merge(df_3, elo_data[['Team', 'ELO']], on='Team', how='left')
-stats_and_metrics = pd.merge(df_4, quadrant_record_df, on='Team', how='left')
+df_5 = pd.merge(df_4, kpi_results, on='Team', how='left')
+stats_and_metrics = pd.merge(df_5, quadrant_record_df, on='Team', how='left')
 
 stats_and_metrics['wins_above_expected'] = round(stats_and_metrics['Wins'] - stats_and_metrics['expected_wins'],2)
 stats_and_metrics['SOR'] = stats_and_metrics['wins_above_expected'].rank(method='min', ascending=False)
@@ -1026,6 +1085,11 @@ max_WAB = stats_and_metrics['WAB'].max()
 stats_and_metrics['WAB'].fillna(max_WAB + 1, inplace=True)
 stats_and_metrics['WAB'] = stats_and_metrics['WAB'].astype(int)
 stats_and_metrics = stats_and_metrics.sort_values('WAB').reset_index(drop=True)
+
+stats_and_metrics['KPI'] = stats_and_metrics['KPI_Score'].rank(method='min', ascending=False)
+max_KPI = stats_and_metrics['KPI'].max()
+stats_and_metrics['KPI'].fillna(max_KPI + 1, inplace=True)
+stats_and_metrics['KPI'] = stats_and_metrics['KPI'].astype(int)
 
 stats_and_metrics.fillna(0, inplace=True)
 stats_and_metrics = stats_and_metrics.sort_values('Rating', ascending=False).reset_index(drop=True)

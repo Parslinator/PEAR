@@ -75,7 +75,7 @@ st.divider()
 st.subheader("CBASE Power Ratings")
 modeling_stats.index = modeling_stats.index + 1
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats[['Team', 'Rating', 'SOR', 'WAB', 'SOS', 'RemSOS', 'Rec', 'Q1', 'Q2', 'Q3', 'Q4', 'Conf']], use_container_width=True)
+    st.dataframe(modeling_stats[['Team', 'Rating', 'KPI', 'WAB', 'SOR', 'SOS', 'RemSOS', 'Rec', 'Q1', 'Q2', 'Q3', 'Q4', 'Conf']], use_container_width=True)
 st.caption("SOR - Strength of Record, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
 
 st.divider()
