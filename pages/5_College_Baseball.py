@@ -90,4 +90,4 @@ st.subheader(f"{comparison_date} Games")
 subset_games['Home'] = subset_games['home_team']
 subset_games['Away'] = subset_games['away_team']
 with st.container(border=True, height=440):
-    st.dataframe(subset_games[['Home', 'Away', 'PEAR', 'Date']], use_container_width=True)
+    st.dataframe(subset_games[['Home', 'Away', 'PEAR']], use_container_width=True)
