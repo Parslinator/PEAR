@@ -12,8 +12,8 @@ comparison_date = pd.to_datetime(formatted_date, format="%m_%d_%Y")
 # formatted_date_dt = pd.to_datetime(comparison_date, format="%m_%d_%Y")
 subset_games = schedule_df[
     (schedule_df["Date"] >= comparison_date) &
-    (schedule_df["Date"] <= comparison_date + pd.Timedelta(days=0))
-].reset_index(drop=True).sort_values('Date')
+    (schedule_df["Date"] <= comparison_date + pd.Timedelta(days=1))
+].sort_values('Date').reset_index(drop=True)
 
 folder_path = f"./PEAR/PEAR Baseball/y{current_season}"
 
@@ -89,4 +89,4 @@ st.subheader(f"{formatted_latest_date} Games")
 subset_games['Home'] = subset_games['home_team']
 subset_games['Away'] = subset_games['away_team']
 with st.container(border=True, height=440):
-    st.dataframe(subset_games[['Home', 'Away', 'PEAR']], use_container_width=True)
+    st.dataframe(subset_games[['Home', 'Away', 'PEAR', 'Date']], use_container_width=True)
