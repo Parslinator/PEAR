@@ -4,9 +4,7 @@ import pandas as pd # type: ignore
 import streamlit as st # type: ignore
 import pytz # type: ignore
 
-central_tz = pytz.timezone('America/Chicago')
-formatted_date = datetime.now(central_tz).strftime('%m_%d_%Y')
-formatted_date = central_tz.localize(datetime.strptime(formatted_date, '%m_%d_%Y'))
+formatted_date = datetime.today().strftime('%m_%d_%Y')
 current_season = datetime.today().year
 schedule_df = pd.read_csv(f"./PEAR/PEAR Baseball/y{current_season}/schedule_{current_season}.csv")
 schedule_df["Date"] = pd.to_datetime(schedule_df["Date"])
