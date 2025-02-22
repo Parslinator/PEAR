@@ -314,7 +314,7 @@ def grab_team_schedule(team_name, stats_df):
     schedule_df["Comparison_Date"] = pd.to_datetime(schedule_df["Comparison_Date"], format="%m-%d-%Y")
     formatted_date = datetime.today().strftime('%m_%d_%Y')
     comparison_date = pd.to_datetime(formatted_date, format="%m_%d_%Y")
-    st.write(print(type(comparison_date)))
+    st.write(print(type(formatted_date)))
     completed_schedule = schedule_df[
         (schedule_df["Date"] < comparison_date) & (schedule_df["home_score"] != schedule_df["away_score"])
     ].reset_index(drop=True)
