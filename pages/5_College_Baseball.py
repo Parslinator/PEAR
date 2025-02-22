@@ -311,7 +311,7 @@ def grab_team_schedule(team_name, stats_df):
 
     # Apply function to convert date format
     schedule_df["Compairson_Date"] = schedule_df["Date"].astype(str).apply(convert_date)
-    schedule_df["Comparison_Date"] = pd.to_datetime(schedule_df["Date"], format="%m-%d-%Y")
+    schedule_df["Comparison_Date"] = pd.to_datetime(schedule_df["Comparison_Date"], format="%m-%d-%Y")
     formatted_date = datetime.today().strftime('%m_%d_%Y')
     comparison_date = pd.to_datetime(formatted_date, format="%m_%d_%Y")
     completed_schedule = schedule_df[
