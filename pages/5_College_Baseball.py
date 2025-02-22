@@ -316,7 +316,7 @@ def grab_team_schedule(team_name, stats_df):
     comparison_date = pd.to_datetime(formatted_date, format="%m_%d_%Y")
     st.write(type(formatted_date))
     completed_schedule = schedule_df[
-        (schedule_df["Date"] < comparison_date) & (schedule_df["home_score"] != schedule_df["away_score"])
+        (schedule_df["Comparison_Date"] < comparison_date) & (schedule_df["home_score"] != schedule_df["away_score"])
     ].reset_index(drop=True)
 
     win_rating = 500
@@ -327,21 +327,21 @@ def grab_team_schedule(team_name, stats_df):
         if row['Team'] == row['home_team']:
             if row['home_score'] > row['away_score']:
                 if row['Rating'] < win_rating:
-                    win_rating = row['Rating'].values[0]
-                    best_win_opponent = row['Opponent'].values[0]
+                    win_rating = row['Rating']
+                    best_win_opponent = row['Opponent']
             else:
                 if row['Rating'] > loss_rating:
-                    loss_rating = row['Rating'].values[0]
-                    worst_loss_opponent = row['Opponent'].values[0]
+                    loss_rating = row['Rating']
+                    worst_loss_opponent = row['Opponent']
         else:
             if row['away_score'] > row['home_score']:
                 if row['Rating'] < win_rating:
-                    win_rating = row['Rating'].values[0]
-                    best_win_opponent = row['Opponent'].values[0]
+                    win_rating = row['Rating']
+                    best_win_opponent = row['Opponent']
             else:
                 if row['Rating'] > loss_rating:
-                    loss_rating = row['Rating'].values[0]
-                    worst_loss_opponent = row['Opponent'].values[0]
+                    loss_rating = row['Rating']
+                    worst_loss_opponent = row['Opponent']
                 
     return best_win_opponent, worst_loss_opponent, schedule_df
 
