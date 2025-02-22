@@ -746,6 +746,8 @@ def calculate_average_expected_wins(group, average_team):
         else:
             avg_expected_wins += 1 - PEAR_Win_Prob(row['home_rating'], average_team) / 100
 
+    avg_expected_wins = avg_expected_wins / len(group)
+
     return pd.Series({'Team': group['Team'].iloc[0], 'avg_expected_wins': avg_expected_wins})
 
 average_team = ending_data['Rating'].mean()
