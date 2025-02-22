@@ -59,66 +59,87 @@ if table:
 else:
     print("Table not found.")
 
-url = "https://www.collegebaseballratings.com/"
+url = 'https://www.warrennolan.com/baseball/2025/rpi-predict'
 response = requests.get(url)
-response.raise_for_status()  # Raise an error for failed requests
-soup = BeautifulSoup(response.text, "html.parser")
-table = soup.find("table", {"id": "teamList"})
-headers = [th.text.strip() for th in table.find("thead").find_all("th")]
+soup = BeautifulSoup(response.text, 'html.parser')
+table = soup.find('table', class_='normal-grid alternating-rows stats-table')
+headers = [th.text.strip() for th in table.find('thead').find_all('th')]
+
 data = []
-for row in table.find("tbody").find_all("tr"):
-    cells = [td.text.strip() for td in row.find_all("td")]
-    data.append(cells)
-cbr = pd.DataFrame(data, columns=headers[1:])
-cbr.rename(columns={"Rank":"CBRank"}, inplace=True)
-cbr['Team'] = cbr['Team'].str.replace('State', 'St.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Southern Miss', 'Southern Miss.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('NC St.', 'NC State', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Appalachian St.', 'App State', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Dallas Baptist', 'DBU', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('USC', 'Southern California', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Charleston', 'Col. of Charleston', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Col. of Charleston Southern', 'Charleston So.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Georgia Southern', 'Ga. Southern', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('UNC Wilmington', 'UNCW', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Southern Illinois', 'Southern Ill.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Florida Atlantic', 'Fla. Atlantic', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Lamar', 'Lamar University', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Western Kentucky', 'Western Ky.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Southern California Upstate', 'USC Upstate', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Southeast Missouri', 'Southeast Mo. St.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace("St. John's", "St. John's (NY)", regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Southeastern Louisiana', 'Southeastern La.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Kennesaw', 'Kennesaw St.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Louisiana Monroe', 'ULM', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Western Carolina', 'Western Caro.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('USF', 'South Fla.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Loyola Marymount', 'LMU (CA)', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Army', 'Army West Point', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Incarnate Word', 'UIW', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Central Michigan', 'Central Mich.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Eastern Illinois', 'Eastern Ill.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Western Michigan', 'Western Mich.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Central Arkansas', 'Central Ark.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Middle Tennessee', 'Middle Tenn.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Monmouth (NJ)', 'Monmouth', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Northern Kentucky', 'Northern Ky.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('North Carolina A&T', 'N.C. A&T', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Texas A&M-Corpus Christi', 'A&M-Corpus Christi', regex=False)
-cbr['Team'] = cbr['Team'].str.replace("Saint Joseph's (PA)", "Saint Joseph's", regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Eastern Kentucky', 'Eastern Ky.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Seattle', 'Seattle U', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Eastern Michigan', 'Eastern Mich.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('North Alabama', 'North Ala.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Northern Colorado', 'Northern Colo.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Stephen F. Austin', 'SFA', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Western Illinois', 'Western Ill.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Prairie View A&M', 'Prairie View', regex=False)
-cbr['Team'] = cbr['Team'].apply(lambda x: 'Southern U.' if x == 'Southern' else x)
-cbr['Team'] = cbr['Team'].str.replace('Arkansas-Pine Bluff', 'Ark.-Pine Bluff', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Maryland Eastern Shore', 'UMES', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Mississippi Valley St.', 'Mississippi Val.', regex=False)
-cbr['Team'] = cbr['Team'].str.replace('Alcorn St.', 'Alcorn', regex=False)
+for row in table.find('tbody').find_all('tr'):
+    cells = row.find_all('td')
+    if len(cells) >= 2:
+        rank = cells[0].text.strip()  # First element (ranking)
+        name_div = cells[1].find('div', class_='name-subcontainer')
+        if name_div:
+            team_name = name_div.text.split("\n")[0].strip()  # Extract just the team name
+        else:
+            team_name = cells[1].text.split("\n")[0].strip()  # Fallback
+        data.append([rank, team_name])  # Store only Rank & Team Name
+projected_rpi = pd.DataFrame(data, columns=["RPI", "Team"])
+
+team_replacements = {
+    'North Carolina St.': 'NC State',
+    'Southern Miss': 'Southern Miss.',
+    'USC': 'Southern California',
+    'Dallas Baptist': 'DBU',
+    'Charleston': 'Col. of Charleston',
+    'Georgia Southern': 'Ga. Southern',
+    'UNCG': 'UNC Greensboro',
+    'East Tennessee St.': 'ETSU',
+    'Lamar': 'Lamar University',
+    "Saint Mary's College": "Saint Mary's (CA)",
+    'Western Kentucky': 'Western Ky.',
+    'FAU': 'Fla. Atlantic',
+    'Connecticut': 'UConn',
+    'Southeast Missouri': 'Southeast Mo. St.',
+    'Alcorn St.': 'Alcorn',
+    'Appalachian St.': 'App State',
+    'Arkansas-Pine Bluff': 'Ark.-Pine Bluff',
+    'Army': 'Army West Point',
+    'Cal St. Bakersfield': 'CSU Bakersfield',
+    'Cal St. Northridge': 'CSUN',
+    'Central Arkansas': 'Central Ark.',
+    'Central Michigan': 'Central Mich.',
+    'Charleston Southern': 'Charleston So.',
+    'Eastern Illinois': 'Eastern Ill.',
+    'Eastern Kentucky': 'Eastern Ky.',
+    'Eastern Michigan': 'Eastern Mich.',
+    'Fairleigh Dickinson': 'FDU',
+    'Grambling St.': 'Grambling',
+    'Incarnate Word': 'UIW',
+    'Long Island': 'LIU',
+    'Maryland Eastern Shore': 'UMES',
+    'Middle Tennessee': 'Middle Tenn.',
+    'Mississippi Valley St.': 'Mississippi Val.',
+    "Mount Saint Mary's": "Mount St. Mary's",
+    'North Alabama': 'North Ala.',
+    'North Carolina A&T': 'N.C. A&T',
+    'Northern Colorado': 'Northern Colo.',
+    'Northern Kentucky': 'Northern Ky.',
+    'Prairie View A&M': 'Prairie View',
+    'Presbyterian College': 'Presbyterian',
+    'Saint Bonaventure': 'St. Bonaventure',
+    "Saint John's": "St. John's (NY)",
+    'Sam Houston St.': 'Sam Houston',
+    'Seattle University': 'Seattle U',
+    'South Carolina Upstate': 'USC Upstate',
+    'South Florida': 'South Fla.',
+    'Southeastern Louisiana': 'Southeastern La.',
+    'Southern': 'Southern U.',
+    'Southern Illinois': 'Southern Ill.',
+    'Stephen F. Austin': 'SFA',
+    'Tennessee-Martin': 'UT Martin',
+    'Texas A&M-Corpus Christi': 'A&M-Corpus Christi',
+    'UMass-Lowell': 'UMass Lowell',
+    'UTA': 'UT Arlington',
+    'Western Carolina': 'Western Caro.',
+    'Western Illinois': 'Western Ill.',
+    'Western Michigan': 'Western Mich.',
+}
+
+projected_rpi['Team'] = projected_rpi['Team'].str.replace('State', 'St.', regex=False)
+projected_rpi['Team'] = projected_rpi['Team'].replace(team_replacements)
 
 def get_stat_dataframe(stat_name):
     """Fetches the specified stat table from multiple pages and returns a combined DataFrame,
@@ -285,7 +306,7 @@ stat_name_input = "WHIP"
 whip = get_stat_dataframe(stat_name_input)
 whip = whip.drop(columns=['Rank', 'HA', 'IP', 'BB'])
 
-dfs = [ba, bb, era, fp, obp, runs, slg, kp9, wp9, whip, rpi, cbr]
+dfs = [ba, bb, era, fp, obp, runs, slg, kp9, wp9, whip, projected_rpi]
 for df in dfs:
     df["Team"] = df["Team"].str.strip()
 df_combined = dfs[0]
@@ -300,10 +321,10 @@ rpi_2024 = pd.read_csv("./PEAR/PEAR Baseball/rpi_end_2024.csv")
 modeling_stats = baseball_stats[['Team', 'HPG',
                 'BBPG', 'ERA', 'PCT', 
                 'KP9', 'WP9', 'OPS', 
-                'WHIP', 'PYTHAG', 'CBRank']]
+                'WHIP', 'PYTHAG', 'RPI']]
 modeling_stats = pd.merge(modeling_stats, rpi_2024[['Team', 'Rank']], on = 'Team', how='left')
 modeling_stats["Rank"] = modeling_stats["Rank"].apply(pd.to_numeric, errors='coerce')
-modeling_stats["CBRank"] = modeling_stats["CBRank"].apply(pd.to_numeric, errors='coerce')
+modeling_stats["RPI"] = modeling_stats["RPI"].apply(pd.to_numeric, errors='coerce')
 modeling_stats['Rank_pct'] = 1 - (modeling_stats['Rank'] - 1) / (len(modeling_stats) - 1)
 
 higher_better = ["HPG", "BBPG", "PCT", "KP9", "OPS", "Rank_pct", 'PYTHAG']
@@ -357,7 +378,7 @@ def objective_function(weights):
 
     modeling_stats['calculated_rank'] = modeling_stats['power_ranking'].rank(ascending=False)
     modeling_stats['combined_rank'] = (
-        modeling_stats['CBRank']
+        modeling_stats['RPI']
     )
     spearman_corr = modeling_stats[['calculated_rank', 'combined_rank']].corr(method='spearman').iloc[0,1]
 
@@ -387,11 +408,11 @@ modeling_stats['Rating'] = round(modeling_stats['Rating'] - modeling_stats['Rati
 modeling_stats['Rating'] = round(modeling_stats['Rating'], 2)
 
 ending_data = pd.merge(baseball_stats, modeling_stats[['Team', 'Rating']], on="Team", how="inner").sort_values('Rating', ascending=False).reset_index(drop=True)
-ending_data = ending_data.drop(columns=['SOR', 'SOS'])
+# ending_data = ending_data.drop(columns=['SOR', 'SOS'])
 ending_data.index = ending_data.index + 1
-ending_data[['Wins', 'Losses']] = ending_data['Rec'].str.split('-', expand=True).astype(int)
-ending_data['WIN%'] = round(ending_data['Wins'] / (ending_data['Wins'] + ending_data['Losses']), 3)
-ending_data['Wins_Over_Pythag'] = ending_data['WIN%'] - ending_data['PYTHAG']
+# ending_data[['Wins', 'Losses']] = ending_data['Rec'].str.split('-', expand=True).astype(int)
+# ending_data['WIN%'] = round(ending_data['Wins'] / (ending_data['Wins'] + ending_data['Losses']), 3)
+# ending_data['Wins_Over_Pythag'] = ending_data['WIN%'] - ending_data['PYTHAG']
 
 import requests # type: ignore
 from bs4 import BeautifulSoup # type: ignore
@@ -863,7 +884,7 @@ def calculate_kpi(completed_schedule, ending_data):
 # Call function
 kpi_results = calculate_kpi(completed_schedule, ending_data).sort_values('KPI_Score', ascending=False).reset_index(drop=True)
 
-df_1 = pd.merge(ending_data, team_expected_wins[['Team', 'expected_wins']], on='Team', how='left')
+df_1 = pd.merge(ending_data, team_expected_wins[['Team', 'expected_wins', 'Wins', 'Losses']], on='Team', how='left')
 df_2 = pd.merge(df_1, avg_team_expected_wins[['Team', 'avg_expected_wins', 'total_expected_wins']], on='Team', how='left')
 df_3 = pd.merge(df_2, rem_avg_expected_wins[['Team', 'rem_avg_expected_wins', 'rem_total_expected_wins']], on='Team', how='left')
 df_4 = pd.merge(df_3, elo_data[['Team', 'ELO']], on='Team', how='left')
