@@ -738,23 +738,23 @@ def calculate_expected_wins(group):
 team_expected_wins = completed_schedule.groupby('Team').apply(calculate_expected_wins).reset_index(drop=True)
 
 def calculate_average_expected_wins(group, average_team):
-    avg_expected_wins = 0
+    total_expected_wins = 0
 
     for _, row in group.iterrows():
         if row['Team'] == row['home_team']:
-            avg_expected_wins += PEAR_Win_Prob(average_team, row['away_rating']) / 100
+            total_expected_wins += PEAR_Win_Prob(average_team, row['away_rating']) / 100
         else:
-            avg_expected_wins += 1 - PEAR_Win_Prob(row['home_rating'], average_team) / 100
+            total_expected_wins += 1 - PEAR_Win_Prob(row['home_rating'], average_team) / 100
 
-    avg_expected_wins = avg_expected_wins / len(group)
+    avg_expected_wins = total_expected_wins / len(group)
 
-    return pd.Series({'Team': group['Team'].iloc[0], 'avg_expected_wins': avg_expected_wins})
+    return pd.Series({'Team': group['Team'].iloc[0], 'avg_expected_wins': avg_expected_wins, 'total_expected_wins':total_expected_wins})
 
 average_team = ending_data['Rating'].mean()
 avg_team_expected_wins = completed_schedule.groupby('Team').apply(calculate_average_expected_wins, average_team).reset_index(drop=True)
 
 rem_avg_expected_wins = remaining_games.groupby('Team').apply(calculate_average_expected_wins, average_team).reset_index(drop=True)
-rem_avg_expected_wins.rename(columns={"avg_expected_wins": "rem_avg_expected_wins"}, inplace=True)
+rem_avg_expected_wins.rename(columns={"avg_expected_wins": "rem_avg_expected_wins", "total_expected_wins":"rem_total_expected_wins"}, inplace=True)
 
 quadrant_records = {}
 
@@ -864,13 +864,13 @@ def calculate_kpi(completed_schedule, ending_data):
 kpi_results = calculate_kpi(completed_schedule, ending_data).sort_values('KPI_Score', ascending=False).reset_index(drop=True)
 
 df_1 = pd.merge(ending_data, team_expected_wins[['Team', 'expected_wins']], on='Team', how='left')
-df_2 = pd.merge(df_1, avg_team_expected_wins[['Team', 'avg_expected_wins']], on='Team', how='left')
-df_3 = pd.merge(df_2, rem_avg_expected_wins[['Team', 'rem_avg_expected_wins']], on='Team', how='left')
+df_2 = pd.merge(df_1, avg_team_expected_wins[['Team', 'avg_expected_wins', 'total_expected_wins']], on='Team', how='left')
+df_3 = pd.merge(df_2, rem_avg_expected_wins[['Team', 'rem_avg_expected_wins', 'rem_total_expected_wins']], on='Team', how='left')
 df_4 = pd.merge(df_3, elo_data[['Team', 'ELO']], on='Team', how='left')
 df_5 = pd.merge(df_4, kpi_results, on='Team', how='left')
 stats_and_metrics = pd.merge(df_5, quadrant_record_df, on='Team', how='left')
 
-stats_and_metrics['wins_above_expected'] = round(stats_and_metrics['Wins'] - stats_and_metrics['avg_expected_wins'],2)
+stats_and_metrics['wins_above_expected'] = round(stats_and_metrics['Wins'] - stats_and_metrics['total_expected_wins'],2)
 stats_and_metrics['SOR'] = stats_and_metrics['wins_above_expected'].rank(method='min', ascending=False)
 max_SOR = stats_and_metrics['SOR'].max()
 stats_and_metrics['SOR'].fillna(max_SOR + 1, inplace=True)
@@ -893,11 +893,11 @@ stats_and_metrics['ELO'].fillna(1200, inplace=True)
 
 bubble_rating = stats_and_metrics.loc[(stats_and_metrics["SOR"] >= 32) & (stats_and_metrics["SOR"] <= 40), "Rating"].mean()
 bubble_expected_wins = completed_schedule.groupby('Team').apply(calculate_average_expected_wins, bubble_rating).reset_index(drop=True)
-bubble_expected_wins.rename(columns={"avg_expected_wins": "bubble_expected_wins"}, inplace=True)
+bubble_expected_wins.rename(columns={"avg_expected_wins": "bubble_expected_wins", "total_expected_wins":"bubble_total_expected_wins"}, inplace=True)
 
 stats_and_metrics = pd.merge(stats_and_metrics, bubble_expected_wins, on='Team', how='left')
 
-stats_and_metrics['wins_above_bubble'] = round(stats_and_metrics['Wins'] - stats_and_metrics['bubble_expected_wins'],2)
+stats_and_metrics['wins_above_bubble'] = round(stats_and_metrics['Wins'] - stats_and_metrics['bubble_total_expected_wins'],2)
 stats_and_metrics['Prelim_WAB'] = stats_and_metrics['wins_above_bubble'].rank(method='min', ascending=False)
 max_WAB = stats_and_metrics['Prelim_WAB'].max()
 stats_and_metrics['Prelim_WAB'].fillna(max_WAB + 1, inplace=True)
@@ -913,10 +913,10 @@ stats_and_metrics['Prelim_AVG'] = round(stats_and_metrics[['KPI', 'Prelim_WAB', 
 
 bubble_rating = stats_and_metrics.loc[(stats_and_metrics['Prelim_AVG'] >= 32) & (stats_and_metrics['Prelim_AVG'] <= 40), "Rating"].mean()
 bubble_expected_wins = completed_schedule.groupby('Team').apply(calculate_average_expected_wins, bubble_rating).reset_index(drop=True)
-bubble_expected_wins.rename(columns={"avg_expected_wins": "final_bubble_expected_wins"}, inplace=True)
+bubble_expected_wins.rename(columns={"avg_expected_wins": "final_bubble_expected_wins", "total_expected_wins":"final_bubble_total_expected_wins"}, inplace=True)
 stats_and_metrics = pd.merge(stats_and_metrics, bubble_expected_wins, on='Team', how='left')
 
-stats_and_metrics['wins_above_bubble'] = round(stats_and_metrics['Wins'] - stats_and_metrics['final_bubble_expected_wins'],2)
+stats_and_metrics['wins_above_bubble'] = round(stats_and_metrics['Wins'] - stats_and_metrics['final_bubble_total_expected_wins'],2)
 stats_and_metrics['WAB'] = stats_and_metrics['wins_above_bubble'].rank(method='min', ascending=False)
 max_WAB = stats_and_metrics['WAB'].max()
 stats_and_metrics['WAB'].fillna(max_WAB + 1, inplace=True)
