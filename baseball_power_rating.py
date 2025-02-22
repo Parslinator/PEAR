@@ -72,11 +72,16 @@ for row in table.find('tbody').find_all('tr'):
         rank = cells[0].text.strip()  # First element (ranking)
         name_div = cells[1].find('div', class_='name-subcontainer')
         if name_div:
-            team_name = name_div.text.split("\n")[0].strip()  # Extract just the team name
+            full_text = name_div.text.strip()
         else:
-            team_name = cells[1].text.split("\n")[0].strip()  # Fallback
-        data.append([rank, team_name])  # Store only Rank & Team Name
-projected_rpi = pd.DataFrame(data, columns=["RPI", "Team"])
+            full_text = cells[1].text.strip()  # Fallback
+        
+        # Split the text to extract Team Name and Conference
+        parts = full_text.split("\n")
+        team_name = parts[0].strip()  # Extract just the team name
+        conference = parts[1].split("(")[0].strip() if len(parts) > 1 else ""  # Extract conference
+        data.append([rank, team_name, conference]) 
+projected_rpi = pd.DataFrame(data, columns=["RPI", "Team", "Conference"])
 
 team_replacements = {
     'North Carolina St.': 'NC State',
