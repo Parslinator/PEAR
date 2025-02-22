@@ -315,7 +315,7 @@ st.caption(f"Last Updated {formatted_latest_date}")
 
 st.divider()
 
-st.subheader("CBASE Power Ratings")
+st.subheader("CBASE Ratings and Resume")
 modeling_stats.index = modeling_stats.index + 1
 with st.container(border=True, height=440):
     st.dataframe(modeling_stats[['Team', 'Rating', 'Resume', 'KPI', 'WAB', 'SOR', 'SOS', 'RemSOS', 'Conf']], use_container_width=True)
@@ -330,7 +330,7 @@ st.caption("PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP 
 
 st.divider()
 
-st.subheader("Calculate Spread Between Any Two Teams")
+st.subheader("Projected Spreads")
 with st.form(key='calculate_spread'):
     away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
     home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
