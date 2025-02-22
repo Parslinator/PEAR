@@ -12,3 +12,4 @@ IPython
 seaborn
 beautifulsoup4
 requests
+tqdm
