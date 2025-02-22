@@ -31,7 +31,5 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions@github.com"
           git add .
-          git commit -m "Automated daily update $(date)"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          git commit -m "Automated daily update $(date)" || exit 0
+          git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/Parslinator/PEAR.git
