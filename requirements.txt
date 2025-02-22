@@ -10,3 +10,5 @@ matplotlib
 requests
 IPython
 seaborn
+beautifulsoup4
+requests
