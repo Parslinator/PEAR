@@ -291,7 +291,57 @@ def grab_team_schedule(team_name, stats_df):
     )
     schedule_df.rename(columns={'Team_x':'Team', 'Rating Rank':'Rating'}, inplace=True)
     schedule_df = schedule_df.drop(columns=['Team_y'])
-    return schedule_df
+
+    month_mapping = {
+        "JAN": "01", "FEB": "02", "MAR": "03", "APR": "04",
+        "MAY": "05", "JUN": "06", "JUL": "07", "AUG": "08",
+        "SEP": "09", "OCT": "10", "NOV": "11", "DEC": "12"
+    }
+
+    # Function to convert "FEB 14 (FRI)" format to "mm-dd-yyyy"
+    def convert_date(date_str):
+        # Ensure date is a string before splitting
+        if isinstance(date_str, pd.Timestamp):
+            date_str = date_str.strftime("%b %d (%a)").upper()  # Convert to same format
+        
+        parts = date_str.split()  # ["FEB", "14", "(FRI)"]
+        month = month_mapping[parts[0].upper()]  # Convert month to number
+        day = parts[1]  # Extract day
+        return f"{month}-{day}-{current_season}"
+
+    # Apply function to convert date format
+    schedule_df["Compairson_Date"] = schedule_df["Date"].astype(str).apply(convert_date)
+    schedule_df["Comparison_Date"] = pd.to_datetime(schedule_df["Date"], format="%m-%d-%Y")
+    comparison_date = pd.to_datetime(formatted_date, format="%m_%d_%Y")
+    completed_schedule = schedule_df[
+        (schedule_df["Date"] < comparison_date) & (schedule_df["home_score"] != schedule_df["away_score"])
+    ].reset_index(drop=True)
+
+    win_rating = 500
+    best_win_opponent = ""
+    loss_rating = 0
+    worst_loss_opponent = ""
+    for _, row in completed_schedule.iterrows():
+        if row['Team'] == row['home_team']:
+            if row['home_score'] > row['away_score']:
+                if row['Rating'] < win_rating:
+                    win_rating = row['Rating'].values[0]
+                    best_win_opponent = row['Opponent'].values[0]
+            else:
+                if row['Rating'] > loss_rating:
+                    loss_rating = row['Rating'].values[0]
+                    worst_loss_opponent = row['Opponent'].values[0]
+        else:
+            if row['away_score'] > row['home_score']:
+                if row['Rating'] < win_rating:
+                    win_rating = row['Rating'].values[0]
+                    best_win_opponent = row['Opponent'].values[0]
+            else:
+                if row['Rating'] > loss_rating:
+                    loss_rating = row['Rating'].values[0]
+                    worst_loss_opponent = row['Opponent'].values[0]
+                
+    return best_win_opponent, worst_loss_opponent, schedule_df
 
 def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 1.5
@@ -345,7 +395,9 @@ with st.form(key='team_schedule'):
     team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
     team_schedule = st.form_submit_button("Team Schedule")
     if team_schedule:
-        schedule = grab_team_schedule(team_name, modeling_stats)
+        best, worst, schedule = grab_team_schedule(team_name, modeling_stats)
+        st.write(f"Best Win: {best}")
+        st.write(f"Worst Loss: {worst}")
         st.dataframe(schedule[['Opponent', 'Rating', 'Result', 'Date']], use_container_width=True)
 
 st.divider()
