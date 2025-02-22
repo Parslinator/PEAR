@@ -26,10 +26,15 @@ jobs:
       - name: Run Python Script
         run: python baseball_power_rating.py  # Replace with your script name
 
-      - name: Commit and Push Changes
+      - name: Commit Changes
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions@github.com"
-          git add .
-          git commit -m "Automated daily update $(date)" || exit 0
-          git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/Parslinator/PEAR.git
+          git config --local user.name "GitHub Action"
+          git config --local user.email "action@github.com"
+          git add -A
+          git diff-index --quiet HEAD || (git commit -a -m "baseball ratings update" --allow-empty)
+      
+      - name: Push Changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
