@@ -318,14 +318,14 @@ st.divider()
 st.subheader("CBASE Ratings and Resume")
 modeling_stats.index = modeling_stats.index + 1
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats[['Team', 'Rating', 'Resume', 'KPI', 'WAB', 'SOR', 'SOS', 'RemSOS', 'Conference']], use_container_width=True)
+    st.dataframe(modeling_stats[['Team', 'Rating', 'Resume', 'KPI', 'WAB', 'SOR', 'SOS', 'RemSOS']], use_container_width=True)
 st.caption("Resume - Resume Rank based on Average from KPI, WAB, SOR, KPI - Kevin Pauga Index, WAB - Wins Above Bubble, SOR - Strength of Record, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
 
 st.divider()
 
 st.subheader("CBASE Stats")
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats[['Team', 'Q1', 'Q2', 'Q3', 'Q4', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
+    st.dataframe(modeling_stats[['Team', 'Q1', 'Q2', 'Q3', 'Q4', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'BA', 'OBP', 'SLG', 'OPS']], use_container_width=True)
 st.caption("PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
 
 st.divider()
