@@ -821,7 +821,8 @@ def calculate_kpi(completed_schedule, ending_data):
         opponent_rank = get_opponent_rank(opponent)
 
         # Opponent strength calculation
-        opponent_strength = 1 - (opponent_rank / (len(ending_data) + 1))
+        opponent_strength_win = 1 - (opponent_rank / (len(ending_data) + 1))
+        opponent_strength_loss = (opponent_rank / (len(ending_data) + 1))
         
         # Determine if the team is home
         is_home = team == home_team
@@ -837,8 +838,10 @@ def calculate_kpi(completed_schedule, ending_data):
         # Margin factor
         if margin > 0:
             margin_factor = 1 + (min(margin, 20) / 20)
+            opponent_strength = opponent_strength_win
         else:
             margin_factor = max(0.1, 1 - (min(abs(margin), 20) / 20))
+            opponent_strength = opponent_strength_loss
 
         # Team strength adjustment
         team_strength_adj = 1 - (team_rank / (len(ending_data) + 1))
