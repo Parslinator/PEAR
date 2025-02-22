@@ -775,47 +775,26 @@ for team, group in completed_schedule.groupby('Team'):
                     (row['away_score'] > row['home_score'] and not team_is_home)
 
         # Apply quadrant logic
-        if team_is_home and opponent_index <= 25:
+        if opponent_index <= 40:
             if team_won:
                 Q1_win += 1
             else:
                 Q1_loss += 1
-        elif team_is_home and opponent_index <= 50:
+        elif opponent_index <= 80:
             if team_won:
                 Q2_win += 1
             else:
                 Q2_loss += 1
-        elif team_is_home and opponent_index <= 100:
+        elif opponent_index <= 160:
             if team_won:
                 Q3_win += 1
             else:
                 Q3_loss += 1
-        elif team_is_home:
+        else:
             if team_won:
                 Q4_win += 1
             else:
-                Q4_loss += 1            
-        elif not team_is_home and opponent_index <= 60:
-            if team_won:
-                Q1_win += 1
-            else:
-                Q1_loss += 1
-        elif not team_is_home and opponent_index <= 120:
-            if team_won:
-                Q2_win += 1
-            else:
-                Q2_loss += 1
-        elif not team_is_home and opponent_index <= 240:
-            if team_won:
-                Q3_win += 1
-            else:
-                Q3_loss += 1
-        elif not team_is_home:
-            if team_won:
-                Q4_win += 1
-            else:
-                Q4_loss += 1
-            
+                Q4_loss += 1      
 
     # Store results for the team
     quadrant_records[team] = {'Team': team, 'Q1': f"{Q1_win}-{Q1_loss}", 'Q2': f"{Q2_win}-{Q2_loss}", 'Q3': f"{Q3_win}-{Q3_loss}", 'Q4': f"{Q4_win}-{Q4_loss}"}
