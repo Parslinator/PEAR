@@ -892,6 +892,23 @@ def calculate_kpi(completed_schedule, ending_data):
 # Call function
 kpi_results = calculate_kpi(completed_schedule, ending_data).sort_values('KPI_Score', ascending=False).reset_index(drop=True)
 
+def calculate_resume_quality(group, bubble_team_rating):
+    results = []
+    resume_quality = 0
+    for _, row in group.iterrows():
+        team = row['Team']
+        is_home = row["home_team"] == team
+        is_away = row["away_team"] == team
+        opponent_rating = row["away_rating"] if is_home else row["home_rating"]
+        win_prob = PEAR_Win_Prob(bubble_team_rating, opponent_rating) / 100
+        team_won = (is_home and row["home_score"] > row["away_score"]) or (is_away and row["away_score"] > row["home_score"])
+        if team_won:
+            resume_quality += (1-win_prob)
+        else:
+            resume_quality -= win_prob
+    results.append({"Team": team, "resume_quality": resume_quality})
+    return pd.DataFrame(results)
+
 df_1 = pd.merge(ending_data, team_expected_wins[['Team', 'expected_wins', 'Wins', 'Losses']], on='Team', how='left')
 df_2 = pd.merge(df_1, avg_team_expected_wins[['Team', 'avg_expected_wins', 'total_expected_wins']], on='Team', how='left')
 df_3 = pd.merge(df_2, rem_avg_expected_wins[['Team', 'rem_avg_expected_wins', 'rem_total_expected_wins']], on='Team', how='left')
@@ -953,6 +970,15 @@ stats_and_metrics['WAB'] = stats_and_metrics['WAB'].astype(int)
 stats_and_metrics = stats_and_metrics.sort_values('WAB').reset_index(drop=True)
 
 stats_and_metrics['AVG'] = round(stats_and_metrics[['KPI', 'WAB', 'SOR']].mean(axis=1),1)
+stats_and_metrics['Resume'] = stats_and_metrics['AVG'].rank(method='min')
+
+bubble_team_rating = stats_and_metrics.loc[stats_and_metrics['Resume'] == 34, 'Rating'].values[0]
+resume_quality = completed_schedule.groupby('Team').apply(calculate_resume_quality, bubble_team_rating).reset_index(drop=True)
+resume_quality['RQI'] = resume_quality['resume_quality'].rank(method='min', ascending=False)
+resume_quality.sort_values('RQI')[0:50].reset_index(drop=True)
+
+stats_and_metrics = pd.merge(stats_and_metrics, resume_quality, on='Team', how='left')
+stats_and_metrics['AVG'] = round(stats_and_metrics[['RQI', 'WAB', 'SOR']].mean(axis=1),1)
 stats_and_metrics['Resume'] = stats_and_metrics['AVG'].rank(method='min')
 
 stats_and_metrics.fillna(0, inplace=True)
