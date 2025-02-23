@@ -51,7 +51,7 @@ def process_result(row):
     
     return result  # Leave other cases unchanged
 
-
+subset_games['Result'] = subset_games['Result'].astype(str)
 subset_games = subset_games.sort_values(by="Result", key=lambda x: x.map(game_sort_key))
 subset_games["Result"] = subset_games.apply(process_result, axis=1)
 subset_games = subset_games.reset_index(drop=True)
@@ -420,7 +420,72 @@ def grab_team_schedule(team_name, stats_df):
                     loss_rating = row['Rating']
                     worst_loss_opponent = row['Opponent']
                 
-    return team_rank, best_win_opponent, worst_loss_opponent, schedule_df
+    return team_rank, best_win_opponent, worst_loss_opponent, schedule_df, completed_schedule
+
+import matplotlib.pyplot as plt # type: ignore
+def create_quadrant_table(completed):
+    # Clean up the 'Result' column
+    def clean_result(result):
+        return re.sub(r"\s\(\d+\sInnings\)", "", result)
+    
+    completed['Result'] = completed['Result'].apply(clean_result)
+
+    # Count the maximum number of games in any quadrant
+    quadrant_counts = completed['Quadrant'].value_counts()
+    max_games = quadrant_counts.max()
+
+    # Define columns for quadrants
+    columns = ["Q1", "Q2", "Q3", "Q4"]
+    
+    # Create an empty array to store game data
+    table_data = np.full((max_games, 4), '', dtype=object)
+    
+    # Fill table data based on 'Quadrant'
+    for idx, row in completed.iterrows():
+        quadrant_idx = columns.index(row["Quadrant"])
+        game_info = f"{int(row['Rating'])} | {row['Opponent']} | {row['Result']}"
+        
+        # Add the game info to the first available row for the respective quadrant
+        for game_row in range(max_games):
+            if table_data[game_row, quadrant_idx] == '':
+                table_data[game_row, quadrant_idx] = game_info
+                break
+
+    # Create figure and axis
+    fig, ax = plt.subplots(figsize=(6, 4))
+    
+    # Set background color of the figure
+    fig.patch.set_facecolor('#CECEB2')
+    
+    # Hide axes for the table display
+    ax.axis('off')
+    
+    # Add the table to the plot
+    table = ax.table(cellText=table_data, colLabels=columns, loc='center')
+    
+    # Adjust table appearance
+    table.auto_set_font_size(False)
+    table.set_fontsize(15)
+    table.scale(4, 4)
+    
+    # Set background color for each cell
+    for (i, j), cell in table.get_celld().items():
+        cell.set_facecolor('#CECEB2')  # Set the background color for each cell
+    
+    # Style column headers and rows
+    for (i, j), cell in table.get_celld().items():
+        if i == 0:  # Column header row
+            cell.set_text_props(weight='bold')
+        else:  # Rows below the header
+            cell.set_text_props(ha='left', weight='bold')  # Left align the rows
+            # Set text color based on "W" (green) or "L" (red) in the Result
+            if "W" in table_data[i-1, j]:  # Skip header row
+                cell.set_text_props(color='#1D4D00')  # Green for win
+            elif "L" in table_data[i-1, j]:  # Skip header row
+                cell.set_text_props(color='#660000')  # Red for loss
+    
+    # Return the figure object
+    return fig
 
 def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 1.5
@@ -476,8 +541,10 @@ with st.form(key='team_schedule'):
     team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
     team_schedule = st.form_submit_button("Team Schedule")
     if team_schedule:
-        rank, best, worst, schedule = grab_team_schedule(team_name, modeling_stats)
+        rank, best, worst, schedule, completed = grab_team_schedule(team_name, modeling_stats)
+        fig = create_quadrant_table(completed)
         st.write(f"Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
+        st.pyplot(fig)
         st.dataframe(schedule[['Opponent', 'Rating', 'Quadrant', 'Result', 'Date']], use_container_width=True)
 
 st.divider()
