@@ -479,10 +479,11 @@ def create_quadrant_table(completed):
             cell.set_text_props(weight='bold')
         else:  # Rows below the header
             cell.set_text_props(ha='left', weight='bold')  # Left align the rows
-            # Set text color based on "W" (green) or "L" (red) in the Result
-            if "W" in table_data[i-1, j]:  # Skip header row
+            game_result = table_data[i-1, j]
+            reversed_result = game_result[::-1]
+            if "W" in reversed_result:  # Check if 'W' comes first in reversed string
                 cell.set_text_props(color='#1D4D00')  # Green for win
-            elif "L" in table_data[i-1, j]:  # Skip header row
+            elif "L" in reversed_result:  # If 'W' doesn't appear, check for 'L'
                 cell.set_text_props(color='#660000')  # Red for loss
     
     # Return the figure object
