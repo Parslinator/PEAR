@@ -18,7 +18,7 @@ comparison_date = pd.to_datetime(formatted_date, format="%m_%d_%Y")
 subset_games = schedule_df[
     (schedule_df["Date"] >= comparison_date) &
     (schedule_df["Date"] <= comparison_date + pd.Timedelta(days=0))
-][['home_team', 'away_team', 'PEAR', 'Date']].sort_values('Date').drop_duplicates().reset_index(drop=True)
+][['home_team', 'away_team', 'PEAR', 'Date', 'Team', 'Opponent', 'Result']].sort_values('Date').drop_duplicates(subset=['home_team', 'away_team'], keep = 'first').reset_index(drop=True)
 
 
 base_url = "https://www.ncaa.com"
