@@ -6,6 +6,7 @@ import requests # type: ignore
 from bs4 import BeautifulSoup # type: ignore
 import pytz # type: ignore
 import re # type: ignore
+import numpy as np # type: ignore
 
 formatted_date = datetime.today().strftime('%m_%d_%Y')
 current_season = datetime.today().year
@@ -318,6 +319,19 @@ def grab_team_schedule(team_name, stats_df):
     )
     schedule_df.rename(columns={'Team_x':'Team', 'Rating Rank':'Rating'}, inplace=True)
     schedule_df = schedule_df.drop(columns=['Team_y'])
+
+    # Define conditions
+    conditions = [
+        schedule_df["Rating"] <= 40,
+        schedule_df["Rating"] <= 80,
+        schedule_df["Rating"] <= 160
+    ]
+
+    # Define corresponding values
+    quadrants = ["Q1", "Q2", "Q3"]
+
+    # Assign Quadrant values
+    schedule_df["Quadrant"] = np.select(conditions, quadrants, default="Q4")
 
     month_mapping = {
         "JAN": "01", "FEB": "02", "MAR": "03", "APR": "04",
