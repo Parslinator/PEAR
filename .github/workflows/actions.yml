@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: "0 9 * * *"   # Runs at 3:00 AM CST (9:00 AM UTC)
     - cron: "0 17 * * *"  # Runs at 11:00 AM CST (5:00 PM UTC)
-    - cron: "0 21 * * *"  # Runs at 3:00 PM CST (9:00 PM UTC)
+    - cron: "0 20 * * *"  # Runs at 2:00 PM CST (8:00 PM UTC)
     - cron: "0 23 * * *"  # Runs at 5:00 PM CST (11:00 PM UTC)
     - cron: "0 2 * * *"   # Runs at 8:00 PM CST (2:00 AM UTC next day)
     - cron: "0 5 * * *"   # Runs at 11:00 PM CST (5:00 AM UTC next day)
