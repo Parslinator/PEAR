@@ -561,7 +561,7 @@ with st.form(key='team_schedule'):
         st.write(f"Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
         st.pyplot(fig)
         st.write("Upcoming Games")
-        st.dataframe(schedule[['Opponent', 'Rating', 'Quadrant', 'Result', 'Date']], use_container_width=True)
+        st.dataframe(schedule[['Opponent', 'Rating', 'Quadrant', 'Date']], use_container_width=True)
 
 st.divider()
 
