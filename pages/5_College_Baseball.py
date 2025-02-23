@@ -405,6 +405,7 @@ def find_spread(home_team, away_team):
 st.title(f"{current_season} CBASE PEAR")
 st.caption(f"Ratings Updated {formatted_latest_date}")
 st.caption(f"Stats Through Games {last_date}")
+st.caption(f"Page Updated Once a Day at 10:00 am CST")
 
 st.divider()
 
