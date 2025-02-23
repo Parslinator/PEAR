@@ -423,7 +423,7 @@ def grab_team_schedule(team_name, stats_df):
 
     def clean_spread(row):
         team_name = row["Team"]
-        spread = row["Projected_Spread"]
+        spread = row["PEAR"]
         spread_value = float(spread.split()[-1])
 
         return f'{spread_value}' if team_name in spread else f'+{abs(spread_value)}'
