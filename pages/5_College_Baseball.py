@@ -426,7 +426,7 @@ def grab_team_schedule(team_name, stats_df):
         spread = row["PEAR"]
         spread_value = float(spread.split()[-1])
 
-        return f'{spread_value}' if team_name in spread else f'+{abs(spread_value)}'
+        return spread_value if team_name in spread else abs(spread_value)
 
     remaining_games["PEAR"] = remaining_games.apply(clean_spread, axis=1)
 
@@ -582,6 +582,7 @@ with st.form(key='team_schedule'):
         st.pyplot(fig)
         st.write("Upcoming Games")
         st.dataframe(schedule[['Opponent', 'Rating', 'Quadrant', 'PEAR', 'Date']], use_container_width=True)
+        st.caption('PEAR - Negative Value Indicates Favorites, Positive Value Indicates Underdog')
 
 st.divider()
 
