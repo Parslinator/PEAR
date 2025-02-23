@@ -15,11 +15,10 @@ schedule_df = pd.read_csv(f"./PEAR/PEAR Baseball/y{current_season}/schedule_{cur
 schedule_df["Date"] = pd.to_datetime(schedule_df["Date"])
 comparison_date = pd.to_datetime(formatted_date, format="%m_%d_%Y")
 # formatted_date_dt = pd.to_datetime(comparison_date, format="%m_%d_%Y")
-subset_games = schedule_df[schedule_df["Date"] > comparison_date][['home_team', 'away_team', 'PEAR', 'Date', 'Team', 'Opponent', 'Result']].sort_values('Date').drop_duplicates(subset=['home_team', 'away_team'], keep = 'first').reset_index(drop=True)
-# subset_games = schedule_df[
-#     (schedule_df["Date"] >= comparison_date) &
-#     (schedule_df["Date"] <= comparison_date + pd.Timedelta(days=0))
-# ][['home_team', 'away_team', 'PEAR', 'Date', 'Team', 'Opponent', 'Result']].sort_values('Date').drop_duplicates(subset=['home_team', 'away_team'], keep = 'first').reset_index(drop=True)
+subset_games = schedule_df[
+    (schedule_df["Date"] >= comparison_date) &
+    (schedule_df["Date"] <= comparison_date + pd.Timedelta(days=0))
+][['home_team', 'away_team', 'PEAR', 'Date', 'Team', 'Opponent', 'Result']].sort_values('Date').drop_duplicates(subset=['home_team', 'away_team'], keep = 'first').reset_index(drop=True)
 
 def game_sort_key(result):
     if result.startswith(("W", "L")):
@@ -396,6 +395,7 @@ def grab_team_schedule(team_name, stats_df):
     completed_schedule = schedule_df[
         (schedule_df["Comparison_Date"] < comparison_date) & (schedule_df["home_score"] != schedule_df["away_score"])
     ].reset_index(drop=True)
+    remaining_games = schedule_df[schedule_df["Comparison_Date"] > comparison_date].reset_index(drop=True)
 
     win_rating = 500
     best_win_opponent = ""
@@ -421,7 +421,7 @@ def grab_team_schedule(team_name, stats_df):
                     loss_rating = row['Rating']
                     worst_loss_opponent = row['Opponent']
                 
-    return team_rank, best_win_opponent, worst_loss_opponent, schedule_df, completed_schedule
+    return team_rank, best_win_opponent, worst_loss_opponent, remaining_games, completed_schedule
 
 import matplotlib.pyplot as plt # type: ignore
 def create_quadrant_table(completed):
