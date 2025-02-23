@@ -543,6 +543,7 @@ with st.form(key='team_schedule'):
     team_schedule = st.form_submit_button("Team Schedule")
     if team_schedule:
         rank, best, worst, schedule, completed = grab_team_schedule(team_name, modeling_stats)
+        schedule.index = schedule.index + 1
         fig = create_quadrant_table(completed)
         st.write(f"Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
         st.pyplot(fig)
