@@ -376,8 +376,8 @@ st.divider()
 
 st.subheader("CBASE Stats")
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats[['Team', 'Q1', 'Q2', 'Q3', 'Q4', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
-st.caption("PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
+    st.dataframe(modeling_stats[['Team', 'Q1', 'Q2', 'Q3', 'Q4', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
+st.caption("PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
 
 st.divider()
 
