@@ -477,9 +477,7 @@ with st.form(key='team_schedule'):
     team_schedule = st.form_submit_button("Team Schedule")
     if team_schedule:
         rank, best, worst, schedule = grab_team_schedule(team_name, modeling_stats)
-        st.write(f"Team Rank: {rank}")
-        st.write(f"Best Win: {best}")
-        st.write(f"Worst Loss: {worst}")
+        st.write(f"Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
         st.dataframe(schedule[['Opponent', 'Rating', 'Quadrant', 'Result', 'Date']], use_container_width=True)
 
 st.divider()
