@@ -446,7 +446,10 @@ def create_quadrant_table(completed):
     # Fill table data based on 'Quadrant'
     for idx, row in completed.iterrows():
         quadrant_idx = columns.index(row["Quadrant"])
-        game_info = f"{int(row['Rating'])} | {row['Opponent']} | {row['Result']}"
+        if pd.notna(row['Rating']):  # Check if 'Rating' exists (not NaN)
+            game_info = f"{int(row['Rating'])} | {row['Opponent']} | {row['Result']}"
+        else:
+            game_info = f"N/A | {row['Opponent']} | {row['Result']}"
         
         # Add the game info to the first available row for the respective quadrant
         for game_row in range(max_games):
