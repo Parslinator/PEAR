@@ -1,7 +1,9 @@
 from datetime import datetime
 import os
+import pytz # type: ignore
 
-formatted_date = datetime.today().strftime('%m_%d_%Y')
+cst = pytz.timezone('America/Chicago')
+formatted_date = datetime.now(cst).strftime('%m_%d_%Y')
 current_season = datetime.today().year
 
 folder_path = f"./PEAR/PEAR Baseball/y{current_season}"
@@ -724,8 +726,9 @@ schedule_df['home_win_prob'] = schedule_df.apply(
     lambda row: PEAR_Win_Prob(row['home_rating'], row['away_rating']) / 100, axis=1
 )
 completed_schedule = schedule_df[
-    (schedule_df["Date"] < comparison_date) & (schedule_df["home_score"] != schedule_df["away_score"])
+    (schedule_df["Date"] <= comparison_date) & (schedule_df["home_score"] != schedule_df["away_score"])
 ].reset_index(drop=True)
+completed_schedule = completed_schedule[completed_schedule["Result"].str.startswith(("W", "L"))]
 remaining_games = schedule_df[schedule_df["Date"] > comparison_date].reset_index(drop=True)
 
 def adjust_home_pr(home_win_prob):

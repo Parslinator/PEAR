@@ -8,7 +8,8 @@ import pytz # type: ignore
 import re # type: ignore
 import numpy as np # type: ignore
 
-formatted_date = datetime.today().strftime('%m_%d_%Y')
+cst = pytz.timezone('America/Chicago')
+formatted_date = datetime.now(cst).strftime('%m_%d_%Y')
 current_season = datetime.today().year
 schedule_df = pd.read_csv(f"./PEAR/PEAR Baseball/y{current_season}/schedule_{current_season}.csv")
 schedule_df["Date"] = pd.to_datetime(schedule_df["Date"])
@@ -405,7 +406,7 @@ def find_spread(home_team, away_team):
 st.title(f"{current_season} CBASE PEAR")
 st.caption(f"Ratings Updated {formatted_latest_date}")
 st.caption(f"Stats Through Games {last_date}")
-st.caption(f"Page Updated Once a Day at 10:00 am CST")
+st.caption(f"Page Updated @ 3 AM, 11 AM, 3 PM, 5 PM, 8 PM, 11 PM CST")
 
 st.divider()
 
