@@ -111,7 +111,7 @@ formatted_latest_date = latest_date.strftime("%B %d, %Y")
 def find_spread(home_team, away_team):
     default_pr = modeling_stats['Rating'].mean() - 1.75 * modeling_stats['Rating'].std()
     default_elo = 1200
-    
+
     home_pr = modeling_stats.loc[modeling_stats['Team'] == home_team, 'Rating']
     away_pr = modeling_stats.loc[modeling_stats['Team'] == away_team, 'Rating']
     home_elo = modeling_stats.loc[modeling_stats['Team'] == home_team, 'ELO']
@@ -420,6 +420,15 @@ def grab_team_schedule(team_name, stats_df):
     ].reset_index(drop=True)
     remaining_games = schedule_df[schedule_df["Comparison_Date"] > comparison_date].reset_index(drop=True)
     remaining_games['PEAR'] = remaining_games.apply(lambda row: find_spread(row['Team'], row['Opponent']), axis=1)
+
+    def clean_spread(row):
+        team_name = row["Team"]
+        spread = row["Projected_Spread"]
+        spread_value = float(spread.split()[-1])
+
+        return f'{spread_value}' if team_name in spread else f'+{abs(spread_value)}'
+
+    remaining_games["PEAR"] = remaining_games.apply(clean_spread, axis=1)
 
     win_rating = 500
     best_win_opponent = ""
