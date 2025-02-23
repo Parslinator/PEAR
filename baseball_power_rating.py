@@ -16,7 +16,7 @@ warnings.filterwarnings("ignore")
 
 def PEAR_Win_Prob(home_pr, away_pr):
     rating_diff = home_pr - away_pr
-    win_prob = round(1 / (1 + 10 ** (-rating_diff / 10)) * 100, 2)
+    win_prob = round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
     return win_prob
 
 # Base URL for NCAA stats
