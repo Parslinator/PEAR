@@ -15,10 +15,11 @@ schedule_df = pd.read_csv(f"./PEAR/PEAR Baseball/y{current_season}/schedule_{cur
 schedule_df["Date"] = pd.to_datetime(schedule_df["Date"])
 comparison_date = pd.to_datetime(formatted_date, format="%m_%d_%Y")
 # formatted_date_dt = pd.to_datetime(comparison_date, format="%m_%d_%Y")
-subset_games = schedule_df[
-    (schedule_df["Date"] >= comparison_date) &
-    (schedule_df["Date"] <= comparison_date + pd.Timedelta(days=0))
-][['home_team', 'away_team', 'PEAR', 'Date', 'Team', 'Opponent', 'Result']].sort_values('Date').drop_duplicates(subset=['home_team', 'away_team'], keep = 'first').reset_index(drop=True)
+subset_games = schedule_df[schedule_df["Date"] > comparison_date][['home_team', 'away_team', 'PEAR', 'Date', 'Team', 'Opponent', 'Result']].sort_values('Date').drop_duplicates(subset=['home_team', 'away_team'], keep = 'first').reset_index(drop=True)
+# subset_games = schedule_df[
+#     (schedule_df["Date"] >= comparison_date) &
+#     (schedule_df["Date"] <= comparison_date + pd.Timedelta(days=0))
+# ][['home_team', 'away_team', 'PEAR', 'Date', 'Team', 'Opponent', 'Result']].sort_values('Date').drop_duplicates(subset=['home_team', 'away_team'], keep = 'first').reset_index(drop=True)
 
 def game_sort_key(result):
     if result.startswith(("W", "L")):
