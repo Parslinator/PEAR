@@ -546,6 +546,7 @@ with st.form(key='team_schedule'):
         fig = create_quadrant_table(completed)
         st.write(f"Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
         st.pyplot(fig)
+        st.write("Upcoming Games")
         st.dataframe(schedule[['Opponent', 'Rating', 'Quadrant', 'Result', 'Date']], use_container_width=True)
 
 st.divider()
