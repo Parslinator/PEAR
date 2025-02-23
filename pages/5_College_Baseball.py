@@ -20,6 +20,39 @@ subset_games = schedule_df[
     (schedule_df["Date"] <= comparison_date + pd.Timedelta(days=0))
 ][['home_team', 'away_team', 'PEAR', 'Date', 'Team', 'Opponent', 'Result']].sort_values('Date').drop_duplicates(subset=['home_team', 'away_team'], keep = 'first').reset_index(drop=True)
 
+def game_sort_key(result):
+    if result.startswith(("W", "L")):
+        return (0, None)  # Completed games
+    elif result.startswith(("Bot", "Top")):
+        return (1, None)  # Ongoing games
+    elif result[0].isdigit():  # Upcoming games with time
+        try:
+            return (2, datetime.strptime(result, "%I:%M %p"))  # Convert time to sortable format
+        except ValueError:
+            return (2, None)  # If parsing fails, treat as unknown
+    elif result.startswith("T"):  # TBA games
+        return (3, None)
+    elif result.startswith("C"):  # Cancelled games
+        return (4, None)
+    return (5, None)  # Any other cases
+
+def process_result(row):
+    result = row["Result"]
+    if result.startswith("W"):
+        return re.sub(r"^W", row["Team"], result)  # Replace "W" with Team name
+    elif result.startswith("L"):
+        # Extract scores, swap them
+        match = re.search(r"L (\d+) - (\d+)", result)
+        if match:
+            new_result = f"{row['Opponent']} {match.group(2)} - {match.group(1)}"  # Swap scores
+            return result.replace(match.group(0), new_result)  # Replace original text
+    return result  # Leave other cases unchanged
+
+
+subset_games = subset_games.sort_values(by="Result", key=lambda x: x.map(game_sort_key))
+subset_games["Result"] = subset_games.apply(process_result, axis=1)
+subset_games = subset_games.reset_index(drop=True)
+subset_games.index = subset_games.index + 1
 
 base_url = "https://www.ncaa.com"
 stats_page = f"{base_url}/stats/baseball/d1"
@@ -453,6 +486,6 @@ st.subheader(f"{comparison_date} Games")
 subset_games['Home'] = subset_games['home_team']
 subset_games['Away'] = subset_games['away_team']
 with st.container(border=True, height=440):
-    st.dataframe(subset_games[['Team', 'Opponent', 'PEAR', 'Result']], use_container_width=True)
+    st.dataframe(subset_games[['Home', 'Away', 'PEAR', 'Result']], use_container_width=True)
 
 st.divider()
