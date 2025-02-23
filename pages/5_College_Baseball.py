@@ -320,7 +320,7 @@ def grab_team_schedule(team_name, stats_df):
     )
     schedule_df.rename(columns={'Team_x':'Team', 'Rating Rank':'Rating'}, inplace=True)
     schedule_df = schedule_df.drop(columns=['Team_y'])
-
+    team_rank = stats_df[stats_df['Team'] == team_name]['Rating Rank'].values[0]
     # Define conditions
     conditions = [
         schedule_df["Rating"] <= 40,
@@ -384,7 +384,7 @@ def grab_team_schedule(team_name, stats_df):
                     loss_rating = row['Rating']
                     worst_loss_opponent = row['Opponent']
                 
-    return best_win_opponent, worst_loss_opponent, schedule_df
+    return team_rank, best_win_opponent, worst_loss_opponent, schedule_df
 
 def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 1.5
@@ -440,7 +440,8 @@ with st.form(key='team_schedule'):
     team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
     team_schedule = st.form_submit_button("Team Schedule")
     if team_schedule:
-        best, worst, schedule = grab_team_schedule(team_name, modeling_stats)
+        rank, best, worst, schedule = grab_team_schedule(team_name, modeling_stats)
+        st.write(f"Team Rank: {rank}")
         st.write(f"Best Win: {best}")
         st.write(f"Worst Loss: {worst}")
         st.dataframe(schedule[['Opponent', 'Rating', 'Quadrant', 'Result', 'Date']], use_container_width=True)
