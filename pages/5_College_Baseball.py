@@ -38,14 +38,17 @@ def game_sort_key(result):
 
 def process_result(row):
     result = row["Result"]
+    
     if result.startswith("W"):
-        return re.sub(r"^W", row["Team"], result)  # Replace "W" with Team name
+        return re.sub(r"^W\s+", row["Team"] + " ", result)  # Replace "W" with Team name
+
     elif result.startswith("L"):
-        # Extract scores, swap them
-        match = re.search(r"L (\d+) - (\d+)", result)
+        # Extract scores and swap them
+        match = re.search(r"L\s+(\d+)\s*-\s*(\d+)", result)
         if match:
-            new_result = f"{row['Opponent']} {match.group(2)} - {match.group(1)}"  # Swap scores
-            return result.replace(match.group(0), new_result)  # Replace original text
+            swapped_score = f"{row['Opponent']} {match.group(2)} - {match.group(1)}"
+            return re.sub(r"L\s+\d+\s*-\s*\d+", swapped_score, result)  # Replace score section
+    
     return result  # Leave other cases unchanged
 
 
