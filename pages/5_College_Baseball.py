@@ -441,7 +441,7 @@ with st.form(key='team_schedule'):
         best, worst, schedule = grab_team_schedule(team_name, modeling_stats)
         st.write(f"Best Win: {best}")
         st.write(f"Worst Loss: {worst}")
-        st.dataframe(schedule[['Opponent', 'Rating', 'Result', 'Date']], use_container_width=True)
+        st.dataframe(schedule[['Opponent', 'Rating', 'Quadrant', 'Result', 'Date']], use_container_width=True)
 
 st.divider()
 
