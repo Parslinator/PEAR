@@ -108,6 +108,25 @@ else:
     modeling_stats = None  # No valid files found
 formatted_latest_date = latest_date.strftime("%B %d, %Y")
 
+def find_spread(home_team, away_team):
+    default_pr = modeling_stats['Rating'].mean() - 1.75 * modeling_stats['Rating'].std()
+    default_elo = 1200
+    home_pr = modeling_stats[modeling_stats['Team'] == home_team]['Rating'].values[0]
+    away_pr = modeling_stats[modeling_stats['Team'] == away_team]['Rating'].values[0]
+    home_elo = modeling_stats[modeling_stats['Team'] == home_team]['ELO'].values[0]
+    away_elo = modeling_stats[modeling_stats['Team'] == away_team]['ELO'].values[0]
+    home_pr = home_pr[0] if len(home_pr) > 0 else default_pr
+    away_pr = away_pr[0] if len(away_pr) > 0 else default_pr
+    home_elo = home_elo[0] if len(home_elo) > 0 else default_elo
+    away_elo = away_elo[0] if len(away_elo) > 0 else default_elo
+    win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1)*100,2)
+    raw_spread = adjust_home_pr(win_prob) + home_pr - away_pr
+    spread = round(raw_spread,2)
+    if spread >= 0:
+        return f"{home_team} -{spread}"
+    else:
+        return f"{away_team} {spread}"
+
 def elo_load():
     # URL of the page to scrape
     url = 'https://www.warrennolan.com/baseball/2025/elo'
@@ -398,6 +417,7 @@ def grab_team_schedule(team_name, stats_df):
         (schedule_df["Result"].str.contains("W|L"))  # Check if "Result" contains "W" or "L"
     ].reset_index(drop=True)
     remaining_games = schedule_df[schedule_df["Comparison_Date"] > comparison_date].reset_index(drop=True)
+    remaining_games['PEAR'] = remaining_games.apply(lambda row: find_spread(row['Team'], row['Opponent']), axis=1)
 
     win_rating = 500
     best_win_opponent = ""
@@ -507,20 +527,6 @@ def create_quadrant_table(completed):
 def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 1.5
 
-def find_spread(home_team, away_team):
-    home_pr = modeling_stats[modeling_stats['Team'] == home_team]['Rating'].values[0]
-    away_pr = modeling_stats[modeling_stats['Team'] == away_team]['Rating'].values[0]
-    home_elo = modeling_stats[modeling_stats['Team'] == home_team]['ELO'].values[0]
-    away_elo = modeling_stats[modeling_stats['Team'] == away_team]['ELO'].values[0]
-    win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1)*100,2)
-    raw_spread = adjust_home_pr(win_prob) + home_pr - away_pr
-    spread = round(raw_spread,2)
-    if spread >= 0:
-        return f"{home_team} -{spread}"
-    else:
-        return f"{away_team} {spread}"
-
-
 st.title(f"{current_season} CBASE PEAR")
 st.caption(f"Ratings Updated {formatted_latest_date}")
 st.caption(f"Stats Through Games {last_date}")
@@ -564,7 +570,7 @@ with st.form(key='team_schedule'):
         st.write(f"Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
         st.pyplot(fig)
         st.write("Upcoming Games")
-        st.dataframe(schedule[['Opponent', 'Rating', 'Quadrant', 'Date']], use_container_width=True)
+        st.dataframe(schedule[['Opponent', 'Rating', 'Quadrant', 'PEAR', 'Date']], use_container_width=True)
 
 st.divider()
 
