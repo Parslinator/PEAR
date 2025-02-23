@@ -5,6 +5,7 @@ import streamlit as st # type: ignore
 import requests # type: ignore
 from bs4 import BeautifulSoup # type: ignore
 import pytz # type: ignore
+import re # type: ignore
 
 formatted_date = datetime.today().strftime('%m_%d_%Y')
 current_season = datetime.today().year
@@ -16,6 +17,32 @@ subset_games = schedule_df[
     (schedule_df["Date"] >= comparison_date) &
     (schedule_df["Date"] <= comparison_date + pd.Timedelta(days=0))
 ][['home_team', 'away_team', 'PEAR', 'Date']].sort_values('Date').drop_duplicates().reset_index(drop=True)
+
+
+base_url = "https://www.ncaa.com"
+stats_page = f"{base_url}/stats/baseball/d1"
+def get_soup(url):
+    response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
+    response.raise_for_status()  # Ensure request was successful
+    return BeautifulSoup(response.text, "html.parser")
+soup = get_soup(stats_page)
+dropdown = soup.find("select", {"id": "select-container-team"})
+options = dropdown.find_all("option")
+stat_links = {
+    option.text.strip(): base_url + option["value"]
+    for option in options if option.get("value")
+}
+url = stat_links['Base on Balls']
+response = requests.get(url)
+
+# Parse with BeautifulSoup
+soup = BeautifulSoup(response.text, "html.parser")
+
+desc_div = soup.find("div", class_="stats-header__lower__desc")
+desc_text = desc_div.text.strip()
+# Regular expression to find the last date (format: Month Day, Year)
+match = re.search(r"([A-Za-z]+ \d{1,2}, \d{4})$", desc_text)
+last_date = match.group(1)
 
 folder_path = f"./PEAR/PEAR Baseball/y{current_season}"
 
@@ -362,7 +389,8 @@ def find_spread(home_team, away_team):
 
 
 st.title(f"{current_season} CBASE PEAR")
-st.caption(f"Last Updated {formatted_latest_date}")
+st.caption(f"Ratings Updated {formatted_latest_date}")
+st.caption(f"Stats Updated {last_date}")
 
 st.divider()
 
