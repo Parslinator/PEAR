@@ -23,7 +23,7 @@ subset_games = schedule_df[
 def game_sort_key(result):
     if result.startswith(("W", "L")):
         return (0, None)  # Completed games
-    elif result.startswith(("Bot", "Top")):
+    elif result.startswith(("Bot", "Top", "Middle", "End")):
         return (1, None)  # Ongoing games
     elif result[0].isdigit():  # Upcoming games with time
         try:
