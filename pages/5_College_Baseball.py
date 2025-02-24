@@ -423,9 +423,13 @@ def grab_team_schedule(team_name, stats_df):
 
     def clean_spread(row):
         team_name = row["Team"]
-        spread = row["PEAR"]
-        spread_value = float(spread.split()[-1])
-
+        spread = row["Projected_Spread"]
+        spread_value_str = spread.split()[-1]
+        spread_value_str = spread_value_str.lstrip("-") if spread_value_str.startswith("--") else spread_value_str
+        try:
+            spread_value = float(spread_value_str)
+        except ValueError:
+            spread_value = 0.0  # Default to 0 if there's a parsing issue
         return spread_value if team_name in spread else abs(spread_value)
 
     remaining_games["PEAR"] = remaining_games.apply(clean_spread, axis=1)
