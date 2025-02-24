@@ -785,52 +785,6 @@ avg_team_expected_wins = completed_schedule.groupby('Team').apply(calculate_aver
 rem_avg_expected_wins = remaining_games.groupby('Team').apply(calculate_average_expected_wins, average_team).reset_index(drop=True)
 rem_avg_expected_wins.rename(columns={"avg_expected_wins": "rem_avg_expected_wins", "total_expected_wins":"rem_total_expected_wins"}, inplace=True)
 
-quadrant_records = {}
-
-for team, group in completed_schedule.groupby('Team'):
-    Q1_win, Q1_loss = 0, 0  # Initialize counters
-    Q2_win, Q2_loss = 0, 0
-    Q3_win, Q3_loss = 0, 0
-    Q4_win, Q4_loss = 0, 0
-
-    for _, row in group.iterrows():
-        opponent = row['Opponent']
-        
-        if len(ending_data[ending_data['Team'] == opponent]) > 0:
-            opponent_index = ending_data[ending_data['Team'] == opponent].index.values[0]
-        else:
-            opponent_index = 300
-
-        team_is_home = row['Team'] == row['home_team']
-        team_won = (row['home_score'] > row['away_score'] and team_is_home) or \
-                    (row['away_score'] > row['home_score'] and not team_is_home)
-
-        # Apply quadrant logic
-        if opponent_index <= 40:
-            if team_won:
-                Q1_win += 1
-            else:
-                Q1_loss += 1
-        elif opponent_index <= 80:
-            if team_won:
-                Q2_win += 1
-            else:
-                Q2_loss += 1
-        elif opponent_index <= 160:
-            if team_won:
-                Q3_win += 1
-            else:
-                Q3_loss += 1
-        else:
-            if team_won:
-                Q4_win += 1
-            else:
-                Q4_loss += 1      
-
-    # Store results for the team
-    quadrant_records[team] = {'Team': team, 'Q1': f"{Q1_win}-{Q1_loss}", 'Q2': f"{Q2_win}-{Q2_loss}", 'Q3': f"{Q3_win}-{Q3_loss}", 'Q4': f"{Q4_win}-{Q4_loss}"}
-quadrant_record_df = pd.DataFrame.from_dict(quadrant_records, orient='index').reset_index(drop=True)
-
 def calculate_kpi(completed_schedule, ending_data):
     def get_team_rank(team):
         match = ending_data.loc[ending_data["Team"] == team]
@@ -913,8 +867,7 @@ df_1 = pd.merge(ending_data, team_expected_wins[['Team', 'expected_wins', 'Wins'
 df_2 = pd.merge(df_1, avg_team_expected_wins[['Team', 'avg_expected_wins', 'total_expected_wins']], on='Team', how='left')
 df_3 = pd.merge(df_2, rem_avg_expected_wins[['Team', 'rem_avg_expected_wins', 'rem_total_expected_wins']], on='Team', how='left')
 df_4 = pd.merge(df_3, elo_data[['Team', 'ELO']], on='Team', how='left')
-df_5 = pd.merge(df_4, kpi_results, on='Team', how='left')
-stats_and_metrics = pd.merge(df_5, quadrant_record_df, on='Team', how='left')
+stats_and_metrics = pd.merge(df_4, kpi_results, on='Team', how='left')
 
 stats_and_metrics['wins_above_expected'] = round(stats_and_metrics['Wins'] - stats_and_metrics['total_expected_wins'],2)
 stats_and_metrics['SOR'] = stats_and_metrics['wins_above_expected'].rank(method='min', ascending=False)
@@ -990,6 +943,54 @@ def calculate_NET(df, w1=0.55, w2=0.40, w3=0.05):
 
     return df[["Team", "NET_Score", "NET"]].sort_values(by="NET").reset_index(drop=True)
 net = calculate_NET(stats_and_metrics)
+
+quadrant_records = {}
+
+for team, group in completed_schedule.groupby('Team'):
+    Q1_win, Q1_loss = 0, 0  # Initialize counters
+    Q2_win, Q2_loss = 0, 0
+    Q3_win, Q3_loss = 0, 0
+    Q4_win, Q4_loss = 0, 0
+
+    for _, row in group.iterrows():
+        opponent = row['Opponent']
+        
+        if len(stats_and_metrics[stats_and_metrics['Team'] == opponent]) > 0:
+            opponent_index = stats_and_metrics[stats_and_metrics['Team'] == opponent]["NET"].values[0]
+        else:
+            opponent_index = 300
+
+        team_is_home = row['Team'] == row['home_team']
+        team_won = (row['home_score'] > row['away_score'] and team_is_home) or \
+                    (row['away_score'] > row['home_score'] and not team_is_home)
+
+        # Apply quadrant logic
+        if opponent_index <= 40:
+            if team_won:
+                Q1_win += 1
+            else:
+                Q1_loss += 1
+        elif opponent_index <= 80:
+            if team_won:
+                Q2_win += 1
+            else:
+                Q2_loss += 1
+        elif opponent_index <= 160:
+            if team_won:
+                Q3_win += 1
+            else:
+                Q3_loss += 1
+        else:
+            if team_won:
+                Q4_win += 1
+            else:
+                Q4_loss += 1            
+            
+
+    # Store results for the team
+    quadrant_records[team] = {'Team': team, 'Q1': f"{Q1_win}-{Q1_loss}", 'Q2': f"{Q2_win}-{Q2_loss}", 'Q3': f"{Q3_win}-{Q3_loss}", 'Q4': f"{Q4_win}-{Q4_loss}"}
+quadrant_record_df = pd.DataFrame.from_dict(quadrant_records, orient='index').reset_index(drop=True)
+stats_and_metrics = pd.merge(stats_and_metrics, quadrant_record_df, on='Team', how='left')
 
 stats_and_metrics.fillna(0, inplace=True)
 stats_and_metrics = stats_and_metrics.sort_values('Rating', ascending=False).reset_index(drop=True)

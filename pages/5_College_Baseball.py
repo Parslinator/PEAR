@@ -372,14 +372,14 @@ def grab_team_schedule(team_name, stats_df):
         schedule_df[col] = schedule_df[col].replace(team_replacements)
 
     schedule_df = schedule_df.merge(
-        stats_df[['Team', 'Rating Rank']],  # Keep only "Rating" and "Resume"
+        stats_df[['Team', 'Rating Rank', 'NET']],  # Keep only "Rating" and "Resume"
         left_on="Opponent",
         right_on="Team",  # Match "Opponent" with the "Rating" column (previously the index)
         how="left"  # Keep all rows from schedule_df
     )
     schedule_df.rename(columns={'Team_x':'Team', 'Rating Rank':'Rating'}, inplace=True)
     schedule_df = schedule_df.drop(columns=['Team_y'])
-    team_rank = stats_df[stats_df['Team'] == team_name]['Rating Rank'].values[0]
+    team_rank = stats_df[stats_df['Team'] == team_name]['NET'].values[0]
     # Define conditions
     conditions = [
         schedule_df["Rating"] <= 40,
@@ -443,21 +443,21 @@ def grab_team_schedule(team_name, stats_df):
     for _, row in completed_schedule.iterrows():
         if row['Team'] == row['home_team']:
             if row['home_score'] > row['away_score']:
-                if row['Rating'] < win_rating:
-                    win_rating = row['Rating']
+                if row['NET'] < win_rating:
+                    win_rating = row['NET']
                     best_win_opponent = row['Opponent']
             else:
-                if row['Rating'] > loss_rating:
-                    loss_rating = row['Rating']
+                if row['NET'] > loss_rating:
+                    loss_rating = row['NET']
                     worst_loss_opponent = row['Opponent']
         else:
             if row['away_score'] > row['home_score']:
-                if row['Rating'] < win_rating:
-                    win_rating = row['Rating']
+                if row['NET'] < win_rating:
+                    win_rating = row['NET']
                     best_win_opponent = row['Opponent']
             else:
-                if row['Rating'] > loss_rating:
-                    loss_rating = row['Rating']
+                if row['NET'] > loss_rating:
+                    loss_rating = row['NET']
                     worst_loss_opponent = row['Opponent']
                 
     return team_rank, best_win_opponent, worst_loss_opponent, remaining_games, completed_schedule
@@ -483,8 +483,8 @@ def create_quadrant_table(completed):
     # Fill table data based on 'Quadrant'
     for idx, row in completed.iterrows():
         quadrant_idx = columns.index(row["Quadrant"])
-        if pd.notna(row['Rating']):  # Check if 'Rating' exists (not NaN)
-            game_info = f"{int(row['Rating'])} | {row['Opponent']} | {row['Result']}"
+        if pd.notna(row['NET']):  # Check if 'Rating' exists (not NaN)
+            game_info = f"{int(row['NET'])} | {row['Opponent']} | {row['Result']}"
         else:
             game_info = f"N/A | {row['Opponent']} | {row['Result']}"
         
