@@ -971,11 +971,13 @@ stats_and_metrics = stats_and_metrics.sort_values('WAB').reset_index(drop=True)
 
 stats_and_metrics['AVG'] = round(stats_and_metrics[['KPI', 'WAB', 'SOR']].mean(axis=1),1)
 stats_and_metrics['Resume'] = stats_and_metrics['AVG'].rank(method='min')
+stats_and_metrics = stats_and_metrics.sort_values('Resume').reset_index(drop=True)
 
-bubble_team_rating = stats_and_metrics.loc[stats_and_metrics['Resume'] == 34, 'Rating'].values[0]
+bubble_team_rating = stats_and_metrics.loc[33, 'Rating']
 resume_quality = completed_schedule.groupby('Team').apply(calculate_resume_quality, bubble_team_rating).reset_index(drop=True)
 resume_quality['RQI'] = resume_quality['resume_quality'].rank(method='min', ascending=False)
-resume_quality['resume_quality'] = resume_quality['resume_quality'] - resume_quality.loc[resume_quality['RQI'] == 34, 'resume_quality'].values[0]
+resume_quality = resume_quality.sort_values('RQI').reset_index(drop=True)
+resume_quality['resume_quality'] = resume_quality['resume_quality'] - resume_quality.loc[33, 'resume_quality']
 stats_and_metrics = pd.merge(stats_and_metrics, resume_quality, on='Team', how='left')
 
 def calculate_NET(df, w1=0.45, w2=0.45, w3=0.1):
@@ -988,7 +990,6 @@ def calculate_NET(df, w1=0.45, w2=0.45, w3=0.1):
 
     return df[["Team", "NET_Score", "NET"]].sort_values(by="NET").reset_index(drop=True)
 net = calculate_NET(stats_and_metrics)
-stats_and_metrics = pd.merge(stats_and_metrics, net, on='Team', how='left')
 
 stats_and_metrics.fillna(0, inplace=True)
 stats_and_metrics = stats_and_metrics.sort_values('Rating', ascending=False).reset_index(drop=True)
