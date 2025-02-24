@@ -379,12 +379,12 @@ def grab_team_schedule(team_name, stats_df):
     )
     schedule_df.rename(columns={'Team_x':'Team', 'Rating Rank':'Rating'}, inplace=True)
     schedule_df = schedule_df.drop(columns=['Team_y'])
-    team_rank = stats_df[stats_df['Team'] == team_name]['NET'].values[0]
+    team_rank = int(stats_df[stats_df['Team'] == team_name]['NET'].values[0])
     # Define conditions
     conditions = [
-        schedule_df["Rating"] <= 40,
-        schedule_df["Rating"] <= 80,
-        schedule_df["Rating"] <= 160
+        schedule_df["NET"] <= 40,
+        schedule_df["NET"] <= 80,
+        schedule_df["NET"] <= 160
     ]
 
     # Define corresponding values
