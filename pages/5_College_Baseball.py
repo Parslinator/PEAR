@@ -552,10 +552,10 @@ st.caption(f"Page Updated @ 3 AM, 11 AM, 2 PM, 5 PM, 8 PM, 11 PM CST")
 st.divider()
 
 st.subheader("CBASE Ratings and Resume")
-modeling_stats = modeling_stats.sort_values('NET').set_index('NET')
+modeling_stats.index = modeling_stats.index + 1
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats[['Team', 'Rating', 'RQI', 'SOS', 'RemSOS', 'Conference']], use_container_width=True)
-st.caption("NET - Mimicing the NCAA Evaluation Tool, Rating - Runs Above or Below Average', RQI - Resume Quality Index, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
+    st.dataframe(modeling_stats[['Team', 'Rating', 'NET', 'RQI', 'SOS', 'RemSOS', 'Conference']], use_container_width=True)
+st.caption("NET - Mimicing the NCAA Evaluation Tool, RQI - Resume Quality Index, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
 
 st.divider()
 
