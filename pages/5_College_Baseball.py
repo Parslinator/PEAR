@@ -554,7 +554,7 @@ st.divider()
 st.subheader("CBASE Ratings and Resume")
 modeling_stats = modeling_stats.sort_values('NET').set_index('NET')
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats[['NET', 'Team', 'Rating', 'RQI', 'SOS', 'RemSOS', 'Conference']], use_container_width=True)
+    st.dataframe(modeling_stats[['Team', 'Rating', 'RQI', 'SOS', 'RemSOS', 'Conference']], use_container_width=True)
 st.caption("NET - Mimicing the NCAA Evaluation Tool, Rating - Runs Above or Below Average', RQI - Resume Quality Index, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
 
 st.divider()
