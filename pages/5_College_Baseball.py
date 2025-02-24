@@ -423,7 +423,7 @@ def grab_team_schedule(team_name, stats_df):
 
     def clean_spread(row):
         team_name = row["Team"]
-        spread = row["Projected_Spread"]
+        spread = row["PEAR"]
         spread_value_str = spread.split()[-1]
         spread_value_str = spread_value_str.lstrip("-") if spread_value_str.startswith("--") else spread_value_str
         try:
