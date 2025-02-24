@@ -53,6 +53,8 @@ def process_result(row):
 
 subset_games['Result'] = subset_games['Result'].astype(str)
 subset_games = subset_games.sort_values(by="Result", key=lambda x: x.map(game_sort_key))
+subset_games["Result"] = subset_games["Result"].astype(str)  # Convert to string to avoid errors
+subset_games["Result"] = subset_games["Result"].apply(lambda x: x if x.startswith(("W", "L")) else "")
 subset_games["Result"] = subset_games.apply(process_result, axis=1)
 subset_games = subset_games.reset_index(drop=True)
 subset_games.index = subset_games.index + 1
