@@ -975,11 +975,20 @@ stats_and_metrics['Resume'] = stats_and_metrics['AVG'].rank(method='min')
 bubble_team_rating = stats_and_metrics.loc[stats_and_metrics['Resume'] == 34, 'Rating'].values[0]
 resume_quality = completed_schedule.groupby('Team').apply(calculate_resume_quality, bubble_team_rating).reset_index(drop=True)
 resume_quality['RQI'] = resume_quality['resume_quality'].rank(method='min', ascending=False)
-resume_quality.sort_values('RQI')[0:50].reset_index(drop=True)
-
+resume_quality['resume_quality'] = resume_quality['resume_quality'] - resume_quality.loc[resume_quality['RQI'] == 34, 'resume_quality'].values[0]
 stats_and_metrics = pd.merge(stats_and_metrics, resume_quality, on='Team', how='left')
-stats_and_metrics['AVG'] = round(stats_and_metrics[['RQI', 'WAB', 'SOR']].mean(axis=1),1)
-stats_and_metrics['Resume'] = stats_and_metrics['AVG'].rank(method='min')
+
+def calculate_NET(df, w1=0.45, w2=0.45, w3=0.1):
+
+    df["Norm_Rating"] = (df["Rating"] - df["Rating"].min()) / (df["Rating"].max() - df["Rating"].min())
+    df["Norm_RQI"] = (df["resume_quality"] - df["resume_quality"].min()) / (df["resume_quality"].max() - df["resume_quality"].min())
+    df["Norm_SOS"] = (df["avg_expected_wins"] - df["avg_expected_wins"].min()) / (df["avg_expected_wins"].max() - df["avg_expected_wins"].min())
+    df["NET_Score"] = (w1 * df["Norm_Rating"]) + (w2 * df["Norm_RQI"]) + (w3 * df["Norm_SOS"])
+    df["NET"] = df["NET_Score"].rank(method="min", ascending=False)
+
+    return df[["Team", "NET_Score", "NET"]].sort_values(by="NET").reset_index(drop=True)
+net = calculate_NET(stats_and_metrics)
+stats_and_metrics = pd.merge(stats_and_metrics, net, on='Team', how='left')
 
 stats_and_metrics.fillna(0, inplace=True)
 stats_and_metrics = stats_and_metrics.sort_values('Rating', ascending=False).reset_index(drop=True)

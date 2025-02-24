@@ -554,8 +554,8 @@ st.divider()
 st.subheader("CBASE Ratings and Resume")
 modeling_stats.index = modeling_stats.index + 1
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats[['Team', 'Rating', 'Resume', 'RQI', 'WAB', 'SOR', 'SOS', 'RemSOS', 'Conference']], use_container_width=True)
-st.caption("Resume - Resume Rank based on Average from RQI, WAB, SOR, RQI - Resume Quality Index, WAB - Wins Above Bubble, SOR - Strength of Record, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
+    st.dataframe(modeling_stats[['Team', 'Rating', 'NET', 'RQI', 'SOS', 'RemSOS', 'Conference']], use_container_width=True)
+st.caption("NET - Mimicing the NCAA Evaluation Tool, RQI - Resume Quality Index, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
 
 st.divider()
 
