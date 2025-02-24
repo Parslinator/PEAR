@@ -584,10 +584,10 @@ with st.form(key='team_schedule'):
         rank, best, worst, schedule, completed = grab_team_schedule(team_name, modeling_stats)
         schedule.index = schedule.index + 1
         fig = create_quadrant_table(completed)
-        st.write(f"Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
+        st.write(f"NET Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
         st.pyplot(fig)
         st.write("Upcoming Games")
-        st.dataframe(schedule[['Opponent', 'Rating', 'Quadrant', 'PEAR', 'Date']], use_container_width=True)
+        st.dataframe(schedule[['Opponent', 'NET', 'Quadrant', 'PEAR', 'Date']], use_container_width=True)
         st.caption('PEAR - Negative Value Indicates Favorites, Positive Value Indicates Underdog')
 
 st.divider()
