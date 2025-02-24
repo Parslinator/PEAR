@@ -573,15 +573,16 @@ tournament = pd.concat([at_large, automatic_qualifiers])
 tournament = tournament.sort_values(by="NET").reset_index(drop=True)
 tournament["Seed"] = (tournament.index // 16) + 1
 pod_order = list(range(1, 17)) + list(range(16, 0, -1)) + list(range(1, 17)) + list(range(16, 0, -1))
-tournament["Regional"] = pod_order
-formatted_df = tournament.pivot_table(index="Regional", columns="Seed", values="Team", aggfunc=lambda x: ' '.join(x))
+tournament["Host"] = pod_order
+formatted_df = tournament.pivot_table(index="Host", columns="Seed", values="Team", aggfunc=lambda x: ' '.join(x))
 formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
 formatted_df = formatted_df.reset_index()
-pivoted_df = formatted_df.set_index('Regional').T  # Transpose so that Seeds are rows and Pods are columns
-pivoted_df.columns = [f"{formatted_df.at[pod, '1 Seed']} Regional" for pod in formatted_df.index]
+formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
+formatted_df.set_index('Host')
+formatted_df.index = formatted_df.index + 1
 st.subheader("Projected NCAA Tournament")
 with st.container(border=True, height=440):
-    st.dataframe(pivoted_df, use_container_width=True)
+    st.dataframe(formatted_df, use_container_width=True)
 st.caption("If the NCAA Tournament Started Today, This Is The Projection. AQ's are the highest NET ranking team in the conference")
 
 st.divider()
