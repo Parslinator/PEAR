@@ -582,7 +582,7 @@ formatted_df.set_index('Host')
 formatted_df.index = formatted_df.index + 1
 st.subheader("Projected NCAA Tournament")
 with st.container(border=True, height=440):
-    st.dataframe(formatted_df, use_container_width=True)
+    st.dataframe(formatted_df[['Host', '2 Seed', '3 Seed', '4 Seed']], use_container_width=True)
 st.caption("If the NCAA Tournament Started Today, This Is The Projection. AQ's are the highest NET ranking team in the conference")
 
 st.divider()
