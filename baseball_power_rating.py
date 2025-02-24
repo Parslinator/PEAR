@@ -342,7 +342,7 @@ modeling_stats[higher_better] = scaler.fit_transform(modeling_stats[higher_bette
 modeling_stats[lower_better] = scaler.fit_transform(-modeling_stats[lower_better])
 weights = {
     'HPG': 8, 'BBPG': 8, 'ERA': 22, 'PCT': 8,
-    'KP9': 8, 'WP9': 8, 'OPS': 22, 'WHIP': 8, 'PYTHAG': 22, 'Rank_pct': 40
+    'KP9': 8, 'WP9': 8, 'OPS': 22, 'WHIP': 8, 'PYTHAG': 22, 'Rank_pct': 45
 }
 modeling_stats['in_house_pr'] = sum(modeling_stats[stat] * weight for stat, weight in weights.items())
 
@@ -933,7 +933,7 @@ resume_quality = resume_quality.sort_values('RQI').reset_index(drop=True)
 resume_quality['resume_quality'] = resume_quality['resume_quality'] - resume_quality.loc[33, 'resume_quality']
 stats_and_metrics = pd.merge(stats_and_metrics, resume_quality, on='Team', how='left')
 
-def calculate_NET(df, w1=0.55, w2=0.40, w3=0.05):
+def calculate_NET(df, w1=0.6, w2=0.3, w3=0.1):
 
     df["Norm_Rating"] = (df["Rating"] - df["Rating"].min()) / (df["Rating"].max() - df["Rating"].min())
     df["Norm_RQI"] = (df["resume_quality"] - df["resume_quality"].min()) / (df["resume_quality"].max() - df["resume_quality"].min())
