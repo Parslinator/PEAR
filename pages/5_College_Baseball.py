@@ -509,7 +509,7 @@ def create_quadrant_table(completed):
     completed['Result'] = completed['Result'].apply(clean_result)
 
     # Count the maximum number of games in any quadrant
-    quadrant_counts = completed['Quadrant'].value_counts()
+    quadrant_counts = completed['Quad'].value_counts()
     max_games = quadrant_counts.max()
 
     # Define columns for quadrants
@@ -520,7 +520,7 @@ def create_quadrant_table(completed):
     
     # Fill table data based on 'Quadrant'
     for idx, row in completed.iterrows():
-        quadrant_idx = columns.index(row["Quadrant"])
+        quadrant_idx = columns.index(row["Quad"])
         if pd.notna(row['NET']):  # Check if 'Rating' exists (not NaN)
             game_info = f"{int(row['NET'])} | {row['Opponent']} | {row['Result']}"
         else:
