@@ -945,15 +945,16 @@ resume_quality = resume_quality.sort_values('RQI').reset_index(drop=True)
 resume_quality['resume_quality'] = resume_quality['resume_quality'] - resume_quality.loc[33, 'resume_quality']
 stats_and_metrics = pd.merge(stats_and_metrics, resume_quality, on='Team', how='left')
 
-def calculate_NET(df, w1=0.6, w2=0.3, w3=0.1):
+def calculate_NET(df, w1=0.45, w2=0.45, w3=0.1):
 
     df["Norm_Rating"] = (df["Rating"] - df["Rating"].min()) / (df["Rating"].max() - df["Rating"].min())
     df["Norm_RQI"] = (df["resume_quality"] - df["resume_quality"].min()) / (df["resume_quality"].max() - df["resume_quality"].min())
-    df["Norm_SOS"] = (df["avg_expected_wins"] - df["avg_expected_wins"].min()) / (df["avg_expected_wins"].max() - df["avg_expected_wins"].min())
+    df["Norm_SOS"] = 1 - (df["avg_expected_wins"] - df["avg_expected_wins"].min()) / (df["avg_expected_wins"].max() - df["avg_expected_wins"].min())  # Inverted
     df["NET_Score"] = (w1 * df["Norm_Rating"]) + (w2 * df["Norm_RQI"]) + (w3 * df["Norm_SOS"])
     df["NET"] = df["NET_Score"].rank(method="min", ascending=False)
 
     return df[["Team", "NET_Score", "NET"]].sort_values(by="NET").reset_index(drop=True)
+
 net = calculate_NET(stats_and_metrics)
 
 quadrant_records = {}
@@ -1007,6 +1008,7 @@ stats_and_metrics = pd.merge(stats_and_metrics, quadrant_record_df, on='Team', h
 stats_and_metrics.fillna(0, inplace=True)
 stats_and_metrics = stats_and_metrics.sort_values('Rating', ascending=False).reset_index(drop=True)
 stats_and_metrics['Rating Rank'] = stats_and_metrics.index + 1
+stats_and_metrics['PRR'] = stats_and_metrics['Rating Rank']
 
 file_path = os.path.join(folder_path, f"baseball_{formatted_date}.csv")
 stats_and_metrics.to_csv(file_path)
