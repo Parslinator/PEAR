@@ -18,7 +18,7 @@ comparison_date = pd.to_datetime(formatted_date, format="%m_%d_%Y")
 subset_games = schedule_df[
     (schedule_df["Date"] >= comparison_date) &
     (schedule_df["Date"] <= comparison_date + pd.Timedelta(days=0))
-][['home_team', 'away_team', 'PEAR', 'Date', 'Team', 'Opponent', 'Result']].sort_values('Date').drop_duplicates(subset=['home_team', 'away_team'], keep = 'first').reset_index(drop=True)
+][['home_team', 'away_team', 'PEAR', 'GQI', 'Date', 'Team', 'Opponent', 'Result']].sort_values('Date').drop_duplicates(subset=['home_team', 'away_team'], keep = 'first').reset_index(drop=True)
 
 def game_sort_key(result):
     if result.startswith(("W", "L")):
