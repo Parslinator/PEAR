@@ -239,6 +239,12 @@ def elo_load():
         'Western Carolina': 'Western Caro.',
         'Western Illinois': 'Western Ill.',
         'Western Michigan': 'Western Mich.',
+        'Albany': 'UAlbany',
+        'Southern Indiana': 'Southern Ind.',
+        'Queens': 'Queens (NC)',
+        'Central Connecticut': 'Central Conn. St.',
+        'Saint Thomas': 'St. Thomas (MN)',
+        'Northern Illinois': 'NIU',
     }
 
     elo_data['Team'] = elo_data['Team'].str.replace('State', 'St.', regex=False)
@@ -306,6 +312,12 @@ def grab_team_schedule(team_name, stats_df):
         'Western Carolina': 'Western Caro.',
         'Western Illinois': 'Western Ill.',
         'Western Michigan': 'Western Mich.',
+        'Albany': 'UAlbany',
+        'Southern Indiana': 'Southern Ind.',
+        'Queens': 'Queens (NC)',
+        'Central Connecticut': 'Central Conn. St.',
+        'Saint Thomas': 'St. Thomas (MN)',
+        'Northern Illinois': 'NIU',
     }
 
     BASE_URL = "https://www.warrennolan.com"

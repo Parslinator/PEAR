@@ -143,6 +143,12 @@ team_replacements = {
     'Western Carolina': 'Western Caro.',
     'Western Illinois': 'Western Ill.',
     'Western Michigan': 'Western Mich.',
+    'Albany': 'UAlbany',
+    'Southern Indiana': 'Southern Ind.',
+    'Queens': 'Queens (NC)',
+    'Central Connecticut': 'Central Conn. St.',
+    'Saint Thomas': 'St. Thomas (MN)',
+    'Northern Illinois': 'NIU',
 }
 
 projected_rpi['Team'] = projected_rpi['Team'].str.replace('State', 'St.', regex=False)
@@ -675,6 +681,12 @@ team_replacements = {
     'Western Carolina': 'Western Caro.',
     'Western Illinois': 'Western Ill.',
     'Western Michigan': 'Western Mich.',
+    'Albany': 'UAlbany',
+    'Southern Indiana': 'Southern Ind.',
+    'Queens': 'Queens (NC)',
+    'Central Connecticut': 'Central Conn. St.',
+    'Saint Thomas': 'St. Thomas (MN)',
+    'Northern Illinois': 'NIU',
 }
 
 # Apply replacements and standardize 'State' to 'St.'
