@@ -566,7 +566,7 @@ st.divider()
 st.subheader("CBASE Ratings and Resume")
 modeling_stats.index = modeling_stats.index + 1
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats[['Team', 'PRR', 'NET', 'RQI', 'SOS', 'RemSOS', 'Conference']], use_container_width=True)
+    st.dataframe(modeling_stats[['Team', 'Rating Rank', 'NET', 'RQI', 'SOS', 'RemSOS', 'Conference']], use_container_width=True)
 st.caption("PRR - Power Rating Rank, NET - Mimicing the NCAA Evaluation Tool, RQI - Resume Quality Index, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
 
 st.divider()
