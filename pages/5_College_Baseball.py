@@ -384,14 +384,15 @@ def grab_team_schedule(team_name, stats_df):
         schedule_df[col] = schedule_df[col].replace(team_replacements)
 
     schedule_df = schedule_df.merge(
-        stats_df[['Team', 'Rating Rank', 'NET']],  # Keep only "Rating" and "Resume"
+        stats_df[['Team', 'Rating', 'NET']],  # Keep only "Rating" and "Resume"
         left_on="Opponent",
         right_on="Team",  # Match "Opponent" with the "Rating" column (previously the index)
         how="left"  # Keep all rows from schedule_df
     )
-    schedule_df.rename(columns={'Team_x':'Team', 'Rating Rank':'Rating'}, inplace=True)
+    schedule_df.rename(columns={'Team_x':'Team'}, inplace=True)
     schedule_df = schedule_df.drop(columns=['Team_y'])
     team_rank = int(stats_df[stats_df['Team'] == team_name]['NET'].values[0])
+    team_rating = stats_df[stats_df['Team'] == team_name]['Rating'].values[0]
     # Define conditions
     conditions = [
         schedule_df["NET"] <= 40,
@@ -403,7 +404,7 @@ def grab_team_schedule(team_name, stats_df):
     quadrants = ["Q1", "Q2", "Q3"]
 
     # Assign Quadrant values
-    schedule_df["Quadrant"] = np.select(conditions, quadrants, default="Q4")
+    schedule_df["Quad"] = np.select(conditions, quadrants, default="Q4")
 
     month_mapping = {
         "JAN": "01", "FEB": "02", "MAR": "03", "APR": "04",
@@ -435,6 +436,11 @@ def grab_team_schedule(team_name, stats_df):
     remaining_games = schedule_df[schedule_df["Comparison_Date"] > comparison_date].reset_index(drop=True)
     remaining_games['PEAR'] = remaining_games.apply(lambda row: find_spread(row['Team'], row['Opponent']), axis=1)
 
+    def PEAR_Win_Prob(home_pr, away_pr):
+        rating_diff = home_pr - away_pr
+        win_prob = round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
+        return win_prob
+
     def clean_spread(row):
         team_name = row["Team"]
         spread = row["PEAR"]
@@ -447,6 +453,26 @@ def grab_team_schedule(team_name, stats_df):
         return spread_value if team_name in spread else abs(spread_value)
 
     remaining_games["PEAR"] = remaining_games.apply(clean_spread, axis=1)
+    remaining_games['home_win_prob'] = remaining_games.apply(
+        lambda row: PEAR_Win_Prob(team_rating, row['Rating']) / 100, axis=1
+    )
+    max_net = len(stats_df)
+    max_spread = 16.5
+
+    w_tq = 0.7
+    w_wp = 0.2
+    w_ned = 0.1
+
+    remaining_games['avg_net'] = (team_rank + remaining_games['NET']) / 2
+    remaining_games['TQ'] = (max_net - remaining_games['avg_net']) / (max_net - 1)
+    remaining_games['WP'] = 1 - 2 * np.abs(remaining_games['home_win_prob'] - 0.5)
+    remaining_games['NED'] = 1 - (np.abs(team_rank - remaining_games['NET']) / (max_net - 1))
+
+    remaining_games['GQI'] = round(10 * (
+        w_tq * remaining_games['TQ'] +
+        w_wp * remaining_games['WP'] +
+        w_ned * remaining_games['NED']
+    ),1)   
 
     win_rating = 500
     best_win_opponent = ""
@@ -566,7 +592,7 @@ st.divider()
 st.subheader("CBASE Ratings and Resume")
 modeling_stats.index = modeling_stats.index + 1
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats[['Team', 'Rating Rank', 'NET', 'RQI', 'SOS', 'RemSOS', 'Conference']], use_container_width=True)
+    st.dataframe(modeling_stats[['Team', 'NET', 'PRR', 'RQI', 'SOS', 'RemSOS', 'Conference']], use_container_width=True)
 st.caption("PRR - Power Rating Rank, NET - Mimicing the NCAA Evaluation Tool, RQI - Resume Quality Index, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
 
 st.divider()
@@ -620,7 +646,7 @@ with st.form(key='team_schedule'):
         st.write(f"NET Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
         st.pyplot(fig)
         st.write("Upcoming Games")
-        st.dataframe(schedule[['Opponent', 'NET', 'Quadrant', 'PEAR', 'Date']], use_container_width=True)
+        st.dataframe(schedule[['Opponent', 'NET', 'Quad', 'GQI', 'PEAR', 'Date']], use_container_width=True)
         st.caption('PEAR - Negative Value Indicates Favorites, Positive Value Indicates Underdog')
 
 st.divider()
@@ -630,6 +656,6 @@ st.subheader(f"{comparison_date} Games")
 subset_games['Home'] = subset_games['home_team']
 subset_games['Away'] = subset_games['away_team']
 with st.container(border=True, height=440):
-    st.dataframe(subset_games[['Home', 'Away', 'PEAR', 'Result']], use_container_width=True)
+    st.dataframe(subset_games[['Home', 'Away', 'GQI', 'PEAR', 'Result']], use_container_width=True)
 
 st.divider()

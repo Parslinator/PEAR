@@ -1009,6 +1009,33 @@ stats_and_metrics.fillna(0, inplace=True)
 stats_and_metrics = stats_and_metrics.sort_values('Rating', ascending=False).reset_index(drop=True)
 stats_and_metrics['Rating Rank'] = stats_and_metrics.index + 1
 stats_and_metrics['PRR'] = stats_and_metrics['Rating Rank']
+stats_and_metrics = stats_and_metrics.sort_values('NET').reset_index(drop=True)
+
+schedule_df = schedule_df.merge(stats_and_metrics[['Team', 'NET']], left_on='home_team', right_on='Team', how='left')
+schedule_df.rename(columns={'NET': 'home_net'}, inplace=True)
+schedule_df = schedule_df.merge(stats_and_metrics[['Team', 'NET']], left_on='away_team', right_on='Team', how='left')
+schedule_df.rename(columns={'NET': 'away_net'}, inplace=True)
+schedule_df.drop(columns=['Team', 'Team_y'], inplace=True)
+schedule_df.rename(columns={'Team_x':'Team'}, inplace=True)
+
+import numpy as np # type: ignore
+import pandas as pd # type: ignore
+
+max_net = len(stats_and_metrics)
+max_spread = 16.5
+
+w_tq = 0.70   # NET AVG
+w_wp = 0.20   # Win Probability
+w_ned = 0.10  # NET Differential
+schedule_df['avg_net'] = (schedule_df['home_net'] + schedule_df['away_net']) / 2
+schedule_df['TQ'] = (max_net - schedule_df['avg_net']) / (max_net - 1)
+schedule_df['WP'] = 1 - 2 * np.abs(schedule_df['home_win_prob'] - 0.5)
+schedule_df['NED'] = 1 - (np.abs(schedule_df['home_net'] - schedule_df['away_net']) / (max_net - 1))
+schedule_df['GQI'] = round(10 * (
+    w_tq * schedule_df['TQ'] +
+    w_wp * schedule_df['WP'] +
+    w_ned * schedule_df['NED']
+),1)
 
 file_path = os.path.join(folder_path, f"baseball_{formatted_date}.csv")
 stats_and_metrics.to_csv(file_path)
