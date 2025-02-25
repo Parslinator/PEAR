@@ -858,7 +858,7 @@ def calculate_kpi(completed_schedule, ending_data):
 # Call function
 kpi_results = calculate_kpi(completed_schedule, ending_data).sort_values('KPI_Score', ascending=False).reset_index(drop=True)
 
-def calculate_resume_quality(group, bubble_team_rating):
+def calculate_resume_quality(group, one_seed_rating):
     results = []
     resume_quality = 0
     for _, row in group.iterrows():
@@ -866,7 +866,7 @@ def calculate_resume_quality(group, bubble_team_rating):
         is_home = row["home_team"] == team
         is_away = row["away_team"] == team
         opponent_rating = row["away_rating"] if is_home else row["home_rating"]
-        win_prob = PEAR_Win_Prob(bubble_team_rating, opponent_rating) / 100
+        win_prob = PEAR_Win_Prob(one_seed_rating, opponent_rating) / 100
         team_won = (is_home and row["home_score"] > row["away_score"]) or (is_away and row["away_score"] > row["home_score"])
         if team_won:
             resume_quality += (1-win_prob)
@@ -936,10 +936,10 @@ stats_and_metrics = stats_and_metrics.sort_values('WAB').reset_index(drop=True)
 
 stats_and_metrics['AVG'] = round(stats_and_metrics[['KPI', 'WAB', 'SOR']].mean(axis=1),1)
 stats_and_metrics['Resume'] = stats_and_metrics['AVG'].rank(method='min')
-stats_and_metrics = stats_and_metrics.sort_values('Resume').reset_index(drop=True)
+stats_and_metrics = stats_and_metrics.sort_values('Rating').reset_index(drop=True)
 
-bubble_team_rating = stats_and_metrics.loc[33, 'Rating']
-resume_quality = completed_schedule.groupby('Team').apply(calculate_resume_quality, bubble_team_rating).reset_index(drop=True)
+one_seed_rating = stats_and_metrics.loc[15, 'Rating']
+resume_quality = completed_schedule.groupby('Team').apply(calculate_resume_quality, one_seed_rating).reset_index(drop=True)
 resume_quality['RQI'] = resume_quality['resume_quality'].rank(method='min', ascending=False)
 resume_quality = resume_quality.sort_values('RQI').reset_index(drop=True)
 resume_quality['resume_quality'] = resume_quality['resume_quality'] - resume_quality.loc[33, 'resume_quality']
