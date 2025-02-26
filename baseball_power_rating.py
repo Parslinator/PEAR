@@ -803,6 +803,78 @@ schedule_df['PEAR'] = schedule_df.apply(
     lambda row: f"{row['away_team']} {-abs(row['Spread'])}" if ((row['Spread'] <= 0)) 
     else f"{row['home_team']} {-abs(row['Spread'])}", axis=1)
 
+def calculate_rpi(completed_schedule):
+    teams = set(completed_schedule['home_team']).union(set(completed_schedule['away_team']))
+    team_records = {team: {'wins': 0, 'losses': 0} for team in teams}
+    
+    for _, row in completed_schedule.iterrows():
+        home_team, away_team = row['home_team'], row['away_team']
+        home_score, away_score = row['home_score'], row['away_score']
+        if home_score > away_score:
+            team_records[home_team]['wins'] += 1
+            team_records[away_team]['losses'] += 1
+        else:
+            team_records[away_team]['wins'] += 1
+            team_records[home_team]['losses'] += 1
+
+    wp = {team: record['wins'] / (record['wins'] + record['losses']) if (record['wins'] + record['losses']) > 0 else 0 
+          for team, record in team_records.items()}
+    
+    team_opponents = {team: set() for team in teams}
+    for _, row in completed_schedule.iterrows():
+        home_team, away_team = row['home_team'], row['away_team']
+        team_opponents[home_team].add(away_team)
+        team_opponents[away_team].add(home_team)
+    owp = {}
+    for team in teams:
+        opponents = team_opponents[team]
+        opponent_wps = []
+        for opp in opponents:
+            opp_games = completed_schedule[
+                (completed_schedule['home_team'] == opp) | (completed_schedule['away_team'] == opp)
+            ]
+            opp_wins = 0
+            opp_losses = 0
+            for _, game in opp_games.iterrows():
+                if game['home_team'] == opp:
+                    opp_team = game['away_team']
+                    if game['home_score'] > game['away_score']:
+                        opp_wins += 1
+                    else:
+                        opp_losses += 1
+                else:
+                    opp_team = game['home_team']
+                    if game['away_score'] > game['home_score']:
+                        opp_wins += 1
+                    else:
+                        opp_losses += 1
+                
+                if opp_team == team:
+                    if game['home_team'] == opp:
+                        opp_wins -= 1 if game['home_score'] > game['away_score'] else 0
+                        opp_losses -= 1 if game['home_score'] < game['away_score'] else 0
+                    else:
+                        opp_wins -= 1 if game['away_score'] > game['home_score'] else 0
+                        opp_losses -= 1 if game['away_score'] < game['home_score'] else 0
+
+            if opp_wins + opp_losses > 0:
+                opponent_wps.append(opp_wins / (opp_wins + opp_losses))
+        
+        owp[team] = sum(opponent_wps) / len(opponent_wps) if opponent_wps else 0
+    
+    oowp = {team: sum(owp[opp] for opp in team_opponents[team]) / len(team_opponents[team]) if team_opponents[team] else 0 
+            for team in teams}
+    rpi = {team: (0.25 * wp[team]) + (0.50 * owp[team]) + (0.25 * oowp[team]) for team in teams}
+    
+    # Convert to DataFrame
+    rpi_df = pd.DataFrame.from_dict(rpi, orient='index', columns=['RPI_Score']).sort_values('RPI_Score', ascending=False).reset_index()
+    rpi_df.rename(columns={'index': 'Team'}, inplace=True)
+    rpi_df['RPI'] = rpi_df['RPI_Score'].rank(ascending=False)
+    
+    return rpi_df
+
+pear_rpi = calculate_rpi(completed_schedule)
+
 def calculate_expected_wins(group):
     # Initialize a variable to accumulate expected wins
     expected_wins = 0
@@ -931,7 +1003,10 @@ df_1 = pd.merge(ending_data, team_expected_wins[['Team', 'expected_wins', 'Wins'
 df_2 = pd.merge(df_1, avg_team_expected_wins[['Team', 'avg_expected_wins', 'total_expected_wins']], on='Team', how='left')
 df_3 = pd.merge(df_2, rem_avg_expected_wins[['Team', 'rem_avg_expected_wins', 'rem_total_expected_wins']], on='Team', how='left')
 df_4 = pd.merge(df_3, projected_rpi[['Team', 'RPI', 'Conference']], on='Team', how='left')
-stats_and_metrics = pd.merge(df_4, kpi_results, on='Team', how='left')
+df_4.rename(columns={'RPI': 'Projected_RPI'}, inplace=True)
+df_5 = pd.merge(df_4, pear_rpi, on='Team', how='left')
+stats_and_metrics = pd.merge(df_5, kpi_results, on='Team', how='left')
+stats_and_metrics['RPI'] = stats_and_metrics['RPI'].rank(ascending=False)
 
 stats_and_metrics['wins_above_expected'] = round(stats_and_metrics['Wins'] - stats_and_metrics['total_expected_wins'],2)
 stats_and_metrics['SOR'] = stats_and_metrics['wins_above_expected'].rank(method='min', ascending=False)
@@ -1012,7 +1087,7 @@ def calculate_net(weights):
 
     stats_and_metrics['NET'] = stats_and_metrics['NET_Score'].rank(ascending=False)
     stats_and_metrics['combined_rank'] = (
-        stats_and_metrics['RPI']
+        stats_and_metrics['Projected_RPI']
     )
     spearman_corr = stats_and_metrics[['NET', 'combined_rank']].corr(method='spearman').iloc[0,1]
 
