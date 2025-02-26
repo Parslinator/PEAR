@@ -1006,7 +1006,7 @@ df_4 = pd.merge(df_3, projected_rpi[['Team', 'RPI', 'Conference']], on='Team', h
 df_4.rename(columns={'RPI': 'Projected_RPI'}, inplace=True)
 df_5 = pd.merge(df_4, pear_rpi, on='Team', how='left')
 stats_and_metrics = pd.merge(df_5, kpi_results, on='Team', how='left')
-stats_and_metrics['RPI'] = stats_and_metrics['Projected_RPI'].rank(ascending=False)
+stats_and_metrics['RPI'] = stats_and_metrics['RPI_Score'].rank(ascending=False)
 
 stats_and_metrics['wins_above_expected'] = round(stats_and_metrics['Wins'] - stats_and_metrics['total_expected_wins'],2)
 stats_and_metrics['SOR'] = stats_and_metrics['wins_above_expected'].rank(method='min', ascending=False)
