@@ -85,6 +85,30 @@ for row in table.find('tbody').find_all('tr'):
         data.append([rank, team_name, conference]) 
 projected_rpi = pd.DataFrame(data, columns=["RPI", "Team", "Conference"])
 
+url = 'https://www.warrennolan.com/baseball/2025/rpi-live'
+response = requests.get(url)
+soup = BeautifulSoup(response.text, 'html.parser')
+table = soup.find('table', class_='normal-grid alternating-rows stats-table')
+headers = [th.text.strip() for th in table.find('thead').find_all('th')]
+
+data = []
+for row in table.find('tbody').find_all('tr'):
+    cells = row.find_all('td')
+    if len(cells) >= 2:
+        rank = cells[0].text.strip()  # First element (ranking)
+        name_div = cells[1].find('div', class_='name-subcontainer')
+        if name_div:
+            full_text = name_div.text.strip()
+        else:
+            full_text = cells[1].text.strip()  # Fallback
+        
+        # Split the text to extract Team Name and Conference
+        parts = full_text.split("\n")
+        team_name = parts[0].strip()  # Extract just the team name
+        conference = parts[1].split("(")[0].strip() if len(parts) > 1 else ""  # Extract conference
+        data.append([rank, team_name, conference]) 
+live_rpi = pd.DataFrame(data, columns=["Live_RPI", "Team", "Conference"])
+
 # URL of the page to scrape
 url = 'https://www.warrennolan.com/baseball/2025/elo'
 
@@ -205,6 +229,8 @@ elo_data['Team'] = elo_data['Team'].replace(team_replacements)
 elo_data.rename(columns={'Rank':'ELO_Rank'}, inplace=True)
 projected_rpi['Team'] = projected_rpi['Team'].str.replace('State', 'St.', regex=False)
 projected_rpi['Team'] = projected_rpi['Team'].replace(team_replacements)
+live_rpi['Team'] = live_rpi['Team'].str.replace('State', 'St.', regex=False)
+live_rpi['Team'] = live_rpi['Team'].replace(team_replacements)
 
 def get_stat_dataframe(stat_name):
     """Fetches the specified stat table from multiple pages and returns a combined DataFrame,
@@ -803,7 +829,7 @@ schedule_df['PEAR'] = schedule_df.apply(
     lambda row: f"{row['away_team']} {-abs(row['Spread'])}" if ((row['Spread'] <= 0)) 
     else f"{row['home_team']} {-abs(row['Spread'])}", axis=1)
 
-def calculate_rpi(completed_schedule):
+def rpi_components(completed_schedule):
     teams = set(completed_schedule['home_team']).union(set(completed_schedule['away_team']))
     team_records = {team: {'wins': 0, 'losses': 0} for team in teams}
     
@@ -864,16 +890,42 @@ def calculate_rpi(completed_schedule):
     
     oowp = {team: sum(owp[opp] for opp in team_opponents[team]) / len(team_opponents[team]) if team_opponents[team] else 0 
             for team in teams}
-    rpi = {team: (0.25 * wp[team]) + (0.50 * owp[team]) + (0.25 * oowp[team]) for team in teams}
     
-    # Convert to DataFrame
-    rpi_df = pd.DataFrame.from_dict(rpi, orient='index', columns=['RPI_Score']).sort_values('RPI_Score', ascending=False).reset_index()
-    rpi_df.rename(columns={'index': 'Team'}, inplace=True)
-    rpi_df['RPI'] = rpi_df['RPI_Score'].rank(ascending=False)
-    
-    return rpi_df
+    rpi_components_df = pd.DataFrame({
+        "Team": list(teams),
+        "WP": [wp[team] for team in teams],
+        "OWP": [owp[team] for team in teams],
+        "OOWP": [oowp[team] for team in teams]
+    })
 
-pear_rpi = calculate_rpi(completed_schedule)
+    return rpi_components_df
+
+pear_rpi = rpi_components(completed_schedule)
+pear_rpi = pd.merge(pear_rpi, live_rpi, on='Team', how='left')
+pear_rpi = pear_rpi.dropna()
+
+def rpi_calculation(weights):
+    (w_wp, w_owp, w_oowp) = weights
+    
+    pear_rpi['RPI_Score'] = (
+        w_wp * pear_rpi['WP'] +
+        w_owp * pear_rpi['OWP'] +
+        w_oowp * pear_rpi['OOWP']
+    )
+
+    pear_rpi['RPI'] = pear_rpi['RPI_Score'].rank(ascending=False)
+    pear_rpi['combined_rank'] = (
+        pear_rpi['Live_RPI']
+    )
+    spearman_corr = pear_rpi[['RPI', 'combined_rank']].corr(method='spearman').iloc[0,1]
+
+    return -spearman_corr
+
+bounds = [(-1,1),
+          (-1,1),
+          (-1,1)]
+result = differential_evolution(rpi_calculation, bounds, strategy='best1bin', maxiter=500, tol=1e-4, seed=42)
+optimized_weights = result.x
 
 def calculate_expected_wins(group):
     # Initialize a variable to accumulate expected wins
