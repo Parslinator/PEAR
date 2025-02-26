@@ -945,7 +945,7 @@ resume_quality = resume_quality.sort_values('RQI').reset_index(drop=True)
 resume_quality['resume_quality'] = resume_quality['resume_quality'] - resume_quality.loc[15, 'resume_quality']
 stats_and_metrics = pd.merge(stats_and_metrics, resume_quality, on='Team', how='left')
 
-def calculate_NET(df, w1=0.45, w2=0.45, w3=0.1):
+def calculate_NET(df, w1=0.65, w2=0.25, w3=0.1):
 
     df["Norm_Rating"] = (df["Rating"] - df["Rating"].min()) / (df["Rating"].max() - df["Rating"].min())
     df["Norm_RQI"] = (df["resume_quality"] - df["resume_quality"].min()) / (df["resume_quality"].max() - df["resume_quality"].min())
