@@ -592,14 +592,14 @@ st.divider()
 st.subheader("CBASE Ratings and Resume")
 modeling_stats.index = modeling_stats.index + 1
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats[['Team', 'NET', 'PRR', 'RQI', 'RPI', 'SOS', 'RemSOS', 'Conference']], use_container_width=True)
+    st.dataframe(modeling_stats[['Team', 'NET', 'PRR', 'RQI', 'RPI', 'SOS', 'RemSOS']], use_container_width=True)
 st.caption("NET - Mimicing the NCAA Evaluation Tool, PRR - Power Rating Rank, RQI - Resume Quality Index, RPI - PEAR's Attempted RPI, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
 
 st.divider()
 
 st.subheader("CBASE Stats")
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats[['Team', 'Q1', 'Q2', 'Q3', 'Q4', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
+    st.dataframe(modeling_stats[['Team', 'Q1', 'Q2', 'Q3', 'Q4', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS']], use_container_width=True)
 st.caption("PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
 
 st.divider()
