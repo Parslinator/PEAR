@@ -1205,6 +1205,11 @@ stats_and_metrics['Rating Rank'] = stats_and_metrics.index + 1
 stats_and_metrics['PRR'] = stats_and_metrics['Rating Rank']
 stats_and_metrics = stats_and_metrics.sort_values('NET').reset_index(drop=True)
 
+if "Conference" not in stats_and_metrics.columns:
+    stats_and_metrics = stats_and_metrics.merge(
+        projected_rpi[["Team", "Conference"]], on="Team", how="left"
+    )
+
 schedule_df = schedule_df.merge(stats_and_metrics[['Team', 'NET']], left_on='home_team', right_on='Team', how='left')
 schedule_df.rename(columns={'NET': 'home_net'}, inplace=True)
 schedule_df = schedule_df.merge(stats_and_metrics[['Team', 'NET']], left_on='away_team', right_on='Team', how='left')
