@@ -85,6 +85,55 @@ for row in table.find('tbody').find_all('tr'):
         data.append([rank, team_name, conference]) 
 projected_rpi = pd.DataFrame(data, columns=["RPI", "Team", "Conference"])
 
+# URL of the page to scrape
+url = 'https://www.warrennolan.com/baseball/2025/elo'
+
+# Fetch the webpage content
+response = requests.get(url)
+soup = BeautifulSoup(response.text, 'html.parser')
+
+# Find the table with the specified class
+table = soup.find('table', class_='normal-grid alternating-rows stats-table')
+
+if table:
+    # Extract table headers
+    headers = [th.text.strip() for th in table.find('thead').find_all('th')]
+    headers.insert(1, "Team Link")  # Adding extra column for team link
+
+    # Extract table rows
+    data = []
+    for row in table.find('tbody').find_all('tr'):
+        cells = row.find_all('td')
+        row_data = []
+        for i, cell in enumerate(cells):
+            # If it's the first cell, extract team name and link from 'name-subcontainer'
+            if i == 0:
+                name_container = cell.find('div', class_='name-subcontainer')
+                if name_container:
+                    team_name = name_container.text.strip()
+                    team_link_tag = name_container.find('a')
+                    team_link = team_link_tag['href'] if team_link_tag else ''
+                else:
+                    team_name = cell.text.strip()
+                    team_link = ''
+                row_data.append(team_name)
+                row_data.append(team_link)  # Add team link separately
+            else:
+                row_data.append(cell.text.strip())
+        data.append(row_data)
+
+
+    elo_data = pd.DataFrame(data, columns=[headers])
+    elo_data.columns = elo_data.columns.get_level_values(0)
+    elo_data = elo_data.drop_duplicates(subset='Team', keep='first')
+    elo_data = elo_data.astype({col: 'str' for col in elo_data.columns if col not in ['ELO', 'Rank']})
+    elo_data['ELO'] = elo_data['ELO'].astype(float, errors='ignore')
+    elo_data['Rank'] = elo_data['Rank'].astype(int, errors='ignore')
+
+else:
+    print("Table not found on the page.")
+print("Elo Load Done")
+
 team_replacements = {
     'North Carolina St.': 'NC State',
     'Southern Miss': 'Southern Miss.',
@@ -151,6 +200,9 @@ team_replacements = {
     'Northern Illinois': 'NIU',
 }
 
+elo_data['Team'] = elo_data['Team'].str.replace('State', 'St.', regex=False)
+elo_data['Team'] = elo_data['Team'].replace(team_replacements)
+elo_data.rename(columns={'Rank':'ELO_Rank'}, inplace=True)
 projected_rpi['Team'] = projected_rpi['Team'].str.replace('State', 'St.', regex=False)
 projected_rpi['Team'] = projected_rpi['Team'].replace(team_replacements)
 
@@ -319,7 +371,7 @@ stat_name_input = "WHIP"
 whip = get_stat_dataframe(stat_name_input)
 whip = whip.drop(columns=['Rank', 'HA', 'IP', 'BB'])
 
-dfs = [ba, bb, era, fp, obp, runs, slg, kp9, wp9, whip, projected_rpi]
+dfs = [ba, bb, era, fp, obp, runs, slg, kp9, wp9, whip, elo_data]
 for df in dfs:
     df["Team"] = df["Team"].str.strip()
 df_combined = dfs[0]
@@ -334,10 +386,10 @@ rpi_2024 = pd.read_csv("./PEAR/PEAR Baseball/rpi_end_2024.csv")
 modeling_stats = baseball_stats[['Team', 'HPG',
                 'BBPG', 'ERA', 'PCT', 
                 'KP9', 'WP9', 'OPS', 
-                'WHIP', 'PYTHAG', 'RPI']]
+                'WHIP', 'PYTHAG', 'ELO_Rank']]
 modeling_stats = pd.merge(modeling_stats, rpi_2024[['Team', 'Rank']], on = 'Team', how='left')
 modeling_stats["Rank"] = modeling_stats["Rank"].apply(pd.to_numeric, errors='coerce')
-modeling_stats["RPI"] = modeling_stats["RPI"].apply(pd.to_numeric, errors='coerce')
+modeling_stats["ELO_Rank"] = modeling_stats["ELO_Rank"].apply(pd.to_numeric, errors='coerce')
 modeling_stats['Rank_pct'] = 1 - (modeling_stats['Rank'] - 1) / (len(modeling_stats) - 1)
 
 higher_better = ["HPG", "BBPG", "PCT", "KP9", "OPS", "Rank_pct", 'PYTHAG']
@@ -391,7 +443,7 @@ def objective_function(weights):
 
     modeling_stats['calculated_rank'] = modeling_stats['power_ranking'].rank(ascending=False)
     modeling_stats['combined_rank'] = (
-        modeling_stats['RPI']
+        modeling_stats['ELO_Rank']
     )
     spearman_corr = modeling_stats[['calculated_rank', 'combined_rank']].corr(method='spearman').iloc[0,1]
 
@@ -878,7 +930,7 @@ def calculate_resume_quality(group, bubble_team_rating):
 df_1 = pd.merge(ending_data, team_expected_wins[['Team', 'expected_wins', 'Wins', 'Losses']], on='Team', how='left')
 df_2 = pd.merge(df_1, avg_team_expected_wins[['Team', 'avg_expected_wins', 'total_expected_wins']], on='Team', how='left')
 df_3 = pd.merge(df_2, rem_avg_expected_wins[['Team', 'rem_avg_expected_wins', 'rem_total_expected_wins']], on='Team', how='left')
-df_4 = pd.merge(df_3, elo_data[['Team', 'ELO']], on='Team', how='left')
+df_4 = pd.merge(df_3, projected_rpi[['Team', 'RPI']], on='Team', how='left')
 stats_and_metrics = pd.merge(df_4, kpi_results, on='Team', how='left')
 
 stats_and_metrics['wins_above_expected'] = round(stats_and_metrics['Wins'] - stats_and_metrics['total_expected_wins'],2)
@@ -945,17 +997,32 @@ resume_quality = resume_quality.sort_values('RQI').reset_index(drop=True)
 resume_quality['resume_quality'] = resume_quality['resume_quality'] - resume_quality.loc[15, 'resume_quality']
 stats_and_metrics = pd.merge(stats_and_metrics, resume_quality, on='Team', how='left')
 
-def calculate_NET(df, w1=0.65, w2=0.25, w3=0.1):
+stats_and_metrics["Norm_Rating"] = (stats_and_metrics["Rating"] - stats_and_metrics["Rating"].min()) / (stats_and_metrics["Rating"].max() - stats_and_metrics["Rating"].min())
+stats_and_metrics["Norm_RQI"] = (stats_and_metrics["resume_quality"] - stats_and_metrics["resume_quality"].min()) / (stats_and_metrics["resume_quality"].max() - stats_and_metrics["resume_quality"].min())
+stats_and_metrics["Norm_SOS"] = 1 - (stats_and_metrics["avg_expected_wins"] - stats_and_metrics["avg_expected_wins"].min()) / (stats_and_metrics["avg_expected_wins"].max() - stats_and_metrics["avg_expected_wins"].min())  # Inverted
 
-    df["Norm_Rating"] = (df["Rating"] - df["Rating"].min()) / (df["Rating"].max() - df["Rating"].min())
-    df["Norm_RQI"] = (df["resume_quality"] - df["resume_quality"].min()) / (df["resume_quality"].max() - df["resume_quality"].min())
-    df["Norm_SOS"] = 1 - (df["avg_expected_wins"] - df["avg_expected_wins"].min()) / (df["avg_expected_wins"].max() - df["avg_expected_wins"].min())  # Inverted
-    df["NET_Score"] = (w1 * df["Norm_Rating"]) + (w2 * df["Norm_RQI"]) + (w3 * df["Norm_SOS"])
-    df["NET"] = df["NET_Score"].rank(method="min", ascending=False)
+def calculate_net(weights):
+    (w_rating, w_rqi, w_sos) = weights
+    
+    stats_and_metrics['NET_Score'] = (
+        w_rating * stats_and_metrics['Norm_Rating'] +
+        w_rqi * stats_and_metrics['Norm_RQI'] +
+        w_sos * stats_and_metrics['Norm_SOS']
+    )
 
-    return df[["Team", "NET_Score", "NET"]].sort_values(by="NET").reset_index(drop=True)
+    stats_and_metrics['NET'] = stats_and_metrics['NET_Score'].rank(ascending=False)
+    stats_and_metrics['combined_rank'] = (
+        stats_and_metrics['RPI']
+    )
+    spearman_corr = stats_and_metrics[['NET', 'combined_rank']].corr(method='spearman').iloc[0,1]
 
-net = calculate_NET(stats_and_metrics)
+    return -spearman_corr
+
+bounds = [(-1,1),
+          (-1,1),
+          (-1,1)]
+result = differential_evolution(calculate_net, bounds, strategy='best1bin', maxiter=500, tol=1e-4, seed=42)
+optimized_weights = result.x
 
 quadrant_records = {}
 
