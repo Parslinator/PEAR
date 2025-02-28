@@ -10,6 +10,7 @@ folder_path = f"./PEAR/PEAR Baseball/y{current_season}"
 os.makedirs(folder_path, exist_ok=True)
 
 import requests # type: ignore
+import re # type: ignore
 from bs4 import BeautifulSoup # type: ignore
 import pandas as pd # type: ignore
 from sklearn.preprocessing import MinMaxScaler # type: ignore
@@ -815,10 +816,6 @@ schedule_df['away_rating'].fillna(missing_rating, inplace=True)
 schedule_df['home_win_prob'] = schedule_df.apply(
     lambda row: PEAR_Win_Prob(row['home_rating'], row['away_rating']) / 100, axis=1
 )
-completed_schedule = schedule_df[
-    (schedule_df["Date"] <= comparison_date) & (schedule_df["home_score"] != schedule_df["away_score"])
-].reset_index(drop=True)
-completed_schedule = completed_schedule[completed_schedule["Result"].str.startswith(("W", "L"))]
 remaining_games = schedule_df[schedule_df["Date"] > comparison_date].reset_index(drop=True)
 
 def adjust_home_pr(home_win_prob):
@@ -828,6 +825,12 @@ schedule_df['Spread'] = (schedule_df['home_rating'] + (schedule_df['elo_win_prob
 schedule_df['PEAR'] = schedule_df.apply(
     lambda row: f"{row['away_team']} {-abs(row['Spread'])}" if ((row['Spread'] <= 0)) 
     else f"{row['home_team']} {-abs(row['Spread'])}", axis=1)
+completed_schedule = schedule_df[
+    (schedule_df["Date"] <= comparison_date) & (schedule_df["home_score"] != schedule_df["away_score"])
+].reset_index(drop=True)
+completed_schedule = completed_schedule[completed_schedule["Result"].str.startswith(("W", "L"))]
+
+straight_up_calculator = completed_schedule.copy()
 
 def rpi_components(completed_schedule):
     teams = set(completed_schedule['home_team']).union(set(completed_schedule['away_team']))
@@ -1235,6 +1238,67 @@ schedule_df['GQI'] = round(10 * (
     w_wp * schedule_df['WP'] +
     w_ned * schedule_df['NED']
 ),1)
+
+def game_sort_key(result):
+    if result.startswith(("W", "L")):
+        return (0, None)  # Completed games
+    elif result.startswith(("Bot", "Top", "Middle", "End")):
+        return (1, None)  # Ongoing games
+    elif result[0].isdigit():  # Upcoming games with time
+        try:
+            return (2, datetime.strptime(result, "%I:%M %p"))  # Convert time to sortable format
+        except ValueError:
+            return (2, None)  # If parsing fails, treat as unknown
+    elif result.startswith("T"):  # TBA games
+        return (3, None)
+    elif result.startswith("C"):  # Cancelled games
+        return (4, None)
+    return (5, None)  # Any other cases
+
+def process_result(row):
+    result = row["Result"]
+    
+    if result.startswith("W"):
+        return re.sub(r"^W\s+", row["Team"] + " ", result)  # Replace "W" with Team name
+
+    elif result.startswith("L"):
+        # Extract scores and swap them
+        match = re.search(r"L\s+(\d+)\s*-\s*(\d+)", result)
+        if match:
+            swapped_score = f"{row['Opponent']} {match.group(2)} - {match.group(1)}"
+            return re.sub(r"L\s+\d+\s*-\s*\d+", swapped_score, result)  # Replace score section
+    
+    return result  # Leave other cases unchanged
+
+straight_up_calculator['Result'] = straight_up_calculator['Result'].astype(str)
+straight_up_calculator = straight_up_calculator.sort_values(by="Result", key=lambda x: x.map(game_sort_key))
+straight_up_calculator["Result"] = straight_up_calculator["Result"].astype(str)  # Convert to string to avoid errors
+straight_up_calculator["Result"] = straight_up_calculator["Result"].apply(lambda x: x if x.startswith(("W", "L")) else "")
+straight_up_calculator["Result"] = straight_up_calculator.apply(process_result, axis=1)
+df = straight_up_calculator[['Result', 'PEAR', 'Date']].drop_duplicates().sort_values('Date').reset_index(drop=True)
+df['Result'] = df['Result'].astype(str)
+df['PEAR'] = df['PEAR'].astype(str)
+def extract_team_name(text):
+    match = re.match(r'^([^\d-]+)', str(text))
+    return match.group(1).strip() if match else text
+df['team_result'] = df['Result'].apply(extract_team_name)
+df['team_pear'] = df['PEAR'].apply(extract_team_name)
+df['flag'] = (df['team_result'] == df['team_pear']).astype(int)
+straight_up = df.groupby('Date').agg(
+    Correct=('flag', 'sum'),
+    Total=('flag', 'count')
+).reset_index()
+previous = pd.read_csv(f"./PEAR/PEAR Baseball/y{current_season}/straight_up.csv").drop(columns=['Unnamed: 0'])
+previous["Date"] = pd.to_datetime(previous["Date"])
+merged = straight_up.merge(previous[['Date', 'Total']], on='Date', how='left', suffixes=('', '_previous'))
+missing_or_mismatched = merged[
+    (merged['Total_previous'].isna()) |  
+    (merged['Total'] != merged['Total_previous'])
+]
+missing_or_mismatched = missing_or_mismatched.drop(columns=['Total_previous'])
+previous = pd.concat([previous, missing_or_mismatched]).reset_index(drop=True)
+previous = previous.drop_duplicates(subset='Date', keep='last').reset_index(drop=True)
+previous.to_csv(f"./PEAR/PEAR Baseball/y{current_season}/straight_up.csv")
 
 file_path = os.path.join(folder_path, f"baseball_{formatted_date}.csv")
 stats_and_metrics.to_csv(file_path)
