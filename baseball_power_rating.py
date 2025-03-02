@@ -223,6 +223,8 @@ team_replacements = {
     'Central Connecticut': 'Central Conn. St.',
     'Saint Thomas': 'St. Thomas (MN)',
     'Northern Illinois': 'NIU',
+    'UMass':'Massachusetts',
+    'Loyola-Marymount':'LMU (CA)'
 }
 
 elo_data['Team'] = elo_data['Team'].str.replace('State', 'St.', regex=False)
@@ -766,6 +768,8 @@ team_replacements = {
     'Central Connecticut': 'Central Conn. St.',
     'Saint Thomas': 'St. Thomas (MN)',
     'Northern Illinois': 'NIU',
+    'UMass':'Massachusetts',
+    'Loyola-Marymount':'LMU (CA)'
 }
 
 # Apply replacements and standardize 'State' to 'St.'

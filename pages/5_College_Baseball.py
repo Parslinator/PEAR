@@ -245,6 +245,8 @@ def elo_load():
         'Central Connecticut': 'Central Conn. St.',
         'Saint Thomas': 'St. Thomas (MN)',
         'Northern Illinois': 'NIU',
+        'UMass':'Massachusetts',
+        'Loyola-Marymount':'LMU (CA)'
     }
 
     elo_data['Team'] = elo_data['Team'].str.replace('State', 'St.', regex=False)
@@ -318,6 +320,8 @@ def grab_team_schedule(team_name, stats_df):
         'Central Connecticut': 'Central Conn. St.',
         'Saint Thomas': 'St. Thomas (MN)',
         'Northern Illinois': 'NIU',
+        'UMass':'Massachusetts',
+        'Loyola-Marymount':'LMU (CA)'
     }
 
     BASE_URL = "https://www.warrennolan.com"
