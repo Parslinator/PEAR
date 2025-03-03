@@ -571,11 +571,13 @@ BASE_URL = "https://www.warrennolan.com"
 
 # Initialize storage for schedule data
 schedule_data = []
-
+schedule_counter = 1
 # Iterate over each team's schedule link
 for _, row in elo_data.iterrows():
     team_name = row["Team"]
-    print(team_name)
+    if (schedule_counter % 10 == 0):
+        print(f"{schedule_counter}/{len(elo_data)}")
+    schedule_counter = schedule_counter + 1
     team_schedule_url = BASE_URL + row["Team Link"]
     
     response = requests.get(team_schedule_url)
@@ -912,8 +914,12 @@ pear_rpi = pd.merge(pear_rpi, live_rpi, on='Team', how='left')
 pear_rpi = pear_rpi.dropna()
 
 def rpi_calculation(weights):
-    (w_wp, w_owp, w_oowp) = weights
-    
+    w_wp, w_owp = weights
+    w_oowp = 1 - (w_wp + w_owp)
+
+    if w_oowp < 0 or w_oowp > 1:
+        return float('inf')
+
     pear_rpi['RPI_Score'] = (
         w_wp * pear_rpi['WP'] +
         w_owp * pear_rpi['OWP'] +
@@ -921,18 +927,19 @@ def rpi_calculation(weights):
     )
 
     pear_rpi['RPI'] = pear_rpi['RPI_Score'].rank(ascending=False)
-    pear_rpi['combined_rank'] = (
-        pear_rpi['Live_RPI']
-    )
+    pear_rpi['combined_rank'] = pear_rpi['Live_RPI']
     spearman_corr = pear_rpi[['RPI', 'combined_rank']].corr(method='spearman').iloc[0,1]
 
     return -spearman_corr
 
-bounds = [(-1,1),
-          (-1,1),
-          (-1,1)]
+bounds = [(0,1), (0,1)]  
 result = differential_evolution(rpi_calculation, bounds, strategy='best1bin', maxiter=500, tol=1e-4, seed=42)
 optimized_weights = result.x
+print("RPI Calculation Weights:")
+print("------------------------")
+print(f"Win Prob: {optimized_weights[0]}")
+print(f"Opp Win Prob: {optimized_weights[1]}")
+print(f"Opp Opp Win Prob: {1 - (optimized_weights[0] + optimized_weights[1])}")
 
 def calculate_expected_wins(group):
     # Initialize a variable to accumulate expected wins
@@ -1136,27 +1143,30 @@ stats_and_metrics["Norm_RQI"] = (stats_and_metrics["resume_quality"] - stats_and
 stats_and_metrics["Norm_SOS"] = 1 - (stats_and_metrics["avg_expected_wins"] - stats_and_metrics["avg_expected_wins"].min()) / (stats_and_metrics["avg_expected_wins"].max() - stats_and_metrics["avg_expected_wins"].min())  # Inverted
 
 def calculate_net(weights):
-    (w_rating, w_rqi, w_sos) = weights
+    w_rating, w_rqi = weights
+    w_sos = 1 - (w_rating + w_rqi)
     
+    if w_sos < 0 or w_sos > 1:
+        return float('inf')
+
     stats_and_metrics['NET_Score'] = (
         w_rating * stats_and_metrics['Norm_Rating'] +
         w_rqi * stats_and_metrics['Norm_RQI'] +
         w_sos * stats_and_metrics['Norm_SOS']
     )
-
     stats_and_metrics['NET'] = stats_and_metrics['NET_Score'].rank(ascending=False)
-    stats_and_metrics['combined_rank'] = (
-        stats_and_metrics['Projected_RPI']
-    )
+    stats_and_metrics['combined_rank'] = stats_and_metrics['Projected_RPI']
     spearman_corr = stats_and_metrics[['NET', 'combined_rank']].corr(method='spearman').iloc[0,1]
 
     return -spearman_corr
-
-bounds = [(-1,1),
-          (-1,1),
-          (-1,1)]
+bounds = [(0,1), (0,1)]  
 result = differential_evolution(calculate_net, bounds, strategy='best1bin', maxiter=500, tol=1e-4, seed=42)
 optimized_weights = result.x
+print("NET Calculation Weights:")
+print("------------------------")
+print(f"Rating: {optimized_weights[0]}")
+print(f"RQI: {optimized_weights[1]}")
+print(f"SOS: {1 - (optimized_weights[0] + optimized_weights[1])}")
 
 quadrant_records = {}
 
