@@ -429,7 +429,7 @@ modeling_stats[higher_better] = scaler.fit_transform(modeling_stats[higher_bette
 modeling_stats[lower_better] = scaler.fit_transform(-modeling_stats[lower_better])
 weights = {
     'HPG': 8, 'BBPG': 8, 'ERA': 22, 'PCT': 8,
-    'KP9': 8, 'WP9': 8, 'OPS': 22, 'WHIP': 8, 'PYTHAG': 22, 'Rank_pct': 45
+    'KP9': 8, 'WP9': 8, 'OPS': 22, 'WHIP': 8, 'PYTHAG': 22, 'Rank_pct': 40
 }
 modeling_stats['in_house_pr'] = sum(modeling_stats[stat] * weight for stat, weight in weights.items())
 
