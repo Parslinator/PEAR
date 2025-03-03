@@ -593,7 +593,8 @@ st.caption(f"Page Updated @ 3 AM, 11 AM, 2 PM, 5 PM, 8 PM, 11 PM CST")
 
 st.divider()
 
-st.subheader("CBASE Ratings and Resume")
+st.subheader("Live CBASE Ratings and Resume")
+st.caption("Updated when page updates. Weekly rankings are taken Monday at 11 AM CST")
 modeling_stats.index = modeling_stats.index + 1
 with st.container(border=True, height=440):
     st.dataframe(modeling_stats[['Team', 'NET', 'PRR', 'RQI', 'RPI', 'SOS', 'RemSOS', 'Conference']], use_container_width=True)
@@ -601,7 +602,7 @@ st.caption("NET - Mimicing the NCAA Evaluation Tool, PRR - Power Rating Rank, RQ
 
 st.divider()
 
-st.subheader("CBASE Stats")
+st.subheader("Live CBASE Stats")
 with st.container(border=True, height=440):
     st.dataframe(modeling_stats[['Team', 'Q1', 'Q2', 'Q3', 'Q4', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
 st.caption("PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
@@ -622,7 +623,8 @@ formatted_df = formatted_df.reset_index()
 formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
 formatted_df.set_index('Host')
 formatted_df.index = formatted_df.index + 1
-st.subheader("Projected NCAA Tournament")
+st.subheader("Live Projected NCAA Tournament")
+st.caption("Updated when page updates. Weekly projected tournament is taken Monday at 11 AM CST")
 with st.container(border=True, height=440):
     st.dataframe(formatted_df[['Host', '2 Seed', '3 Seed', '4 Seed']], use_container_width=True)
 st.caption("If the NCAA Tournament Started Today, This Is The Projection. AQ's are the highest NET ranking team in the conference")
