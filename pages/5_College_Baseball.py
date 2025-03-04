@@ -612,6 +612,8 @@ st.divider()
 automatic_qualifiers = modeling_stats.loc[modeling_stats.groupby("Conference")["NET"].idxmin()]
 at_large = modeling_stats.drop(automatic_qualifiers.index)
 at_large = at_large.nsmallest(34, "NET")
+last_four_in = at_large[-4:].reset_index()
+next_8_teams = modeling_stats.drop(automatic_qualifiers.index).nsmallest(42, "NET").iloc[34:].reset_index(drop=True)
 tournament = pd.concat([at_large, automatic_qualifiers])
 tournament = tournament.sort_values(by="NET").reset_index(drop=True)
 tournament["Seed"] = (tournament.index // 16) + 1
@@ -627,7 +629,9 @@ st.subheader("Live Projected NCAA Tournament")
 st.caption("Updated when page updates. Weekly projected tournament is taken Monday at 11 AM CST")
 with st.container(border=True, height=440):
     st.dataframe(formatted_df[['Host', '2 Seed', '3 Seed', '4 Seed']], use_container_width=True)
-st.caption("If the NCAA Tournament Started Today, This Is The Projection. AQ's are the highest NET ranking team in the conference")
+st.caption(f"Last 4 In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}")
+st.caption(f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}")
+st.caption(f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}")
 
 st.divider()
 
