@@ -410,43 +410,81 @@ baseball_stats = df_combined.loc[:, ~df_combined.columns.duplicated()].sort_valu
 baseball_stats['OPS'] = baseball_stats['SLG'] + baseball_stats['OBP']
 baseball_stats['PYTHAG'] = round((baseball_stats['RS'] ** 1.83) / ((baseball_stats['RS'] ** 1.83) + (baseball_stats['RA'] ** 1.83)),3)
 
+hbp = get_stat_dataframe('Hit by Pitch')[['Team', 'G', 'HBP']]
+hits = get_stat_dataframe('Hits')[['Team', 'AB', 'H']]
+doubles = get_stat_dataframe('Doubles')[['Team', '2B']]
+triples = get_stat_dataframe('Triples')[['Team', '3B']]
+sacrifice_flies = get_stat_dataframe('Sacrifice Flies')[['Team', 'SF']]
+dfs = [bb, hbp, hits, doubles, triples, hr, sacrifice_flies, runs, sb, era]
+for df in dfs:
+    df["Team"] = df["Team"].str.strip()
+wOBA = dfs[0]
+for df in dfs[1:]:
+    wOBA = pd.merge(wOBA, df, on="Team", how="left")
+wOBA = wOBA.fillna(0)
+wOBA['PA'] = wOBA['AB'] + wOBA['BB'] + wOBA['HBP'] + wOBA['SF'] + wOBA['SB']
+wOBA['1B'] = wOBA['H'] - wOBA['2B'] - wOBA['3B'] - wOBA['HR']
+wOBA['wOBA'] = ((0.69 * wOBA['BB']) + (0.72 * wOBA['HBP']) + (0.88 * wOBA['1B']) + (1.24 * wOBA['2B']) + (1.56 * wOBA['3B']) + (1.95 * wOBA['HR'])) / (wOBA['PA'])
+league_wOBA = (wOBA['wOBA'] * wOBA['PA']).sum() / wOBA['PA'].sum()
+league_R_PA = wOBA['RS'].sum() / wOBA['PA'].sum()
+wOBA_scale = league_R_PA / league_wOBA
+wOBA['wRAA'] = ((wOBA['wOBA'] - league_wOBA) / wOBA_scale) * wOBA['PA']
+league_RS = wOBA['RS'].sum()
+league_G = wOBA['G'].sum()
+RPW = 2 * (league_RS / league_G)
+wOBA['oWAR'] = wOBA['wRAA'] / RPW
+wOBA['RA9'] = wOBA['ERA']
+league_RA9 = wOBA['RS'].sum() / wOBA['G'].sum()
+league_ERA = wOBA['ERA'].mean()
+replacement_level_ERA = wOBA['ERA'].quantile(0.80)
+multiplier = replacement_level_ERA / league_ERA
+replacement_RA9 = league_RA9 * multiplier
+wOBA['pWAR'] = ((replacement_RA9 - wOBA['RA9']) / RPW) * (wOBA['IP'] / 9)
+mean_oWAR = wOBA['oWAR'].mean()
+std_oWAR = wOBA['oWAR'].std()
+mean_pWAR = wOBA['pWAR'].mean()
+std_pWAR = wOBA['pWAR'].std()
+wOBA['oWAR_z'] = (wOBA['oWAR'] - mean_oWAR) / std_oWAR
+wOBA['pWAR_z'] = (wOBA['pWAR'] - mean_pWAR) / std_pWAR
+wOBA['fWAR'] = wOBA['oWAR_z'] + wOBA['pWAR_z']
+baseball_stats = pd.merge(baseball_stats, wOBA[['Team', 'wOBA', 'wRAA', 'oWAR_z', 'pWAR_z', 'fWAR']], how='left', on='Team')
+
 rpi_2024 = pd.read_csv("./PEAR/PEAR Baseball/rpi_end_2024.csv")
 
 modeling_stats = baseball_stats[['Team', 'HPG',
                 'BBPG', 'ERA', 'PCT', 
                 'KP9', 'WP9', 'OPS', 
-                'WHIP', 'PYTHAG', 'ELO_Rank']]
+                'WHIP', 'PYTHAG', 'fWAR', 'oWAR_z', 'pWAR_z', 'ELO_Rank']]
 modeling_stats = pd.merge(modeling_stats, rpi_2024[['Team', 'Rank']], on = 'Team', how='left')
 modeling_stats["Rank"] = modeling_stats["Rank"].apply(pd.to_numeric, errors='coerce')
 modeling_stats["ELO_Rank"] = modeling_stats["ELO_Rank"].apply(pd.to_numeric, errors='coerce')
 modeling_stats['Rank_pct'] = 1 - (modeling_stats['Rank'] - 1) / (len(modeling_stats) - 1)
 
-higher_better = ["HPG", "BBPG", "PCT", "KP9", "OPS", "Rank_pct", 'PYTHAG']
+higher_better = ["HPG", "BBPG", "PCT", "KP9", "OPS", "Rank_pct", 'PYTHAG', 'fWAR', 'oWAR_z', 'pWAR_z']
 lower_better = ["ERA", "WP9", "WHIP"]
 
 scaler = MinMaxScaler(feature_range=(1, 100))
 modeling_stats[higher_better] = scaler.fit_transform(modeling_stats[higher_better])
 modeling_stats[lower_better] = scaler.fit_transform(-modeling_stats[lower_better])
 weights = {
-    'HPG': 8, 'BBPG': 8, 'ERA': 22, 'PCT': 8,
-    'KP9': 8, 'WP9': 8, 'OPS': 22, 'WHIP': 8, 'PYTHAG': 22, 'Rank_pct': 40
+    'fWAR': 50, 'PYTHAG': 40, 'OPS': 10, 'WHIP': 10, 'Rank_pct': 0
 }
 modeling_stats['in_house_pr'] = sum(modeling_stats[stat] * weight for stat, weight in weights.items())
 
 modeling_stats['in_house_pr'] = modeling_stats['in_house_pr'] - modeling_stats['in_house_pr'].mean()
 current_range = modeling_stats['in_house_pr'].max() - modeling_stats['in_house_pr'].min()
-desired_range = 25
+desired_range = 100
 scaling_factor = desired_range / current_range
 modeling_stats['in_house_pr'] = round(modeling_stats['in_house_pr'] * scaling_factor, 4)
 modeling_stats['in_house_pr'] = modeling_stats['in_house_pr'] - modeling_stats['in_house_pr'].min()
 
-import pandas as pd # type: ignore
-import numpy as np # type: ignore
-import pandas as pd # type: ignore
-from scipy.optimize import minimize # type: ignore
-import numpy as np # type: ignore
-from scipy.optimize import differential_evolution # type: ignore
-from tqdm import tqdm # type: ignore
+import pandas as pd
+import numpy as np
+import pandas as pd
+from scipy.optimize import minimize
+import numpy as np
+from scipy.optimize import differential_evolution
+from tqdm import tqdm
 pbar = tqdm(total=500, desc="Optimization Progress")
 def progress_callback(xk, convergence):
     """Callback to update the progress bar after each iteration."""
@@ -455,18 +493,16 @@ def progress_callback(xk, convergence):
         pbar.close()
 
 def objective_function(weights):
-    (w_hpb, w_bbpg, w_era, w_pct, w_kp9, w_wp9, w_whip, w_ops, w_pythag, w_in_house_pr) = weights
+    (w_owar, w_pwar, w_whip, w_ops, w_pythag, w_fwar, w_rank, w_in_house_pr) = weights
     
     modeling_stats['power_ranking'] = (
-        w_hpb * modeling_stats['HPG'] +
-        w_bbpg * modeling_stats['BBPG'] +
-        w_era * modeling_stats['ERA'] +
-        w_pct * modeling_stats['PCT'] +
-        w_kp9 * modeling_stats['KP9'] +
-        w_wp9 * modeling_stats['WP9'] +
+        w_owar * modeling_stats['oWAR_z'] +
+        w_pwar * modeling_stats['pWAR_z'] +
         w_whip * modeling_stats['WHIP'] +
         w_ops * modeling_stats['OPS'] +
         w_pythag * modeling_stats['PYTHAG'] + 
+        w_fwar * modeling_stats['fWAR'] +
+        w_rank * modeling_stats['Rank_pct'] +
         w_in_house_pr * modeling_stats['in_house_pr']
     )
 
@@ -478,15 +514,13 @@ def objective_function(weights):
 
     return -spearman_corr
 
-bounds = [(-1,1),
-          (-1,1),
-          (-1,1),
-          (-1,1),
-          (-1,1),
-          (-1,1),
-          (-1,1),
-          (-1,1),
-          (-1,1),
+bounds = [(0,1),
+          (0,1),
+          (0,1),
+          (0,1),
+          (0,1),
+          (0,1),
+          (0,0.4),
           (0,1)]
 result = differential_evolution(objective_function, bounds, strategy='best1bin', maxiter=500, tol=1e-4, seed=42, callback=progress_callback)
 optimized_weights = result.x
