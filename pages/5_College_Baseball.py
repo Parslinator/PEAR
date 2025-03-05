@@ -595,16 +595,17 @@ st.divider()
 
 st.subheader("Live CBASE Ratings and Resume")
 st.caption("Updated when page updates. Weekly rankings are taken Monday at 11 AM CST")
-modeling_stats.index = modeling_stats.index + 1
+modeling_stats_copy = modeling_stats.copy()
+modeling_stats_copy.set_index("Team", inplace=True)
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats[['Team', 'NET', 'PRR', 'RQI', 'RPI', 'SOS', 'RemSOS', 'Q1', 'Q2', 'Q3', 'Q4', 'Conference']], use_container_width=True)
+    st.dataframe(modeling_stats_copy[['NET', 'PRR', 'RQI', 'RPI', 'SOS', 'RemSOS', 'Q1', 'Q2', 'Q3', 'Q4', 'Conference']], use_container_width=True)
 st.caption("NET - Mimicing the NCAA Evaluation Tool, PRR - Power Rating Rank, RQI - Resume Quality Index, RPI - PEAR's Attempted RPI, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
 
 st.divider()
 
 st.subheader("Live CBASE Stats")
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats[['Team', 'fWAR', 'oWAR_z', 'pWAR_z', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
+    st.dataframe(modeling_stats_copy[['fWAR', 'oWAR_z', 'pWAR_z', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
 st.caption("fWAR - Combined Offense and Pitching, oWAR_z - Normalized Offensive War, pWAR_z - Normalized Pitching War, PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
 
 st.divider()
