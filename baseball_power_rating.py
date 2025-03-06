@@ -444,9 +444,9 @@ mean_oWAR = wOBA['oWAR'].mean()
 std_oWAR = wOBA['oWAR'].std()
 mean_pWAR = wOBA['pWAR'].mean()
 std_pWAR = wOBA['pWAR'].std()
-wOBA['oWAR_z'] = (wOBA['oWAR'] - mean_oWAR) / std_oWAR
-wOBA['pWAR_z'] = (wOBA['pWAR'] - mean_pWAR) / std_pWAR
-wOBA['fWAR'] = wOBA['oWAR_z'] + wOBA['pWAR_z']
+wOBA['oWAR_z'] = round((wOBA['oWAR'] - mean_oWAR) / std_oWAR, 2)
+wOBA['pWAR_z'] = round((wOBA['pWAR'] - mean_pWAR) / std_pWAR,2)
+wOBA['fWAR'] = round(wOBA['oWAR_z'] + wOBA['pWAR_z'],2)
 baseball_stats = pd.merge(baseball_stats, wOBA[['Team', 'wOBA', 'wRAA', 'oWAR_z', 'pWAR_z', 'fWAR']], how='left', on='Team')
 
 rpi_2024 = pd.read_csv("./PEAR/PEAR Baseball/rpi_end_2024.csv")
