@@ -598,8 +598,8 @@ st.caption("Updated when page updates. Weekly rankings are taken Monday at 11 AM
 modeling_stats_copy = modeling_stats.copy()
 modeling_stats_copy.set_index("Team", inplace=True)
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats_copy[['NET', 'PRR', 'RQI', 'RPI', 'SOS', 'RemSOS', 'Q1', 'Q2', 'Q3', 'Q4', 'Conference']], use_container_width=True)
-st.caption("NET - Mimicing the NCAA Evaluation Tool, PRR - Power Rating Rank, RQI - Resume Quality Index, RPI - PEAR's Attempted RPI, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
+    st.dataframe(modeling_stats_copy[['NET', 'PRR', 'RQI', 'aRQI', 'RPI', 'SOS', 'RemSOS', 'Q1', 'Q2', 'Q3', 'Q4', 'Conference']], use_container_width=True)
+st.caption("NET - Mimicing the NCAA Evaluation Tool, PRR - Power Rating Rank, RQI - Resume Quality Index, aRQI - RQI Adjusted for SOS, RPI - PEAR's Attempted RPI, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
 
 st.divider()
 

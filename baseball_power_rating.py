@@ -478,13 +478,13 @@ scaling_factor = desired_range / current_range
 modeling_stats['in_house_pr'] = round(modeling_stats['in_house_pr'] * scaling_factor, 4)
 modeling_stats['in_house_pr'] = modeling_stats['in_house_pr'] - modeling_stats['in_house_pr'].min()
 
-import pandas as pd
-import numpy as np
-import pandas as pd
-from scipy.optimize import minimize
-import numpy as np
-from scipy.optimize import differential_evolution
-from tqdm import tqdm
+import pandas as pd # type: ignore
+import numpy as np # type: ignore
+import pandas as pd # type: ignore
+from scipy.optimize import minimize # type: ignore
+import numpy as np # type: ignore
+from scipy.optimize import differential_evolution # type: ignore
+from tqdm import tqdm # type: ignore
 pbar = tqdm(total=500, desc="Optimization Progress")
 def progress_callback(xk, convergence):
     """Callback to update the progress bar after each iteration."""
@@ -1174,6 +1174,7 @@ stats_and_metrics = pd.merge(stats_and_metrics, resume_quality, on='Team', how='
 
 stats_and_metrics["Norm_Rating"] = (stats_and_metrics["Rating"] - stats_and_metrics["Rating"].min()) / (stats_and_metrics["Rating"].max() - stats_and_metrics["Rating"].min())
 stats_and_metrics["Norm_RQI"] = (stats_and_metrics["resume_quality"] - stats_and_metrics["resume_quality"].min()) / (stats_and_metrics["resume_quality"].max() - stats_and_metrics["resume_quality"].min())
+stats_and_metrics["Norm_RPI"] = (stats_and_metrics["RPI_Score"] - stats_and_metrics["RPI_Score"].min()) / (stats_and_metrics["RPI_Score"].max() - stats_and_metrics["RPI_Score"].min())
 stats_and_metrics["Norm_SOS"] = 1 - (stats_and_metrics["avg_expected_wins"] - stats_and_metrics["avg_expected_wins"].min()) / (stats_and_metrics["avg_expected_wins"].max() - stats_and_metrics["avg_expected_wins"].min())  # Inverted
 
 def calculate_net(weights):
@@ -1201,6 +1202,11 @@ print("------------------------")
 print(f"Rating: {optimized_weights[0]}")
 print(f"RQI: {optimized_weights[1]}")
 print(f"SOS: {1 - (optimized_weights[0] + optimized_weights[1])}")
+adj_rqi_weight = (optimized_weights[1]) / ((1 - (optimized_weights[0] + optimized_weights[1])) + (optimized_weights[1]))
+adj_sos_weight = (1 - (optimized_weights[0] + optimized_weights[1])) / ((1 - (optimized_weights[0] + optimized_weights[1])) + (optimized_weights[1]))
+stats_and_metrics['Norm_Resume'] = adj_rqi_weight * stats_and_metrics['Norm_RQI'] + adj_sos_weight * stats_and_metrics['Norm_SOS']
+stats_and_metrics['aRQI'] = stats_and_metrics['Norm_Resume'].rank(ascending=False)
+
 
 quadrant_records = {}
 
