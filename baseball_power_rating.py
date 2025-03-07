@@ -485,12 +485,6 @@ from scipy.optimize import minimize # type: ignore
 import numpy as np # type: ignore
 from scipy.optimize import differential_evolution # type: ignore
 from tqdm import tqdm # type: ignore
-pbar = tqdm(total=500, desc="Optimization Progress")
-def progress_callback(xk, convergence):
-    """Callback to update the progress bar after each iteration."""
-    pbar.update(1)
-    if convergence < 1e-4:  # Close bar if convergence is achieved early
-        pbar.close()
 
 def objective_function(weights):
     (w_owar, w_pwar, w_whip, w_ops, w_pythag, w_fwar, w_rank, w_in_house_pr) = weights
@@ -1354,7 +1348,7 @@ previous = pd.concat([previous, missing_or_mismatched]).reset_index(drop=True)
 previous = previous.drop_duplicates(subset='Date', keep='last').reset_index(drop=True)
 previous.to_csv(f"./PEAR/PEAR Baseball/y{current_season}/straight_up.csv")
 
-file_path = os.path.join(folder_path, f"baseball_{formatted_date}.csv")
+file_path = os.path.join(folder_path, f"Data/baseball_{formatted_date}.csv")
 stats_and_metrics.to_csv(file_path)
 
 file_path = os.path.join(folder_path, f"schedule_{current_season}.csv")

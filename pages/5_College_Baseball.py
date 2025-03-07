@@ -84,7 +84,7 @@ desc_text = desc_div.text.strip()
 match = re.search(r"([A-Za-z]+ \d{1,2}, \d{4})$", desc_text)
 last_date = match.group(1)
 
-folder_path = f"./PEAR/PEAR Baseball/y{current_season}"
+folder_path = f"./PEAR/PEAR Baseball/y{current_season}/Ratings"
 
 csv_files = [f for f in os.listdir(folder_path) if f.startswith("baseball_") and f.endswith(".csv")]
 
