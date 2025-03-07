@@ -589,7 +589,7 @@ def adjust_home_pr(home_win_prob):
 st.title(f"{current_season} CBASE PEAR")
 st.caption(f"Ratings Updated {formatted_latest_date}")
 st.caption(f"Stats Through Games {last_date}")
-st.caption(f"Page Updated @ 11 AM, 2 PM, 5 PM, 8 PM, 11 PM CST")
+st.caption(f"Page Updated @ 5 AM, 11 AM, 2 PM, 5 PM, 8 PM CST")
 
 st.divider()
 
