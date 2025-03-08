@@ -1538,9 +1538,10 @@ if now.weekday() == 0 and now.hour < 14:
     ax.set_xlabel('Rating Rank')
     ax.set_ylabel('Adjusted Resume Rank')
     ax.set_title('At Large Ratings vs. Adjusted Resume', fontweight='bold', fontsize=14)
-    plt.text(max_range + 7, -15, f"Projected At Large Bids ONLY (Based on PEAR NET Rankings)", ha='right', fontsize=12)
-    plt.text(max_range + 7, -19, f"Green - Last 8 In, Orange - First 8 Out, Red - Next 8 Out", ha='right', fontsize=12)
-    plt.text(max_range + 7, -23, f"Value indicates distance from being the last team in", ha='right', fontsize=12)
+    plt.text(max_range + 7, -12, "@PEARatings", ha='right', fontsize=12)
+    plt.text(max_range + 7, -16, f"Projected At Large Bids ONLY (Based on PEAR NET Rankings)", ha='right', fontsize=12)
+    plt.text(max_range + 7, -20, f"Green - Last 8 In, Orange - First 8 Out, Red - Next 8 Out", ha='right', fontsize=12)
+    plt.text(max_range + 7, -24, f"Value indicates distance from being the last team in", ha='right', fontsize=12)
     plt.xlim(-2, max_range + 10)
     plt.ylim(-2, max_range + 10)
     plt.grid(False)
@@ -1653,3 +1654,47 @@ if now.weekday() == 0 and now.hour < 14:
     ax.set_title("NET Score Distance from Last Host Seed", fontsize = 16)
 
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Host/last_host_{formatted_date}.png", bbox_inches='tight')
+
+    automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
+    at_large = stats_and_metrics.drop(automatic_qualifiers.index)
+    at_large = at_large.nsmallest(34, "NET")
+    last_four_in = at_large[-4:].reset_index()
+    next_8_teams = stats_and_metrics.drop(automatic_qualifiers.index).nsmallest(42, "NET").iloc[34:].reset_index(drop=True)
+    tournament = pd.concat([at_large, automatic_qualifiers])
+    tournament = tournament.sort_values(by="NET").reset_index(drop=True)
+    tournament["Seed"] = (tournament.index // 16) + 1
+    pod_order = list(range(1, 17)) + list(range(16, 0, -1)) + list(range(1, 17)) + list(range(16, 0, -1))
+    tournament["Host"] = pod_order
+    formatted_df = tournament.pivot_table(index="Host", columns="Seed", values="Team", aggfunc=lambda x: ' '.join(x))
+    formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
+    formatted_df = formatted_df.reset_index()
+    formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
+    formatted_df.index = formatted_df.index + 1
+    automatic_teams = set(automatic_qualifiers["Team"])
+    formatted_df_with_asterisk = formatted_df.copy()
+    for col in formatted_df_with_asterisk.columns[1:]:  # Exclude index column
+        formatted_df_with_asterisk[col] = formatted_df_with_asterisk[col].apply(lambda x: f"{x}*" if x in automatic_teams else x)
+    plt.figure(figsize=(12, 8), facecolor='#CECEB2')
+    ax = plt.gca()
+    ax.axis('off')
+    table = ax.table(cellText=formatted_df_with_asterisk.iloc[:, 1:].values,
+                    rowLabels=formatted_df_with_asterisk.index,
+                    colLabels=["Host", "2 Seed", "3 Seed", "4 Seed"],
+                    loc='center', cellLoc='center', colLoc='center')
+    table.auto_set_font_size(False)
+    table.set_fontsize(16)
+    table.scale(2, 3)
+    for (i, j), cell in table.get_celld().items():
+        cell.set_facecolor('#CECEB2')
+        if i == 0:  # Row label header
+            cell.set_text_props(fontweight='bold')
+        if (j == 0) | (j == -1):  # Column label header
+            cell.set_text_props(fontweight='bold')
+    plt.text(0.5, 1.22, 'Projected NCAA Tournament Regionals', fontsize=24, ha='center', fontweight='bold')
+    plt.text(0.5, -0.25, f"Last Four In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}", ha='center', fontsize=16)
+    plt.text(0.5, -0.32, f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}", ha='center', fontsize=16)
+    plt.text(0.5, -0.39, f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}", ha='center', fontsize=16)
+    plt.text(-0.54, -0.25, "* Denotes Automatic Qualifier", fontsize=16, ha='left')
+    plt.text(1.49, -0.25, "@PEARating", ha='right', fontsize=16, fontweight='bold')
+
+    plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Tournament/tournament_{formatted_date}.png", bbox_inches='tight')
