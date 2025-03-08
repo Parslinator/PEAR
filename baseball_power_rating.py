@@ -1093,6 +1093,18 @@ def calculate_resume_quality(group, bubble_team_rating):
     results.append({"Team": team, "resume_quality": resume_quality})
     return pd.DataFrame(results)
 
+def calculate_game_resume_quality(row, one_seed_rating):
+    """Calculate resume quality for a single game."""
+    team = row["Team"]
+    is_home = row["home_team"] == team
+    is_away = row["away_team"] == team
+    opponent_rating = row["away_rating"] if is_home else row["home_rating"]
+    
+    win_prob = PEAR_Win_Prob(one_seed_rating, opponent_rating) / 100
+    team_won = (is_home and row["home_score"] > row["away_score"]) or (is_away and row["away_score"] > row["home_score"])
+    
+    return (1 - win_prob) if team_won else -win_prob
+
 df_1 = pd.merge(ending_data, team_expected_wins[['Team', 'expected_wins', 'Wins', 'Losses']], on='Team', how='left')
 df_2 = pd.merge(df_1, avg_team_expected_wins[['Team', 'avg_expected_wins', 'total_expected_wins']], on='Team', how='left')
 df_3 = pd.merge(df_2, rem_avg_expected_wins[['Team', 'rem_avg_expected_wins', 'rem_total_expected_wins']], on='Team', how='left')
@@ -1165,6 +1177,7 @@ resume_quality['RQI'] = resume_quality['resume_quality'].rank(method='min', asce
 resume_quality = resume_quality.sort_values('RQI').reset_index(drop=True)
 resume_quality['resume_quality'] = resume_quality['resume_quality'] - resume_quality.loc[15, 'resume_quality']
 stats_and_metrics = pd.merge(stats_and_metrics, resume_quality, on='Team', how='left')
+schedule_df["resume_quality"] = schedule_df.apply(lambda row: calculate_game_resume_quality(row, bubble_team_rating), axis=1)
 
 stats_and_metrics["Norm_Rating"] = (stats_and_metrics["Rating"] - stats_and_metrics["Rating"].min()) / (stats_and_metrics["Rating"].max() - stats_and_metrics["Rating"].min())
 stats_and_metrics["Norm_RQI"] = (stats_and_metrics["resume_quality"] - stats_and_metrics["resume_quality"].min()) / (stats_and_metrics["resume_quality"].max() - stats_and_metrics["resume_quality"].min())
