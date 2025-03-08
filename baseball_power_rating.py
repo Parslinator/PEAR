@@ -1373,7 +1373,7 @@ central_time_zone = pytz.timezone('US/Central')
 now = datetime.datetime.now(central_time_zone)
 
 # Check if it's Monday and after 10:00 AM and before 3:00 PM
-if now.hour < 20 and now.hour > 10:
+if now.hour < 15 and now.hour > 10:
     from bs4 import BeautifulSoup # type: ignore
     import pandas as pd # type: ignore
     import requests # type: ignore
@@ -1722,6 +1722,6 @@ if now.hour < 20 and now.hour > 10:
     plt.text(-0.5, -0.32, f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}", ha='left', fontsize=20)
     plt.text(-0.5, -0.39, f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}", ha='left', fontsize=20)
     plt.text(1.49, -0.25, "* Denotes Automatic Qualifier", fontsize=20, ha='right')
-    plt.text(1.49, 1.22, "@PEARating", ha='right', fontsize=24, fontweight='bold')
+    plt.text(1.49, 1.22, "@PEARatings", ha='right', fontsize=24, fontweight='bold')
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Tournament/tournament_{formatted_date}.png", bbox_inches='tight')
     print('Tournament Done')
