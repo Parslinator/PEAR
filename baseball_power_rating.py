@@ -1382,6 +1382,8 @@ if now.weekday() == 0 and now.hour < 15 and now.hour > 10:
     import matplotlib.pyplot as plt # type: ignore
     import seaborn as sns # type: ignore
     import matplotlib.offsetbox as offsetbox # type: ignore
+    import matplotlib.font_manager as fm # type: ignore
+    plt.rcParams['font.family'] = 'Trebuchet MS'
 
     BASE_URL = "https://www.warrennolan.com"
 
@@ -1390,7 +1392,7 @@ if now.weekday() == 0 and now.hour < 15 and now.hour > 10:
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#CECEB2')
     plt.suptitle(f"Week 3 CBASE PEAR", fontsize=20, fontweight='bold', color='black')
-    fig.text(0.5, 0.92, "NET Ranking Incorporating Team Strength and Resume", fontsize=8, ha='center', color='black')
+    fig.text(0.5, 0.92, "NET Ranking Incorporating Team Strength and Resume", fontsize=10, ha='center', color='black')
     fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
 
     for i, ax in enumerate(axs.ravel()):
@@ -1405,7 +1407,7 @@ if now.weekday() == 0 and now.hour < 15 and now.hour > 10:
         img = Image.open(BytesIO(response.content))
         ax.imshow(img)
         ax.set_facecolor('#f0f0f0')
-        ax.set_title(f"#{i+1} {team}", fontsize=8)
+        ax.set_title(f"#{i+1} {team}", fontsize=8, fontweight='bold')
         ax.axis('off')
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/NET/net_{formatted_date}.png", bbox_inches='tight')
 
@@ -1414,7 +1416,7 @@ if now.weekday() == 0 and now.hour < 15 and now.hour > 10:
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#CECEB2')
     plt.suptitle(f"Week 3 CBASE Resume Quality", fontsize=20, fontweight='bold', color='black')
-    fig.text(0.5, 0.92, "How Impressive Your Total Body of Work Is", fontsize=8, ha='center', color='black')
+    fig.text(0.5, 0.92, "Team Performance Relative to Strength of Schedule", fontsize=10, ha='center', color='black')
     fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
 
     for i, ax in enumerate(axs.ravel()):
@@ -1429,7 +1431,7 @@ if now.weekday() == 0 and now.hour < 15 and now.hour > 10:
         img = Image.open(BytesIO(response.content))
         ax.imshow(img)
         ax.set_facecolor('#f0f0f0')
-        ax.set_title(f"#{i+1} {team}", fontsize=8)
+        ax.set_title(f"#{i+1} {team}", fontsize=8, fontweight='bold')
         ax.axis('off')
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/RQI/rqi_{formatted_date}.png", bbox_inches='tight')
 
@@ -1438,7 +1440,7 @@ if now.weekday() == 0 and now.hour < 15 and now.hour > 10:
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#CECEB2')
     plt.suptitle(f"Week 3 CBASE Team Strength", fontsize=20, fontweight='bold', color='black')
-    fig.text(0.5, 0.92, "How Strong Your Team Is", fontsize=8, ha='center', color='black')
+    fig.text(0.5, 0.92, "Team Rating Based on Team Stats", fontsize=10, ha='center', color='black')
     fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
 
     for i, ax in enumerate(axs.ravel()):
@@ -1453,7 +1455,7 @@ if now.weekday() == 0 and now.hour < 15 and now.hour > 10:
         img = Image.open(BytesIO(response.content))
         ax.imshow(img)
         ax.set_facecolor('#f0f0f0')
-        ax.set_title(f"#{i+1} {team}", fontsize=8)
+        ax.set_title(f"#{i+1} {team}", fontsize=8, fontweight='bold')
         ax.axis('off')
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/PRR/prr_{formatted_date}.png", bbox_inches='tight')
 
@@ -1462,7 +1464,7 @@ if now.weekday() == 0 and now.hour < 15 and now.hour > 10:
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#CECEB2')
     plt.suptitle(f"Week 3 CBASE RPI", fontsize=20, fontweight='bold', color='black')
-    fig.text(0.5, 0.92, "PEAR's RPI Rankings", fontsize=8, ha='center', color='black')
+    fig.text(0.5, 0.92, "PEAR's RPI Rankings", fontsize=10, ha='center', color='black')
     fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
 
     for i, ax in enumerate(axs.ravel()):
@@ -1477,7 +1479,7 @@ if now.weekday() == 0 and now.hour < 15 and now.hour > 10:
         img = Image.open(BytesIO(response.content))
         ax.imshow(img)
         ax.set_facecolor('#f0f0f0')
-        ax.set_title(f"#{i+1} {team}", fontsize=8)
+        ax.set_title(f"#{i+1} {team}", fontsize=8, fontweight='bold')
         ax.axis('off')
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/RPI/rpi_{formatted_date}.png", bbox_inches='tight')
 
@@ -1541,20 +1543,22 @@ if now.weekday() == 0 and now.hour < 15 and now.hour > 10:
         max_range = all_at_large_teams['aRQI'].max()
 
     height = max_range
-    plt.text(max_range-10, height + 4, "Automatic Qualifiers", ha='center', fontweight='bold', fontsize = 14)
+    plt.text(max_range-7, height + 4, "Automatic Qualifiers", ha='center', fontweight='bold', fontsize = 14)
     for i in range(len(sorted_aqs)):
         team = sorted_aqs.loc[i, 'Team']
         conference = sorted_aqs.loc[i, 'Conference']
-        plt.text(max_range-10, height, f"{team}", ha='center', fontsize=12)
+        plt.text(max_range-7, height, f"{team}", ha='center', fontsize=12)
         height = height - 4
 
-    ax.set_xlabel('Rating Rank')
-    ax.set_ylabel('Adjusted Resume Rank')
-    ax.set_title('At Large Ratings vs. Adjusted Resume', fontweight='bold', fontsize=14)
-    plt.text(max_range + 7, -12, "@PEARatings", ha='right', fontsize=12)
-    plt.text(max_range + 7, -16, f"Projected At Large Bids ONLY (Based on PEAR NET Rankings)", ha='right', fontsize=12)
-    plt.text(max_range + 7, -20, f"Green - Last 8 In, Orange - First 8 Out, Red - Next 8 Out", ha='right', fontsize=12)
-    plt.text(max_range + 7, -24, f"Value indicates distance from being the last team in", ha='right', fontsize=12)
+    ax.set_xlabel('Team Strength Rank', fontsize = 16)
+    ax.set_ylabel('Adjusted Resume Rank', fontsize = 16)
+    # ax.set_title('At Large Ratings vs. Adjusted Resume', fontweight='bold', fontsize=14)
+    plt.text(0, max_range + 15, "At Large Team Strength vs. Adjusted Resume", ha='left', fontsize = 20, fontweight = 'bold')
+    plt.text(0, max_range + 12, "Automatic Qualifiers Removed, Bubble Teams Highlighted", fontsize = 12)
+    plt.text(max_range - 7, max_range + 13.5, "@PEARatings", ha='center', fontsize=16, fontweight='bold')
+    plt.text(max_range + 7, -12, f"Projected At Large Bids ONLY (Based on PEAR NET Rankings)", ha='right', fontsize=12)
+    plt.text(max_range + 7, -16, f"Green - Last 8 In, Orange - First 8 Out, Red - Next 8 Out", ha='right', fontsize=12)
+    plt.text(max_range + 7, -20, f"Value indicates distance from being the last team in", ha='right', fontsize=12)
     plt.xlim(-2, max_range + 10)
     plt.ylim(-2, max_range + 10)
     plt.grid(False)
@@ -1582,7 +1586,7 @@ if now.weekday() == 0 and now.hour < 15 and now.hour > 10:
 
     team_logos = {team: get_team_logo(team) for team in bubble["Team"]}
     bubble = bubble.sort_values(by="percentage_away", ascending=False)
-    max_abs_value = bubble["percentage_away"].abs().max()
+    max_abs_value = bubble["percentage_away"].abs().max() + 0.2
     colors = ["#2ECC71" if x >= 0 else "#E74C3C" for x in bubble["percentage_away"]]
     fig, ax = plt.subplots(figsize=(10, 8))
     fig.set_facecolor("#CECEB2")
@@ -1607,10 +1611,12 @@ if now.weekday() == 0 and now.hour < 15 and now.hour > 10:
                                         frameon=False)
             ax.add_artist(ab)
 
-    ax.set_xlabel("@PEARatings")
+    ax.set_xlabel("")
     # ax.set_xlabel("")
     ax.set_ylabel("")
-    ax.set_title("NET Score Distance from Last Team In", fontsize = 16)
+    # ax.set_title("NET Score Distance from Last Team In", fontsize = 16)
+    plt.text(-max_abs_value, -2, "NET Score Distance From Last Team In", fontsize=20, ha='left', fontweight='bold')
+    plt.text(-max_abs_value, -1, "@PEARatings", ha='left', fontsize = 12)
 
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Team_In/last_team_in_{formatted_date}.png", bbox_inches='tight')
 
@@ -1636,7 +1642,7 @@ if now.weekday() == 0 and now.hour < 15 and now.hour > 10:
 
     team_logos = {team: get_team_logo(team) for team in hosting["Team"]}
     hosting = hosting.sort_values(by="percentage_away", ascending=False)
-    max_abs_value = hosting["percentage_away"].abs().max()
+    max_abs_value = hosting["percentage_away"].abs().max() + 0.2
     colors = ["#2ECC71" if x >= 0 else "#E74C3C" for x in hosting["percentage_away"]]
     fig, ax = plt.subplots(figsize=(10, 8))
     fig.set_facecolor("#CECEB2")
@@ -1695,7 +1701,7 @@ if now.weekday() == 0 and now.hour < 15 and now.hour > 10:
                     colLabels=["Host", "2 Seed", "3 Seed", "4 Seed"],
                     loc='center', cellLoc='center', colLoc='center')
     table.auto_set_font_size(False)
-    table.set_fontsize(16)
+    table.set_fontsize(20)
     table.scale(2, 3)
     for (i, j), cell in table.get_celld().items():
         cell.set_facecolor('#CECEB2')
@@ -1703,11 +1709,11 @@ if now.weekday() == 0 and now.hour < 15 and now.hour > 10:
             cell.set_text_props(fontweight='bold')
         if (j == 0) | (j == -1):  # Column label header
             cell.set_text_props(fontweight='bold')
-    plt.text(0.5, 1.22, 'Projected NCAA Tournament Regionals', fontsize=24, ha='center', fontweight='bold')
-    plt.text(0.5, -0.25, f"Last Four In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}", ha='center', fontsize=16)
-    plt.text(0.5, -0.32, f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}", ha='center', fontsize=16)
-    plt.text(0.5, -0.39, f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}", ha='center', fontsize=16)
-    plt.text(-0.54, -0.25, "* Denotes Automatic Qualifier", fontsize=16, ha='left')
-    plt.text(1.49, -0.25, "@PEARating", ha='right', fontsize=16, fontweight='bold')
-
+    plt.text(-0.5, 1.28, "PEAR NET Ranking Projected NCAA Tournament", fontsize=36, ha='left', fontweight='bold')
+    plt.text(-0.5, 1.22, "No Consideration For Conference or Regional Proximity", fontsize=24, ha='left', fontweight='bold')
+    plt.text(-0.5, -0.25, f"Last Four In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}", ha='left', fontsize=20)
+    plt.text(-0.5, -0.32, f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}", ha='left', fontsize=20)
+    plt.text(-0.5, -0.39, f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}", ha='left', fontsize=20)
+    plt.text(1.49, -0.25, "* Denotes Automatic Qualifier", fontsize=20, ha='right')
+    plt.text(1.49, 1.22, "@PEARating", ha='right', fontsize=24, fontweight='bold')
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Tournament/tournament_{formatted_date}.png", bbox_inches='tight')
