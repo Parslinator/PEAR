@@ -500,7 +500,7 @@ def objective_function(weights):
         w_in_house_pr * modeling_stats['in_house_pr']
     )
 
-    modeling_stats['calculated_rank'] = modeling_stats['power_ranking'].rank(ascending=False)
+    modeling_stats['calculated_rank'] = modeling_stats['power_ranking'].rank(ascending=False).astype(int)
     modeling_stats['combined_rank'] = (
         modeling_stats['ELO_Rank']
     )
@@ -954,7 +954,7 @@ def rpi_calculation(weights):
         w_oowp * pear_rpi['OOWP']
     )
 
-    pear_rpi['RPI'] = pear_rpi['RPI_Score'].rank(ascending=False)
+    pear_rpi['RPI'] = pear_rpi['RPI_Score'].rank(ascending=False).astype(int)
     pear_rpi['combined_rank'] = pear_rpi['Live_RPI']
     spearman_corr = pear_rpi[['RPI', 'combined_rank']].corr(method='spearman').iloc[0,1]
 
@@ -1100,22 +1100,22 @@ df_4 = pd.merge(df_3, projected_rpi[['Team', 'RPI', 'Conference']], on='Team', h
 df_4.rename(columns={'RPI': 'Projected_RPI'}, inplace=True)
 df_5 = pd.merge(df_4, pear_rpi, on='Team', how='left')
 stats_and_metrics = pd.merge(df_5, kpi_results, on='Team', how='left')
-stats_and_metrics['RPI'] = stats_and_metrics['RPI_Score'].rank(ascending=False)
+stats_and_metrics['RPI'] = stats_and_metrics['RPI_Score'].rank(ascending=False).astype(int)
 
 stats_and_metrics['wins_above_expected'] = round(stats_and_metrics['Wins'] - stats_and_metrics['total_expected_wins'],2)
-stats_and_metrics['SOR'] = stats_and_metrics['wins_above_expected'].rank(method='min', ascending=False)
+stats_and_metrics['SOR'] = stats_and_metrics['wins_above_expected'].rank(method='min', ascending=False).astype(int)
 max_SOR = stats_and_metrics['SOR'].max()
 stats_and_metrics['SOR'].fillna(max_SOR + 1, inplace=True)
 stats_and_metrics['SOR'] = stats_and_metrics['SOR'].astype(int)
 stats_and_metrics = stats_and_metrics.sort_values('SOR').reset_index(drop=True)
 
-stats_and_metrics['RemSOS'] = stats_and_metrics['rem_avg_expected_wins'].rank(method='min', ascending=True)
+stats_and_metrics['RemSOS'] = stats_and_metrics['rem_avg_expected_wins'].rank(method='min', ascending=True).astype(int)
 max_remSOS = stats_and_metrics['RemSOS'].max()
 stats_and_metrics['RemSOS'].fillna(max_remSOS + 1, inplace=True)
 stats_and_metrics['RemSOS'] = stats_and_metrics['RemSOS'].astype(int)
 stats_and_metrics = stats_and_metrics.sort_values('RemSOS').reset_index(drop=True)
 
-stats_and_metrics['SOS'] = stats_and_metrics['avg_expected_wins'].rank(method='min', ascending=True)
+stats_and_metrics['SOS'] = stats_and_metrics['avg_expected_wins'].rank(method='min', ascending=True).astype(int)
 max_SOS = stats_and_metrics['SOS'].max()
 stats_and_metrics['SOS'].fillna(max_SOS + 1, inplace=True)
 stats_and_metrics['SOS'] = stats_and_metrics['SOS'].astype(int)
@@ -1130,13 +1130,13 @@ bubble_expected_wins.rename(columns={"avg_expected_wins": "bubble_expected_wins"
 stats_and_metrics = pd.merge(stats_and_metrics, bubble_expected_wins, on='Team', how='left')
 
 stats_and_metrics['wins_above_bubble'] = round(stats_and_metrics['Wins'] - stats_and_metrics['bubble_total_expected_wins'],2)
-stats_and_metrics['Prelim_WAB'] = stats_and_metrics['wins_above_bubble'].rank(method='min', ascending=False)
+stats_and_metrics['Prelim_WAB'] = stats_and_metrics['wins_above_bubble'].rank(method='min', ascending=False).astype(int)
 max_WAB = stats_and_metrics['Prelim_WAB'].max()
 stats_and_metrics['Prelim_WAB'].fillna(max_WAB + 1, inplace=True)
 stats_and_metrics['Prelim_WAB'] = stats_and_metrics['Prelim_WAB'].astype(int)
 stats_and_metrics = stats_and_metrics.sort_values('Prelim_WAB').reset_index(drop=True)
 
-stats_and_metrics['KPI'] = stats_and_metrics['KPI_Score'].rank(method='min', ascending=False)
+stats_and_metrics['KPI'] = stats_and_metrics['KPI_Score'].rank(method='min', ascending=False).astype(int)
 max_KPI = stats_and_metrics['KPI'].max()
 stats_and_metrics['KPI'].fillna(max_KPI + 1, inplace=True)
 stats_and_metrics['KPI'] = stats_and_metrics['KPI'].astype(int)
@@ -1149,19 +1149,19 @@ bubble_expected_wins.rename(columns={"avg_expected_wins": "final_bubble_expected
 stats_and_metrics = pd.merge(stats_and_metrics, bubble_expected_wins, on='Team', how='left')
 
 stats_and_metrics['wins_above_bubble'] = round(stats_and_metrics['Wins'] - stats_and_metrics['final_bubble_total_expected_wins'],2)
-stats_and_metrics['WAB'] = stats_and_metrics['wins_above_bubble'].rank(method='min', ascending=False)
+stats_and_metrics['WAB'] = stats_and_metrics['wins_above_bubble'].rank(method='min', ascending=False).astype(int)
 max_WAB = stats_and_metrics['WAB'].max()
 stats_and_metrics['WAB'].fillna(max_WAB + 1, inplace=True)
 stats_and_metrics['WAB'] = stats_and_metrics['WAB'].astype(int)
 stats_and_metrics = stats_and_metrics.sort_values('WAB').reset_index(drop=True)
 
 stats_and_metrics['AVG'] = round(stats_and_metrics[['KPI', 'WAB', 'SOR']].mean(axis=1),1)
-stats_and_metrics['Resume'] = stats_and_metrics['AVG'].rank(method='min')
+stats_and_metrics['Resume'] = stats_and_metrics['AVG'].rank(method='min').astype(int)
 stats_and_metrics = stats_and_metrics.sort_values('Resume').reset_index(drop=True)
 
 bubble_team_rating = stats_and_metrics.loc[15, 'Rating']
 resume_quality = completed_schedule.groupby('Team').apply(calculate_resume_quality, bubble_team_rating).reset_index(drop=True)
-resume_quality['RQI'] = resume_quality['resume_quality'].rank(method='min', ascending=False)
+resume_quality['RQI'] = resume_quality['resume_quality'].rank(method='min', ascending=False).astype(int)
 resume_quality = resume_quality.sort_values('RQI').reset_index(drop=True)
 resume_quality['resume_quality'] = resume_quality['resume_quality'] - resume_quality.loc[15, 'resume_quality']
 stats_and_metrics = pd.merge(stats_and_metrics, resume_quality, on='Team', how='left')
@@ -1183,7 +1183,7 @@ def calculate_net(weights):
         w_rqi * stats_and_metrics['Norm_RQI'] +
         w_sos * stats_and_metrics['Norm_SOS']
     )
-    stats_and_metrics['NET'] = stats_and_metrics['NET_Score'].rank(ascending=False)
+    stats_and_metrics['NET'] = stats_and_metrics['NET_Score'].rank(ascending=False).astype(int)
     stats_and_metrics['combined_rank'] = stats_and_metrics['Projected_RPI']
     spearman_corr = stats_and_metrics[['NET', 'combined_rank']].corr(method='spearman').iloc[0,1]
 
@@ -1199,7 +1199,7 @@ print(f"SOS: {1 - (optimized_weights[0] + optimized_weights[1])}")
 adj_rqi_weight = (optimized_weights[1]) / ((1 - (optimized_weights[0] + optimized_weights[1])) + (optimized_weights[1]))
 adj_sos_weight = (1 - (optimized_weights[0] + optimized_weights[1])) / ((1 - (optimized_weights[0] + optimized_weights[1])) + (optimized_weights[1]))
 stats_and_metrics['Norm_Resume'] = adj_rqi_weight * stats_and_metrics['Norm_RQI'] + adj_sos_weight * stats_and_metrics['Norm_SOS']
-stats_and_metrics['aRQI'] = stats_and_metrics['Norm_Resume'].rank(ascending=False)
+stats_and_metrics['aRQI'] = stats_and_metrics['Norm_Resume'].rank(ascending=False).astype(int)
 
 
 quadrant_records = {}

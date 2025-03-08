@@ -605,9 +605,9 @@ st.caption("RPI - PEAR's Attempted Ratings Percentage Index, TSR - Team Strength
 
 st.divider()
 
-modeling_stats_copy['WAR'] = modeling_stats_copy['fWAR'].rank(ascending=False)
-modeling_stats_copy['oWAR'] = modeling_stats_copy['oWAR_z'].rank(ascending=False)
-modeling_stats_copy['pWAR'] = modeling_stats_copy['pWAR_z'].rank(ascending=False)
+modeling_stats_copy['WAR'] = modeling_stats_copy['fWAR'].rank(ascending=False).astype(int)
+modeling_stats_copy['oWAR'] = modeling_stats_copy['oWAR_z'].rank(ascending=False).astype(int)
+modeling_stats_copy['pWAR'] = modeling_stats_copy['pWAR_z'].rank(ascending=False).astype(int)
 modeling_stats_copy = modeling_stats_copy.sort_values('WAR')
 st.subheader("Live CBASE Stats")
 with st.container(border=True, height=440):
