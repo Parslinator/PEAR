@@ -1090,6 +1090,7 @@ def calculate_resume_quality(group, bubble_team_rating):
             resume_quality += (1-win_prob)
         else:
             resume_quality -= win_prob
+    resume_quality = resume_quality / len(group)
     results.append({"Team": team, "resume_quality": resume_quality})
     return pd.DataFrame(results)
 
