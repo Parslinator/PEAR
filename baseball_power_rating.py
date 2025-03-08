@@ -1201,7 +1201,7 @@ def calculate_net(weights):
     spearman_corr = stats_and_metrics[['NET', 'combined_rank']].corr(method='spearman').iloc[0,1]
 
     return -spearman_corr
-bounds = [(0,1), (0,.1)]  
+bounds = [(0.5,1), (0,.1)]  
 result = differential_evolution(calculate_net, bounds, strategy='best1bin', maxiter=500, tol=1e-4, seed=42)
 optimized_weights = result.x
 print("NET Calculation Weights:")
@@ -1410,6 +1410,7 @@ if now.hour < 15 and now.hour > 10:
         ax.set_title(f"#{i+1} {team}", fontsize=8, fontweight='bold')
         ax.axis('off')
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/NET/net_{formatted_date}.png", bbox_inches='tight')
+    print('NET Done')
 
     top_25 = stats_and_metrics.sort_values('RQI').reset_index(drop=True)[0:25]
     fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
@@ -1434,6 +1435,7 @@ if now.hour < 15 and now.hour > 10:
         ax.set_title(f"#{i+1} {team}", fontsize=8, fontweight='bold')
         ax.axis('off')
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/RQI/rqi_{formatted_date}.png", bbox_inches='tight')
+    print('RQI Done')
 
     top_25 = stats_and_metrics.sort_values('PRR').reset_index(drop=True)[0:25]
     fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
@@ -1458,6 +1460,7 @@ if now.hour < 15 and now.hour > 10:
         ax.set_title(f"#{i+1} {team}", fontsize=8, fontweight='bold')
         ax.axis('off')
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/PRR/prr_{formatted_date}.png", bbox_inches='tight')
+    print('PRR Done')
 
     top_25 = stats_and_metrics.sort_values('RPI').reset_index(drop=True)[0:25]
     fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
@@ -1482,6 +1485,7 @@ if now.hour < 15 and now.hour > 10:
         ax.set_title(f"#{i+1} {team}", fontsize=8, fontweight='bold')
         ax.axis('off')
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/RPI/rpi_{formatted_date}.png", bbox_inches='tight')
+    print('RPI Done')
 
     automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
     at_large = stats_and_metrics.drop(automatic_qualifiers.index)
@@ -1562,7 +1566,8 @@ if now.hour < 15 and now.hour > 10:
     plt.xlim(-2, max_range + 10)
     plt.ylim(-2, max_range + 10)
     plt.grid(False)
-    plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Ratings_vs_Resume/ratings_vs_ratings_{formatted_date}.png", bbox_inches='tight')
+    plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Ratings_vs_Resume/ratings_vs_resume_{formatted_date}.png", bbox_inches='tight')
+    print('Ratings vs Resume Done')
 
     bubble = pd.concat([last_four_in, next_8_teams, extended_bubble]).sort_values('NET').reset_index(drop=True)[['Team', 'NET', 'NET_Score']]
     last_net_score = bubble[bubble['Team'] == last_team_in]['NET_Score'].values[0]
@@ -1619,6 +1624,7 @@ if now.hour < 15 and now.hour > 10:
     plt.text(-max_abs_value, -1, "@PEARatings", ha='left', fontsize = 12)
 
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Team_In/last_team_in_{formatted_date}.png", bbox_inches='tight')
+    print('Last Team In Done')
 
     hosting = stats_and_metrics[0:24][['Team', 'NET', 'NET_Score']]
     last_host_score = hosting[hosting['NET'] == 16]['NET_Score'].values[0]
@@ -1673,6 +1679,7 @@ if now.hour < 15 and now.hour > 10:
     ax.set_title("NET Score Distance from Last Host Seed", fontsize = 16)
 
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Host/last_host_{formatted_date}.png", bbox_inches='tight')
+    print('Last Host Seed Done')
 
     automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
     at_large = stats_and_metrics.drop(automatic_qualifiers.index)
@@ -1717,3 +1724,4 @@ if now.hour < 15 and now.hour > 10:
     plt.text(1.49, -0.25, "* Denotes Automatic Qualifier", fontsize=20, ha='right')
     plt.text(1.49, 1.22, "@PEARating", ha='right', fontsize=24, fontweight='bold')
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Tournament/tournament_{formatted_date}.png", bbox_inches='tight')
+    print('Tournament Done')
