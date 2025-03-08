@@ -1169,9 +1169,9 @@ stats_and_metrics = stats_and_metrics.sort_values('WAB').reset_index(drop=True)
 
 stats_and_metrics['AVG'] = round(stats_and_metrics[['KPI', 'WAB', 'SOR']].mean(axis=1),1)
 stats_and_metrics['Resume'] = stats_and_metrics['AVG'].rank(method='min').astype(int)
-stats_and_metrics = stats_and_metrics.sort_values('Rating').reset_index(drop=True)
+stats_and_metrics = stats_and_metrics.sort_values('Resume').reset_index(drop=True)
 
-bubble_team_rating = stats_and_metrics.loc[15, 'Rating']
+bubble_team_rating = stats_and_metrics.loc[31, 'Rating']
 resume_quality = completed_schedule.groupby('Team').apply(calculate_resume_quality, bubble_team_rating).reset_index(drop=True)
 resume_quality['RQI'] = resume_quality['resume_quality'].rank(method='min', ascending=False).astype(int)
 resume_quality = resume_quality.sort_values('RQI').reset_index(drop=True)
@@ -1185,10 +1185,10 @@ stats_and_metrics["Norm_RPI"] = (stats_and_metrics["RPI_Score"] - stats_and_metr
 stats_and_metrics["Norm_SOS"] = 1 - (stats_and_metrics["avg_expected_wins"] - stats_and_metrics["avg_expected_wins"].min()) / (stats_and_metrics["avg_expected_wins"].max() - stats_and_metrics["avg_expected_wins"].min())  # Inverted
 
 def calculate_net(weights):
-    w_rating, w_rqi = weights
-    w_sos = 1 - (w_rating + w_rqi)
+    w_rating, w_sos = weights
+    w_rqi = 1 - (w_rating + w_sos)
     
-    if w_sos < 0 or w_sos > 1:
+    if w_rqi < 0 or w_rqi > 1:
         return float('inf')
 
     stats_and_metrics['NET_Score'] = (
@@ -1201,16 +1201,16 @@ def calculate_net(weights):
     spearman_corr = stats_and_metrics[['NET', 'combined_rank']].corr(method='spearman').iloc[0,1]
 
     return -spearman_corr
-bounds = [(0,1), (0,1)]  
+bounds = [(0,1), (0,.1)]  
 result = differential_evolution(calculate_net, bounds, strategy='best1bin', maxiter=500, tol=1e-4, seed=42)
 optimized_weights = result.x
 print("NET Calculation Weights:")
 print("------------------------")
 print(f"Rating: {optimized_weights[0]}")
-print(f"RQI: {optimized_weights[1]}")
-print(f"SOS: {1 - (optimized_weights[0] + optimized_weights[1])}")
-adj_rqi_weight = (optimized_weights[1]) / ((1 - (optimized_weights[0] + optimized_weights[1])) + (optimized_weights[1]))
-adj_sos_weight = (1 - (optimized_weights[0] + optimized_weights[1])) / ((1 - (optimized_weights[0] + optimized_weights[1])) + (optimized_weights[1]))
+print(f"RQI: {1 - (optimized_weights[0] + optimized_weights[1])}")
+print(f"SOS: {optimized_weights[1]}")
+adj_sos_weight = (optimized_weights[1]) / ((1 - (optimized_weights[0] + optimized_weights[1])) + (optimized_weights[1]))
+adj_rqi_weight = (1 - (optimized_weights[0] + optimized_weights[1])) / ((1 - (optimized_weights[0] + optimized_weights[1])) + (optimized_weights[1]))
 stats_and_metrics['Norm_Resume'] = adj_rqi_weight * stats_and_metrics['Norm_RQI'] + adj_sos_weight * stats_and_metrics['Norm_SOS']
 stats_and_metrics['aRQI'] = stats_and_metrics['Norm_Resume'].rank(ascending=False).astype(int)
 
