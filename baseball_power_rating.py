@@ -1169,7 +1169,7 @@ stats_and_metrics = stats_and_metrics.sort_values('WAB').reset_index(drop=True)
 
 stats_and_metrics['AVG'] = round(stats_and_metrics[['KPI', 'WAB', 'SOR']].mean(axis=1),1)
 stats_and_metrics['Resume'] = stats_and_metrics['AVG'].rank(method='min').astype(int)
-stats_and_metrics = stats_and_metrics.sort_values('Resume').reset_index(drop=True)
+stats_and_metrics = stats_and_metrics.sort_values('Rating').reset_index(drop=True)
 
 bubble_team_rating = stats_and_metrics.loc[15, 'Rating']
 resume_quality = completed_schedule.groupby('Team').apply(calculate_resume_quality, bubble_team_rating).reset_index(drop=True)
