@@ -1529,17 +1529,17 @@ if now.hour < 20 and now.hour > 10:
         if team in last_four_in['Team'].values:
             circle = plt.Circle((x, y), logo_size, color='#2ECC71', fill=True, alpha=0.3, linewidth=2)
             ax.add_patch(circle)
-            ax.text(x, y + logo_size, above, fontsize=10, fontweight='bold', ha='center')
+            ax.text(x, y + logo_size, above, fontsize=14, fontweight='bold', ha='center')
 
         if team in next_8_teams['Team'].values:
             circle = plt.Circle((x, y), logo_size, color='#F39C12', fill=True, alpha=0.3, linewidth=2)
             ax.add_patch(circle)
-            ax.text(x, y + logo_size, above, fontsize=10, fontweight='bold', ha='center')
+            ax.text(x, y + logo_size, above, fontsize=14, fontweight='bold', ha='center')
 
         if team in extended_bubble['Team'].values:
             circle = plt.Circle((x, y), logo_size, color='#E74C3C', fill=True, alpha=0.3, linewidth=2)
             ax.add_patch(circle)
-            ax.text(x, y + logo_size, above, fontsize=10, fontweight='bold', ha='center')
+            ax.text(x, y + logo_size, above, fontsize=14, fontweight='bold', ha='center')
 
 
     if all_at_large_teams['PRR'].max() > all_at_large_teams['aRQI'].max():
@@ -1547,23 +1547,23 @@ if now.hour < 20 and now.hour > 10:
     else:
         max_range = all_at_large_teams['aRQI'].max()
 
-    height = max_range
-    plt.text(max_range-7, height + 4, "Automatic Qualifiers", ha='center', fontweight='bold', fontsize = 14)
+    height = max_range + 4
+    plt.text(max_range+22, height + 3, "Automatic Qualifiers", ha='center', fontweight='bold', fontsize = 14)
     for i in range(len(sorted_aqs)):
         team = sorted_aqs.loc[i, 'Team']
         conference = sorted_aqs.loc[i, 'Conference']
-        plt.text(max_range-7, height, f"{team}", ha='center', fontsize=12)
-        height = height - 4
+        plt.text(max_range+22, height, f"{team}", ha='center', fontsize=12)
+        height = height - 3
 
     ax.set_xlabel('Team Strength Rank', fontsize = 16)
     ax.set_ylabel('Adjusted Resume Rank', fontsize = 16)
     # ax.set_title('At Large Ratings vs. Adjusted Resume', fontweight='bold', fontsize=14)
     plt.text(0, max_range + 15, "At Large Team Strength vs. Adjusted Resume", ha='left', fontsize = 20, fontweight = 'bold')
     plt.text(0, max_range + 12, "Automatic Qualifiers Removed, Bubble Teams Highlighted", fontsize = 12)
-    plt.text(max_range - 7, max_range + 13.5, "@PEARatings", ha='center', fontsize=16, fontweight='bold')
-    plt.text(max_range + 7, -12, f"Projected At Large Bids ONLY (Based on PEAR NET Rankings)", ha='right', fontsize=12)
-    plt.text(max_range + 7, -16, f"Green - Last 8 In, Orange - First 8 Out, Red - Next 8 Out", ha='right', fontsize=12)
-    plt.text(max_range + 7, -20, f"Value indicates distance from being the last team in", ha='right', fontsize=12)
+    plt.text(max_range + 22, max_range + 13.5, "@PEARatings", ha='center', fontsize=20, fontweight='bold')
+    plt.text(max_range + 7, max_range + 7, f"Projected At Large Bids ONLY (Based on PEAR NET Rankings)", ha='right', fontsize=12)
+    plt.text(max_range + 7, max_range + 4, f"Green - Last 8 In, Orange - First 8 Out, Red - Next 8 Out", ha='right', fontsize=12)
+    plt.text(max_range + 7, max_range + 1, f"Value indicates distance from being the last team in", ha='right', fontsize=12)
     plt.xlim(-2, max_range + 10)
     plt.ylim(-2, max_range + 10)
     plt.grid(False)
