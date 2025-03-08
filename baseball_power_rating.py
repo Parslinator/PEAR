@@ -1372,7 +1372,7 @@ central_time_zone = pytz.timezone('US/Central')
 now = datetime.datetime.now(central_time_zone)
 
 # Check if it's Monday and after 10:00 AM and before 3:00 PM
-if now.hour < 15 and now.hour > 10:
+if now.hour < 20 and now.hour > 10:
     from bs4 import BeautifulSoup # type: ignore
     import pandas as pd # type: ignore
     import requests # type: ignore
@@ -1673,11 +1673,10 @@ if now.hour < 15 and now.hour > 10:
                                         frameon=False)
             ax.add_artist(ab)
 
-    ax.set_xlabel("@PEARatings")
-    # ax.set_xlabel("")
+    ax.set_xlabel("")
     ax.set_ylabel("")
-    ax.set_title("NET Score Distance from Last Host Seed", fontsize = 16)
-
+    plt.text(-max_abs_value, -2, "NET Score Distance From Last Host Seed", fontsize=20, ha='left', fontweight='bold')
+    plt.text(-max_abs_value, -1, "@PEARatings", ha='left', fontsize = 12)
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Host/last_host_{formatted_date}.png", bbox_inches='tight')
     print('Last Host Seed Done')
 
