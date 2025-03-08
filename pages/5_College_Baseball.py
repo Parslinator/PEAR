@@ -605,10 +605,14 @@ st.caption("RPI - PEAR's Attempted Ratings Percentage Index, TSR - Team Strength
 
 st.divider()
 
+modeling_stats_copy['WAR'] = modeling_stats_copy['fWAR'].rank(ascending=False)
+modeling_stats_copy['oWAR'] = modeling_stats_copy['oWAR_z'].rank(ascending=False)
+modeling_stats_copy['pWAR'] = modeling_stats_copy['pWAR_z'].rank(ascending=False)
+modeling_stats_copy = modeling_stats_copy.sort_values('WAR')
 st.subheader("Live CBASE Stats")
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats_copy[['fWAR', 'oWAR_z', 'pWAR_z', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
-st.caption("fWAR - Combined Offense and Pitching, oWAR_z - Normalized Offensive War, pWAR_z - Normalized Pitching War, PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
+    st.dataframe(modeling_stats_copy[['WAR', 'oWAR', 'pWAR', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
+st.caption("WAR - Team WAR Rank, oWAR - Team Offensive WAR Rank, pWAR - Team Pitching WAR Rank, PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
 
 st.divider()
 
