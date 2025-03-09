@@ -1384,7 +1384,8 @@ if now.hour < 15 and now.hour > 10:
     import seaborn as sns # type: ignore
     import matplotlib.offsetbox as offsetbox # type: ignore
     import matplotlib.font_manager as fm # type: ignore
-    plt.rcParams['font.family'] = 'Trebuchet MS'
+    custom_font = fm.FontProperties(fname="./trebuc.ttf")
+    plt.rcParams['font.family'] = custom_font.get_name()
 
     BASE_URL = "https://www.warrennolan.com"
 

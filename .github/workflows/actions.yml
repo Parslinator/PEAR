@@ -27,15 +27,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Install Microsoft Fonts
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ttf-mscorefonts-installer
-          fc-cache -fv  # Refresh font cache
-
-      - name: Verify Installed Fonts
-        run: fc-list | grep "Trebuchet"
-
       - name: Run Python Script
         run: python baseball_power_rating.py
 
