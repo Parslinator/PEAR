@@ -30,8 +30,8 @@ jobs:
       - name: Install Fonts
         run: |
           mkdir -p ~/.fonts
-          cp fonts/trebuc.ttf ~/.fonts/
-          cp fonts/Trebuchet\ MS\ Bold.ttf ~/.fonts/
+          cp ./trebuc.ttf ~/.fonts/
+          cp ./Trebuchet\ MS\ Bold.ttf ~/.fonts/
           fc-cache -f -v  # Rebuild font cache
           fc-list | grep "Trebuchet"  # Debug: Check if fonts are available
 
