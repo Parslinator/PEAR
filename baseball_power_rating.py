@@ -1753,3 +1753,71 @@ if now.hour < 15 and now.hour > 10:
     plt.figtext(0.13, 0.03, f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}", ha='left', fontsize=14)
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Tournament/tournament_{formatted_date}.png", bbox_inches='tight')
     print('Tournament Done')
+
+    from matplotlib.ticker import MaxNLocator
+    def net_tracker(X, Y):
+        csv_files = [f for f in os.listdir(folder_path) if f.startswith("baseball_") and f.endswith(".csv")]
+        def extract_date(filename):
+            try:
+                return datetime.strptime(filename.replace("baseball_", "").replace(".csv", ""), "%m_%d_%Y")
+            except ValueError:
+                return None
+            
+        date_files = {extract_date(f): f for f in csv_files if extract_date(f) is not None}
+        sorted_date_files = sorted(date_files.items(), key=lambda x: x[0], reverse=True)
+        latest_files = sorted_date_files[:X]
+        stats_and_metrics_list = []
+        for _, file_name in latest_files:
+            file_path = os.path.join(folder_path, file_name)
+            date_of_file = extract_date(file_name).strftime('%Y-%m-%d')  # Get date in 'YYYY-MM-DD' format
+            
+            # Read the CSV and add the "Date" column
+            df = pd.read_csv(file_path)
+            df['Date'] = date_of_file  # Add a column with the date of the file
+            stats_and_metrics_list.append(df)
+        stats_and_metrics_combined = pd.concat(stats_and_metrics_list, ignore_index=True)
+        most_recent_csv = stats_and_metrics_combined[stats_and_metrics_combined['Date'] == stats_and_metrics_combined['Date'].max()]
+        top_teams = most_recent_csv.nsmallest(Y, 'NET')['Team'].tolist()
+        filtered_data = stats_and_metrics_combined[stats_and_metrics_combined['Team'].isin(top_teams)]
+        filtered_data['Date'] = pd.to_datetime(filtered_data['Date']).dt.strftime('%m-%d')
+        earliest = filtered_data['Date'].min()
+        latest = filtered_data['Date'].max()
+        pivoted_table = filtered_data.pivot_table(index='Team', columns='Date', values='NET', aggfunc='first')
+        pivoted_table = pivoted_table[sorted(pivoted_table.columns)]
+        pivoted_table = pivoted_table.reset_index()
+        pivoted_table = pivoted_table.sort_values(by=pivoted_table.columns[-1], ascending=True)
+        import math
+        num_rows = math.ceil(math.sqrt(Y))
+        num_cols = math.ceil(math.sqrt(Y))
+        fig, axes = plt.subplots(num_rows, num_cols, figsize=(15, 12))
+        fig.patch.set_facecolor('#CECEB2')
+        axes = axes.flatten()
+        plt.text(0, 1.5, f"Top {Y} in PEAR NET Rankings", fontsize = 32, fontweight='bold', ha='left', transform=axes[0].transAxes)
+        plt.text(0, 1.34, f"Past {X} Days - {earliest} to {latest}", fontsize = 16, ha='left', transform=axes[0].transAxes)
+        plt.text(0, 1.19, f"@PEARatings", fontsize = 16, ha='left', fontweight='bold', transform=axes[0].transAxes)
+        min_net = 0
+        max_net = pivoted_table.drop(columns='Team').max().max() + 1
+
+        for i, (team, ax) in enumerate(zip(pivoted_table['Team'], axes)):
+            team_data = pivoted_table[pivoted_table['Team'] == team].drop(columns='Team').T  # Drop 'Team' column and transpose
+            team_data.columns = [team]  # Set the team name as the column header
+            last_value = team_data.iloc[0, 0]
+            first_value = team_data.iloc[-1, 0]
+            
+            # Determine the color of the line based on trend
+            line_color = "#2ca02c" if last_value > first_value else "#d62728"
+
+            ax.plot(team_data.index, team_data[team], marker='o', color=line_color)
+            ax.text(team_data.index[0], last_value + 1.2, f"{int(last_value)}", 
+                fontsize=10, fontweight='bold', ha='center', color='black')
+            ax.text(team_data.index[-1], first_value + 1.2, f"{int(first_value)}", 
+                fontsize=10, fontweight='bold', ha='center', color='black')
+            ax.set_title(f"#{i+1} {team}", fontweight='bold', fontsize=16)
+            ax.tick_params(axis='x', rotation=45)  # Rotate x-axis labels for readability
+            ax.set_facecolor('#CECEB2')
+            ax.set_xticks("")
+            ax.set_ylim(min_net, max_net)
+            ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.tight_layout()
+        plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Over_Time/over_time_{formatted_date}.png", bbox_inches='tight')
+    net_tracker(14,16)
