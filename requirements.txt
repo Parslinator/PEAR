@@ -6,7 +6,7 @@ numpy
 altair
 scikit-learn
 datetime
-matplotlib
+matplotlib==3.9.2
 requests
 IPython
 seaborn
