@@ -1549,22 +1549,22 @@ if now.hour < 15 and now.hour > 10:
         max_range = all_at_large_teams['aRQI'].max()
 
     height = max_range + 4
-    plt.text(max_range+22, height + 3, "Automatic Qualifiers", ha='center', fontweight='bold', fontsize = 14)
+    plt.text(max_range+24, height + 3, "Automatic Qualifiers", ha='center', fontweight='bold', fontsize = 18)
     for i in range(len(sorted_aqs)):
         team = sorted_aqs.loc[i, 'Team']
         conference = sorted_aqs.loc[i, 'Conference']
-        plt.text(max_range+22, height, f"{team}", ha='center', fontsize=12)
+        plt.text(max_range+24, height, f"{team}", ha='center', fontsize=16)
         height = height - 3
 
     ax.set_xlabel('Team Strength Rank', fontsize = 16)
     ax.set_ylabel('Adjusted Resume Rank', fontsize = 16)
     # ax.set_title('At Large Ratings vs. Adjusted Resume', fontweight='bold', fontsize=14)
-    plt.text(0, max_range + 15, "At Large Team Strength vs. Adjusted Resume", ha='left', fontsize = 20, fontweight = 'bold')
-    plt.text(0, max_range + 12, "Automatic Qualifiers Removed, Bubble Teams Highlighted", fontsize = 12)
-    plt.text(max_range + 22, max_range + 13.5, "@PEARatings", ha='center', fontsize=20, fontweight='bold')
-    plt.text(max_range + 7, max_range + 7, f"Projected At Large Bids ONLY (Based on PEAR NET Rankings)", ha='right', fontsize=12)
-    plt.text(max_range + 7, max_range + 4, f"Green - Last 8 In, Orange - First 8 Out, Red - Next 8 Out", ha='right', fontsize=12)
-    plt.text(max_range + 7, max_range + 1, f"Value indicates distance from being the last team in", ha='right', fontsize=12)
+    plt.text(0, max_range + 20, "At Large Team Strength vs. Adjusted Resume", ha='left', fontsize = 32, fontweight = 'bold')
+    plt.text(0, max_range + 16, "Automatic Qualifiers Removed, Bubble Teams Highlighted", fontsize = 24)
+    plt.text(0, max_range + 12, "@PEARatings", ha='left', fontsize=24, fontweight='bold')
+    plt.text(max_range + 8, max_range + 7, f"Projected At Large Bids ONLY (Based on PEAR NET Rankings)", ha='right', fontsize=16)
+    plt.text(max_range + 8, max_range + 4, f"Green - Last 8 In, Orange - First 8 Out, Red - Next 8 Out", ha='right', fontsize=16)
+    plt.text(max_range + 8, max_range + 1, f"Value indicates distance from being the last team in", ha='right', fontsize=16)
     plt.xlim(-2, max_range + 10)
     plt.ylim(-2, max_range + 10)
     plt.grid(False)
@@ -1745,9 +1745,9 @@ if now.hour < 15 and now.hour > 10:
     tab.col_label_row.set_facecolor('#CECEB2')
     tab.columns["Host"].set_facecolor('#CECEB2')
     # plt.figtext(0.89, 0.09, "* Indicates an automatic qualifier", ha="right", fontsize=14, fontstyle='italic')
-    plt.figtext(0.13, 0.915, "PEAR Projected Regionals", ha='left', fontsize=32, fontweight='bold')
-    plt.figtext(0.13, 0.885, "No Considerations For Conference or Regional Proximity", ha='left', fontsize=16)
-    plt.figtext(0.89, 0.885, "@PEARatings", ha='right', fontsize=16, fontweight='bold')
+    plt.figtext(0.13, 0.945, "PEAR Projected Tournament Regionals", ha='left', fontsize=32, fontweight='bold')
+    plt.figtext(0.13, 0.915, "No Considerations For Conference or Regional Proximity", ha='left', fontsize=16)
+    plt.figtext(0.13, 0.885, "@PEARatings", ha='left', fontsize=16, fontweight='bold')
     plt.figtext(0.13, 0.09, f"Last Four In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}", ha='left', fontsize=14)
     plt.figtext(0.13, 0.06, f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}", ha='left', fontsize=14)
     plt.figtext(0.13, 0.03, f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}", ha='left', fontsize=14)
