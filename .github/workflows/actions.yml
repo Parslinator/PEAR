@@ -27,6 +27,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Install Fonts
+        run: |
+          mkdir -p ~/.fonts
+          cp ./trebuc.ttf ~/.fonts/
+          fc-cache -f -v  # Rebuild font cache
+          fc-list | grep Trebuchet  # Debug: Check if font is available
+
       - name: Run Python Script
         run: python baseball_power_rating.py
 
