@@ -1696,32 +1696,59 @@ if now.hour < 15 and now.hour > 10:
     formatted_df = formatted_df.reset_index()
     formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
     formatted_df.index = formatted_df.index + 1
+    from plottable import Table # type: ignore
+    from plottable.plots import image, circled_image # type: ignore
+    from plottable import ColumnDefinition # type: ignore
+    # Create a set of automatic qualifier teams for faster lookup
     automatic_teams = set(automatic_qualifiers["Team"])
+
+    # Modify the DataFrame by appending '*' to teams in automatic qualifiers
     formatted_df_with_asterisk = formatted_df.copy()
-    for col in formatted_df_with_asterisk.columns[1:]:  # Exclude index column
+    for col in formatted_df_with_asterisk.columns[0:]:  # Exclude index column
         formatted_df_with_asterisk[col] = formatted_df_with_asterisk[col].apply(lambda x: f"{x}*" if x in automatic_teams else x)
-    plt.figure(figsize=(12, 8), facecolor='#CECEB2')
-    ax = plt.gca()
-    ax.axis('off')
-    table = ax.table(cellText=formatted_df_with_asterisk.iloc[:, 1:].values,
-                    rowLabels=formatted_df_with_asterisk.index,
-                    colLabels=["Host", "2 Seed", "3 Seed", "4 Seed"],
-                    loc='center', cellLoc='center', colLoc='center')
-    table.auto_set_font_size(False)
-    table.set_fontsize(20)
-    table.scale(2, 3)
-    for (i, j), cell in table.get_celld().items():
-        cell.set_facecolor('#CECEB2')
-        if i == 0:  # Row label header
-            cell.set_text_props(fontweight='bold')
-        if (j == 0) | (j == -1):  # Column label header
-            cell.set_text_props(fontweight='bold')
-    plt.text(-0.5, 1.28, "PEAR NET Ranking Projected NCAA Tournament", fontsize=36, ha='left', fontweight='bold')
-    plt.text(-0.5, 1.22, "No Consideration For Conference or Regional Proximity", fontsize=24, ha='left', fontweight='bold')
-    plt.text(-0.5, -0.25, f"Last Four In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}", ha='left', fontsize=20)
-    plt.text(-0.5, -0.32, f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}", ha='left', fontsize=20)
-    plt.text(-0.5, -0.39, f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}", ha='left', fontsize=20)
-    plt.text(1.49, -0.25, "* Denotes Automatic Qualifier", fontsize=20, ha='right')
-    plt.text(1.49, 1.22, "@PEARatings", ha='right', fontsize=24, fontweight='bold')
+    formatted_df_with_asterisk['Host'] = formatted_df_with_asterisk.index.to_series().apply(lambda i: f"#{i} {formatted_df_with_asterisk.loc[i, '1 Seed']}")
+    make_table = formatted_df_with_asterisk[['Host', '2 Seed', '3 Seed', '4 Seed']].set_index('Host')
+
+    # Init a figure 
+    fig, ax = plt.subplots(figsize=(12, 10))
+    fig.patch.set_facecolor('#CECEB2')
+
+    column_definitions = [
+        ColumnDefinition(name='Host', # name of the column to change
+                        title='Host', # new title for the column
+                        textprops={"ha": "center", "weight": "bold", "fontsize": 16}, # properties to apply
+                        ),
+        ColumnDefinition(name='2 Seed', # name of the column to change
+                        title='2 Seed', # new title for the column
+                        textprops={"ha": "center", "fontsize": 16}, # properties to apply
+                        ),
+        ColumnDefinition(name='3 Seed', # name of the column to change
+                        title='3 Seed', # new title for the column
+                        textprops={"ha": "center", "fontsize": 16}, # properties to apply
+                        ),
+        ColumnDefinition(name='4 Seed', # name of the column to change
+                        title='4 Seed', # new title for the column
+                        textprops={"ha": "center", "fontsize": 16}, # properties to apply
+                        )
+    ]
+
+    # Create the table object with the column definitions parameter
+    tab = Table(make_table, column_definitions=column_definitions, footer_divider=True, row_divider_kw={"linewidth": 1})
+
+
+    # Change the color
+    last_four_in_teams = set(last_four_in["Team"])
+    for col in make_table.columns:
+        tab.columns[col].set_facecolor("#CECEB2")
+
+    tab.col_label_row.set_facecolor('#CECEB2')
+    tab.columns["Host"].set_facecolor('#CECEB2')
+    # plt.figtext(0.89, 0.09, "* Indicates an automatic qualifier", ha="right", fontsize=14, fontstyle='italic')
+    plt.figtext(0.13, 0.915, "PEAR Projected NCAA Tournament", ha='left', fontsize=32, fontweight='bold')
+    plt.figtext(0.13, 0.885, "No Considerations For Conference or Regional Proximity", ha='left', fontsize=16)
+    plt.figtext(0.89, 0.885, "@PEARatings", ha='right', fontsize=16, fontweight='bold')
+    plt.figtext(0.13, 0.09, f"Last Four In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}", ha='left', fontsize=14)
+    plt.figtext(0.13, 0.06, f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}", ha='left', fontsize=14)
+    plt.figtext(0.13, 0.03, f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}", ha='left', fontsize=14)
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Tournament/tournament_{formatted_date}.png", bbox_inches='tight')
     print('Tournament Done')
