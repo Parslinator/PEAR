@@ -1744,7 +1744,7 @@ if now.hour < 15 and now.hour > 10:
     tab.col_label_row.set_facecolor('#CECEB2')
     tab.columns["Host"].set_facecolor('#CECEB2')
     # plt.figtext(0.89, 0.09, "* Indicates an automatic qualifier", ha="right", fontsize=14, fontstyle='italic')
-    plt.figtext(0.13, 0.915, "PEAR Projected Tournament Regionals", ha='left', fontsize=32, fontweight='bold')
+    plt.figtext(0.13, 0.915, "PEAR Projected Regionals", ha='left', fontsize=32, fontweight='bold')
     plt.figtext(0.13, 0.885, "No Considerations For Conference or Regional Proximity", ha='left', fontsize=16)
     plt.figtext(0.89, 0.885, "@PEARatings", ha='right', fontsize=16, fontweight='bold')
     plt.figtext(0.13, 0.09, f"Last Four In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}", ha='left', fontsize=14)
