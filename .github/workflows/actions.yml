@@ -30,9 +30,10 @@ jobs:
       - name: Install Fonts
         run: |
           mkdir -p ~/.fonts
-          cp ./trebuc.ttf ~/.fonts/
+          cp fonts/trebuc.ttf ~/.fonts/
+          cp fonts/Trebuchet\ MS\ Bold.ttf ~/.fonts/
           fc-cache -f -v  # Rebuild font cache
-          fc-list | grep Trebuchet  # Debug: Check if font is available
+          fc-list | grep "Trebuchet"  # Debug: Check if fonts are available
 
       - name: Run Python Script
         run: python baseball_power_rating.py
