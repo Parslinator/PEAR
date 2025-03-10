@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup # type: ignore
 import pytz # type: ignore
 import re # type: ignore
 import numpy as np # type: ignore
+from matplotlib.ticker import MaxNLocator # type: ignore
 
 cst = pytz.timezone('America/Chicago')
 formatted_date = datetime.now(cst).strftime('%m_%d_%Y')
@@ -583,6 +584,98 @@ def create_quadrant_table(completed):
     # Return the figure object
     return fig
 
+def team_net_tracker(team):
+    X = 14
+    csv_files = [f for f in os.listdir(folder_path) if f.startswith("baseball_") and f.endswith(".csv")]
+    def extract_date(filename):
+        try:
+            return datetime.strptime(filename.replace("baseball_", "").replace(".csv", ""), "%m_%d_%Y")
+        except ValueError:
+            return None
+        
+    date_files = {extract_date(f): f for f in csv_files if extract_date(f) is not None}
+    sorted_date_files = sorted(date_files.items(), key=lambda x: x[0], reverse=True)
+    latest_files = sorted_date_files[:X]
+    stats_and_metrics_list = []
+    for _, file_name in latest_files:
+        file_path = os.path.join(folder_path, file_name)
+        date_of_file = extract_date(file_name).strftime('%Y-%m-%d')  # Get date in 'YYYY-MM-DD' format
+        
+        # Read the CSV and add the "Date" column
+        df = pd.read_csv(file_path)
+        df['Date'] = date_of_file  # Add a column with the date of the file
+        stats_and_metrics_list.append(df)
+    stats_and_metrics_combined = pd.concat(stats_and_metrics_list, ignore_index=True)
+    # most_recent_csv = stats_and_metrics_combined[stats_and_metrics_combined['Date'] == stats_and_metrics_combined['Date'].max()]
+    filtered_data = stats_and_metrics_combined[stats_and_metrics_combined['Team'] == team]
+    filtered_data['Date'] = pd.to_datetime(filtered_data['Date']).dt.strftime('%m-%d')
+    best_net = filtered_data['NET'].min()
+    worst_net = filtered_data['NET'].max()
+    earliest = filtered_data['Date'].min()
+    latest = filtered_data['Date'].max()
+    pivoted_table = filtered_data.pivot_table(index='Team', columns='Date', values='NET', aggfunc='first')
+    pivoted_table = pivoted_table[sorted(pivoted_table.columns)]
+    pivoted_table = pivoted_table.reset_index()
+    pivoted_table = pivoted_table.sort_values(by=pivoted_table.columns[-1], ascending=True)
+    import math
+    num_rows = 1
+    num_cols = 1
+    fig, ax = plt.subplots(num_rows, num_cols, figsize=(8, 8))  # Single axis instead of array
+    fig.patch.set_facecolor('#CECEB2')
+
+    # Title and subtitles
+    plt.text(0, 1.09, f"{team} NET Ranking", fontsize=32, fontweight='bold', ha='left', transform=ax.transAxes)
+    plt.text(0, 1.05, f"Past {X} Days - {earliest} to {latest}", fontsize=16, ha='left', transform=ax.transAxes)
+    plt.text(0, 1.01, f"@PEARatings", fontsize=16, fontweight='bold', ha='left', transform=ax.transAxes)
+
+    min_net = -3
+    max_net = stats_and_metrics_combined['NET'].max() + 10
+
+    team = pivoted_table['Team'].iloc[0]  # Take the first team
+    team_data = pivoted_table[pivoted_table['Team'] == team].drop(columns='Team').T  # Drop 'Team' column and transpose
+    team_data.columns = [team]  # Set the team name as the column header
+    last_value = team_data.iloc[0, 0]
+    first_value = team_data.iloc[-1, 0]
+
+    # Determine the color of the line based on trend
+    line_color = "#2ca02c" if last_value > first_value else "#d62728"
+    best_net_date = filtered_data.loc[filtered_data['NET'] == best_net, 'Date'].values[0]
+    worst_net_date = filtered_data.loc[filtered_data['NET'] == worst_net, 'Date'].values[0]
+    best_net_index = list(team_data.index).index(best_net_date)
+    worst_net_index = list(team_data.index).index(worst_net_date)
+
+    # Annotate best_net
+    ax.text(best_net_index, best_net + 10, f"{int(best_net)}", 
+            fontsize=14, fontweight='bold', ha='center', color='#2ca02c', 
+            bbox=dict(facecolor='#CECEB2', edgecolor='#2ca02c', boxstyle='round,pad=0.3'))
+
+    # Annotate worst_net
+    ax.text(worst_net_index, worst_net + 10, f"{int(worst_net)}", 
+            fontsize=14, fontweight='bold', ha='center', color='#d62728', 
+            bbox=dict(facecolor='#CECEB2', edgecolor='#d62728', boxstyle='round,pad=0.3'))
+
+    # Annotate first_value if it is different from both best_net and worst_net
+    if first_value not in [best_net, worst_net]:
+        ax.text(team_data.index[-1], first_value + 5, f"{int(first_value)}", 
+                fontsize=16, fontweight='bold', ha='center', color='black')
+
+    # Annotate last_value if it is different from both best_net and worst_net
+    if last_value not in [best_net, worst_net]:
+        ax.text(team_data.index[0], last_value + 5, f"{int(last_value)}", 
+                fontsize=16, fontweight='bold', ha='center', color='black')
+
+    # Plotting
+    ax.plot(team_data.index, team_data[team], marker='o', color=line_color, linewidth=5, markersize=10, markeredgecolor='black', markeredgewidth=1.5)
+    ax.set_title(f"#{int(first_value)} {team}", fontweight='bold', fontsize=16)
+    ax.tick_params(axis='x', rotation=45)  # Rotate x-axis labels for readability
+    ax.set_facecolor('#CECEB2')
+    ax.set_xticks([])
+    ax.set_ylim(min_net, max_net)
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+
+    plt.tight_layout()
+    return fig
+
 def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 1.5
 
@@ -667,6 +760,14 @@ with st.form(key='team_schedule'):
         st.caption('PEAR - Negative Value Indicates Favorites, Positive Value Indicates Underdog')
 
 st.divider()
+
+st.subheader("Team NET Changes")
+with st.form(key='net_change'):
+    team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+    net_change = st.form_submit_button("Enter")
+    if net_change:
+        fig = team_net_tracker(team_name)
+        st.pyplot(fig)
 
 comparison_date = comparison_date.strftime("%B %d, %Y")
 st.subheader(f"{comparison_date} Games")
