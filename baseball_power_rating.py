@@ -1761,6 +1761,7 @@ if now.hour < 15 and now.hour > 10:
 
     from matplotlib.ticker import MaxNLocator
     def net_tracker(X, Y):
+        folder_path = f"./PEAR/PEAR Baseball/y{current_season}/Data"
         csv_files = [f for f in os.listdir(folder_path) if f.startswith("baseball_") and f.endswith(".csv")]
         def extract_date(filename):
             try:
