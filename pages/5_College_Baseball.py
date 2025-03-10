@@ -624,9 +624,9 @@ def team_net_tracker(team):
     fig.patch.set_facecolor('#CECEB2')
 
     # Title and subtitles
-    plt.text(0, 1.09, f"{team} NET Ranking", fontsize=32, fontweight='bold', ha='left', transform=ax.transAxes)
-    plt.text(0, 1.05, f"Past {X} Days - {earliest} to {latest}", fontsize=16, ha='left', transform=ax.transAxes)
-    plt.text(0, 1.01, f"@PEARatings", fontsize=16, fontweight='bold', ha='left', transform=ax.transAxes)
+    plt.text(0, 1.09, f"{team} NET Ranking", fontsize=24, fontweight='bold', ha='left', transform=ax.transAxes)
+    plt.text(0, 1.05, f"Past {X} Days - {earliest} to {latest}", fontsize=14, ha='left', transform=ax.transAxes)
+    plt.text(0, 1.01, f"@PEARatings", fontsize=14, fontweight='bold', ha='left', transform=ax.transAxes)
 
     min_net = -3
     max_net = stats_and_metrics_combined['NET'].max() + 10
@@ -666,7 +666,7 @@ def team_net_tracker(team):
 
     # Plotting
     ax.plot(team_data.index, team_data[team], marker='o', color=line_color, linewidth=5, markersize=10, markeredgecolor='black', markeredgewidth=1.5)
-    ax.set_title(f"#{int(first_value)} {team}", fontweight='bold', fontsize=16)
+    ax.set_title(f"#{int(first_value)} {team}", fontweight='bold', fontsize=14)
     ax.tick_params(axis='x', rotation=45)  # Rotate x-axis labels for readability
     ax.set_facecolor('#CECEB2')
     ax.set_xticks([])
