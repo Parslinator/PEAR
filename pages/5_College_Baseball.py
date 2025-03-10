@@ -645,23 +645,23 @@ def team_net_tracker(team):
     worst_net_index = list(team_data.index).index(worst_net_date)
 
     # Annotate best_net
-    ax.text(best_net_index, best_net - 10, f"{int(best_net)}", 
+    ax.text(best_net_index, best_net + 15, f"{int(best_net)}", 
             fontsize=14, fontweight='bold', ha='center', color='#2ca02c', 
             bbox=dict(facecolor='#CECEB2', edgecolor='#2ca02c', boxstyle='round,pad=0.3'))
 
     # Annotate worst_net
-    ax.text(worst_net_index, worst_net - 10, f"{int(worst_net)}", 
+    ax.text(worst_net_index, worst_net + 15, f"{int(worst_net)}", 
             fontsize=14, fontweight='bold', ha='center', color='#d62728', 
             bbox=dict(facecolor='#CECEB2', edgecolor='#d62728', boxstyle='round,pad=0.3'))
 
     # Annotate first_value if it is different from both best_net and worst_net
     if first_value not in [best_net, worst_net]:
-        ax.text(team_data.index[-1], first_value - 5, f"{int(first_value)}", 
+        ax.text(team_data.index[-1], first_value + 15, f"{int(first_value)}", 
                 fontsize=16, fontweight='bold', ha='center', color='black')
 
     # Annotate last_value if it is different from both best_net and worst_net
     if last_value not in [best_net, worst_net]:
-        ax.text(team_data.index[0], last_value - 5, f"{int(last_value)}", 
+        ax.text(team_data.index[0], last_value + 15, f"{int(last_value)}", 
                 fontsize=16, fontweight='bold', ha='center', color='black')
 
     # Plotting
