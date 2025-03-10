@@ -12,6 +12,7 @@ from matplotlib.ticker import MaxNLocator # type: ignore
 import matplotlib.font_manager as fm
 font_prop = fm.FontProperties(fname="./trebuc.ttf")
 fm.fontManager.addfont("./trebuc.ttf")
+fm.fontManager.addfont("./Trebuchet MS Bold.ttf")
 plt.rcParams['font.family'] = font_prop.get_name()
 
 cst = pytz.timezone('America/Chicago')
