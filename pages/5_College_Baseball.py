@@ -620,7 +620,7 @@ def team_net_tracker(team):
     import math
     num_rows = 1
     num_cols = 1
-    fig, ax = plt.subplots(num_rows, num_cols, figsize=(8, 8))  # Single axis instead of array
+    fig, ax = plt.subplots(num_rows, num_cols, figsize=(4, 4))  # Single axis instead of array
     fig.patch.set_facecolor('#CECEB2')
 
     # Title and subtitles
