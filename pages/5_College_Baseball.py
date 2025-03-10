@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup # type: ignore
 import pytz # type: ignore
 import re # type: ignore
 import numpy as np # type: ignore
+import matplotlib.pyplot as plt # type: ignore
 from matplotlib.ticker import MaxNLocator # type: ignore
 import matplotlib.font_manager as fm
 custom_font = fm.FontProperties(fname="./trebuc.ttf")
