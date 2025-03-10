@@ -608,7 +608,7 @@ def team_net_tracker(team):
     stats_and_metrics_combined = pd.concat(stats_and_metrics_list, ignore_index=True)
     # most_recent_csv = stats_and_metrics_combined[stats_and_metrics_combined['Date'] == stats_and_metrics_combined['Date'].max()]
     filtered_data = stats_and_metrics_combined[stats_and_metrics_combined['Team'] == team]
-    filtered_data['Date'] = pd.to_datetime(filtered_data['Date']).dt.strftime('%m-%d')
+    filtered_data['Date'] = pd.to_datetime(filtered_data['Date']).dt.strftime('%m/%d')
     best_net = filtered_data['NET'].min()
     worst_net = filtered_data['NET'].max()
     earliest = filtered_data['Date'].min()
