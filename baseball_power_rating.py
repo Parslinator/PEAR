@@ -1384,8 +1384,13 @@ if now.hour < 15 and now.hour > 10:
     import seaborn as sns # type: ignore
     import matplotlib.offsetbox as offsetbox # type: ignore
     import matplotlib.font_manager as fm # type: ignore
+    from datetime import datetime, timedelta
     custom_font = fm.FontProperties(fname="./trebuc.ttf")
     plt.rcParams['font.family'] = custom_font.get_name()
+    week_1_start = datetime(2025, 2, 10)
+    today = datetime.today()
+    days_since_start = (today - week_1_start).days
+    current_week = (days_since_start // 7) + 1  # Each Monday starts a new week
 
     BASE_URL = "https://www.warrennolan.com"
 
@@ -1393,7 +1398,7 @@ if now.hour < 15 and now.hour > 10:
     fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Week 3 CBASE PEAR", fontsize=20, fontweight='bold', color='black')
+    plt.suptitle(f"Week {current_week} CBASE PEAR", fontsize=20, fontweight='bold', color='black')
     fig.text(0.5, 0.92, "NET Ranking Incorporating Team Strength and Resume", fontsize=10, ha='center', color='black')
     fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
 
@@ -1418,7 +1423,7 @@ if now.hour < 15 and now.hour > 10:
     fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Week 3 CBASE Resume Quality", fontsize=20, fontweight='bold', color='black')
+    plt.suptitle(f"Week {current_week} CBASE Resume Quality", fontsize=20, fontweight='bold', color='black')
     fig.text(0.5, 0.92, "Team Performance Relative to Strength of Schedule", fontsize=10, ha='center', color='black')
     fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
 
@@ -1443,7 +1448,7 @@ if now.hour < 15 and now.hour > 10:
     fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Week 3 CBASE Team Strength", fontsize=20, fontweight='bold', color='black')
+    plt.suptitle(f"Week {current_week} CBASE Team Strength", fontsize=20, fontweight='bold', color='black')
     fig.text(0.5, 0.92, "Team Rating Based on Team Stats", fontsize=10, ha='center', color='black')
     fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
 
@@ -1468,7 +1473,7 @@ if now.hour < 15 and now.hour > 10:
     fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Week 3 CBASE RPI", fontsize=20, fontweight='bold', color='black')
+    plt.suptitle(f"Week {current_week} CBASE RPI", fontsize=20, fontweight='bold', color='black')
     fig.text(0.5, 0.92, "PEAR's RPI Rankings", fontsize=10, ha='center', color='black')
     fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
 
@@ -1560,7 +1565,7 @@ if now.hour < 15 and now.hour > 10:
     ax.set_ylabel('Adjusted Resume Rank', fontsize = 16)
     # ax.set_title('At Large Ratings vs. Adjusted Resume', fontweight='bold', fontsize=14)
     plt.text(0, max_range + 20, "At Large Team Strength vs. Adjusted Resume", ha='left', fontsize = 32, fontweight = 'bold')
-    plt.text(0, max_range + 16, "Automatic Qualifiers Removed, Bubble Teams Highlighted", fontsize = 24)
+    plt.text(0, max_range + 16, f"Automatic Qualifiers Removed, Bubble Teams Highlighted - Through {(today - timedelta(days=1)).strftime('%m-%d')}", fontsize = 24)
     plt.text(0, max_range + 12, "@PEARatings", ha='left', fontsize=24, fontweight='bold')
     plt.text(max_range + 8, max_range + 7, f"Projected At Large Bids ONLY (Based on PEAR NET Rankings)", ha='right', fontsize=16)
     plt.text(max_range + 8, max_range + 4, f"Green - Last 8 In, Orange - First 8 Out, Red - Next 8 Out", ha='right', fontsize=16)
@@ -1622,7 +1627,7 @@ if now.hour < 15 and now.hour > 10:
     # ax.set_xlabel("")
     ax.set_ylabel("")
     # ax.set_title("NET Score Distance from Last Team In", fontsize = 16)
-    plt.text(-max_abs_value, -2, "NET Score Distance From Last Team In", fontsize=20, ha='left', fontweight='bold')
+    plt.text(-max_abs_value, -2, f"NET Score Distance From Last Team In - Through {(today - timedelta(days=1)).strftime('%m-%d')}", fontsize=20, ha='left', fontweight='bold')
     plt.text(-max_abs_value, -1, "@PEARatings", ha='left', fontsize = 12)
 
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Team_In/last_team_in_{formatted_date}.png", bbox_inches='tight')
@@ -1677,7 +1682,7 @@ if now.hour < 15 and now.hour > 10:
 
     ax.set_xlabel("")
     ax.set_ylabel("")
-    plt.text(-max_abs_value, -2, "NET Score Distance From Last Host Seed", fontsize=20, ha='left', fontweight='bold')
+    plt.text(-max_abs_value, -2, f"NET Score Distance From Last Host Seed - Through {(today - timedelta(days=1)).strftime('%m-%d')}", fontsize=20, ha='left', fontweight='bold')
     plt.text(-max_abs_value, -1, "@PEARatings", ha='left', fontsize = 12)
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Host/last_host_{formatted_date}.png", bbox_inches='tight')
     print('Last Host Seed Done')
@@ -1746,7 +1751,7 @@ if now.hour < 15 and now.hour > 10:
     tab.columns["Host"].set_facecolor('#CECEB2')
     # plt.figtext(0.89, 0.09, "* Indicates an automatic qualifier", ha="right", fontsize=14, fontstyle='italic')
     plt.figtext(0.13, 0.945, "PEAR Projected Tournament Regionals", ha='left', fontsize=32, fontweight='bold')
-    plt.figtext(0.13, 0.915, "No Considerations For Conference or Regional Proximity", ha='left', fontsize=16)
+    plt.figtext(0.13, 0.915, f"No Considerations For Conference or Regional Proximity - Through {(today - timedelta(days=1)).strftime('%m-%d')}", ha='left', fontsize=16)
     plt.figtext(0.13, 0.885, "@PEARatings", ha='left', fontsize=16, fontweight='bold')
     plt.figtext(0.13, 0.09, f"Last Four In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}", ha='left', fontsize=14)
     plt.figtext(0.13, 0.06, f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}", ha='left', fontsize=14)
@@ -1808,9 +1813,9 @@ if now.hour < 15 and now.hour > 10:
             line_color = "#2ca02c" if last_value > first_value else "#d62728"
 
             ax.plot(team_data.index, team_data[team], marker='o', color=line_color)
-            ax.text(team_data.index[0], last_value + 1.2, f"{int(last_value)}", 
+            ax.text(team_data.index[0], last_value - 1.2, f"{int(last_value)}", 
                 fontsize=10, fontweight='bold', ha='center', color='black')
-            ax.text(team_data.index[-1], first_value + 1.2, f"{int(first_value)}", 
+            ax.text(team_data.index[-1], first_value - 1.2, f"{int(first_value)}", 
                 fontsize=10, fontweight='bold', ha='center', color='black')
             ax.set_title(f"#{i+1} {team}", fontweight='bold', fontsize=16)
             ax.tick_params(axis='x', rotation=45)  # Rotate x-axis labels for readability
@@ -1818,6 +1823,7 @@ if now.hour < 15 and now.hour > 10:
             ax.set_xticks("")
             ax.set_ylim(min_net, max_net)
             ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+            ax.invert_yaxis()
         plt.tight_layout()
         plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Over_Time/over_time_{formatted_date}.png", bbox_inches='tight')
     net_tracker(14,16)
