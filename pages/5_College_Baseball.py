@@ -8,6 +8,9 @@ import pytz # type: ignore
 import re # type: ignore
 import numpy as np # type: ignore
 from matplotlib.ticker import MaxNLocator # type: ignore
+import matplotlib.font_manager as fm
+custom_font = fm.FontProperties(fname="./trebuc.ttf")
+plt.rcParams['font.family'] = custom_font.get_name()
 
 cst = pytz.timezone('America/Chicago')
 formatted_date = datetime.now(cst).strftime('%m_%d_%Y')
