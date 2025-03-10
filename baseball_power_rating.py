@@ -1565,7 +1565,7 @@ if now.hour < 15 and now.hour > 10:
     ax.set_ylabel('Adjusted Resume Rank', fontsize = 16)
     # ax.set_title('At Large Ratings vs. Adjusted Resume', fontweight='bold', fontsize=14)
     plt.text(0, max_range + 20, "At Large Team Strength vs. Adjusted Resume", ha='left', fontsize = 32, fontweight = 'bold')
-    plt.text(0, max_range + 16, f"Automatic Qualifiers Removed, Bubble Teams Highlighted - Through {(today - timedelta(days=1)).strftime('%m-%d')}", fontsize = 24)
+    plt.text(0, max_range + 16, f"Automatic Qualifiers Removed, Bubble Teams Highlighted - Through {(today - timedelta(days=1)).strftime('%m/%d')}", fontsize = 24)
     plt.text(0, max_range + 12, "@PEARatings", ha='left', fontsize=24, fontweight='bold')
     plt.text(max_range + 8, max_range + 7, f"Projected At Large Bids ONLY (Based on PEAR NET Rankings)", ha='right', fontsize=16)
     plt.text(max_range + 8, max_range + 4, f"Green - Last 8 In, Orange - First 8 Out, Red - Next 8 Out", ha='right', fontsize=16)
