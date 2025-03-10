@@ -767,7 +767,10 @@ with st.form(key='net_change'):
     net_change = st.form_submit_button("Enter")
     if net_change:
         fig = team_net_tracker(team_name)
+        fig.set_size_inches(4, 4)
         st.pyplot(fig)
+
+st.divider()
 
 comparison_date = comparison_date.strftime("%B %d, %Y")
 st.subheader(f"{comparison_date} Games")
