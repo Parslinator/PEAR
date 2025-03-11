@@ -771,8 +771,8 @@ with st.form(key='team_schedule'):
         projected_record = str(projected_wins) + "-" + str(projected_losses)
         schedule.index = schedule.index + 1
         fig = create_quadrant_table(completed)
-        st.write(f"Record: {record}")
-        st.write(f"Projected Record: {projected_record}")
+        # st.write(f"Record: {record}")
+        # st.write(f"Projected Record: {projected_record}")
         st.write(f"NET Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
         st.pyplot(fig)
         st.write("Upcoming Games")
