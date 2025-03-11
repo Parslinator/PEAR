@@ -763,6 +763,7 @@ with st.form(key='team_schedule'):
         schedule['win_prob'] = np.where(schedule['Team'] == schedule['home_team'], 
                                         schedule['home_win_prob'], 
                                         1 - schedule['home_win_prob'])
+        schedule['win_prob'] = schedule['win_prob'].fillna(0.9)
         expected_wins = round(sum(schedule['win_prob']))
         expected_losses = len(schedule) - expected_wins
         projected_wins = wins + expected_wins
