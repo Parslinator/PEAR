@@ -758,8 +758,20 @@ with st.form(key='team_schedule'):
     team_schedule = st.form_submit_button("Team Schedule")
     if team_schedule:
         rank, best, worst, schedule, completed = grab_team_schedule(team_name, modeling_stats)
+        wins, losses = sum(completed['Result'].str.contains('W')), sum(completed['Result'].str.contains('L'))
+        record = str(wins) + "-" + str(losses)
+        schedule['win_prob'] = np.where(schedule['Team'] == schedule['home_team'], 
+                                        schedule['home_win_prob'], 
+                                        1 - schedule['home_win_prob'])
+        expected_wins = round(sum(schedule['win_prob']))
+        expected_losses = len(schedule) - expected_wins
+        projected_wins = wins + expected_wins
+        projected_losses = losses + expected_losses
+        projected_record = str(projected_wins) + "-" + str(projected_losses)
         schedule.index = schedule.index + 1
         fig = create_quadrant_table(completed)
+        st.write(f"Record: {record}")
+        st.write(f"Projected Record: {projected_record}")
         st.write(f"NET Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
         st.pyplot(fig)
         st.write("Upcoming Games")
