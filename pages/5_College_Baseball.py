@@ -10,6 +10,8 @@ import numpy as np # type: ignore
 import matplotlib.pyplot as plt # type: ignore
 from matplotlib.ticker import MaxNLocator # type: ignore
 import matplotlib.font_manager as fm
+import matplotlib.patheffects as pe
+import matplotlib.colors as mcolors
 font_prop = fm.FontProperties(fname="./trebuc.ttf")
 fm.fontManager.addfont("./trebuc.ttf")
 fm.fontManager.addfont("./Trebuchet MS Bold.ttf")
@@ -686,14 +688,79 @@ def team_net_tracker(team):
 def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 1.5
 
+def team_percentiles_chart(team_name, stats_and_metrics):
+    team_data = stats_and_metrics[stats_and_metrics['Team'] == team_name]
+
+    percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'poWAR_z', 'pOPS', 'pBA', 'pRPG', 'ppWAR_z', 'pKP9', 'pWHIP', 'pERA']
+    team_data = team_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
+
+    cmap = plt.get_cmap('seismic')
+    colors = [cmap(p / 100) for p in team_data['Percentile']]
+
+
+    def darken_color(color, factor=0.3):
+        color = mcolors.hex2color(color)
+        darkened_color = [max(c - factor, 0) for c in color]
+        return mcolors.rgb2hex(darkened_color)
+
+    darkened_colors = [darken_color(c) for c in colors]
+    fig, ax = plt.subplots(figsize=(8, 10))
+    fig.patch.set_facecolor('#CECEB2')
+    ax.set_facecolor('#CECEB2')
+    ax.barh(team_data['Metric'], 99, color='gray', height=0.1, left=0)
+    bars = ax.barh(team_data['Metric'], team_data['Percentile'], color=colors, height=0.6, edgecolor=darkened_colors, linewidth=3)
+
+    i = 0
+    for idx, (bar, percentile) in enumerate(zip(bars, team_data['Percentile'])):
+        text = ax.text(bar.get_width(), bar.get_y() + bar.get_height()/2, 
+                    str(percentile), ha='center', va='center', 
+                    fontsize=16, fontweight='bold', color='white', zorder=2,
+                    bbox=dict(facecolor=colors[i], edgecolor=darkened_colors[i], boxstyle='circle,pad=0.4', linewidth=3))
+        text.set_path_effects([
+            pe.withStroke(linewidth=2, foreground='black')
+        ])
+        if idx < 10:
+            if idx % 4 == 3:  
+                y_position = bar.get_y() + bar.get_height()+0.18
+                ax.hlines(y_position, ax.get_xlim()[0], ax.get_xlim()[1], 
+                        colors='black', linestyles='dashed', linewidth=2, zorder=1)
+            
+        i = i + 1
+
+    fig.text(0.93, 0.738, 'Metrics', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
+    fig.text(0.93, 0.496, 'Offense', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
+    fig.text(0.93, 0.255, 'Pitching', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
+    fig.text(0.5, 0.93, f'{team_name} Percentile Rankings', fontsize=24, fontweight='bold', ha='center')
+    fig.text(0.5, 0.90, f'Including PEAR Metrics, Offensive Stats, Pitching Stats', fontsize=16, ha='center')
+    fig.text(0.5, 0.87, f'@PEARatings', fontsize=16, fontweight='bold', ha='center')
+    ax.set_xlim(0, 102)
+    ax.set_xticks([])
+    custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'oWAR', 'OPS', 'BA', 'RPG', 'pWAR', 'KP9', 'WHIP', 'ERA']
+    ax.set_yticks(range(len(custom_labels)))
+    ax.set_yticklabels(custom_labels, fontweight='bold')
+    ax.tick_params(axis='y', which='both', length=0, pad=14)
+    ax.invert_yaxis()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+
+    return fig
+
 st.title(f"{current_season} CBASE PEAR")
 st.caption(f"Ratings Updated {formatted_latest_date}")
 st.caption(f"Stats Through Games {last_date}")
 st.caption(f"Page Updated @ 7 AM, 11 AM, 3 PM, 7 PM, 11 PM CST")
 
+st.sidebar.markdown(f"[Ratings and Resume](#ratings)", unsafe_allow_html=True)
+
+
+
+
 st.divider()
 
-st.subheader("Live CBASE Ratings and Resume")
+# st.subheader("Live CBASE Ratings and Resume")
+st.markdown(f'<h2 id="ratings">Live CBASE Ratings and Resume</h2>', unsafe_allow_html=True)
 st.caption("Updated when page updates. Weekly rankings are taken Monday at 11 AM CST")
 modeling_stats_copy = modeling_stats.copy()
 modeling_stats_copy.set_index("Team", inplace=True)
@@ -778,6 +845,16 @@ with st.form(key='team_schedule'):
         st.write("Upcoming Games")
         st.dataframe(schedule[['Opponent', 'NET', 'Quad', 'GQI', 'PEAR', 'Date']], use_container_width=True)
         st.caption('PEAR - Negative Value Indicates Favorites, Positive Value Indicates Underdog')
+
+st.divider()
+
+st.subheader("Team Percentiles")
+with st.form(key='team_percentile'):
+    team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+    team_percentile = st.form_submit_button("Team Percentiles")
+    if team_percentile:
+        fig = team_percentiles_chart(team_name, modeling_stats)
+        st.pyplot(fig)
 
 st.divider()
 
