@@ -410,12 +410,16 @@ baseball_stats = df_combined.loc[:, ~df_combined.columns.duplicated()].sort_valu
 baseball_stats['OPS'] = baseball_stats['SLG'] + baseball_stats['OBP']
 baseball_stats['PYTHAG'] = round((baseball_stats['RS'] ** 1.83) / ((baseball_stats['RS'] ** 1.83) + (baseball_stats['RA'] ** 1.83)),3)
 
+
 hbp = get_stat_dataframe('Hit by Pitch')[['Team', 'G', 'HBP']]
 hits = get_stat_dataframe('Hits')[['Team', 'AB', 'H']]
 doubles = get_stat_dataframe('Doubles')[['Team', '2B']]
 triples = get_stat_dataframe('Triples')[['Team', '3B']]
 sacrifice_flies = get_stat_dataframe('Sacrifice Flies')[['Team', 'SF']]
-dfs = [bb, hbp, hits, doubles, triples, hr, sacrifice_flies, runs, sb, era]
+hit_batters = get_stat_dataframe('Hit Batters')[['Team', 'HB']]
+stw_ratio = get_stat_dataframe('Strikeout-to-Walk Ratio')[['Team', 'K/BB', 'BB', 'SO']]
+stw_ratio.rename(columns={'BB': 'PBB'}, inplace=True)
+dfs = [bb, hbp, hits, doubles, triples, hr, sacrifice_flies, runs, sb, era, stw_ratio, ha, hit_batters]
 for df in dfs:
     df["Team"] = df["Team"].str.strip()
 wOBA = dfs[0]
@@ -423,6 +427,8 @@ for df in dfs[1:]:
     wOBA = pd.merge(wOBA, df, on="Team", how="left")
 wOBA = wOBA.fillna(0)
 wOBA['PA'] = wOBA['AB'] + wOBA['BB'] + wOBA['HBP'] + wOBA['SF'] + wOBA['SB']
+league_HR_per_game = wOBA['HR'].sum() / wOBA['G'].sum()
+wOBA['HR_A'] = wOBA['G'] * league_HR_per_game
 wOBA['1B'] = wOBA['H'] - wOBA['2B'] - wOBA['3B'] - wOBA['HR']
 wOBA['wOBA'] = ((0.69 * wOBA['BB']) + (0.72 * wOBA['HBP']) + (0.88 * wOBA['1B']) + (1.24 * wOBA['2B']) + (1.56 * wOBA['3B']) + (1.95 * wOBA['HR'])) / (wOBA['PA'])
 league_wOBA = (wOBA['wOBA'] * wOBA['PA']).sum() / wOBA['PA'].sum()
@@ -433,21 +439,28 @@ league_RS = wOBA['RS'].sum()
 league_G = wOBA['G'].sum()
 RPW = 2 * (league_RS / league_G)
 wOBA['oWAR'] = wOBA['wRAA'] / RPW
-wOBA['RA9'] = wOBA['ERA']
-league_RA9 = wOBA['RS'].sum() / wOBA['G'].sum()
+wOBA['ISO'] = (wOBA['2B'] + (2 * wOBA['3B']) + (3 * wOBA['HR'])) / wOBA['AB']
+wOBA['wRC'] = (((wOBA['wOBA'] - league_wOBA) / wOBA_scale) + league_R_PA) * wOBA['PA']
+wOBA['wRC+'] = (wOBA['wRC'] / wOBA['PA']) / league_R_PA * 100
+wOBA['BB%'] = wOBA['BB'] / wOBA['PA']
+wOBA['BABIP'] = (wOBA['H'] - wOBA['HR']) / (wOBA['AB'] + wOBA['SF'])
+wOBA['RA9'] = (wOBA['RA'] / wOBA['IP']) * 9
+wOBA['LOB%'] = (wOBA['HA'] + wOBA['PBB'] + wOBA['HB'] - wOBA['RA']) / (wOBA['HA'] + wOBA['PBB'] + wOBA['HB'] - (1.4*wOBA['HR_A']))
+wOBA['FIP'] = ((13 * wOBA['HR_A'] + 3 * wOBA['PBB'] - 2 * wOBA['SO']) / wOBA['IP'])
+league_RA9 = wOBA['RA'].sum() / wOBA['G'].sum()
 league_ERA = wOBA['ERA'].mean()
 replacement_level_ERA = wOBA['ERA'].quantile(0.80)
 multiplier = replacement_level_ERA / league_ERA
 replacement_RA9 = league_RA9 * multiplier
-wOBA['pWAR'] = ((replacement_RA9 - wOBA['RA9']) / RPW) * (wOBA['IP'] / 9)
+wOBA['pWAR'] = ((replacement_RA9 - wOBA['ERA']) / RPW) * (wOBA['IP'] / 9)
 mean_oWAR = wOBA['oWAR'].mean()
 std_oWAR = wOBA['oWAR'].std()
 mean_pWAR = wOBA['pWAR'].mean()
 std_pWAR = wOBA['pWAR'].std()
-wOBA['oWAR_z'] = round((wOBA['oWAR'] - mean_oWAR) / std_oWAR, 2)
-wOBA['pWAR_z'] = round((wOBA['pWAR'] - mean_pWAR) / std_pWAR,2)
-wOBA['fWAR'] = round(wOBA['oWAR_z'] + wOBA['pWAR_z'],2)
-baseball_stats = pd.merge(baseball_stats, wOBA[['Team', 'wOBA', 'wRAA', 'oWAR_z', 'pWAR_z', 'fWAR']], how='left', on='Team')
+wOBA['oWAR_z'] = (wOBA['oWAR'] - mean_oWAR) / std_oWAR
+wOBA['pWAR_z'] = (wOBA['pWAR'] - mean_pWAR) / std_pWAR
+wOBA['fWAR'] = wOBA['oWAR_z'] + wOBA['pWAR_z']
+baseball_stats = pd.merge(baseball_stats, wOBA[['Team', 'wOBA', 'wRAA', 'oWAR_z', 'pWAR_z', 'fWAR', 'ISO', 'wRC+', 'BB%', 'BABIP', 'RA9', 'FIP', 'LOB%', 'K/BB']], how='left', on='Team')
 
 rpi_2024 = pd.read_csv("./PEAR/PEAR Baseball/rpi_end_2024.csv")
 
@@ -1374,6 +1387,17 @@ stats_and_metrics['ppWAR_z'] = (stats_and_metrics['pWAR_z'].rank(pct=True) * 98 
 stats_and_metrics['pKP9'] = (stats_and_metrics['KP9'].rank(pct=True) * 98 + 1).round().astype(int)
 stats_and_metrics['pWHIP'] = ((1 - stats_and_metrics['WHIP'].rank(pct=True)) * 98 + 1).round().astype(int)
 stats_and_metrics['pERA'] = ((1 - stats_and_metrics['ERA'].rank(pct=True)) * 98 + 1).round().astype(int)
+stats_and_metrics['pwOBA'] = (stats_and_metrics['wOBA'].rank(pct=True) * 98 + 1).round().astype(int)
+stats_and_metrics['pwRAA'] = (stats_and_metrics['wRAA'].rank(pct=True) * 98 + 1).round().astype(int)
+stats_and_metrics['pfWAR'] = (stats_and_metrics['fWAR'].rank(pct=True) * 98 + 1).round().astype(int)
+stats_and_metrics['pISO'] = (stats_and_metrics['ISO'].rank(pct=True) * 98 + 1).round().astype(int)
+stats_and_metrics['pwRC+'] = (stats_and_metrics['wRC+'].rank(pct=True) * 98 + 1).round().astype(int)
+stats_and_metrics['pBB%'] = (stats_and_metrics['BB%'].rank(pct=True) * 98 + 1).round().astype(int)
+stats_and_metrics['pBABIP'] = (stats_and_metrics['BABIP'].rank(pct=True) * 98 + 1).round().astype(int)
+stats_and_metrics['pRA9'] = ((1 - stats_and_metrics['RA9'].rank(pct=True)) * 98 + 1).round().astype(int)
+stats_and_metrics['pFIP'] = ((1 - stats_and_metrics['FIP'].rank(pct=True)) * 98 + 1).round().astype(int)
+stats_and_metrics['pLOB%'] = (stats_and_metrics['LOB%'].rank(pct=True) * 98 + 1).round().astype(int)
+stats_and_metrics['pK/BB'] = (stats_and_metrics['K/BB'].rank(pct=True) * 98 + 1).round().astype(int)
 
 file_path = os.path.join(folder_path, f"Data/baseball_{formatted_date}.csv")
 stats_and_metrics.to_csv(file_path)

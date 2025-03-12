@@ -691,25 +691,20 @@ def adjust_home_pr(home_win_prob):
 def team_percentiles_chart(team_name, stats_and_metrics):
     team_data = stats_and_metrics[stats_and_metrics['Team'] == team_name]
 
-    percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'poWAR_z', 'pOPS', 'pBA', 'pRPG', 'ppWAR_z', 'pKP9', 'pWHIP', 'pERA']
+    percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
     team_data = team_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
-
     cmap = plt.get_cmap('seismic')
     colors = [cmap(p / 100) for p in team_data['Percentile']]
-
-
     def darken_color(color, factor=0.3):
         color = mcolors.hex2color(color)
         darkened_color = [max(c - factor, 0) for c in color]
         return mcolors.rgb2hex(darkened_color)
-
     darkened_colors = [darken_color(c) for c in colors]
     fig, ax = plt.subplots(figsize=(8, 10))
     fig.patch.set_facecolor('#CECEB2')
     ax.set_facecolor('#CECEB2')
     ax.barh(team_data['Metric'], 99, color='gray', height=0.1, left=0)
     bars = ax.barh(team_data['Metric'], team_data['Percentile'], color=colors, height=0.6, edgecolor=darkened_colors, linewidth=3)
-
     i = 0
     for idx, (bar, percentile) in enumerate(zip(bars, team_data['Percentile'])):
         text = ax.text(bar.get_width(), bar.get_y() + bar.get_height()/2, 
@@ -719,25 +714,23 @@ def team_percentiles_chart(team_name, stats_and_metrics):
         text.set_path_effects([
             pe.withStroke(linewidth=2, foreground='black')
         ])
-        if idx < 10:
-            if idx % 4 == 3:  
-                y_position = bar.get_y() + bar.get_height()+0.18
-                ax.hlines(y_position, ax.get_xlim()[0], ax.get_xlim()[1], 
-                        colors='black', linestyles='dashed', linewidth=2, zorder=1)
-            
+        if idx == 4 or idx == 8:  # Check if the index is 5th or 9th bar (0-based index)
+            y_position = bar.get_y() + bar.get_height() + 0.18
+            ax.hlines(y_position, ax.get_xlim()[0], 99,
+                    colors='black', linestyles='dashed', linewidth=2, zorder=1)
+                
         i = i + 1
-
-    fig.text(0.93, 0.738, 'Metrics', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
-    fig.text(0.93, 0.496, 'Offense', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
-    fig.text(0.93, 0.255, 'Pitching', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
+    fig.text(0.93, 0.72, 'Metrics', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
+    fig.text(0.93, 0.47, 'Offense', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
+    fig.text(0.93, 0.245, 'Pitching', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
     fig.text(0.5, 0.93, f'{team_name} Percentile Rankings', fontsize=24, fontweight='bold', ha='center')
     fig.text(0.5, 0.90, f'Including PEAR Metrics, Offensive Stats, Pitching Stats', fontsize=16, ha='center')
     fig.text(0.5, 0.87, f'@PEARatings', fontsize=16, fontweight='bold', ha='center')
     ax.set_xlim(0, 102)
     ax.set_xticks([])
-    custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'oWAR', 'OPS', 'BA', 'RPG', 'pWAR', 'KP9', 'WHIP', 'ERA']
+    custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'fWAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
     ax.set_yticks(range(len(custom_labels)))
-    ax.set_yticklabels(custom_labels, fontweight='bold')
+    ax.set_yticklabels(custom_labels, fontweight='bold', fontsize=16)
     ax.tick_params(axis='y', which='both', length=0, pad=14)
     ax.invert_yaxis()
     ax.spines['top'].set_visible(False)
