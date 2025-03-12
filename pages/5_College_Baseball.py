@@ -851,7 +851,6 @@ with st.form(key='team_schedule'):
 
 st.divider()
 
-st.subheader("Team Percentiles")
 st.markdown(f'<h2 id="team-percentiles">Team Percentiles</h2>', unsafe_allow_html=True)
 with st.form(key='team_percentile'):
     team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
@@ -862,7 +861,6 @@ with st.form(key='team_percentile'):
 
 st.divider()
 
-st.subheader("Team NET Changes")
 st.markdown(f'<h2 id="team-net-changes">Team NET Changes</h2>', unsafe_allow_html=True)
 with st.form(key='net_change'):
     team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
