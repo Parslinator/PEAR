@@ -753,10 +753,15 @@ st.caption(f"Stats Through Games {last_date}")
 st.caption(f"Page Updated @ 7 AM, 11 AM, 3 PM, 7 PM, 11 PM CST")
 
 st.sidebar.markdown(f"[Ratings and Resume](#live-cbase-ratings-and-resume)", unsafe_allow_html=True)
+st.sidebar.markdown(f"[Team Stats](#live-cbase-stats)", unsafe_allow_html=True)
+st.sidebar.markdown(f"[Tournament Outlook](#tournament-outlook)", unsafe_allow_html=True)
+st.sidebar.markdown(f"[Projected Spreads](#projected-spreads)", unsafe_allow_html=True)
+st.sidebar.markdown(f"[Team Schedule](#team-schedule)", unsafe_allow_html=True)
+st.sidebar.markdown(f"[Team Percentiles](#team-percentiles)", unsafe_allow_html=True)
+st.sidebar.markdown(f"[Team NET Changes](#team-net-changes)", unsafe_allow_html=True)
 
 st.divider()
 
-# st.subheader("Live CBASE Ratings and Resume")
 st.markdown(f'<h2 id="live-cbase-ratings-and-resume">Live CBASE Ratings and Resume</h2>', unsafe_allow_html=True)
 st.caption("Updated when page updates. Weekly rankings are taken Monday at 11 AM CST")
 modeling_stats_copy = modeling_stats.copy()
@@ -773,7 +778,7 @@ modeling_stats_copy['WAR'] = modeling_stats_copy['fWAR'].rank(ascending=False).a
 modeling_stats_copy['oWAR'] = modeling_stats_copy['oWAR_z'].rank(ascending=False).astype(int)
 modeling_stats_copy['pWAR'] = modeling_stats_copy['pWAR_z'].rank(ascending=False).astype(int)
 modeling_stats_copy = modeling_stats_copy.sort_values('WAR')
-st.subheader("Live CBASE Stats")
+st.markdown(f'<h2 id="live-cbase-stats">Live CBASE Stats</h2>', unsafe_allow_html=True)
 with st.container(border=True, height=440):
     st.dataframe(modeling_stats_copy[['WAR', 'oWAR', 'pWAR', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
 st.caption("WAR - Team WAR Rank, oWAR - Team Offensive WAR Rank, pWAR - Team Pitching WAR Rank, PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
@@ -796,7 +801,8 @@ formatted_df = formatted_df.reset_index()
 formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
 formatted_df.set_index('Host')
 formatted_df.index = formatted_df.index + 1
-st.subheader("Live Projected NCAA Tournament")
+st.subheader("Tournament Outlook")
+st.markdown(f'<h2 id="tournament-outlook">Tournament Outlook</h2>', unsafe_allow_html=True)
 st.caption("Updated when page updates. Weekly projected tournament is taken Monday at 11 AM CST")
 with st.container(border=True, height=440):
     st.dataframe(formatted_df[['Host', '2 Seed', '3 Seed', '4 Seed']], use_container_width=True)
@@ -806,7 +812,7 @@ st.caption(f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'
 
 st.divider()
 
-st.subheader("Projected Spreads")
+st.markdown(f'<h2 id="projected-spreads">Projected Spreads</h2>', unsafe_allow_html=True)
 with st.form(key='calculate_spread'):
     away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
     home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
@@ -816,7 +822,7 @@ with st.form(key='calculate_spread'):
 
 st.divider()
 
-st.subheader("Team Schedule")
+st.markdown(f'<h2 id="team-schedule">Team Schedule</h2>', unsafe_allow_html=True)
 with st.form(key='team_schedule'):
     team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
     team_schedule = st.form_submit_button("Team Schedule")
@@ -846,6 +852,7 @@ with st.form(key='team_schedule'):
 st.divider()
 
 st.subheader("Team Percentiles")
+st.markdown(f'<h2 id="team-percentiles">Team Percentiles</h2>', unsafe_allow_html=True)
 with st.form(key='team_percentile'):
     team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
     team_percentile = st.form_submit_button("Team Percentiles")
@@ -856,6 +863,7 @@ with st.form(key='team_percentile'):
 st.divider()
 
 st.subheader("Team NET Changes")
+st.markdown(f'<h2 id="team-net-changes">Team NET Changes</h2>', unsafe_allow_html=True)
 with st.form(key='net_change'):
     team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
     net_change = st.form_submit_button("Enter")
