@@ -752,9 +752,12 @@ st.caption(f"Ratings Updated {formatted_latest_date}")
 st.caption(f"Stats Through Games {last_date}")
 st.caption(f"Page Updated @ 7 AM, 11 AM, 3 PM, 7 PM, 11 PM CST")
 
+st.sidebar.markdown(f"[Ratings and Resume](#live-cbase-ratings-and-resume)", unsafe_allow_html=True)
+
 st.divider()
 
-st.subheader("Live CBASE Ratings and Resume")
+# st.subheader("Live CBASE Ratings and Resume")
+st.markdown(f'<h2 id="live-cbase-ratings-and-resume">Live CBASE Ratings and Resume</h2>', unsafe_allow_html=True)
 st.caption("Updated when page updates. Weekly rankings are taken Monday at 11 AM CST")
 modeling_stats_copy = modeling_stats.copy()
 modeling_stats_copy.set_index("Team", inplace=True)
