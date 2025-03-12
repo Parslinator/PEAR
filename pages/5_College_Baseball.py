@@ -801,7 +801,6 @@ formatted_df = formatted_df.reset_index()
 formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
 formatted_df.set_index('Host')
 formatted_df.index = formatted_df.index + 1
-st.subheader("Tournament Outlook")
 st.markdown(f'<h2 id="tournament-outlook">Tournament Outlook</h2>', unsafe_allow_html=True)
 st.caption("Updated when page updates. Weekly projected tournament is taken Monday at 11 AM CST")
 with st.container(border=True, height=440):
