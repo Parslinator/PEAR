@@ -752,6 +752,10 @@ st.caption(f"Ratings Updated {formatted_latest_date}")
 st.caption(f"Stats Through Games {last_date}")
 st.caption(f"Page Updated @ 7 AM, 11 AM, 3 PM, 7 PM, 11 PM CST")
 
+links = ["ratings", "stats", "tournament", "spreads", "schedule", "percentiles", "net", "games"]
+for link in links:
+    st.sidebar.markdown(f"[{link}](#{link})", unsafe_allow_html=True)
+
 st.sidebar.markdown(f"[Ratings and Resume](#ratings)", unsafe_allow_html=True)
 
 
