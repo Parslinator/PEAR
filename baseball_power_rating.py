@@ -446,13 +446,17 @@ wOBA['BB%'] = wOBA['BB'] / wOBA['PA']
 wOBA['BABIP'] = (wOBA['H'] - wOBA['HR']) / (wOBA['AB'] + wOBA['SF'])
 wOBA['RA9'] = (wOBA['RA'] / wOBA['IP']) * 9
 wOBA['LOB%'] = (wOBA['HA'] + wOBA['PBB'] + wOBA['HB'] - wOBA['RA']) / (wOBA['HA'] + wOBA['PBB'] + wOBA['HB'] - (1.4*wOBA['HR_A']))
-wOBA['FIP'] = ((13 * wOBA['HR_A'] + 3 * wOBA['PBB'] - 2 * wOBA['SO']) / wOBA['IP'])
+wOBA['FIP'] = ((13 * wOBA['HR_A'] + 3 * (wOBA['PBB'] + wOBA['HB']) - 2 * wOBA['SO']) / wOBA['IP'])
 league_RA9 = wOBA['RA'].sum() / wOBA['G'].sum()
-league_ERA = wOBA['ERA'].mean()
+league_ERA = (wOBA['ER'].sum() * 9) / wOBA['IP'].sum()
 replacement_level_ERA = wOBA['ERA'].quantile(0.80)
 multiplier = replacement_level_ERA / league_ERA
 replacement_RA9 = league_RA9 * multiplier
-wOBA['pWAR'] = ((replacement_RA9 - wOBA['ERA']) / RPW) * (wOBA['IP'] / 9)
+league_FIP = (wOBA['FIP'] * wOBA['IP']).sum() / wOBA['IP'].sum()
+replacement_level_FIP = wOBA['FIP'].quantile(0.80)
+multiplier = replacement_level_FIP / league_FIP
+replacement_RA9 = league_RA9 * multiplier  # Adjust RA9 to match replacement level
+wOBA['pWAR'] = ((replacement_RA9 - wOBA['FIP']) / RPW) * (wOBA['IP'] / 9)
 mean_oWAR = wOBA['oWAR'].mean()
 std_oWAR = wOBA['oWAR'].std()
 mean_pWAR = wOBA['pWAR'].mean()
@@ -467,20 +471,18 @@ rpi_2024 = pd.read_csv("./PEAR/PEAR Baseball/rpi_end_2024.csv")
 modeling_stats = baseball_stats[['Team', 'HPG',
                 'BBPG', 'ERA', 'PCT', 
                 'KP9', 'WP9', 'OPS', 
-                'WHIP', 'PYTHAG', 'fWAR', 'oWAR_z', 'pWAR_z', 'ELO_Rank']]
+                'WHIP', 'PYTHAG', 'fWAR', 'oWAR_z', 'pWAR_z', 'K/BB', 'wRC+', 'LOB%', 'ELO_Rank']]
 modeling_stats = pd.merge(modeling_stats, rpi_2024[['Team', 'Rank']], on = 'Team', how='left')
 modeling_stats["Rank"] = modeling_stats["Rank"].apply(pd.to_numeric, errors='coerce')
 modeling_stats["ELO_Rank"] = modeling_stats["ELO_Rank"].apply(pd.to_numeric, errors='coerce')
 modeling_stats['Rank_pct'] = 1 - (modeling_stats['Rank'] - 1) / (len(modeling_stats) - 1)
-
-higher_better = ["HPG", "BBPG", "PCT", "KP9", "OPS", "Rank_pct", 'PYTHAG', 'fWAR', 'oWAR_z', 'pWAR_z']
+higher_better = ["HPG", "BBPG", "PCT", "KP9", "OPS", "Rank_pct", 'PYTHAG', 'fWAR', 'oWAR_z', 'pWAR_z', 'K/BB', 'wRC+', 'LOB%']
 lower_better = ["ERA", "WP9", "WHIP"]
-
 scaler = MinMaxScaler(feature_range=(1, 100))
 modeling_stats[higher_better] = scaler.fit_transform(modeling_stats[higher_better])
 modeling_stats[lower_better] = scaler.fit_transform(-modeling_stats[lower_better])
 weights = {
-    'fWAR': 50, 'PYTHAG': 40, 'OPS': 10, 'WHIP': 10, 'Rank_pct': 0
+    'fWAR': .40, 'PYTHAG': .30, 'K/BB': .10, 'wRC+': .10, 'LOB%': .10
 }
 modeling_stats['in_house_pr'] = sum(modeling_stats[stat] * weight for stat, weight in weights.items())
 
@@ -491,29 +493,30 @@ scaling_factor = desired_range / current_range
 modeling_stats['in_house_pr'] = round(modeling_stats['in_house_pr'] * scaling_factor, 4)
 modeling_stats['in_house_pr'] = modeling_stats['in_house_pr'] - modeling_stats['in_house_pr'].min()
 
-import pandas as pd # type: ignore
-import numpy as np # type: ignore
-import pandas as pd # type: ignore
-from scipy.optimize import minimize # type: ignore
-import numpy as np # type: ignore
-from scipy.optimize import differential_evolution # type: ignore
-from tqdm import tqdm # type: ignore
+import pandas as pd
+import numpy as np
+import pandas as pd
+from scipy.optimize import minimize
+import numpy as np
+from scipy.optimize import differential_evolution
+from tqdm import tqdm
 
 def objective_function(weights):
-    (w_owar, w_pwar, w_whip, w_ops, w_pythag, w_fwar, w_rank, w_in_house_pr) = weights
+    (w_owar, w_pwar, w_kbb, w_wrc, w_pythag, w_fwar, w_lob, w_rank, w_in_house_pr) = weights
     
     modeling_stats['power_ranking'] = (
+        w_fwar * modeling_stats['fWAR'] +
         w_owar * modeling_stats['oWAR_z'] +
         w_pwar * modeling_stats['pWAR_z'] +
-        w_whip * modeling_stats['WHIP'] +
-        w_ops * modeling_stats['OPS'] +
         w_pythag * modeling_stats['PYTHAG'] + 
-        w_fwar * modeling_stats['fWAR'] +
+        w_kbb * modeling_stats['K/BB'] +
+        w_wrc * modeling_stats['wRC+'] +
+        w_lob * modeling_stats['LOB%'] +
         w_rank * modeling_stats['Rank_pct'] +
         w_in_house_pr * modeling_stats['in_house_pr']
     )
 
-    modeling_stats['calculated_rank'] = modeling_stats['power_ranking'].rank(ascending=False).astype(int)
+    modeling_stats['calculated_rank'] = modeling_stats['power_ranking'].rank(ascending=False)
     modeling_stats['combined_rank'] = (
         modeling_stats['ELO_Rank']
     )
@@ -522,6 +525,7 @@ def objective_function(weights):
     return -spearman_corr
 
 bounds = [(0,1),
+          (0,1),
           (0,1),
           (0,1),
           (0,1),
