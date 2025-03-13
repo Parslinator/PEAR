@@ -740,6 +740,83 @@ def team_percentiles_chart(team_name, stats_and_metrics):
 
     return fig
 
+import matplotlib.patheffects as pe
+import matplotlib.colors as mcolors
+def matchup_percentiles(team_1, team_2, stats_and_metrics):
+    percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
+    custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'fWAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
+    team1_data = stats_and_metrics[stats_and_metrics['Team'] == team_1]
+    team1_data = team1_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
+    team2_data = stats_and_metrics[stats_and_metrics['Team'] == team_2]
+    team2_data = team2_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
+    combined = pd.DataFrame({
+        'Metric': team1_data['Metric'],
+        'Percentile': team1_data['Percentile'] - team2_data['Percentile']
+    })
+    cmap = plt.get_cmap('seismic')
+    colors = [cmap(abs(p) / 100) for p in combined['Percentile']]
+    colors1 = [cmap(p/100) for p in team1_data['Percentile']]
+    colors2 = [cmap(p/100) for p in team2_data['Percentile']]
+    def darken_color(color, factor=0.3):
+        color = mcolors.hex2color(color)
+        darkened_color = [max(c - factor, 0) for c in color]
+        return mcolors.rgb2hex(darkened_color)
+    darkened_colors = [darken_color(c) for c in colors]
+    darkened_colors1 = [darken_color(c) for c in colors1]
+    darkened_colors2 = [darken_color(c) for c in colors2]
+    fig, ax = plt.subplots(figsize=(8, 10))
+    fig.patch.set_facecolor('#CECEB2')
+    ax.set_facecolor('#CECEB2')
+    ax.barh(combined['Metric'], 99, color='gray', height=0.1, left=0)
+    ax.barh(combined['Metric'], -99, color='gray', height=0.1, left=0)
+    bars = ax.barh(combined['Metric'], combined['Percentile'], color=colors, height=0.3, edgecolor=darkened_colors, linewidth=3)
+    bars1 = ax.barh(team1_data['Metric'], team1_data['Percentile'], color=colors1, height=0.3, edgecolor=darkened_colors1, linewidth=3)
+    bars2 = ax.barh(team2_data['Metric'], -team2_data['Percentile'], color=colors2, height=0.3, edgecolor=darkened_colors2, linewidth=3)
+    i = 0
+    for idx, (bar, percentile) in enumerate(zip(bars1, team1_data['Percentile'])):
+        text = ax.text(bar.get_width(), bar.get_y() + bar.get_height()/2, 
+                    str(abs(percentile)), ha='center', va='center', 
+                    fontsize=16, fontweight='bold', color='white', zorder=2,
+                    bbox=dict(facecolor=colors1[i], edgecolor=darkened_colors1[i], boxstyle='circle,pad=0.4', linewidth=3))
+        text.set_path_effects([
+            pe.withStroke(linewidth=2, foreground='black')
+        ])
+        ax.text(0, bar.get_y() - 0.35, custom_labels[i], fontsize=12, fontweight='bold', ha='center', va='center')
+        i = i+1
+    i = 0
+    for idx, (bar, percentile) in enumerate(zip(bars2, team2_data['Percentile'])):
+        text = ax.text(bar.get_width(), bar.get_y() + bar.get_height()/2, 
+                    str(abs(percentile)), ha='center', va='center', 
+                    fontsize=16, fontweight='bold', color='white', zorder=2,
+                    bbox=dict(facecolor=colors2[i], edgecolor=darkened_colors2[i], boxstyle='circle,pad=0.4', linewidth=3))
+        text.set_path_effects([
+            pe.withStroke(linewidth=2, foreground='black')
+        ])
+        i = i+1
+    i = 0
+    for idx, (bar, percentile) in enumerate(zip(bars, combined['Percentile'])):
+        text = ax.text(bar.get_width(), bar.get_y() + bar.get_height()/2, 
+                    str(abs(percentile)), ha='center', va='center', 
+                    fontsize=14, fontweight='bold', color='white', zorder=2,
+                    bbox=dict(facecolor=colors[i], edgecolor=darkened_colors[i], boxstyle='circle,pad=0.3', linewidth=3))
+        text.set_path_effects([
+            pe.withStroke(linewidth=2, foreground='black')
+        ])
+        i = i+1
+
+    ax.set_xlim(-104, 104)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.invert_yaxis()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    plt.text(0, -1.6, f"{team_2} vs. {team_1}", ha='center', fontsize=24, fontweight='bold')
+    plt.text(0, -1.2, "Comparing Team Percentiles", ha='center', fontsize=16)
+    plt.text(0, -0.8, "@PEARatings", ha='center', fontsize=16, fontweight='bold')
+    return fig
+
 st.title(f"{current_season} CBASE PEAR")
 st.caption(f"Ratings Updated {formatted_latest_date}")
 st.caption(f"Stats Through Games {last_date}")
@@ -811,6 +888,8 @@ with st.form(key='calculate_spread'):
     spread_button = st.form_submit_button("Calculate Spread")
     if spread_button:
         st.write(find_spread(home_team, away_team))
+        fig = matchup_percentiles(away_team, home_team, modeling_stats)
+        st.pyplot(fig)
 
 st.divider()
 
