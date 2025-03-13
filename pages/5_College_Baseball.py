@@ -715,7 +715,7 @@ def team_percentiles_chart(team_name, stats_and_metrics):
             pe.withStroke(linewidth=2, foreground='black')
         ])
         if idx == 4 or idx == 8:  # Check if the index is 5th or 9th bar (0-based index)
-            y_position = bar.get_y() + bar.get_height() + 0.18
+            y_position = bar.get_y() + bar.get_height() + 0.185
             ax.hlines(y_position, ax.get_xlim()[0], 99,
                     colors='black', linestyles='dashed', linewidth=2, zorder=1)
                 
