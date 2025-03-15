@@ -746,9 +746,12 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
     custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'fWAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
     team1_data = stats_and_metrics[stats_and_metrics['Team'] == team_1]
+    team1_net = stats_and_metrics[stats_and_metrics['Team'] == team_1]['NET'].values[0]
     team1_data = team1_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
     team2_data = stats_and_metrics[stats_and_metrics['Team'] == team_2]
+    team2_net = stats_and_metrics[stats_and_metrics['Team'] == team_2]['NET'].values[0]
     team2_data = team2_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
+    spread = find_spread(team_2, team_1, stats_and_metrics)
     combined = pd.DataFrame({
         'Metric': team1_data['Metric'],
         'Percentile': team1_data['Percentile'] - team2_data['Percentile']
@@ -812,9 +815,12 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
-    plt.text(0, -1.6, f"{team_2} vs. {team_1}", ha='center', fontsize=24, fontweight='bold')
-    plt.text(0, -1.2, "Comparing Team Percentiles", ha='center', fontsize=16)
-    plt.text(0, -0.8, "@PEARatings", ha='center', fontsize=16, fontweight='bold')
+    plt.text(0, -1.7, f"#{team2_net} {team_2} vs. #{team1_net} {team_1}", ha='center', fontsize=24, fontweight='bold')
+    plt.text(0, -1.25, "Comparing Team Percentiles", ha='center', fontsize=16)
+    plt.text(0, -0.8, f"{spread}", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-99, -0.8, f"{team_2}", ha='left', fontsize=12, fontweight='bold')
+    plt.text(99, -0.8, f"{team_1}", ha='right', fontsize=12, fontweight='bold')
+    plt.text(0, 12.8, "@PEARatings", ha='center', fontsize=16, fontweight='bold')
     return fig
 
 st.title(f"{current_season} CBASE PEAR")
@@ -887,7 +893,6 @@ with st.form(key='calculate_spread'):
     home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
     spread_button = st.form_submit_button("Calculate Spread")
     if spread_button:
-        st.write(find_spread(home_team, away_team))
         fig = matchup_percentiles(away_team, home_team, modeling_stats)
         st.pyplot(fig)
 
