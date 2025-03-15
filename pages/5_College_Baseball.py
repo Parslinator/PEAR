@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt # type: ignore
 from matplotlib.ticker import MaxNLocator # type: ignore
 import matplotlib.font_manager as fm
 import matplotlib.patheffects as pe
+from io import BytesIO
+from PIL import Image
 import matplotlib.colors as mcolors
 font_prop = fm.FontProperties(fname="./trebuc.ttf")
 fm.fontManager.addfont("./trebuc.ttf")
@@ -773,7 +775,7 @@ def calculate_series_probabilities(win_prob):
 
     # Team B win probabilities (q = 1 - p)
     lose_prob = 1 - win_prob
-    P_B_0 = lose_prob ** 3
+    P_B_0 = win_prob ** 3
     P_B_1 = 3 * lose_prob * win_prob ** 2
     P_B_2 = 3 * lose_prob ** 2 * win_prob
     P_B_3 = lose_prob ** 3
@@ -786,16 +788,50 @@ def calculate_series_probabilities(win_prob):
 
     return [P_A_at_least_1,P_A_at_least_2,P_A_3], [P_B_at_least_1,P_B_at_least_2,P_B_3]
 
+def get_total_record(row):
+    wins = sum(int(str(row[col]).split("-")[0]) for col in ["Q1", "Q2", "Q3", "Q4"])
+    losses = sum(int(str(row[col]).split("-")[1]) for col in ["Q1", "Q2", "Q3", "Q4"])
+    return f"{wins}-{losses}"
+
 def matchup_percentiles(team_1, team_2, stats_and_metrics):
+    BASE_URL = "https://www.warrennolan.com"
     percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
     custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'fWAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
     team1_data = stats_and_metrics[stats_and_metrics['Team'] == team_1]
+    team1_record = get_total_record(team1_data.iloc[0])
+    team1_Q1 = team1_data['Q1'].values[0]
+    team1_Q2 = team1_data['Q2'].values[0]
+    team1_Q3 = team1_data['Q3'].values[0]
+    team1_Q4 = team1_data['Q4'].values[0]
     team1_net = stats_and_metrics[stats_and_metrics['Team'] == team_1]['NET'].values[0]
     team1_data = team1_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
+    team1_url = BASE_URL + elo_data[elo_data['Team'] == team_1]['Team Link'].values[0]
+    response = requests.get(team1_url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    img_tag = soup.find("img", class_="team-menu__image")
+    img_src = img_tag.get("src")
+    image_url = BASE_URL + img_src
+    response = requests.get(image_url)
+    img1 = Image.open(BytesIO(response.content))
+
     team2_data = stats_and_metrics[stats_and_metrics['Team'] == team_2]
+    team2_record = get_total_record(team2_data.iloc[0])
+    team2_Q1 = team2_data['Q1'].values[0]
+    team2_Q2 = team2_data['Q2'].values[0]
+    team2_Q3 = team2_data['Q3'].values[0]
+    team2_Q4 = team2_data['Q4'].values[0]
     team2_net = stats_and_metrics[stats_and_metrics['Team'] == team_2]['NET'].values[0]
     team2_data = team2_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
-    spread, team_2_win_prob = find_spread_matchup(team_2, team_1, stats_and_metrics)
+    team2_url = BASE_URL + elo_data[elo_data['Team'] == team_2]['Team Link'].values[0]
+    response = requests.get(team2_url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    img_tag = soup.find("img", class_="team-menu__image")
+    img_src = img_tag.get("src")
+    image_url = BASE_URL + img_src
+    response = requests.get(image_url)
+    img2 = Image.open(BytesIO(response.content))
+
+    spread, team_2_win_prob = find_spread(team_2, team_1, stats_and_metrics)
     team_2_win_prob = round(team_2_win_prob / 100,3)
     team_1_win_prob = 1 - team_2_win_prob
     team_2_probs, team_1_probs = calculate_series_probabilities(team_2_win_prob)
@@ -869,26 +905,45 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     ax.spines['left'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
     plt.text(0, -1.7, f"#{team2_net} {team_2} vs. #{team1_net} {team_1}", ha='center', fontsize=24, fontweight='bold')
-    plt.text(0, -1.25, "Comparing Team Percentiles", ha='center', fontsize=16)
+    plt.text(0, -1.25, "Matchup Comparison", ha='center', fontsize=16)
     plt.text(0, -0.8, f"{spread}", ha='center', fontsize=16, fontweight='bold')
-    plt.text(-130, -0.8, f"{team_2}", ha='center', fontsize=16, fontweight='bold')
-    plt.text(130, -0.8, f"{team_1}", ha='center', fontsize=16, fontweight='bold')
     plt.text(0, 12.8, "@PEARatings", ha='center', fontsize=16, fontweight='bold')
 
-    plt.text(-130, 0, "Single Game", ha='center', fontsize=16, fontweight='bold')
-    plt.text(-130, 0.5, f"{round(team_2_win_prob*100,1)}%", ha='center', fontsize=16)
-    plt.text(-130, 1.3, "Series Win", ha='center', fontsize=16, fontweight='bold')
-    plt.text(-130, 1.8, f"{round(team_2_two_win*100,1)}%", ha='center', fontsize=16)
-    plt.text(-130, 2.6, "Series Sweep", ha='center', fontsize=16, fontweight='bold')
-    plt.text(-130, 3.1, f"{round(team_2_three_win*100,1)}%", ha='center', fontsize=16)
+    plt.text(-135, 0.5, f"{team_2}", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-135, 1.0, f"{team2_record}", ha='center', fontsize=16)
+    plt.text(-135, 2.2, "Single Game", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-135, 2.7, f"{round(team_2_win_prob*100)}%", ha='center', fontsize=16)
+    plt.text(-135, 3.9, "Series", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-135, 4.4, f"Win 1: {round(team_2_one_win*100)}%", ha='center', fontsize=16)
+    plt.text(-135, 4.9, f"Win 2: {round(team_2_two_win*100)}%", ha='center', fontsize=16)
+    plt.text(-135, 5.4, f"Win 3: {round(team_2_three_win*100)}%", ha='center', fontsize=16)
+    plt.text(-135, 6.6, "Quadrants", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-148, 7.1, f"Q1: {team2_Q1}", ha='left', fontsize=16)
+    plt.text(-148, 7.6, f"Q2: {team2_Q2}", ha='left', fontsize=16)
+    plt.text(-148, 8.1, f"Q3: {team2_Q3}", ha='left', fontsize=16)
+    plt.text(-148, 8.6, f"Q4: {team2_Q4}", ha='left', fontsize=16)
 
+    plt.text(135, 0.5, f"{team_1}", ha='center', fontsize=16, fontweight='bold')
+    plt.text(135, 1.0, f"{team1_record}", ha='center', fontsize=16)
+    plt.text(135, 2.2, "Single Game", ha='center', fontsize=16, fontweight='bold')
+    plt.text(135, 2.7, f"{round(team_1_win_prob*100)}%", ha='center', fontsize=16)
+    plt.text(135, 3.9, "Series", ha='center', fontsize=16, fontweight='bold')
+    plt.text(135, 4.4, f"Win 1: {round(team_1_one_win*100)}%", ha='center', fontsize=16)
+    plt.text(135, 4.9, f"Win 2: {round(team_1_two_win*100)}%", ha='center', fontsize=16)
+    plt.text(135, 5.4, f"Win 3: {round(team_1_three_win*100)}%", ha='center', fontsize=16)
+    plt.text(135, 6.6, "Quadrants", ha='center', fontsize=16, fontweight='bold')
+    plt.text(122, 7.1, f"Q1: {team1_Q1}", ha='left', fontsize=16)
+    plt.text(122, 7.6, f"Q2: {team1_Q2}", ha='left', fontsize=16)
+    plt.text(122, 8.1, f"Q3: {team1_Q3}", ha='left', fontsize=16)
+    plt.text(122, 8.6, f"Q4: {team1_Q4}", ha='left', fontsize=16)
 
-    plt.text(130, 0, "Single Game", ha='center', fontsize=16, fontweight='bold')
-    plt.text(130, 0.5, f"{round(team_1_win_prob*100,1)}%", ha='center', fontsize=16)
-    plt.text(130, 1.3, "Series Win", ha='center', fontsize=16, fontweight='bold')
-    plt.text(130, 1.8, f"{round(team_1_two_win*100,1)}%", ha='center', fontsize=16)
-    plt.text(130, 2.6, "Series Sweep", ha='center', fontsize=16, fontweight='bold')
-    plt.text(130, 3.1, f"{round(team_1_three_win*100,1)}%", ha='center', fontsize=16)
+    ax_img1 = fig.add_axes([0.94, 0.83, 0.15, 0.15])
+    ax_img1.imshow(img1)
+    ax_img1.axis("off")
+    ax_img2 = fig.add_axes([-0.065, 0.83, 0.15, 0.15])
+    ax_img2.imshow(img2)
+    ax_img2.axis("off")
+
     return fig
 
 st.title(f"{current_season} CBASE PEAR")
