@@ -531,7 +531,7 @@ bounds = [(0,1),
           (0,1),
           (0,1),
           (0,1),
-          (0,0.4),
+          (0,0.3),
           (0,1)]
 result = differential_evolution(objective_function, bounds, strategy='best1bin', maxiter=500, tol=1e-4, seed=42)
 optimized_weights = result.x
