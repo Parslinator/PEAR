@@ -139,6 +139,28 @@ def find_spread(home_team, away_team, modeling_stats):
         return f"{home_team} -{spread}"
     else:
         return f"{away_team} {spread}"
+    
+def find_spread_matchup(home_team, away_team, modeling_stats):
+    default_pr = modeling_stats['Rating'].mean() - 1.75 * modeling_stats['Rating'].std()
+    default_elo = 1200
+
+    home_pr = modeling_stats.loc[modeling_stats['Team'] == home_team, 'Rating']
+    away_pr = modeling_stats.loc[modeling_stats['Team'] == away_team, 'Rating']
+    home_elo = modeling_stats.loc[modeling_stats['Team'] == home_team, 'ELO']
+    away_elo = modeling_stats.loc[modeling_stats['Team'] == away_team, 'ELO']
+    home_pr = home_pr.iloc[0] if not home_pr.empty else default_pr
+    away_pr = away_pr.iloc[0] if not away_pr.empty else default_pr
+    home_elo = home_elo.iloc[0] if not home_elo.empty else default_elo
+    away_elo = away_elo.iloc[0] if not away_elo.empty else default_elo
+    rating_diff = home_pr - away_pr
+
+    win_prob = round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
+    raw_spread = adjust_home_pr(win_prob) + home_pr - away_pr
+    spread = round(raw_spread,2)
+    if spread >= 0:
+        return f"{home_team} -{spread}", win_prob
+    else:
+        return f"{away_team} {spread}", win_prob
 
 def elo_load():
     # URL of the page to scrape
@@ -687,6 +709,8 @@ def team_net_tracker(team):
 
 def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 1.5
+import matplotlib.patheffects as pe
+import matplotlib.colors as mcolors
 
 def team_percentiles_chart(team_name, stats_and_metrics):
     team_data = stats_and_metrics[stats_and_metrics['Team'] == team_name]
@@ -740,8 +764,28 @@ def team_percentiles_chart(team_name, stats_and_metrics):
 
     return fig
 
-import matplotlib.patheffects as pe
-import matplotlib.colors as mcolors
+def calculate_series_probabilities(win_prob):
+    # Team A win probabilities
+    P_A_0 = (1 - win_prob) ** 3
+    P_A_1 = 3 * win_prob * (1 - win_prob) ** 2
+    P_A_2 = 3 * win_prob ** 2 * (1 - win_prob)
+    P_A_3 = win_prob ** 3
+
+    # Team B win probabilities (q = 1 - p)
+    lose_prob = 1 - win_prob
+    P_B_0 = lose_prob ** 3
+    P_B_1 = 3 * lose_prob * win_prob ** 2
+    P_B_2 = 3 * lose_prob ** 2 * win_prob
+    P_B_3 = lose_prob ** 3
+
+    # Summing for at least conditions
+    P_A_at_least_1 = 1 - P_A_0
+    P_A_at_least_2 = P_A_2 + P_A_3
+    P_B_at_least_1 = 1 - P_B_0
+    P_B_at_least_2 = P_B_2 + P_B_3
+
+    return [P_A_at_least_1,P_A_at_least_2,P_A_3], [P_B_at_least_1,P_B_at_least_2,P_B_3]
+
 def matchup_percentiles(team_1, team_2, stats_and_metrics):
     percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
     custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'fWAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
@@ -751,7 +795,16 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     team2_data = stats_and_metrics[stats_and_metrics['Team'] == team_2]
     team2_net = stats_and_metrics[stats_and_metrics['Team'] == team_2]['NET'].values[0]
     team2_data = team2_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
-    spread = find_spread(team_2, team_1, stats_and_metrics)
+    spread, team_2_win_prob = find_spread_matchup(team_2, team_1, stats_and_metrics)
+    team_2_win_prob = round(team_2_win_prob / 100,3)
+    team_1_win_prob = 1 - team_2_win_prob
+    team_2_probs, team_1_probs = calculate_series_probabilities(team_2_win_prob)
+    team_2_one_win = team_2_probs[0]
+    team_2_two_win = team_2_probs[1]
+    team_2_three_win = team_2_probs[2]
+    team_1_one_win = team_1_probs[0]
+    team_1_two_win = team_1_probs[1]
+    team_1_three_win = team_1_probs[2]
     combined = pd.DataFrame({
         'Metric': team1_data['Metric'],
         'Percentile': team1_data['Percentile'] - team2_data['Percentile']
@@ -818,9 +871,24 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     plt.text(0, -1.7, f"#{team2_net} {team_2} vs. #{team1_net} {team_1}", ha='center', fontsize=24, fontweight='bold')
     plt.text(0, -1.25, "Comparing Team Percentiles", ha='center', fontsize=16)
     plt.text(0, -0.8, f"{spread}", ha='center', fontsize=16, fontweight='bold')
-    plt.text(-99, -0.8, f"{team_2}", ha='left', fontsize=12, fontweight='bold')
-    plt.text(99, -0.8, f"{team_1}", ha='right', fontsize=12, fontweight='bold')
+    plt.text(-130, -0.8, f"{team_2}", ha='center', fontsize=16, fontweight='bold')
+    plt.text(130, -0.8, f"{team_1}", ha='center', fontsize=16, fontweight='bold')
     plt.text(0, 12.8, "@PEARatings", ha='center', fontsize=16, fontweight='bold')
+
+    plt.text(-130, 0, "Single Game", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-130, 0.5, f"{round(team_2_win_prob*100,1)}%", ha='center', fontsize=16)
+    plt.text(-130, 1.3, "Series Win", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-130, 1.8, f"{round(team_2_two_win*100,1)}%", ha='center', fontsize=16)
+    plt.text(-130, 2.6, "Series Sweep", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-130, 3.1, f"{round(team_2_three_win*100,1)}%", ha='center', fontsize=16)
+
+
+    plt.text(130, 0, "Single Game", ha='center', fontsize=16, fontweight='bold')
+    plt.text(130, 0.5, f"{round(team_1_win_prob*100,1)}%", ha='center', fontsize=16)
+    plt.text(130, 1.3, "Series Win", ha='center', fontsize=16, fontweight='bold')
+    plt.text(130, 1.8, f"{round(team_1_two_win*100,1)}%", ha='center', fontsize=16)
+    plt.text(130, 2.6, "Series Sweep", ha='center', fontsize=16, fontweight='bold')
+    plt.text(130, 3.1, f"{round(team_1_three_win*100,1)}%", ha='center', fontsize=16)
     return fig
 
 st.title(f"{current_season} CBASE PEAR")
