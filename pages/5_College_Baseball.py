@@ -119,7 +119,7 @@ else:
     modeling_stats = None  # No valid files found
 formatted_latest_date = latest_date.strftime("%B %d, %Y")
 
-def find_spread(home_team, away_team):
+def find_spread(home_team, away_team, modeling_stats):
     default_pr = modeling_stats['Rating'].mean() - 1.75 * modeling_stats['Rating'].std()
     default_elo = 1200
 
