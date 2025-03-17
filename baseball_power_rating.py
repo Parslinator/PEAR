@@ -1412,7 +1412,7 @@ central_time_zone = pytz.timezone('US/Central')
 now = datetime.datetime.now(central_time_zone)
 
 # Check if it's Monday and after 10:00 AM and before 3:00 PM
-if now.hour < 15 and now.hour > 9:
+if now.hour < 13 and now.hour > 9:
     from bs4 import BeautifulSoup # type: ignore
     import pandas as pd # type: ignore
     import requests # type: ignore
