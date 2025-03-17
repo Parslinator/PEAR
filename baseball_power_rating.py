@@ -2149,7 +2149,7 @@ if now.hour < 15 and now.hour > 9:
     formatted_df = formatted_df.reset_index()
     formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
 
-    tournament_sim = simulate_full_tournament(formatted_df, stats_and_metrics, 1000)
+    tournament_sim = simulate_full_tournament(formatted_df, stats_and_metrics, 5000)
     top_25_teams = tournament_sim[0:25]
     top_25_teams.iloc[:, 1:] = top_25_teams.iloc[:, 1:] * 100
 
