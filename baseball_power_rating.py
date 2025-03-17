@@ -1215,11 +1215,11 @@ def calculate_net(weights):
         w_sos * stats_and_metrics['Norm_SOS']
     )
     stats_and_metrics['NET'] = stats_and_metrics['NET_Score'].rank(ascending=False).astype(int)
-    stats_and_metrics['combined_rank'] = stats_and_metrics['Projected_RPI']
+    stats_and_metrics['combined_rank'] = stats_and_metrics['ELO_Rank']
     spearman_corr = stats_and_metrics[['NET', 'combined_rank']].corr(method='spearman').iloc[0,1]
 
     return -spearman_corr
-bounds = [(0.55,1), (0,.05)]  
+bounds = [(0,1), (0,.05)]  
 result = differential_evolution(calculate_net, bounds, strategy='best1bin', maxiter=500, tol=1e-4, seed=42)
 optimized_weights = result.x
 print("NET Calculation Weights:")
