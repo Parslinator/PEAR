@@ -1103,12 +1103,10 @@ def calculate_resume_quality(group, bubble_team_rating):
         opponent_rating = row["away_rating"] if is_home else row["home_rating"]
         win_prob = PEAR_Win_Prob(bubble_team_rating, opponent_rating) / 100
         team_won = (is_home and row["home_score"] > row["away_score"]) or (is_away and row["away_score"] > row["home_score"])
-        run_diff = abs(row["home_score"] - row["away_score"])
-        run_diff_adjustment = 1 + np.log1p(run_diff)
         if team_won:
             resume_quality += (1-win_prob)
         else:
-            resume_quality -= win_prob * run_diff_adjustment
+            resume_quality -= win_prob
     # resume_quality = resume_quality / len(group)
     results.append({"Team": team, "resume_quality": resume_quality})
     return pd.DataFrame(results)
