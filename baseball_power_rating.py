@@ -1870,3 +1870,344 @@ if now.hour < 15 and now.hour > 10:
         plt.tight_layout()
         plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Over_Time/over_time_{formatted_date}.png", bbox_inches='tight')
     net_tracker(14,16)
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import pandas as pd
+    from matplotlib.colors import LinearSegmentedColormap
+    import numpy as np
+    import random
+    from collections import defaultdict
+
+    def PEAR_Win_Prob(home_pr, away_pr):
+        rating_diff = home_pr - away_pr
+        return round(1 / (1 + 10 ** (-rating_diff / 7.5)), 4)  # More precision, rounded later in output
+
+    def simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics):
+        teams = [team_a, team_b, team_c, team_d]
+        ratings = {team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].iloc[0] for team in teams}
+
+        game1 = PEAR_Win_Prob(ratings[team_a], ratings[team_d]) 
+        w1, l1 = (team_a, team_d) if random.random() < game1 else (team_d, team_a)
+
+        game2 = PEAR_Win_Prob(ratings[team_b], ratings[team_c])
+        w2, l2 = (team_b, team_c) if random.random() < game2 else (team_c, team_b)
+
+        game3 = PEAR_Win_Prob(ratings[l2], ratings[l1])
+        w3 = l2 if random.random() < game3 else l1
+
+        game4 = PEAR_Win_Prob(ratings[w1], ratings[w2])
+        w4, l4 = (w1, w2) if random.random() < game4 else (w2, w1)
+
+        game5 = PEAR_Win_Prob(ratings[l4], ratings[w3])
+        w5 = l4 if random.random() < game5 else w3
+
+        game6 = PEAR_Win_Prob(ratings[w4], ratings[w5])
+        w6 = w4 if random.random() < game6 else w5
+
+        if w6 == w4:
+            regional_winner = w6
+        else:
+            regional_winner = w4 if random.random() < PEAR_Win_Prob(ratings[w4], ratings[w5]) else w5
+
+        return regional_winner
+
+    def run_simulation(team_a, team_b, team_c, team_d, stats_and_metrics, num_simulations=1000):
+        results = defaultdict(int)
+
+        for _ in range(num_simulations):
+            winner = simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics)
+            results[winner] += 1
+
+        # Sort and format results
+        sorted_results = sorted(results.items(), key=lambda x: x[1], reverse=True)
+        
+        # Return a defaultdict to maintain the same structure
+        formatted_results = defaultdict(float, {team: round(wins / num_simulations, 3) for team, wins in sorted_results})
+        
+        return formatted_results
+
+    def select_super_regional_teams(regional_results):
+        """Selects super regional teams probabilistically based on regional results."""
+        super_regional_teams = []
+        matchups = [(0, 15), (1, 14), (2, 13), (3, 12), 
+                    (4, 11), (5, 10), (6, 9), (7, 8)]
+        
+        for idx1, idx2 in matchups:
+            team1 = random.choices(list(regional_results[idx1].keys()), 
+                                weights=list(regional_results[idx1].values()), k=1)[0]
+            team2 = random.choices(list(regional_results[idx2].keys()), 
+                                weights=list(regional_results[idx2].values()), k=1)[0]
+            super_regional_teams.append((team1, team2, idx1))  # Keep track of region index
+
+        return super_regional_teams
+
+    def simulate_super_regional(team1, team2, stats_and_metrics):
+        """Simulates a best-of-three series for the super regional."""
+        rating1 = stats_and_metrics.loc[stats_and_metrics["Team"] == team1, "Rating"].values[0]
+        rating2 = stats_and_metrics.loc[stats_and_metrics["Team"] == team2, "Rating"].values[0]
+
+        wins1, wins2 = 0, 0
+        while wins1 < 2 and wins2 < 2:
+            win_prob = PEAR_Win_Prob(rating1, rating2)
+            if random.random() < win_prob:
+                wins1 += 1
+            else:
+                wins2 += 1
+
+        return team1 if wins1 == 2 else team2
+
+    def run_super_regionals(regional_results, stats_and_metrics, num_simulations=1000):
+        """Runs multiple simulations of super regionals incorporating regional probabilities."""
+        results = [defaultdict(int) for _ in range(8)]  # Maintain separate regions
+
+        for _ in range(num_simulations):
+            super_regional_matchups = select_super_regional_teams(regional_results)
+            
+            for team1, team2, region_index in super_regional_matchups:
+                winner = simulate_super_regional(team1, team2, stats_and_metrics)
+                results[region_index][winner] += 1  # Track wins in the correct region
+
+        # Normalize probabilities for each region
+        for i in range(8):
+            total_sims = sum(results[i].values())
+            for team in results[i]:
+                results[i][team] = round(results[i][team] / total_sims, 3)
+
+        return results
+
+    def select_team(region):
+        """Selects a team probabilistically based on their make_omaha probabilities."""
+        teams, weights = zip(*region.items())
+        return random.choices(teams, weights=weights, k=1)[0]
+
+    def simulate_game(team1, team2, stats_and_metrics):
+        """Simulates a game using PEAR_Win_Prob."""
+        rating1 = stats_and_metrics.loc[stats_and_metrics["Team"] == team1, "Rating"].values[0]
+        rating2 = stats_and_metrics.loc[stats_and_metrics["Team"] == team2, "Rating"].values[0]
+        win_prob = PEAR_Win_Prob(rating1, rating2)
+        return team1 if random.random() < win_prob else team2
+
+    def simulate_double_elimination(teams, stats_and_metrics):
+        """Runs a double-elimination tournament for 4 teams."""
+        winners_bracket = [teams[0], teams[1], teams[2], teams[3]]
+        losers_bracket = []
+
+        # Round 1
+        game1_winner = simulate_game(winners_bracket[0], winners_bracket[1], stats_and_metrics)
+        game1_loser = winners_bracket[1] if game1_winner == winners_bracket[0] else winners_bracket[0]
+
+        game2_winner = simulate_game(winners_bracket[2], winners_bracket[3], stats_and_metrics)
+        game2_loser = winners_bracket[3] if game2_winner == winners_bracket[2] else winners_bracket[2]
+
+        losers_bracket.extend([game1_loser, game2_loser])
+        
+        # Round 2 (Winners Final)
+        winners_final_winner = simulate_game(game1_winner, game2_winner, stats_and_metrics)
+        winners_final_loser = game1_winner if winners_final_winner == game2_winner else game2_winner
+
+        # Losers Bracket
+        losers_round1_winner = simulate_game(losers_bracket[0], losers_bracket[1], stats_and_metrics)
+
+        # Losers Final
+        losers_final_winner = simulate_game(losers_round1_winner, winners_final_loser, stats_and_metrics)
+
+        # Championship (Double elimination rule: Losers bracket winner must win twice)
+        if simulate_game(winners_final_winner, losers_final_winner, stats_and_metrics) == winners_final_winner:
+            return winners_final_winner
+        return simulate_game(winners_final_winner, losers_final_winner, stats_and_metrics)
+
+    def run_college_world_series(make_omaha, stats_and_metrics, num_simulations=1000):
+        """Runs two separate double-elimination tournaments and returns results in the same format as input."""
+        results = [defaultdict(int), defaultdict(int)]
+
+        for _ in range(num_simulations):
+            # Tournament 1
+            team1 = select_team(make_omaha[0])
+            team2 = select_team(make_omaha[7])
+            team3 = select_team(make_omaha[3])
+            team4 = select_team(make_omaha[4])
+            winner1 = simulate_double_elimination([team1, team2, team3, team4], stats_and_metrics)
+            results[0][winner1] += 1
+
+            # Tournament 2
+            team5 = select_team(make_omaha[1])
+            team6 = select_team(make_omaha[6])
+            team7 = select_team(make_omaha[2])
+            team8 = select_team(make_omaha[5])
+            winner2 = simulate_double_elimination([team5, team6, team7, team8], stats_and_metrics)
+            results[1][winner2] += 1
+
+        # Normalize results to probabilities
+        for i in range(2):
+            total_sims = sum(results[i].values())
+            for team in results[i]:
+                results[i][team] = round(results[i][team] / total_sims, 3)
+
+        return results
+
+    def simulate_finals(make_finals, stats_and_metrics):
+        """Simulates the College World Series Finals as a best-of-three series."""
+        # Select a team from each defaultdict
+        team1 = random.choices(list(make_finals[0].keys()), weights=list(make_finals[0].values()), k=1)[0]
+        team2 = random.choices(list(make_finals[1].keys()), weights=list(make_finals[1].values()), k=1)[0]
+
+        # Get team ratings
+        rating1 = stats_and_metrics.loc[stats_and_metrics["Team"] == team1, "Rating"].values[0]
+        rating2 = stats_and_metrics.loc[stats_and_metrics["Team"] == team2, "Rating"].values[0]
+
+        # Simulate best-of-three series
+        wins1, wins2 = 0, 0
+        while wins1 < 2 and wins2 < 2:
+            win_prob = PEAR_Win_Prob(rating1, rating2)
+            if random.random() < win_prob:
+                wins1 += 1
+            else:
+                wins2 += 1
+
+        # Return the champion
+        return team1 if wins1 == 2 else team2
+
+    def run_finals_simulation(make_finals, stats_and_metrics, num_simulations=1000):
+        """Runs multiple simulations of the College World Series Finals and returns championship probabilities."""
+        results = defaultdict(int)
+
+        for _ in range(num_simulations):
+            champion = simulate_finals(make_finals, stats_and_metrics)
+            results[champion] += 1
+
+        # Convert to probabilities
+        total_sims = sum(results.values())
+        results_dict = {team: round(wins / total_sims, 3) for team, wins in results.items()}
+        
+        return results_dict
+
+    def generate_simulation_dataframe(regionals_results, make_omaha, make_finals, win_finals):
+        teams = set()  # To store all unique teams from all simulation results
+
+        # Collect teams from regional results (Super Regional probabilities)
+        for regional in regionals_results:
+            teams.update(regional.keys())
+
+        # Collect teams from Make Omaha (Omaha probabilities)
+        for omaha in make_omaha:
+            teams.update(omaha.keys())
+
+        # Collect teams from Make Finals (Finals probabilities)
+        for finals in make_finals:
+            teams.update(finals.keys())
+
+        # Collect teams from Win Finals (Win NC probabilities)
+        teams.update(win_finals.keys())
+
+        # Initialize a dictionary to hold the probabilities for each team
+        data = {team: {"Supers": 0, "Omaha": 0, "Finals": 0, "Win NC": 0} for team in teams}
+
+        # Assign the probabilities directly from the simulation results
+        for regional in regionals_results:
+            for team, prob in regional.items():
+                data[team]["Supers"] = prob  # Assign the probability for reaching Super Regionals
+
+        for omaha in make_omaha:
+            for team, prob in omaha.items():
+                data[team]["Omaha"] = prob  # Assign the probability for reaching Omaha
+
+        for finals in make_finals:
+            for team, prob in finals.items():
+                data[team]["Finals"] = prob  # Assign the probability for reaching Finals
+
+        for team, prob in win_finals.items():
+            data[team]["Win NC"] = prob  # Assign the probability for winning the National Championship
+
+        # Convert the dictionary to a DataFrame
+        df = pd.DataFrame.from_dict(data, orient='index')
+
+        return df
+
+    def simulate_full_tournament(formatted_df, stats_and_metrics, iter):
+        regionals_results = []
+        for i in range(len(formatted_df)):
+            regionals_results.append(run_simulation(formatted_df.iloc[i,1], formatted_df.iloc[i,2], formatted_df.iloc[i,3], formatted_df.iloc[i,4], stats_and_metrics, iter))
+        make_omaha = run_super_regionals(regionals_results, stats_and_metrics, iter)
+        make_finals = run_college_world_series(make_omaha, stats_and_metrics, iter)
+        win_finals = run_finals_simulation(make_finals, stats_and_metrics, iter)
+        simulation_df = generate_simulation_dataframe(regionals_results, make_omaha, make_finals, win_finals)
+        simulation_df = simulation_df.sort_values('Win NC', ascending=False).reset_index()
+        simulation_df.rename(columns={'index': 'Team'}, inplace=True)
+        return simulation_df
+
+    automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
+    at_large = stats_and_metrics.drop(automatic_qualifiers.index)
+    at_large = at_large.nsmallest(34, "NET")
+    last_four_in = at_large[-4:].reset_index()
+    next_8_teams = stats_and_metrics.drop(automatic_qualifiers.index).nsmallest(42, "NET").iloc[34:].reset_index(drop=True)
+    tournament = pd.concat([at_large, automatic_qualifiers])
+    tournament = tournament.sort_values(by="NET").reset_index(drop=True)
+    tournament["Seed"] = (tournament.index // 16) + 1
+    pod_order = list(range(1, 17)) + list(range(16, 0, -1)) + list(range(1, 17)) + list(range(16, 0, -1))
+    tournament["Host"] = pod_order
+    formatted_df = tournament.pivot_table(index="Host", columns="Seed", values="Team", aggfunc=lambda x: ' '.join(x))
+    formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
+    formatted_df = formatted_df.reset_index()
+    formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
+
+    tournament_sim = simulate_full_tournament(formatted_df, stats_and_metrics, 1000)
+    top_25_teams = tournament_sim[0:25]
+    top_25_teams.iloc[:, 1:] = top_25_teams.iloc[:, 1:] * 100
+
+    # Normalize values for color gradient (excluding 0 values)
+    min_value = top_25_teams.iloc[:, 1:].replace(0, np.nan).min().min()  # Min of all probabilities
+    max_value = top_25_teams.iloc[:, 1:].max().max()  # Max of all probabilities
+
+    def normalize(value, min_val, max_val):
+        """ Normalize values between 0 and 1 for colormap. """
+        if pd.isna(value) or value == 0:
+            return 0  # Keep 0 values at the lowest color
+        return (value - min_val) / (max_val - min_val)
+
+    # Define custom colormap (lighter green to dark green)
+    cmap = LinearSegmentedColormap.from_list('custom_green', ['#d5f5e3', '#006400'])
+
+    # Create figure and axis
+    fig, ax = plt.subplots(figsize=(8, 6), dpi=125)
+    fig.patch.set_facecolor('#CECEB2')
+
+    ax.axis('tight')
+    ax.axis('off')
+
+    # Add the table
+    table = ax.table(
+        cellText=top_25_teams.values,
+        colLabels=top_25_teams.columns,
+        cellLoc='center',
+        loc='center',
+        colColours=['#CECEB2'] * len(top_25_teams.columns)  # Set the header background color
+    )
+    for (i, j), cell in table.get_celld().items():
+        cell.set_edgecolor('black')
+        cell.set_linewidth(1.2)
+        if i == 0:
+            cell.set_facecolor('#CECEB2')  
+            cell.set_text_props(fontsize=14, weight='bold', color='black')
+        elif j == 0:
+            cell.set_facecolor('#CECEB2')
+            cell.set_text_props(fontsize=14, weight='bold', color='black')
+
+        else:
+            value = top_25_teams.iloc[i-1, j]  # Skip header row
+            normalized_value = normalize(value, min_value, max_value)
+            color = cmap(normalized_value)
+            cell.set_facecolor(color)
+            cell.set_text_props(fontsize=14, weight='bold', color='black')
+            if value == 0:
+                cell.get_text().set_text("<1%")
+            else:
+                cell.get_text().set_text(f"{value:.1f}%")
+
+        cell.set_height(0.05)
+
+    # Show the plot
+    plt.text(0, 0.086, 'Odds to Win Championship', fontsize=24, fontweight='bold', ha='center')
+    plt.text(0, 0.08, f"Based on Tournament Outlook {today.strftime('%m/%d')}", fontsize=16, ha='center')
+    plt.text(0, 0.074, f"@PEARatings", fontsize=16, fontweight='bold', ha='center')
+    plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Tournament_Odds/tournament_odds_{formatted_date}.png", bbox_inches='tight')
