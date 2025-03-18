@@ -801,6 +801,7 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'fWAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
     team1_data = stats_and_metrics[stats_and_metrics['Team'] == team_1]
     team1_record = get_total_record(team1_data.iloc[0])
+    team1_proj_record = team1_data['Projected_Record'].values[0]
     team1_Q1 = team1_data['Q1'].values[0]
     team1_Q2 = team1_data['Q2'].values[0]
     team1_Q3 = team1_data['Q3'].values[0]
@@ -818,6 +819,7 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
 
     team2_data = stats_and_metrics[stats_and_metrics['Team'] == team_2]
     team2_record = get_total_record(team2_data.iloc[0])
+    team2_proj_record = team2_data['Projected_Record'].values[0]
     team2_Q1 = team2_data['Q1'].values[0]
     team2_Q2 = team2_data['Q2'].values[0]
     team2_Q3 = team2_data['Q3'].values[0]
@@ -924,6 +926,9 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     plt.text(-148, 7.6, f"Q2: {team2_Q2}", ha='left', fontsize=16)
     plt.text(-148, 8.1, f"Q3: {team2_Q3}", ha='left', fontsize=16)
     plt.text(-148, 8.6, f"Q4: {team2_Q4}", ha='left', fontsize=16)
+    plt.text(-135, 9.8, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-135, 10.3, f"{team2_proj_record}", ha='center', fontsize=16)
+
 
     plt.text(135, 0.5, f"{team_1}", ha='center', fontsize=16, fontweight='bold')
     plt.text(135, 1.0, f"{team1_record}", ha='center', fontsize=16)
@@ -938,6 +943,8 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     plt.text(122, 7.6, f"Q2: {team1_Q2}", ha='left', fontsize=16)
     plt.text(122, 8.1, f"Q3: {team1_Q3}", ha='left', fontsize=16)
     plt.text(122, 8.6, f"Q4: {team1_Q4}", ha='left', fontsize=16)
+    plt.text(135, 9.8, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
+    plt.text(135, 10.3, f"{team1_proj_record}", ha='center', fontsize=16)
 
     ax_img1 = fig.add_axes([0.94, 0.83, 0.15, 0.15])
     ax_img1.imshow(img1)
@@ -1031,6 +1038,7 @@ with st.form(key='team_schedule'):
         rank, best, worst, schedule, completed = grab_team_schedule(team_name, modeling_stats)
         wins, losses = sum(completed['Result'].str.contains('W')), sum(completed['Result'].str.contains('L'))
         record = str(wins) + "-" + str(losses)
+        projected_record = modeling_stats[modeling_stats['Team'] == team_name]['Projected_Record'].values[0]
         schedule['win_prob'] = np.where(schedule['Team'] == schedule['home_team'], 
                                         schedule['home_win_prob'], 
                                         1 - schedule['home_win_prob'])
@@ -1045,6 +1053,7 @@ with st.form(key='team_schedule'):
         # st.write(f"Record: {record}")
         # st.write(f"Projected Record: {projected_record}")
         st.write(f"NET Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
+        st.write(f"Projected Record: {projected_record}")
         st.pyplot(fig)
         st.write("Upcoming Games")
         st.dataframe(schedule[['Opponent', 'NET', 'Quad', 'GQI', 'PEAR', 'Date']], use_container_width=True)

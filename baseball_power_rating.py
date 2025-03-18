@@ -1377,6 +1377,39 @@ previous = pd.concat([previous, missing_or_mismatched]).reset_index(drop=True)
 previous = previous.drop_duplicates(subset='Date', keep='last').reset_index(drop=True)
 previous.to_csv(f"./PEAR/PEAR Baseball/y{current_season}/straight_up.csv")
 
+def simulate_games(df, num_simulations=100):
+    projected_wins = []
+    games_remaining = df.groupby("Team").size()
+    for _ in range(num_simulations):
+        unique_games = df.drop_duplicates(subset=["Date", "home_team", "away_team"]).copy()
+        unique_games["random_val"] = np.random.rand(len(unique_games))
+        unique_games["home_wins"] = unique_games["random_val"] < unique_games["home_win_prob"]
+        results_map = unique_games.set_index(["Date", "home_team", "away_team"])["home_wins"].to_dict()
+        df["home_wins"] = df[["Date", "home_team", "away_team"]].apply(lambda x: results_map.get(tuple(x), None), axis=1)
+        df["winner"] = np.where(df["home_wins"], df["home_team"], df["away_team"])
+        df["loser"] = np.where(df["home_wins"], df["away_team"], df["home_team"])
+        df["win_flag"] = (df["winner"] == df["Team"]).astype(int)
+        wins_per_team = df.groupby("Team")["win_flag"].sum()
+        projected_wins.append(wins_per_team)
+    projected_wins_df = pd.DataFrame(projected_wins).mean().round().reset_index()
+    projected_wins_df.columns = ["Team", "Remaining_Wins"]
+    projected_wins_df["Games_Remaining"] = projected_wins_df["Team"].map(games_remaining)
+    projected_wins_df["Remaining_Losses"] = projected_wins_df['Games_Remaining'] - projected_wins_df['Remaining_Wins']
+    return projected_wins_df
+
+
+def PEAR_Win_Prob(home_pr, away_pr):
+    rating_diff = home_pr - away_pr
+    return round(1 / (1 + 10 ** (-rating_diff / 7.5)), 4)  # More precision, rounded later in output
+
+projected_wins_df = simulate_games(remaining_games)
+stats_and_metrics = pd.merge(stats_and_metrics, projected_wins_df, how='left', on='Team')
+stats_and_metrics['Projected_Wins'] = stats_and_metrics['Remaining_Wins'] + stats_and_metrics['Wins']
+stats_and_metrics['Projected_Losses'] = stats_and_metrics['Remaining_Losses'] + stats_and_metrics['Losses']
+stats_and_metrics["Projected_Record"] = stats_and_metrics.apply(
+    lambda x: f"{int(x['Projected_Wins'])}-{int(x['Projected_Losses'])}", axis=1
+)
+
 stats_and_metrics['pNET_Score'] = (stats_and_metrics['NET_Score'].rank(pct=True) * 98 + 1).round().astype(int)
 stats_and_metrics['pRating'] = (stats_and_metrics['Rating'].rank(pct=True) * 98 + 1).round().astype(int)
 stats_and_metrics['pResume_Quality'] = (stats_and_metrics['resume_quality'].rank(pct=True) * 98 + 1).round().astype(int)
