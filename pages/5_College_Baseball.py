@@ -1016,7 +1016,7 @@ st.markdown(f'<h2 id="matchup-cards">Matchup Cards</h2>', unsafe_allow_html=True
 with st.form(key='calculate_spread'):
     away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
     home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
-    spread_button = st.form_submit_button("Enter")
+    spread_button = st.form_submit_button("Calculate Spread")
     if spread_button:
         fig = matchup_percentiles(away_team, home_team, modeling_stats)
         st.pyplot(fig)
@@ -1026,7 +1026,7 @@ st.divider()
 st.markdown(f'<h2 id="team-schedule">Team Schedule</h2>', unsafe_allow_html=True)
 with st.form(key='team_schedule'):
     team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
-    team_schedule = st.form_submit_button("Enter")
+    team_schedule = st.form_submit_button("Team Schedule")
     if team_schedule:
         rank, best, worst, schedule, completed = grab_team_schedule(team_name, modeling_stats)
         wins, losses = sum(completed['Result'].str.contains('W')), sum(completed['Result'].str.contains('L'))
@@ -1055,7 +1055,7 @@ st.divider()
 st.markdown(f'<h2 id="team-percentiles">Team Percentiles</h2>', unsafe_allow_html=True)
 with st.form(key='team_percentile'):
     team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
-    team_percentile = st.form_submit_button("Enter")
+    team_percentile = st.form_submit_button("Team Percentiles")
     if team_percentile:
         fig = team_percentiles_chart(team_name, modeling_stats)
         st.pyplot(fig)
