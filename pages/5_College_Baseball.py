@@ -133,9 +133,10 @@ def find_spread(home_team, away_team):
     away_pr = away_pr.iloc[0] if not away_pr.empty else default_pr
     home_elo = home_elo.iloc[0] if not home_elo.empty else default_elo
     away_elo = away_elo.iloc[0] if not away_elo.empty else default_elo
+    elo_win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1)*100,2)
 
     win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1)*100,2)
-    raw_spread = adjust_home_pr(win_prob) + home_pr - away_pr
+    raw_spread = adjust_home_pr(elo_win_prob) + home_pr - away_pr
     spread = round(raw_spread,2)
     if spread >= 0:
         return f"{home_team} -{spread}"
@@ -154,10 +155,11 @@ def find_spread_matchup(home_team, away_team, modeling_stats):
     away_pr = away_pr.iloc[0] if not away_pr.empty else default_pr
     home_elo = home_elo.iloc[0] if not home_elo.empty else default_elo
     away_elo = away_elo.iloc[0] if not away_elo.empty else default_elo
+    elo_win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1)*100,2)
     rating_diff = home_pr - away_pr
 
     win_prob = round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
-    raw_spread = adjust_home_pr(win_prob) + home_pr - away_pr
+    raw_spread = adjust_home_pr(elo_win_prob) + home_pr - away_pr
     spread = round(raw_spread,2)
     if spread >= 0:
         return f"{home_team} -{spread}", win_prob
