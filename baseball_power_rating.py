@@ -1533,6 +1533,32 @@ if now.hour < 13 and now.hour > 9:
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/RPI/rpi_{formatted_date}.png", bbox_inches='tight')
     print('RPI Done')
 
+    major_conferences = ['SEC', 'ACC', 'Independent', 'Big 12', 'Big Ten']
+    top_25 = stats_and_metrics[~stats_and_metrics['Conference'].isin(major_conferences)].reset_index(drop=True)[0:25]
+    fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
+    fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    fig.patch.set_facecolor('#CECEB2')
+    plt.suptitle(f"Week {current_week} Mid-Major CBASE PEAR", fontsize=20, fontweight='bold', color='black')
+    fig.text(0.5, 0.92, "NET Ranking Incorporating Team Strength and Resume", fontsize=10, ha='center', color='black')
+    fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
+
+    for i, ax in enumerate(axs.ravel()):
+        team = top_25.loc[i, 'Team']
+        team_url = BASE_URL + elo_data[elo_data['Team'] == team]['Team Link'].values[0]
+        response = requests.get(team_url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        img_tag = soup.find("img", class_="team-menu__image")
+        img_src = img_tag.get("src")
+        image_url = BASE_URL + img_src
+        response = requests.get(image_url)
+        img = Image.open(BytesIO(response.content))
+        ax.imshow(img)
+        ax.set_facecolor('#f0f0f0')
+        ax.set_title(f"#{i+1} {team}", fontsize=8, fontweight='bold')
+        ax.axis('off')
+    plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Mid_Major/mid_major_{formatted_date}.png", bbox_inches='tight')
+    print('Mid Major Done')
+
     automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
     at_large = stats_and_metrics.drop(automatic_qualifiers.index)
     at_large = at_large.nsmallest(34, "NET")
