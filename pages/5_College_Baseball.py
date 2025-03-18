@@ -1039,15 +1039,6 @@ with st.form(key='team_schedule'):
         wins, losses = sum(completed['Result'].str.contains('W')), sum(completed['Result'].str.contains('L'))
         record = str(wins) + "-" + str(losses)
         projected_record = modeling_stats[modeling_stats['Team'] == team_name]['Projected_Record'].values[0]
-        schedule['win_prob'] = np.where(schedule['Team'] == schedule['home_team'], 
-                                        schedule['home_win_prob'], 
-                                        1 - schedule['home_win_prob'])
-        schedule['win_prob'] = schedule['win_prob'].fillna(0.9)
-        expected_wins = round(sum(schedule['win_prob']))
-        expected_losses = len(schedule) - expected_wins
-        projected_wins = wins + expected_wins
-        projected_losses = losses + expected_losses
-        projected_record = str(projected_wins) + "-" + str(projected_losses)
         schedule.index = schedule.index + 1
         fig = create_quadrant_table(completed)
         # st.write(f"Record: {record}")
