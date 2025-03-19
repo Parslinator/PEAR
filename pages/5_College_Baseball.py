@@ -837,7 +837,7 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     response = requests.get(image_url)
     img2 = Image.open(BytesIO(response.content))
 
-    spread, team_2_win_prob = find_spread(team_2, team_1, stats_and_metrics)
+    spread, team_2_win_prob = find_spread_matchup(team_2, team_1, stats_and_metrics)
     team_2_win_prob = round(team_2_win_prob / 100,3)
     team_1_win_prob = 1 - team_2_win_prob
     team_2_probs, team_1_probs = calculate_series_probabilities(team_2_win_prob)
