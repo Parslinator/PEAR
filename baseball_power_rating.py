@@ -299,7 +299,8 @@ def get_stat_dataframe(stat_name):
         print("No data collected.")
         return None
 
-# Example usage
+####################### Stat Pull #######################
+
 stat_name_input = "Batting Average"  # Change this to the desired stat
 ba = get_stat_dataframe(stat_name_input)
 ba["HPG"] = ba["H"] / ba["G"]
@@ -410,6 +411,7 @@ baseball_stats = df_combined.loc[:, ~df_combined.columns.duplicated()].sort_valu
 baseball_stats['OPS'] = baseball_stats['SLG'] + baseball_stats['OBP']
 baseball_stats['PYTHAG'] = round((baseball_stats['RS'] ** 1.83) / ((baseball_stats['RS'] ** 1.83) + (baseball_stats['RA'] ** 1.83)),3)
 
+####################### Advanced Stats #######################
 
 hbp = get_stat_dataframe('Hit by Pitch')[['Team', 'G', 'HBP']]
 hits = get_stat_dataframe('Hits')[['Team', 'AB', 'H']]
@@ -463,6 +465,8 @@ wOBA['oWAR_z'] = (wOBA['oWAR'] - mean_oWAR) / std_oWAR
 wOBA['pWAR_z'] = (wOBA['pWAR'] - mean_pWAR) / std_pWAR
 wOBA['fWAR'] = wOBA['oWAR_z'] + wOBA['pWAR_z']
 baseball_stats = pd.merge(baseball_stats, wOBA[['Team', 'wOBA', 'wRAA', 'oWAR_z', 'pWAR_z', 'fWAR', 'ISO', 'wRC+', 'BB%', 'BABIP', 'RA9', 'FIP', 'LOB%', 'K/BB']], how='left', on='Team')
+
+####################### Rating Calculation #######################
 
 rpi_2024 = pd.read_csv("./PEAR/PEAR Baseball/rpi_end_2024.csv")
 
@@ -608,6 +612,8 @@ import requests # type: ignore
 from bs4 import BeautifulSoup # type: ignore
 import pandas as pd # type: ignore
 import time
+
+####################### Schedule Load #######################
 
 # Base URL for Warren Nolan
 BASE_URL = "https://www.warrennolan.com"
@@ -881,6 +887,8 @@ completed_schedule = completed_schedule[completed_schedule["Result"].str.startsw
 
 straight_up_calculator = completed_schedule.copy()
 
+####################### RPI #######################
+
 def rpi_components(completed_schedule):
     teams = set(completed_schedule['home_team']).union(set(completed_schedule['away_team']))
     team_records = {team: {'wins': 0, 'losses': 0} for team in teams}
@@ -984,6 +992,8 @@ print(f"Win Prob: {optimized_weights[0]}")
 print(f"Opp Win Prob: {optimized_weights[1]}")
 print(f"Opp Opp Win Prob: {1 - (optimized_weights[0] + optimized_weights[1])}")
 
+####################### Expected Wins #######################
+
 def calculate_expected_wins(group):
     # Initialize a variable to accumulate expected wins
     expected_wins = 0
@@ -1011,6 +1021,8 @@ def calculate_expected_wins(group):
 # Group by 'Team' and apply the calculation
 team_expected_wins = completed_schedule.groupby('Team').apply(calculate_expected_wins).reset_index(drop=True)
 
+####################### Strength of Schedule #######################
+
 def calculate_average_expected_wins(group, average_team):
     total_expected_wins = 0
 
@@ -1029,6 +1041,8 @@ avg_team_expected_wins = completed_schedule.groupby('Team').apply(calculate_aver
 
 rem_avg_expected_wins = remaining_games.groupby('Team').apply(calculate_average_expected_wins, average_team).reset_index(drop=True)
 rem_avg_expected_wins.rename(columns={"avg_expected_wins": "rem_avg_expected_wins", "total_expected_wins":"rem_total_expected_wins"}, inplace=True)
+
+####################### KPI #######################
 
 def calculate_kpi(completed_schedule, ending_data):
     def get_team_rank(team):
@@ -1091,6 +1105,8 @@ def calculate_kpi(completed_schedule, ending_data):
 # Call function
 kpi_results = calculate_kpi(completed_schedule, ending_data).sort_values('KPI_Score', ascending=False).reset_index(drop=True)
 
+####################### Resume Quality #######################
+
 def calculate_resume_quality(group, bubble_team_rating):
     results = []
     resume_quality = 0
@@ -1120,6 +1136,8 @@ def calculate_game_resume_quality(row, one_seed_rating):
     team_won = (is_home and row["home_score"] > row["away_score"]) or (is_away and row["away_score"] > row["home_score"])
     
     return (1 - win_prob) if team_won else -win_prob
+
+####################### Data Formatting #######################
 
 df_1 = pd.merge(ending_data, team_expected_wins[['Team', 'expected_wins', 'Wins', 'Losses']], on='Team', how='left')
 df_2 = pd.merge(df_1, avg_team_expected_wins[['Team', 'avg_expected_wins', 'total_expected_wins']], on='Team', how='left')
@@ -1187,6 +1205,8 @@ stats_and_metrics['AVG'] = round(stats_and_metrics[['KPI', 'WAB', 'SOR']].mean(a
 stats_and_metrics['Resume'] = stats_and_metrics['AVG'].rank(method='min').astype(int)
 stats_and_metrics = stats_and_metrics.sort_values('Resume').reset_index(drop=True)
 
+####################### RQI #######################
+
 bubble_team_rating = stats_and_metrics.loc[31, 'Rating']
 resume_quality = completed_schedule.groupby('Team').apply(calculate_resume_quality, bubble_team_rating).reset_index(drop=True)
 resume_quality['RQI'] = resume_quality['resume_quality'].rank(method='min', ascending=False).astype(int)
@@ -1194,6 +1214,8 @@ resume_quality = resume_quality.sort_values('RQI').reset_index(drop=True)
 resume_quality['resume_quality'] = resume_quality['resume_quality'] - resume_quality.loc[15, 'resume_quality']
 stats_and_metrics = pd.merge(stats_and_metrics, resume_quality, on='Team', how='left')
 schedule_df["resume_quality"] = schedule_df.apply(lambda row: calculate_game_resume_quality(row, bubble_team_rating), axis=1)
+
+####################### NET #######################
 
 stats_and_metrics["Norm_Rating"] = (stats_and_metrics["Rating"] - stats_and_metrics["Rating"].min()) / (stats_and_metrics["Rating"].max() - stats_and_metrics["Rating"].min())
 stats_and_metrics["Norm_RQI"] = (stats_and_metrics["resume_quality"] - stats_and_metrics["resume_quality"].min()) / (stats_and_metrics["resume_quality"].max() - stats_and_metrics["resume_quality"].min())
@@ -1230,6 +1252,7 @@ adj_rqi_weight = (1 - (optimized_weights[0] + optimized_weights[1])) / ((1 - (op
 stats_and_metrics['Norm_Resume'] = adj_rqi_weight * stats_and_metrics['Norm_RQI'] + adj_sos_weight * stats_and_metrics['Norm_SOS']
 stats_and_metrics['aRQI'] = stats_and_metrics['Norm_Resume'].rank(ascending=False).astype(int)
 
+####################### Quadrants #######################
 
 quadrant_records = {}
 
@@ -1300,6 +1323,8 @@ schedule_df.rename(columns={'Team_x':'Team'}, inplace=True)
 import numpy as np # type: ignore
 import pandas as pd # type: ignore
 
+####################### Game Quality #######################
+
 max_net = len(stats_and_metrics)
 max_spread = 16.5
 
@@ -1347,6 +1372,8 @@ def process_result(row):
     
     return result  # Leave other cases unchanged
 
+####################### Straight Up Tracking #######################
+
 straight_up_calculator['Result'] = straight_up_calculator['Result'].astype(str)
 straight_up_calculator = straight_up_calculator.sort_values(by="Result", key=lambda x: x.map(game_sort_key))
 straight_up_calculator["Result"] = straight_up_calculator["Result"].astype(str)  # Convert to string to avoid errors
@@ -1376,6 +1403,8 @@ missing_or_mismatched = missing_or_mismatched.drop(columns=['Total_previous'])
 previous = pd.concat([previous, missing_or_mismatched]).reset_index(drop=True)
 previous = previous.drop_duplicates(subset='Date', keep='last').reset_index(drop=True)
 previous.to_csv(f"./PEAR/PEAR Baseball/y{current_season}/straight_up.csv")
+
+####################### Projected NET #######################
 
 def PEAR_Win_Prob(home_pr, away_pr):
     rating_diff = home_pr - away_pr
@@ -1442,6 +1471,8 @@ stats_and_metrics['Projected_NET_Score'] = (
 )
 stats_and_metrics['Projected_NET'] = stats_and_metrics['Projected_NET_Score'].rank(ascending=False).astype(int)
 
+####################### Percentile Calculations #######################
+
 stats_and_metrics['pNET_Score'] = (stats_and_metrics['NET_Score'].rank(pct=True) * 98 + 1).round().astype(int)
 stats_and_metrics['pRating'] = (stats_and_metrics['Rating'].rank(pct=True) * 98 + 1).round().astype(int)
 stats_and_metrics['pResume_Quality'] = (stats_and_metrics['resume_quality'].rank(pct=True) * 98 + 1).round().astype(int)
@@ -1475,6 +1506,8 @@ schedule_df.to_csv(file_path)
 import datetime
 central_time_zone = pytz.timezone('US/Central')
 now = datetime.datetime.now(central_time_zone)
+
+####################### Visuals #######################
 
 # Check if it's Monday and after 10:00 AM and before 3:00 PM
 if now.hour < 13 and now.hour > 7:
