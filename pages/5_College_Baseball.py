@@ -718,7 +718,7 @@ import matplotlib.colors as mcolors
 
 def team_percentiles_chart(team_name, stats_and_metrics):
     team_data = stats_and_metrics[stats_and_metrics['Team'] == team_name]
-
+    team_net = team_data['NET'].values[0]
     percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
     team_data = team_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
     cmap = plt.get_cmap('seismic')
@@ -751,7 +751,7 @@ def team_percentiles_chart(team_name, stats_and_metrics):
     fig.text(0.93, 0.72, 'Metrics', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
     fig.text(0.93, 0.47, 'Offense', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
     fig.text(0.93, 0.245, 'Pitching', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
-    fig.text(0.5, 0.93, f'{team_name} Percentile Rankings', fontsize=24, fontweight='bold', ha='center')
+    fig.text(0.5, 0.93, f'#{team_net} {team_name} Percentile Rankings', fontsize=24, fontweight='bold', ha='center')
     fig.text(0.5, 0.90, f'Including PEAR Metrics, Offensive Stats, Pitching Stats', fontsize=16, ha='center')
     fig.text(0.5, 0.87, f'@PEARatings', fontsize=16, fontweight='bold', ha='center')
     ax.set_xlim(0, 102)
@@ -802,6 +802,7 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     team1_data = stats_and_metrics[stats_and_metrics['Team'] == team_1]
     team1_record = get_total_record(team1_data.iloc[0])
     team1_proj_record = team1_data['Projected_Record'].values[0]
+    team1_proj_net = team1_data['Projected_NET'].values[0]
     team1_Q1 = team1_data['Q1'].values[0]
     team1_Q2 = team1_data['Q2'].values[0]
     team1_Q3 = team1_data['Q3'].values[0]
@@ -820,6 +821,7 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     team2_data = stats_and_metrics[stats_and_metrics['Team'] == team_2]
     team2_record = get_total_record(team2_data.iloc[0])
     team2_proj_record = team2_data['Projected_Record'].values[0]
+    team2_proj_net = team2_data['Projected_NET'].values[0]
     team2_Q1 = team2_data['Q1'].values[0]
     team2_Q2 = team2_data['Q2'].values[0]
     team2_Q3 = team2_data['Q3'].values[0]
@@ -835,7 +837,7 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     response = requests.get(image_url)
     img2 = Image.open(BytesIO(response.content))
 
-    spread, team_2_win_prob = find_spread_matchup(team_2, team_1, stats_and_metrics)
+    spread, team_2_win_prob = find_spread(team_2, team_1, stats_and_metrics)
     team_2_win_prob = round(team_2_win_prob / 100,3)
     team_1_win_prob = 1 - team_2_win_prob
     team_2_probs, team_1_probs = calculate_series_probabilities(team_2_win_prob)
@@ -926,8 +928,10 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     plt.text(-148, 7.6, f"Q2: {team2_Q2}", ha='left', fontsize=16)
     plt.text(-148, 8.1, f"Q3: {team2_Q3}", ha='left', fontsize=16)
     plt.text(-148, 8.6, f"Q4: {team2_Q4}", ha='left', fontsize=16)
-    plt.text(-135, 9.8, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
-    plt.text(-135, 10.3, f"{team2_proj_record}", ha='center', fontsize=16)
+    plt.text(-135, 9.8, "Proj. NET", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-135, 10.3, f"#{team2_proj_net}", ha='center', fontsize=16)
+    plt.text(-135, 11.5, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-135, 12.0, f"{team2_proj_record}", ha='center', fontsize=16)
 
 
     plt.text(135, 0.5, f"{team_1}", ha='center', fontsize=16, fontweight='bold')
@@ -943,8 +947,10 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     plt.text(122, 7.6, f"Q2: {team1_Q2}", ha='left', fontsize=16)
     plt.text(122, 8.1, f"Q3: {team1_Q3}", ha='left', fontsize=16)
     plt.text(122, 8.6, f"Q4: {team1_Q4}", ha='left', fontsize=16)
-    plt.text(135, 9.8, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
-    plt.text(135, 10.3, f"{team1_proj_record}", ha='center', fontsize=16)
+    plt.text(135, 9.8, "Proj. NET", ha='center', fontsize=16, fontweight='bold')
+    plt.text(135, 10.3, f"#{team1_proj_net}", ha='center', fontsize=16)
+    plt.text(135, 11.5, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
+    plt.text(135, 12.0, f"{team1_proj_record}", ha='center', fontsize=16)
 
     ax_img1 = fig.add_axes([0.94, 0.83, 0.15, 0.15])
     ax_img1.imshow(img1)
@@ -1039,11 +1045,13 @@ with st.form(key='team_schedule'):
         wins, losses = sum(completed['Result'].str.contains('W')), sum(completed['Result'].str.contains('L'))
         record = str(wins) + "-" + str(losses)
         projected_record = modeling_stats[modeling_stats['Team'] == team_name]['Projected_Record'].values[0]
+        projected_net = modeling_stats[modeling_stats['Team'] == team_name]['Projected_NET'].values[0]
         schedule.index = schedule.index + 1
         fig = create_quadrant_table(completed)
         # st.write(f"Record: {record}")
         # st.write(f"Projected Record: {projected_record}")
         st.write(f"NET Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
+        st.write(f"Projected NET: {projected_net}")
         st.write(f"Projected Record: {projected_record}")
         st.pyplot(fig)
         st.write("Upcoming Games")

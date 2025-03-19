@@ -1377,8 +1377,26 @@ previous = pd.concat([previous, missing_or_mismatched]).reset_index(drop=True)
 previous = previous.drop_duplicates(subset='Date', keep='last').reset_index(drop=True)
 previous.to_csv(f"./PEAR/PEAR Baseball/y{current_season}/straight_up.csv")
 
+def PEAR_Win_Prob(home_pr, away_pr):
+    rating_diff = home_pr - away_pr
+    return round(1 / (1 + 10 ** (-rating_diff / 7.5)), 4)  # More precision, rounded later in output
+
+def remaining_games_rq(row, one_seed_rating):
+    """Calculate resume quality for a single game."""
+    team = row["Team"]
+    is_home = row["home_team"] == team
+    is_away = row["away_team"] == team
+    opponent_rating = row["away_rating"] if is_home else row["home_rating"]
+    win_prob = PEAR_Win_Prob(one_seed_rating, opponent_rating)
+    return win_prob
+
+remaining_games['bubble_win_prob'] = remaining_games.apply(
+    lambda row: remaining_games_rq(row, bubble_team_rating), axis=1
+)
+
 def simulate_games(df, num_simulations=100):
     projected_wins = []
+    projected_resume_quality = []
     games_remaining = df.groupby("Team").size()
     for _ in range(num_simulations):
         unique_games = df.drop_duplicates(subset=["Date", "home_team", "away_team"]).copy()
@@ -1389,12 +1407,18 @@ def simulate_games(df, num_simulations=100):
         df["winner"] = np.where(df["home_wins"], df["home_team"], df["away_team"])
         df["loser"] = np.where(df["home_wins"], df["away_team"], df["home_team"])
         df["win_flag"] = (df["winner"] == df["Team"]).astype(int)
+        df["resume_quality_amount"] = df['win_flag'] - df['bubble_win_prob']
         wins_per_team = df.groupby("Team")["win_flag"].sum()
+        total_resume_quality_per_team = df.groupby("Team")["resume_quality_amount"].sum()  # SUM instead of mean
         projected_wins.append(wins_per_team)
+        projected_resume_quality.append(total_resume_quality_per_team)
     projected_wins_df = pd.DataFrame(projected_wins).mean().round().reset_index()
     projected_wins_df.columns = ["Team", "Remaining_Wins"]
+    projected_resume_quality_df = pd.DataFrame(projected_resume_quality).mean().reset_index()
+    projected_resume_quality_df.columns = ["Team", "Remaining_RQ"]  # Changed column name to reflect summation
     projected_wins_df["Games_Remaining"] = projected_wins_df["Team"].map(games_remaining)
     projected_wins_df["Remaining_Losses"] = projected_wins_df['Games_Remaining'] - projected_wins_df['Remaining_Wins']
+    projected_wins_df = projected_wins_df.merge(projected_resume_quality_df, on="Team", how="left")
     return projected_wins_df
 
 
@@ -1409,6 +1433,14 @@ stats_and_metrics['Projected_Losses'] = stats_and_metrics['Remaining_Losses'] + 
 stats_and_metrics["Projected_Record"] = stats_and_metrics.apply(
     lambda x: f"{int(x['Projected_Wins'])}-{int(x['Projected_Losses'])}", axis=1
 )
+stats_and_metrics['Projected_RQ'] = stats_and_metrics['resume_quality'] + stats_and_metrics['Remaining_RQ']
+stats_and_metrics["Projected_Norm_RQI"] = (stats_and_metrics["Projected_RQ"] - stats_and_metrics["Projected_RQ"].min()) / (stats_and_metrics["Projected_RQ"].max() - stats_and_metrics["Projected_RQ"].min())
+stats_and_metrics['Projected_NET_Score'] = (
+    0.5 * stats_and_metrics['Norm_Rating'] +
+    0.45 * stats_and_metrics['Projected_Norm_RQI'] +
+    0.05 * stats_and_metrics['Norm_SOS']
+)
+stats_and_metrics['Projected_NET'] = stats_and_metrics['Projected_NET_Score'].rank(ascending=False).astype(int)
 
 stats_and_metrics['pNET_Score'] = (stats_and_metrics['NET_Score'].rank(pct=True) * 98 + 1).round().astype(int)
 stats_and_metrics['pRating'] = (stats_and_metrics['Rating'].rank(pct=True) * 98 + 1).round().astype(int)
@@ -1445,7 +1477,7 @@ central_time_zone = pytz.timezone('US/Central')
 now = datetime.datetime.now(central_time_zone)
 
 # Check if it's Monday and after 10:00 AM and before 3:00 PM
-if now.hour < 13 and now.hour > 9:
+if now.hour < 13 and now.hour > 7:
     from bs4 import BeautifulSoup # type: ignore
     import pandas as pd # type: ignore
     import requests # type: ignore
@@ -1857,6 +1889,79 @@ if now.hour < 13 and now.hour > 9:
     plt.figtext(0.13, 0.03, f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}", ha='left', fontsize=14)
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Tournament/tournament_{formatted_date}.png", bbox_inches='tight')
     print('Tournament Done')
+
+    automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["Projected_NET"].idxmin()]
+    at_large = stats_and_metrics.drop(automatic_qualifiers.index)
+    at_large = at_large.nsmallest(34, "Projected_NET")
+    last_four_in = at_large[-4:].reset_index()
+    next_8_teams = stats_and_metrics.drop(automatic_qualifiers.index).nsmallest(42, "Projected_NET").iloc[34:].reset_index(drop=True)
+    tournament = pd.concat([at_large, automatic_qualifiers])
+    tournament = tournament.sort_values(by="Projected_NET").reset_index(drop=True)
+    tournament["Seed"] = (tournament.index // 16) + 1
+    pod_order = list(range(1, 17)) + list(range(16, 0, -1)) + list(range(1, 17)) + list(range(16, 0, -1))
+    tournament["Host"] = pod_order
+    formatted_df = tournament.pivot_table(index="Host", columns="Seed", values="Team", aggfunc=lambda x: ' '.join(x))
+    formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
+    formatted_df = formatted_df.reset_index()
+    formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
+    formatted_df.index = formatted_df.index + 1
+    from plottable import Table # type: ignore
+    from plottable.plots import image, circled_image # type: ignore
+    from plottable import ColumnDefinition # type: ignore
+    # Create a set of automatic qualifier teams for faster lookup
+    automatic_teams = set(automatic_qualifiers["Team"])
+
+    # Modify the DataFrame by appending '*' to teams in automatic qualifiers
+    formatted_df_with_asterisk = formatted_df.copy()
+    for col in formatted_df_with_asterisk.columns[0:]:  # Exclude index column
+        formatted_df_with_asterisk[col] = formatted_df_with_asterisk[col].apply(lambda x: f"{x}*" if x in automatic_teams else x)
+    formatted_df_with_asterisk['Host'] = formatted_df_with_asterisk.index.to_series().apply(lambda i: f"#{i} {formatted_df_with_asterisk.loc[i, '1 Seed']}")
+    make_table = formatted_df_with_asterisk[['Host', '2 Seed', '3 Seed', '4 Seed']].set_index('Host')
+
+    # Init a figure 
+    fig, ax = plt.subplots(figsize=(12, 10))
+    fig.patch.set_facecolor('#CECEB2')
+
+    column_definitions = [
+        ColumnDefinition(name='Host', # name of the column to change
+                        title='Host', # new title for the column
+                        textprops={"ha": "center", "weight": "bold", "fontsize": 16}, # properties to apply
+                        ),
+        ColumnDefinition(name='2 Seed', # name of the column to change
+                        title='2 Seed', # new title for the column
+                        textprops={"ha": "center", "fontsize": 16}, # properties to apply
+                        ),
+        ColumnDefinition(name='3 Seed', # name of the column to change
+                        title='3 Seed', # new title for the column
+                        textprops={"ha": "center", "fontsize": 16}, # properties to apply
+                        ),
+        ColumnDefinition(name='4 Seed', # name of the column to change
+                        title='4 Seed', # new title for the column
+                        textprops={"ha": "center", "fontsize": 16}, # properties to apply
+                        )
+    ]
+
+    # Create the table object with the column definitions parameter
+    tab = Table(make_table, column_definitions=column_definitions, footer_divider=True, row_divider_kw={"linewidth": 1})
+
+
+    # Change the color
+    last_four_in_teams = set(last_four_in["Team"])
+    for col in make_table.columns:
+        tab.columns[col].set_facecolor("#CECEB2")
+
+    tab.col_label_row.set_facecolor('#CECEB2')
+    tab.columns["Host"].set_facecolor('#CECEB2')
+    # plt.figtext(0.89, 0.09, "* Indicates an automatic qualifier", ha="right", fontsize=14, fontstyle='italic')
+    plt.figtext(0.13, 0.975, f"PEAR {today.strftime('%m/%d')} Projected Tournament", ha='left', fontsize=32, fontweight='bold')
+    plt.figtext(0.13, 0.945, f"Based on PEAR's Projected NET", ha='left', fontsize=16)
+    plt.figtext(0.13, 0.915, f"No Considerations For Conference or Regional Proximity - Through {(today - timedelta(days=1)).strftime('%m/%d')}", ha='left', fontsize=16)
+    plt.figtext(0.13, 0.885, "@PEARatings", ha='left', fontsize=16, fontweight='bold')
+    plt.figtext(0.13, 0.09, f"Last Four In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}", ha='left', fontsize=14)
+    plt.figtext(0.13, 0.06, f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}", ha='left', fontsize=14)
+    plt.figtext(0.13, 0.03, f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}", ha='left', fontsize=14)
+    plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Projected_Tournament/proj_tournament_{formatted_date}.png", bbox_inches='tight')
+    print('Projected Tournament Done')
 
     from matplotlib.ticker import MaxNLocator
     def net_tracker(X, Y):
