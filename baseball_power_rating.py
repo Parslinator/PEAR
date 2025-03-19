@@ -2298,13 +2298,13 @@ if now.hour < 13 and now.hour > 7:
         simulation_df.rename(columns={'index': 'Team'}, inplace=True)
         return simulation_df
 
-    automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
+    automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["Projected_NET"].idxmin()]
     at_large = stats_and_metrics.drop(automatic_qualifiers.index)
-    at_large = at_large.nsmallest(34, "NET")
+    at_large = at_large.nsmallest(34, "Projected_NET")
     last_four_in = at_large[-4:].reset_index()
-    next_8_teams = stats_and_metrics.drop(automatic_qualifiers.index).nsmallest(42, "NET").iloc[34:].reset_index(drop=True)
+    next_8_teams = stats_and_metrics.drop(automatic_qualifiers.index).nsmallest(42, "Projected_NET").iloc[34:].reset_index(drop=True)
     tournament = pd.concat([at_large, automatic_qualifiers])
-    tournament = tournament.sort_values(by="NET").reset_index(drop=True)
+    tournament = tournament.sort_values(by="Projected_NET").reset_index(drop=True)
     tournament["Seed"] = (tournament.index // 16) + 1
     pod_order = list(range(1, 17)) + list(range(16, 0, -1)) + list(range(1, 17)) + list(range(16, 0, -1))
     tournament["Host"] = pod_order
@@ -2370,6 +2370,6 @@ if now.hour < 13 and now.hour > 7:
 
     # Show the plot
     plt.text(0, 0.086, 'Odds to Win Championship', fontsize=24, fontweight='bold', ha='center')
-    plt.text(0, 0.08, f"Based on Tournament Outlook {today.strftime('%m/%d')}", fontsize=16, ha='center')
+    plt.text(0, 0.08, f"Based on Projected NET Tournament {today.strftime('%m/%d')}", fontsize=16, ha='center')
     plt.text(0, 0.074, f"@PEARatings", fontsize=16, fontweight='bold', ha='center')
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Tournament_Odds/tournament_odds_{formatted_date}.png", bbox_inches='tight')
