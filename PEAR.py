@@ -486,7 +486,116 @@ st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule
 
 st.divider()
 
+st.subheader("PEAR CFB Stats Visuals")
+folder_path = f"PEAR/Visuals/y{current_year}/week_{current_week}/"
 
+if os.path.exists(folder_path):
+    top25_file = f"{folder_path}top25.png" # used
+    go5_top25_file = f"{folder_path}go5_top25.png" # used
+    power_rating_team_pyramid = f"{folder_path}power_rating_team_pyramid.png"  # used
+    projected_playoff = f"{folder_path}projected_playoff.png" # used
+
+    most_deserving_playoff = f"{folder_path}most_deserving_playoff.png"
+    most_deserving_team_pyramid = f"{folder_path}most_deserving_team_pyramid.png"
+    most_deserving = f"{folder_path}most_deserving.png"
+
+    avg_metric_rank = f"{folder_path}average_metric_rank.png"
+    strength_of_record = f"{folder_path}strength_of_record.png"
+    strength_of_schedule = f"{folder_path}strength_of_schedule.png"
+    offenses = f"{folder_path}offenses.png"
+    defenses = f"{folder_path}defenses.png"
+    special_teams = f"{folder_path}special_teams.png"
+    turnovers = f"{folder_path}turnovers.png"
+    drive_control_efficiency = f"{folder_path}drive_control_efficiency.png"
+    drive_disruption_efficiency = f"{folder_path}drive_disruption_efficiency.png"
+    penalty_burden_ratio = f"{folder_path}penalty_burden_ratio.png"
+    mov_performance = f"{folder_path}mov_performance.png"
+    overperformer_and_underperformer = f"{folder_path}overperformer_and_underperformer.png"
+    conference_average = f"{folder_path}conference_average.png"
+    dce_vs_dde = f"{folder_path}dce_vs_dde.png"
+    offense_vs_defense = f"{folder_path}offense_vs_defense.png"
+    resume_vs_ratings = f"{folder_path}resume_vs_ratings.png"
+    production_vs_talent = f"{folder_path}production_vs_talent.png"
+    talent_performance = f"{folder_path}talent_performance.png"
+    dependence_score = f"{folder_path}dependence_score.png"
+
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(top25_file, use_container_width=True, caption="Top 25 Ratings")
+    with cols[1]:
+        st.image(go5_top25_file, use_container_width=True, caption="Group of 5 Top 25 Ratings")
+
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(most_deserving, use_container_width=True, caption="Most Deserving Rankings")
+    with cols[1]:
+        st.image(avg_metric_rank, use_container_width=True, caption="Average Metric Ranks")
+
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(strength_of_record, use_container_width=True, caption="Strength of Record")
+    with cols[1]:
+        st.image(strength_of_schedule, use_container_width=True, caption="Strength of Schedule")
+
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(offenses, use_container_width=True, caption="Offense Ranks")
+    with cols[1]:
+        st.image(defenses, use_container_width=True, caption="Defense Ranks")
+
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(special_teams, use_container_width=True, caption="Special Teams Ranks")
+    with cols[1]:
+        st.image(turnovers, use_container_width=True, caption="Turnover Ranks")
+
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(drive_control_efficiency, use_container_width=True, caption="Drive Control Efficiency")
+    with cols[1]:
+        st.image(drive_disruption_efficiency, use_container_width=True, caption="Drive Disruption Efficiency")
+
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(penalty_burden_ratio, use_container_width=True, caption="Penalty Burden Ratio")
+    with cols[1]:
+        st.image(mov_performance, use_container_width=True, caption="Margin of Victory Performance")
+
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(overperformer_and_underperformer, use_container_width=True, caption="Over and Underperformers")
+    with cols[1]:
+        st.image(talent_performance, use_container_width=True, caption="Talent Performance Gap")
+
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(dependence_score, use_container_width=True, caption="Team's Dependence on Offense or Defense")
+    with cols[1]:
+        st.image(conference_average, use_container_width=True, caption="Average Team Power Rating in Each Conference")
+
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(offense_vs_defense, use_container_width=True, caption="Offense Versus Defense")
+    with cols[1]:
+        st.image(dce_vs_dde, use_container_width=True, caption="DCE vs DDE")
+
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(resume_vs_ratings, use_container_width=True, caption="Resume vs Ratings - Top Right is Better")
+    with cols[1]:
+        st.image(production_vs_talent, use_container_width=True, caption = "Production vs Talent")
+
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(projected_playoff, use_container_width=True, caption="Ratings Projected Playoff - Conference Champions are Highest Rated Team")
+    with cols[1]:
+        st.image(most_deserving_playoff, use_container_width=True, caption="Rankings Projected Playoff")
+    
+    cols = st.columns(2)
+    with cols[0]:
+        st.image(power_rating_team_pyramid, width = 500, caption="Power Ratings Team Pyramid")
+    with cols[1]:
+        st.image(most_deserving_team_pyramid, width=500, caption="Most Deserving Rankings Team Pyramid")
 
 # st.markdown("General Info for PEAR v2")
 # st.caption(f"SU Since Week 9: {SU}%")
