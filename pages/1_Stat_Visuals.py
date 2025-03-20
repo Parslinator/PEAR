@@ -100,9 +100,7 @@ if postseason == True:
 else:
     st.sidebar.markdown(f"[Game Previews](#cfb-game-previews-for-week-{current_week})", unsafe_allow_html=True)
 
-st.sidebar.markdown(f"[Game Previews](#pear-cfb-stats-visuals)", unsafe_allow_html=True)
 st.markdown(f'<h2 id="pear-cfb-stats-visuals">PEAR CFB Stats Visuals</h2>', unsafe_allow_html=True)
-st.title("PEAR CFB Stats Visuals")
 
 # Construct the folder path
 folder_path = f"PEAR/Visuals/y{current_year}/week_{current_week}/"
