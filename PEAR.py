@@ -568,7 +568,7 @@ with st.form(key='filter_team'):
 st.divider()
 
 st.markdown(f'<h2 id="calculate-spread-between-two-teams-from-different-years">Calculate Spread Between Two Teams From Different Years</h2>', unsafe_allow_html=True)
-with st.form(key='calculate_spread'):
+with st.form(key='calculate_spread_two_teams'):
     away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'].unique())))
     away_season = st.selectbox("Away Season", ["Select Season"] + list(sorted(team_data['season'].unique())))
     home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(team_data['team'].unique())))
@@ -577,8 +577,8 @@ with st.form(key='calculate_spread'):
         "Game Location",
         ["Neutral Field", "On Campus"]
     )
-    spread_button = st.form_submit_button("Calculate Spread")
-    if spread_button:
+    spread_button_two_teams = st.form_submit_button("Calculate Spread Two Teams")
+    if spread_button_two_teams:
         if neutrality == 'Neutral Field':
             neutrality = True
         else:
