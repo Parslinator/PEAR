@@ -448,7 +448,9 @@ st.title(f"{current_year} CFB PEAR")
 
 st.divider()
 
-st.subheader("Calculate Spread Between Any Two Teams")
+st.sidebar.markdown(f"[Calculate {current_year} Spread](#calculate-spread-between-any-two-teams)", unsafe_allow_html=True)
+st.sidebar.markdown(f"[{current_year} Power Ratings](#fbs-power-ratings)", unsafe_allow_html=True)
+st.markdown(f'<h2 id="calculate-spread-between-any-two-teams">Calculate Spread Between Any Two Teams</h2>', unsafe_allow_html=True)
 with st.form(key='calculate_spread'):
     away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'])))
     home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(team_data['team'])))
@@ -466,7 +468,7 @@ with st.form(key='calculate_spread'):
 
 st.divider()
 
-st.subheader("FBS Power Ratings")
+st.markdown(f'<h2 id="fbs-power-ratings">FBS Power Ratings</h2>', unsafe_allow_html=True)
 all_data['OFF'] = all_data['Offense']
 all_data['DEF'] = all_data['Defense']
 all_data['MD'] = all_data['most_deserving']
