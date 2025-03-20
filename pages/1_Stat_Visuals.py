@@ -94,12 +94,14 @@ current_week = int(current_week)
 current_year = int(current_year)
 
 st.sidebar.markdown(f"[Stat Visuals](#pear-cfb-stats-visuals)", unsafe_allow_html=True)
+st.sidebar.markdown(f"[Team Stat Profiles](#cfb-team-stat-profiles)", unsafe_allow_html=True)
 
 if postseason == True:
     st.sidebar.markdown(f"[Game Previews](#cfb-game-previews-for-bowl-games)", unsafe_allow_html=True)
 else:
     st.sidebar.markdown(f"[Game Previews](#cfb-game-previews-for-week-{current_week})", unsafe_allow_html=True)
-
+st.title("All PEAR Visuals")
+st.caption("Takes about a minute to load")
 st.markdown(f'<h2 id="pear-cfb-stats-visuals">PEAR CFB Stats Visuals</h2>', unsafe_allow_html=True)
 
 # Construct the folder path
@@ -212,6 +214,33 @@ if os.path.exists(folder_path):
         st.image(power_rating_team_pyramid, width = 500, caption="Power Ratings Team Pyramid")
     with cols[1]:
         st.image(most_deserving_team_pyramid, width=500, caption="Most Deserving Rankings Team Pyramid")
+
+folder_path = f"PEAR/Visuals/y{current_year}/week_{current_week}/Stat Profiles"
+
+if os.path.exists(folder_path):
+    # Get a list of all .png files in the folder
+    png_files = glob.glob(os.path.join(folder_path, "*.png"))
+    png_files = sorted(png_files, key=lambda x: os.path.basename(x).lower())
+    # Display the images in the Streamlit app
+    if png_files:
+        st.markdown(f'<h2 id="cfb-team-stat-profiles">CFB Team Stat Profiles</h2>', unsafe_allow_html=True)
+
+        # Loop through the .png files and display two per row
+        for i in range(0, len(png_files), 2):  # Increment by 2 for two images per row
+            cols = st.columns(2)  # Create two columns
+
+            # Display first image
+            with cols[0]:
+                file_name = os.path.splitext(os.path.basename(png_files[i]))[0]
+                st.image(png_files[i], use_container_width=True, caption=file_name)
+
+            # Check if there's a second image in the current pair
+            if i + 1 < len(png_files):
+                with cols[1]:
+                    file_name = os.path.splitext(os.path.basename(png_files[i+1]))[0]
+                    st.image(png_files[i + 1], use_container_width=True, caption=file_name)
+    else:
+        st.warning(f"No .png files found in {folder_path}")
 
 folder_path = f"PEAR/Visuals/y{current_year}/week_{current_week}/Games"
 if os.path.exists(folder_path):
