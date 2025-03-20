@@ -449,20 +449,24 @@ st.title(f"{current_year} CFB PEAR")
 st.divider()
 
 st.subheader("Calculate Spread Between Any Two Teams")
+
+if "spread_result" not in st.session_state:
+    st.session_state.spread_result = None
+
 with st.form(key='calculate_spread'):
     away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'])))
     home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(team_data['team'])))
-    neutrality = st.radio(
-        "Game Location",
-        ["Neutral Field", "On Campus"]
-    )
+    neutrality = st.radio("Game Location", ["Neutral Field", "On Campus"])
+    
     spread_button = st.form_submit_button("Calculate Spread")
+
     if spread_button:
-        if neutrality == 'Neutral Field':
-            neutrality = True
-        else:
-            neutrality = False
-        st.write(find_spread(home_team, away_team, neutrality))
+        neutrality = neutrality == 'Neutral Field'
+        st.session_state.spread_result = find_spread(home_team, away_team, neutrality)
+
+# Display result outside the form to prevent rerunning
+if st.session_state.spread_result is not None:
+    st.write(st.session_state.spread_result)
 
 st.divider()
 
