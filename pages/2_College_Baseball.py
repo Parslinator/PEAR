@@ -996,6 +996,7 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     return fig
 
 st.title(f"{current_season} CBASE PEAR")
+st.logo("./PEAR/pear_logo.jpg", size = 'large')
 st.caption(f"Ratings Updated {formatted_latest_date}")
 st.caption(f"Stats Through Games {last_date}")
 st.caption(f"Page Updated @ 7 AM, 11 AM, 3 PM, 7 PM, 11 PM CST")

@@ -101,6 +101,7 @@ if postseason == True:
 else:
     st.sidebar.markdown(f"[Game Previews](#cfb-game-previews-for-week-{current_week})", unsafe_allow_html=True)
 st.title("All PEAR Visuals")
+st.logo("./PEAR/pear_logo.jpg", size = 'large')
 st.caption("Takes about a minute to load")
 st.caption("If you are looking for a specific visual, it's best to search the page via Ctrl+F")
 st.markdown(f'<h2 id="pear-cfb-stats-visuals">PEAR CFB Stats Visuals</h2>', unsafe_allow_html=True)
