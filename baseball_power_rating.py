@@ -515,7 +515,8 @@ def objective_function(weights):
         w_wrc * modeling_stats['wRC+'] +
         w_lob * modeling_stats['LOB%'] +
         w_bb * modeling_stats['BB%'] +
-        w_in_house_pr * modeling_stats['in_house_pr']
+        w_in_house_pr * modeling_stats['in_house_pr'] +
+        0.05 * modeling_stats['Rank_pct']
     )
 
     modeling_stats['calculated_rank'] = modeling_stats['power_ranking'].rank(ascending=False)
