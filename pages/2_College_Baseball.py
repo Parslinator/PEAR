@@ -1006,15 +1006,16 @@ st.sidebar.markdown("""
             display: block;
             padding: 10px;
             margin: 5px 0;
-            background-color: #007BFF;
+            background-color: #333;  /* Dark grey background */
             color: white;
             text-align: center;
             border-radius: 5px;
             text-decoration: none;
             font-weight: bold;
+            font-size: 16px;
         }
         .nav-link:hover {
-            background-color: #0056b3;
+            background-color: #555;  /* Slightly lighter grey on hover */
         }
     </style>
     <a class="nav-link" href="#live-cbase-ratings-and-resume">Ratings and Resume</a>
