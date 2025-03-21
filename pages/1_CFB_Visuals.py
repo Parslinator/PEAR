@@ -93,36 +93,13 @@ else:
 current_week = int(current_week)
 current_year = int(current_year)
 
-# Dynamically add the Game Previews link based on postseason
-if postseason:
-    game_preview_link = '<a class="nav-link" href="#cfb-game-previews-for-bowl-games">Game Previews</a>'
+st.sidebar.markdown(f"[Stat Visuals](#pear-cfb-stats-visuals)", unsafe_allow_html=True)
+st.sidebar.markdown(f"[Team Stat Profiles](#cfb-team-stat-profiles)", unsafe_allow_html=True)
+
+if postseason == True:
+    st.sidebar.markdown(f"[Game Previews](#cfb-game-previews-for-bowl-games)", unsafe_allow_html=True)
 else:
-    game_preview_link = f'<a class="nav-link" href="#cfb-game-previews-for-week-{current_week}">Game Previews</a>'
-
-st.sidebar.markdown("""
-    <style>
-        .nav-link {
-            display: block;
-            padding: 12px;
-            margin: 4px 0;
-            background-color: #262730;  /* Dark grey background */
-            color: white;
-            text-align: left;
-            border-radius: 4px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 16px;
-            transition: background-color 0.3s ease-in-out;
-        }
-        .nav-link:hover {
-            background-color: #3a3b46;  /* Slightly lighter grey on hover */
-        }
-    </style>
-    <a class="nav-link" href="#pear-cfb-stats-visuals">Stat Visuals</a>
-    <a class="nav-link" href="#cfb-team-stat-profiles">Team Stat Profiles</a>
-    {game_preview_link}
-""", unsafe_allow_html=True)
-
+    st.sidebar.markdown(f"[Game Previews](#cfb-game-previews-for-week-{current_week})", unsafe_allow_html=True)
 st.title("All PEAR Visuals")
 st.caption("Takes about a minute to load")
 st.caption("If you are looking for a specific visual, it's best to search the page via Ctrl+F")
