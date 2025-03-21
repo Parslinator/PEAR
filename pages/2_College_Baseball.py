@@ -716,9 +716,31 @@ def adjust_home_pr(home_win_prob):
 import matplotlib.patheffects as pe
 import matplotlib.colors as mcolors
 
+def get_total_record(row):
+    wins = sum(int(str(row[col]).split("-")[0]) for col in ["Q1", "Q2", "Q3", "Q4"])
+    losses = sum(int(str(row[col]).split("-")[1]) for col in ["Q1", "Q2", "Q3", "Q4"])
+    return f"{wins}-{losses}"
+
+
 def team_percentiles_chart(team_name, stats_and_metrics):
+    BASE_URL = "https://www.warrennolan.com"
     team_data = stats_and_metrics[stats_and_metrics['Team'] == team_name]
     team_net = team_data['NET'].values[0]
+    team_proj_record = team_data['Projected_Record'].values[0]
+    team_proj_net = team_data['Projected_NET'].values[0]
+    team_record = get_total_record(team_data.iloc[0])
+    team_Q1 = team_data['Q1'].values[0]
+    team_Q2 = team_data['Q2'].values[0]
+    team_Q3 = team_data['Q3'].values[0]
+    team_Q4 = team_data['Q4'].values[0]
+    team_url = BASE_URL + elo_data[elo_data['Team'] == team_name]['Team Link'].values[0]
+    response = requests.get(team_url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    img_tag = soup.find("img", class_="team-menu__image")
+    img_src = img_tag.get("src")
+    image_url = BASE_URL + img_src
+    response = requests.get(image_url)
+    img = Image.open(BytesIO(response.content))
     percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
     team_data = team_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
     cmap = plt.get_cmap('seismic')
@@ -744,16 +766,30 @@ def team_percentiles_chart(team_name, stats_and_metrics):
         ])
         if idx == 4 or idx == 8:  # Check if the index is 5th or 9th bar (0-based index)
             y_position = bar.get_y() + bar.get_height() + 0.185
-            ax.hlines(y_position, ax.get_xlim()[0], 99,
+            ax.hlines(y_position, 0, 99,
                     colors='black', linestyles='dashed', linewidth=2, zorder=1)
                 
         i = i + 1
-    fig.text(0.93, 0.72, 'Metrics', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
-    fig.text(0.93, 0.47, 'Offense', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
-    fig.text(0.93, 0.245, 'Pitching', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
+    # fig.text(0.93, 0.72, 'Metrics', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
+    # fig.text(0.93, 0.47, 'Offense', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
+    # fig.text(0.93, 0.245, 'Pitching', ha='center', va='center', fontsize=16, fontweight='bold', color='black', rotation=270)
     fig.text(0.5, 0.93, f'#{team_net} {team_name} Percentile Rankings', fontsize=24, fontweight='bold', ha='center')
     fig.text(0.5, 0.90, f'Including PEAR Metrics, Offensive Stats, Pitching Stats', fontsize=16, ha='center')
     fig.text(0.5, 0.87, f'@PEARatings', fontsize=16, fontweight='bold', ha='center')
+
+    plt.text(117, 0.5, f"{team_name}", ha='center', fontsize=16, fontweight='bold')
+    plt.text(117, 1.0, f"{team_record}", ha='center', fontsize=16)
+    plt.text(117, 2.2, "Quadrants", ha='center', fontsize=16, fontweight='bold')
+    plt.text(111, 2.7, f"Q1: {team_Q1}", ha='left', fontsize=16)
+    plt.text(111, 3.2, f"Q2: {team_Q2}", ha='left', fontsize=16)
+    plt.text(111, 3.7, f"Q3: {team_Q3}", ha='left', fontsize=16)
+    plt.text(111, 4.2, f"Q4: {team_Q4}", ha='left', fontsize=16)
+    plt.text(117, 5.4, "Proj. NET", ha='center', fontsize=16, fontweight='bold')
+    plt.text(117, 5.9, f"#{team_proj_net}", ha='center', fontsize=16)
+    plt.text(117, 7.1, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
+    plt.text(117, 7.6, f"{team_proj_record}", ha='center', fontsize=16)
+
+
     ax.set_xlim(0, 102)
     ax.set_xticks([])
     custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'fWAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
@@ -765,6 +801,9 @@ def team_percentiles_chart(team_name, stats_and_metrics):
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
+    ax_img1 = fig.add_axes([0.94, 0.83, 0.15, 0.15])
+    ax_img1.imshow(img)
+    ax_img1.axis("off")
 
     return fig
 
@@ -789,11 +828,6 @@ def calculate_series_probabilities(win_prob):
     P_B_at_least_2 = P_B_2 + P_B_3
 
     return [P_A_at_least_1,P_A_at_least_2,P_A_3], [P_B_at_least_1,P_B_at_least_2,P_B_3]
-
-def get_total_record(row):
-    wins = sum(int(str(row[col]).split("-")[0]) for col in ["Q1", "Q2", "Q3", "Q4"])
-    losses = sum(int(str(row[col]).split("-")[1]) for col in ["Q1", "Q2", "Q3", "Q4"])
-    return f"{wins}-{losses}"
 
 def matchup_percentiles(team_1, team_2, stats_and_metrics):
     BASE_URL = "https://www.warrennolan.com"
