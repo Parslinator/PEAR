@@ -1004,7 +1004,7 @@ st.sidebar.markdown("""
     <style>
         .nav-link {
             display: block;
-            padding: 10px;
+            padding: 12px;
             margin: 4px 0;
             background-color: #262730;  /* Dark grey background */
             color: white;
@@ -1013,6 +1013,7 @@ st.sidebar.markdown("""
             text-decoration: none;
             font-weight: bold;
             font-size: 16px;
+            transition: background-color 0.3s ease-in-out;
         }
         .nav-link:hover {
             background-color: #3a3b46;  /* Slightly lighter grey on hover */
