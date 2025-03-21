@@ -1000,13 +1000,31 @@ st.caption(f"Ratings Updated {formatted_latest_date}")
 st.caption(f"Stats Through Games {last_date}")
 st.caption(f"Page Updated @ 7 AM, 11 AM, 3 PM, 7 PM, 11 PM CST")
 
-st.sidebar.markdown(f"[Ratings and Resume](#live-cbase-ratings-and-resume)", unsafe_allow_html=True)
-st.sidebar.markdown(f"[Team Stats](#live-cbase-stats)", unsafe_allow_html=True)
-st.sidebar.markdown(f"[Tournament Outlook](#tournament-outlook)", unsafe_allow_html=True)
-st.sidebar.markdown(f"[Matchup Cards](#matchup-cards)", unsafe_allow_html=True)
-st.sidebar.markdown(f"[Team Schedule](#team-schedule)", unsafe_allow_html=True)
-st.sidebar.markdown(f"[Team Percentiles](#team-percentiles)", unsafe_allow_html=True)
-st.sidebar.markdown(f"[Team NET Changes](#team-net-changes)", unsafe_allow_html=True)
+st.sidebar.markdown("""
+    <style>
+        .nav-link {
+            display: block;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #007BFF;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .nav-link:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <a class="nav-link" href="#live-cbase-ratings-and-resume">Ratings and Resume</a>
+    <a class="nav-link" href="#live-cbase-stats">Team Stats</a>
+    <a class="nav-link" href="#tournament-outlook">Tournament Outlook</a>
+    <a class="nav-link" href="#matchup-cards">Matchup Cards</a>
+    <a class="nav-link" href="#team-schedule">Team Schedule</a>
+    <a class="nav-link" href="#team-percentiles">Team Percentiles</a>
+    <a class="nav-link" href="#team-net-changes">Team NET Changes</a>
+""", unsafe_allow_html=True)
 
 st.divider()
 
