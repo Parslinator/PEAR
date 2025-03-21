@@ -93,6 +93,12 @@ else:
 current_week = int(current_week)
 current_year = int(current_year)
 
+# Dynamically add the Game Previews link based on postseason
+if postseason:
+    game_preview_link = '<a class="nav-link" href="#cfb-game-previews-for-bowl-games">Game Previews</a>'
+else:
+    game_preview_link = f'<a class="nav-link" href="#cfb-game-previews-for-week-{current_week}">Game Previews</a>'
+
 st.sidebar.markdown("""
     <style>
         .nav-link {
@@ -117,12 +123,6 @@ st.sidebar.markdown("""
     {game_preview_link}
 """, unsafe_allow_html=True)
 
-# Dynamically add the Game Previews link based on postseason
-if postseason:
-    game_preview_link = '<a class="nav-link" href="#cfb-game-previews-for-bowl-games">Game Previews</a>'
-else:
-    game_preview_link = f'<a class="nav-link" href="#cfb-game-previews-for-week-{current_week}">Game Previews</a>'
-    
 st.title("All PEAR Visuals")
 st.caption("Takes about a minute to load")
 st.caption("If you are looking for a specific visual, it's best to search the page via Ctrl+F")
