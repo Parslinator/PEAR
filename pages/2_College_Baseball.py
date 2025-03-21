@@ -1005,11 +1005,11 @@ st.sidebar.markdown("""
         .nav-link {
             display: block;
             padding: 10px;
-            margin: 5px 0;
+            margin: 4px 0;
             background-color: #262730;  /* Dark grey background */
             color: white;
-            text-align: center;
-            border-radius: 5px;
+            text-align: left;
+            border-radius: 4px;
             text-decoration: none;
             font-weight: bold;
             font-size: 16px;
