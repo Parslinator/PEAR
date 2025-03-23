@@ -1375,6 +1375,20 @@ def process_result(row):
 
 ####################### Straight Up Tracking #######################
 
+win_percentage_df = (
+    completed_schedule.groupby("Team").apply(
+        lambda x: pd.Series({
+            "win_percentage": x["Result"].str.contains("W").sum() / len(x),
+            "completed_games": len(x)
+        })
+    ).reset_index()
+)
+stats_and_metrics = pd.merge(stats_and_metrics, win_percentage_df, how='left', on='Team')
+stats_and_metrics['luck_pct'] = stats_and_metrics['win_percentage'] - (stats_and_metrics['expected_wins'] / stats_and_metrics['completed_games'])
+stats_and_metrics["Luck"] = stats_and_metrics["luck_pct"].rank(ascending=False)
+
+####################### Straight Up Tracking #######################
+
 straight_up_calculator['Result'] = straight_up_calculator['Result'].astype(str)
 straight_up_calculator = straight_up_calculator.sort_values(by="Result", key=lambda x: x.map(game_sort_key))
 straight_up_calculator["Result"] = straight_up_calculator["Result"].astype(str)  # Convert to string to avoid errors
