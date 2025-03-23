@@ -1037,7 +1037,7 @@ modeling_stats_copy = modeling_stats.copy()
 modeling_stats_copy.set_index("Team", inplace=True)
 modeling_stats_copy['TSR'] = modeling_stats_copy['PRR']
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats_copy[['NET', 'RPI', 'TSR', 'RQI', 'SOS', 'RemSOS', 'Luck', 'Q1', 'Q2', 'Q3', 'Q4', 'Conference']], use_container_width=True)
+    st.dataframe(modeling_stats_copy[['NET', 'RPI', 'TSR', 'RQI', 'SOS', 'RemSOS', 'Q1', 'Q2', 'Q3', 'Q4', 'Conference']], use_container_width=True)
 st.caption("NET - Mimicing the NCAA Evaluation Tool using TSR, RQI, SOS")
 st.caption("RPI - PEAR's Attempted Ratings Percentage Index, TSR - Team Strength Rank, RQI - Resume Quality Index, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
 
@@ -1049,7 +1049,7 @@ modeling_stats_copy['pWAR'] = modeling_stats_copy['pWAR_z'].rank(ascending=False
 modeling_stats_copy = modeling_stats_copy.sort_values('WAR')
 st.markdown(f'<h2 id="live-cbase-stats">Live CBASE Stats</h2>', unsafe_allow_html=True)
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats_copy[['WAR', 'oWAR', 'pWAR', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
+    st.dataframe(modeling_stats_copy[['WAR', 'oWAR', 'pWAR', 'Luck', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
 st.caption("WAR - Team WAR Rank, oWAR - Team Offensive WAR Rank, pWAR - Team Pitching WAR Rank, PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
 
 st.divider()
