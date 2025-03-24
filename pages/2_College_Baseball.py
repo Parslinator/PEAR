@@ -1043,7 +1043,7 @@ st.caption("RPI - PEAR's Attempted Ratings Percentage Index, TSR - Team Strength
 
 st.divider()
 
-columns_to_rank = ['PYTHAG', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'WAR', 'oWAR', 'pWAR']
+columns_to_rank = ['PYTHAG', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'fWAR', 'oWAR_z', 'pWAR_z']
 modeling_stats_copy[columns_to_rank] = modeling_stats_copy[columns_to_rank].rank(ascending=False, method='min').astype(int)
 modeling_stats_copy['ERA'] = modeling_stats_copy['ERA'].rank(ascending=True, method='min').astype(int)
 
