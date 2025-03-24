@@ -1046,7 +1046,6 @@ st.divider()
 modeling_stats_copy['WAR'] = modeling_stats_copy['fWAR'].rank(ascending=False).astype(int)
 modeling_stats_copy['oWAR'] = modeling_stats_copy['oWAR_z'].rank(ascending=False).astype(int)
 modeling_stats_copy['pWAR'] = modeling_stats_copy['pWAR_z'].rank(ascending=False).astype(int)
-modeling_stats_copy = modeling_stats_copy.sort_values('WAR')
 st.markdown(f'<h2 id="live-cbase-stats">Live CBASE Stats</h2>', unsafe_allow_html=True)
 with st.container(border=True, height=440):
     st.dataframe(modeling_stats_copy[['WAR', 'oWAR', 'pWAR', 'Luck', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
@@ -1072,6 +1071,7 @@ formatted_df.set_index('Host')
 formatted_df.index = formatted_df.index + 1
 st.markdown(f'<h2 id="tournament-outlook">Tournament Outlook</h2>', unsafe_allow_html=True)
 st.caption("Updated when page updates. Weekly projected tournament is taken Monday at 11 AM CST")
+st.caption("No consideration for conferences or regional proximity - just a straight seeding.")
 with st.container(border=True, height=440):
     st.dataframe(formatted_df[['Host', '2 Seed', '3 Seed', '4 Seed']], use_container_width=True)
 st.caption(f"Last 4 In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}")
