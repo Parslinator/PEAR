@@ -516,7 +516,7 @@ def objective_function(weights):
         w_lob * modeling_stats['LOB%'] +
         w_bb * modeling_stats['BB%'] +
         w_in_house_pr * modeling_stats['in_house_pr'] +
-        0.05 * modeling_stats['Rank_pct']
+        0.025 * modeling_stats['Rank_pct']
     )
 
     modeling_stats['calculated_rank'] = modeling_stats['power_ranking'].rank(ascending=False)
@@ -1480,9 +1480,9 @@ stats_and_metrics["Projected_Record"] = stats_and_metrics.apply(
 stats_and_metrics['Projected_RQ'] = stats_and_metrics['resume_quality'] + stats_and_metrics['Remaining_RQ']
 stats_and_metrics["Projected_Norm_RQI"] = (stats_and_metrics["Projected_RQ"] - stats_and_metrics["Projected_RQ"].min()) / (stats_and_metrics["Projected_RQ"].max() - stats_and_metrics["Projected_RQ"].min())
 stats_and_metrics['Projected_NET_Score'] = (
-    0.5 * stats_and_metrics['Norm_Rating'] +
-    0.45 * stats_and_metrics['Projected_Norm_RQI'] +
-    0.05 * stats_and_metrics['Norm_SOS']
+    optimized_weights[0] * stats_and_metrics['Norm_Rating'] +
+    (optimized_weights[0] + optimized_weights[1]) * stats_and_metrics['Projected_Norm_RQI'] +
+    optimized_weights[1] * stats_and_metrics['Norm_SOS']
 )
 stats_and_metrics['Projected_NET'] = stats_and_metrics['Projected_NET_Score'].rank(ascending=False).astype(int)
 
