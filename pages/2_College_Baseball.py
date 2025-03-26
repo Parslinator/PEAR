@@ -1130,7 +1130,7 @@ with st.form(key='team_schedule'):
         # st.write(f"Record: {record}")
         # st.write(f"Projected Record: {projected_record}")
         st.write(f"NET Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
-        st.write(f"Last Ten: {last_ten}")
+        st.write(f"Record: {record}, Last Ten: {last_ten}")
         st.write(f"Projected NET: {projected_net}")
         st.write(f"Projected Record: {projected_record}")
         st.pyplot(fig)
