@@ -475,6 +475,13 @@ def grab_team_schedule(team_name, stats_df):
     remaining_games = schedule_df[schedule_df["Comparison_Date"] > comparison_date].reset_index(drop=True)
     remaining_games['PEAR'] = remaining_games.apply(lambda row: find_spread(row['Team'], row['Opponent']), axis=1)
 
+    team_completed = completed_schedule[completed_schedule['Team'] == team_name].reset_index(drop=True)
+    num_rows = len(team_completed)
+    last_n_games = team_completed['Result'].iloc[-10 if num_rows >= 10 else -num_rows:]
+    wins = last_n_games.str.count('W').sum()
+    losses = (10 if num_rows >= 10 else num_rows) - wins
+    last_ten = f'{wins}-{losses}'
+
     def PEAR_Win_Prob(home_pr, away_pr):
         rating_diff = home_pr - away_pr
         win_prob = round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
@@ -537,7 +544,7 @@ def grab_team_schedule(team_name, stats_df):
                     loss_rating = row['NET']
                     worst_loss_opponent = row['Opponent']
                 
-    return team_rank, best_win_opponent, worst_loss_opponent, remaining_games, completed_schedule
+    return team_rank, best_win_opponent, worst_loss_opponent, remaining_games, completed_schedule, last_ten
 
 import matplotlib.pyplot as plt # type: ignore
 def create_quadrant_table(completed):
@@ -1113,7 +1120,7 @@ with st.form(key='team_schedule'):
     team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
     team_schedule = st.form_submit_button("Team Schedule")
     if team_schedule:
-        rank, best, worst, schedule, completed = grab_team_schedule(team_name, modeling_stats)
+        rank, best, worst, schedule, completed, last_ten = grab_team_schedule(team_name, modeling_stats)
         wins, losses = sum(completed['Result'].str.contains('W')), sum(completed['Result'].str.contains('L'))
         record = str(wins) + "-" + str(losses)
         projected_record = modeling_stats[modeling_stats['Team'] == team_name]['Projected_Record'].values[0]
@@ -1123,6 +1130,7 @@ with st.form(key='team_schedule'):
         # st.write(f"Record: {record}")
         # st.write(f"Projected Record: {projected_record}")
         st.write(f"NET Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
+        st.write(f"Last Ten: {last_ten}")
         st.write(f"Projected NET: {projected_net}")
         st.write(f"Projected Record: {projected_record}")
         st.pyplot(fig)
