@@ -872,6 +872,17 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     img2 = Image.open(BytesIO(response.content))
 
     spread, team_2_win_prob = find_spread_matchup(team_2, team_1, stats_and_metrics)
+
+    max_net = 299
+    w_tq = 0.70   # NET AVG
+    w_wp = 0.20   # Win Probability
+    w_ned = 0.10  # NET Differential
+    avg_net = (team1_net + team2_net) / 2
+    tq = (max_net - avg_net) / (max_net - 1)
+    wp = 1 - 2 * np.abs((team_2_win_prob/100) - 0.5)
+    ned = 1 - (np.abs(team2_net - team1_net) / (max_net - 1))
+    gqi = round(10*(w_tq * tq + w_wp * wp + w_ned * ned), 1)
+
     team_2_win_prob = round(team_2_win_prob / 100,3)
     team_1_win_prob = 1 - team_2_win_prob
     team_2_probs, team_1_probs = calculate_series_probabilities(team_2_win_prob)
@@ -945,7 +956,8 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     ax.spines['left'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
     plt.text(0, -1.7, f"#{team2_net} {team_2} vs. #{team1_net} {team_1}", ha='center', fontsize=24, fontweight='bold')
-    plt.text(0, -1.25, "Matchup Comparison", ha='center', fontsize=16)
+    # plt.text(0, -1.25, "Matchup Comparison", ha='center', fontsize=16)
+    plt.text(0, -1.25, f"Game Quality: {gqi}", ha='center', fontsize=16, fontweight='bold')
     plt.text(0, -0.8, f"{spread}", ha='center', fontsize=16, fontweight='bold')
     plt.text(0, 12.8, "@PEARatings", ha='center', fontsize=16, fontweight='bold')
 
