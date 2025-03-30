@@ -1128,7 +1128,7 @@ kpi_results = calculate_kpi(completed_schedule, ending_data).sort_values('KPI_Sc
 
 ####################### Resume Quality #######################
 
-def calculate_resume_quality(group, one_seed_rating):
+def calculate_resume_quality(group, bubble_team_rating):
     results = []
     resume_quality = 0
     for _, row in group.iterrows():
@@ -1136,15 +1136,16 @@ def calculate_resume_quality(group, one_seed_rating):
         is_home = row["home_team"] == team
         is_away = row["away_team"] == team
         opponent_rating = row["away_rating"] if is_home else row["home_rating"]
-        if is_home:
-            win_prob = PEAR_Win_Prob(one_seed_rating, opponent_rating, row['Location']) / 100
+        if row["Location"] == "Away":
+            win_prob = 1 - PEAR_Win_Prob(opponent_rating, bubble_team_rating, row['Location']) / 100    
         else:
-            win_prob = PEAR_Win_Prob(opponent_rating, one_seed_rating, row['Location']) / 100
+            win_prob = PEAR_Win_Prob(bubble_team_rating, opponent_rating, row['Location']) / 100
         team_won = (is_home and row["home_score"] > row["away_score"]) or (is_away and row["away_score"] > row["home_score"])
         if team_won:
             resume_quality += (1-win_prob)
         else:
             resume_quality -= win_prob
+    # resume_quality = resume_quality / len(group)
     results.append({"Team": team, "resume_quality": resume_quality})
     return pd.DataFrame(results)
 
@@ -1154,11 +1155,11 @@ def calculate_game_resume_quality(row, one_seed_rating):
     is_home = row["home_team"] == team
     is_away = row["away_team"] == team
     opponent_rating = row["away_rating"] if is_home else row["home_rating"]
-    
-    if is_home:
-        win_prob = PEAR_Win_Prob(one_seed_rating, opponent_rating, row['Location']) / 100
+    if row["Location"] == "Away":
+        win_prob = 1 - PEAR_Win_Prob(opponent_rating, one_seed_rating, row['Location']) / 100    
     else:
-        win_prob = PEAR_Win_Prob(opponent_rating, one_seed_rating, row['Location']) / 100
+        win_prob = PEAR_Win_Prob(one_seed_rating, opponent_rating, row['Location']) / 100
+
     team_won = (is_home and row["home_score"] > row["away_score"]) or (is_away and row["away_score"] > row["home_score"])
     
     return (1 - win_prob) if team_won else -win_prob
