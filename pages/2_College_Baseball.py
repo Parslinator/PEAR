@@ -1134,7 +1134,7 @@ with st.form(key='calculate_spread'):
     home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
     neutrality = st.radio(
         "Game Location",
-        ["Neutral", "On Campus"]
+        ["On Campus", "Neutral"]
     )
     spread_button = st.form_submit_button("Calculate Spread")
     if spread_button:
