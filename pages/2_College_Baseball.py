@@ -387,8 +387,17 @@ def grab_team_schedule(team_name, stats_df):
         else:
             opponent_name = ""
 
-        location_info = game.find('div', class_='team-schedule__info')
-        location = location_info.text.strip() if location_info else "Unknown"
+        location_div = game.find('div', class_='team-schedule__location')
+        if location_div:
+            location_text = location_div.text.strip()
+            if "VS" in location_text:
+                game_location = "Neutral"
+            elif "AT" in location_text:
+                game_location = "Away"
+            else:
+                game_location = "Home"
+        else:
+            game_location = "Home"
 
         # Extract Game Result
         result_info = game.find('div', class_='team-schedule__result')
@@ -413,7 +422,7 @@ def grab_team_schedule(team_name, stats_df):
             home_team, away_team = "N/A", "N/A"
 
         # Append to schedule data
-        schedule_data.append([team_name, game_date, opponent_name, location, result_text, home_team, away_team, home_score, away_score])
+        schedule_data.append([team_name, game_date, opponent_name, game_location, result_text, home_team, away_team, home_score, away_score])
 
     columns = ["Team", "Date", "Opponent", "Location", "Result", "home_team", "away_team", "home_score", "away_score"]
     schedule_df = pd.DataFrame(schedule_data, columns=columns)
@@ -438,12 +447,20 @@ def grab_team_schedule(team_name, stats_df):
     team_rating = stats_df[stats_df['Team'] == team_name]['Rating'].values[0]
     # Define conditions
     conditions = [
-        schedule_df["NET"] <= 40,
-        schedule_df["NET"] <= 80,
-        schedule_df["NET"] <= 160
+        ((schedule_df["Location"] == "Home") & (schedule_df["NET"] <= 25)) |
+        ((schedule_df["Location"] == "Neutral") & (schedule_df["NET"] <= 40)) |
+        ((schedule_df["Location"] == "Away") & (schedule_df["NET"] <= 60)),
+
+        ((schedule_df["Location"] == "Home") & (schedule_df["NET"] <= 50)) |
+        ((schedule_df["Location"] == "Neutral") & (schedule_df["NET"] <= 80)) |
+        ((schedule_df["Location"] == "Away") & (schedule_df["NET"] <= 120)),
+
+        ((schedule_df["Location"] == "Home") & (schedule_df["NET"] <= 100)) |
+        ((schedule_df["Location"] == "Neutral") & (schedule_df["NET"] <= 160)) |
+        ((schedule_df["Location"] == "Away") & (schedule_df["NET"] <= 240))
     ]
 
-    # Define corresponding values
+    # Define corresponding quadrant labels
     quadrants = ["Q1", "Q2", "Q3"]
 
     # Assign Quadrant values
