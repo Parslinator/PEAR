@@ -1093,8 +1093,8 @@ modeling_stats_copy['WHIP'] = modeling_stats_copy['WHIP'].rank(ascending=True, m
 
 st.markdown(f'<h2 id="live-cbase-stats">Live CBASE Stats</h2>', unsafe_allow_html=True)
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats_copy[['WAR', 'oWAR', 'pWAR', 'Luck', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
-st.caption("WAR - Team WAR Rank, oWAR - Team Offensive WAR Rank, pWAR - Team Pitching WAR Rank, PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
+    st.dataframe(modeling_stats_copy[['WAR', 'Luck', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
+st.caption("WAR - Team WAR Rank, PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
 
 st.divider()
 
