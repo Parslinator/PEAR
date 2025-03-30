@@ -1,5 +1,6 @@
 from datetime import datetime
 import os
+import textwrap
 import pytz # type: ignore
 
 cst = pytz.timezone('America/Chicago')
@@ -1865,6 +1866,8 @@ if now.hour < 13 and now.hour > 7:
     tournament["Seed"] = (tournament.index // 16) + 1
     pod_order = list(range(1, 17)) + list(range(16, 0, -1)) + list(range(1, 17)) + list(range(16, 0, -1))
     tournament["Host"] = pod_order
+    conference_counts = tournament['Conference'].value_counts()
+    multibid = conference_counts[conference_counts > 1]
     formatted_df = tournament.pivot_table(index="Host", columns="Seed", values="Team", aggfunc=lambda x: ' '.join(x))
     formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
     formatted_df = formatted_df.reset_index()
@@ -1925,6 +1928,15 @@ if now.hour < 13 and now.hour > 7:
     plt.figtext(0.13, 0.09, f"Last Four In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}", ha='left', fontsize=14)
     plt.figtext(0.13, 0.06, f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}", ha='left', fontsize=14)
     plt.figtext(0.13, 0.03, f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}", ha='left', fontsize=14)
+    text = " | ".join([f"{conference}: {count}" for conference, count in multibid.items()])
+    final_text = "Multibid - " + text
+    wrapped_text = textwrap.fill(final_text, width=100)
+    lines = wrapped_text.split('\n')
+    y_position = 0.00
+    vertical_spacing = -0.03
+    for line in lines:
+        plt.figtext(0.13, y_position, line, ha='left', fontsize=14)
+        y_position += vertical_spacing
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Tournament/tournament_{formatted_date}.png", bbox_inches='tight')
     print('Tournament Done')
 
@@ -1938,6 +1950,8 @@ if now.hour < 13 and now.hour > 7:
     tournament["Seed"] = (tournament.index // 16) + 1
     pod_order = list(range(1, 17)) + list(range(16, 0, -1)) + list(range(1, 17)) + list(range(16, 0, -1))
     tournament["Host"] = pod_order
+    conference_counts = tournament['Conference'].value_counts()
+    multibid = conference_counts[conference_counts > 1]
     formatted_df = tournament.pivot_table(index="Host", columns="Seed", values="Team", aggfunc=lambda x: ' '.join(x))
     formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
     formatted_df = formatted_df.reset_index()
@@ -1998,6 +2012,15 @@ if now.hour < 13 and now.hour > 7:
     plt.figtext(0.13, 0.09, f"Last Four In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}", ha='left', fontsize=14)
     plt.figtext(0.13, 0.06, f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}", ha='left', fontsize=14)
     plt.figtext(0.13, 0.03, f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}", ha='left', fontsize=14)
+    text = " | ".join([f"{conference}: {count}" for conference, count in multibid.items()])
+    final_text = "Multibid - " + text
+    wrapped_text = textwrap.fill(final_text, width=100)
+    lines = wrapped_text.split('\n')
+    y_position = 0.00
+    vertical_spacing = -0.03
+    for line in lines:
+        plt.figtext(0.13, y_position, line, ha='left', fontsize=14)
+        y_position += vertical_spacing
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Projected_Tournament/proj_tournament_{formatted_date}.png", bbox_inches='tight')
     print('Projected Tournament Done')
 

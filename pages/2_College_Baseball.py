@@ -1091,6 +1091,8 @@ tournament = tournament.sort_values(by="NET").reset_index(drop=True)
 tournament["Seed"] = (tournament.index // 16) + 1
 pod_order = list(range(1, 17)) + list(range(16, 0, -1)) + list(range(1, 17)) + list(range(16, 0, -1))
 tournament["Host"] = pod_order
+conference_counts = tournament['Conference'].value_counts()
+multibid = conference_counts[conference_counts > 1]
 formatted_df = tournament.pivot_table(index="Host", columns="Seed", values="Team", aggfunc=lambda x: ' '.join(x))
 formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
 formatted_df = formatted_df.reset_index()
@@ -1105,6 +1107,7 @@ with st.container(border=True, height=440):
 st.caption(f"Last 4 In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}")
 st.caption(f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}")
 st.caption(f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}")
+st.caption(" | ".join([f"{conference}: {count}" for conference, count in multibid.items()]))
 
 st.divider()
 
