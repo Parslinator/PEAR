@@ -17,7 +17,9 @@ from sklearn.preprocessing import MinMaxScaler # type: ignore
 import warnings
 warnings.filterwarnings("ignore")
 
-def PEAR_Win_Prob(home_pr, away_pr):
+def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
+    if location != "Neutral":
+        home_pr += 0.3
     rating_diff = home_pr - away_pr
     win_prob = round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
     return win_prob
@@ -616,7 +618,6 @@ import time
 
 ####################### Schedule Load #######################
 
-# Base URL for Warren Nolan
 BASE_URL = "https://www.warrennolan.com"
 
 # Initialize storage for schedule data
@@ -627,14 +628,11 @@ for _, row in elo_data.iterrows():
     team_name = row["Team"]
     if (schedule_counter % 50 == 0):
         print(f"{schedule_counter}/{len(elo_data)}")
-    schedule_counter = schedule_counter + 1
+    schedule_counter += 1
     team_schedule_url = BASE_URL + row["Team Link"]
     
     response = requests.get(team_schedule_url)
     soup = BeautifulSoup(response.text, 'html.parser')
-
-    # Find the team name
-    # team_name = soup.find("h1").text.strip() if soup.find("h1") else "Unknown"
 
     # Find the team schedule list
     schedule_lists = soup.find_all("ul", class_="team-schedule")
@@ -658,10 +656,19 @@ for _, row in elo_data.iterrows():
             opponent_name = opponent_link_element.text.strip() if opponent_link_element else ""
         else:
             opponent_name = ""
-
-        # Extract Location
-        location_info = game.find('div', class_='team-schedule__info')
-        location = location_info.text.strip() if location_info else "Unknown"
+        
+        # Extract Game Location
+        location_div = game.find('div', class_='team-schedule__location')
+        if location_div:
+            location_text = location_div.text.strip()
+            if "VS" in location_text:
+                game_location = "Neutral"
+            elif "AT" in location_text:
+                game_location = "Away"
+            else:
+                game_location = "Home"
+        else:
+            game_location = "Home"
 
         # Extract Game Result
         result_info = game.find('div', class_='team-schedule__result')
@@ -686,7 +693,7 @@ for _, row in elo_data.iterrows():
             home_team, away_team = "N/A", "N/A"
 
         # Append to schedule data
-        schedule_data.append([team_name, game_date, opponent_name, location, result_text, home_team, away_team, home_score, away_score])
+        schedule_data.append([team_name, game_date, opponent_name, game_location, result_text, home_team, away_team, home_score, away_score])
 
 # Convert to DataFrame
 columns = ["Team", "Date", "Opponent", "Location", "Result", "home_team", "away_team", "home_score", "away_score"]
@@ -877,7 +884,7 @@ remaining_games = schedule_df[schedule_df["Date"] > comparison_date].reset_index
 def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 1.5
 schedule_df['elo_win_prob'] = round((10**((schedule_df['home_elo'] - schedule_df['away_elo']) / 400)) / ((10**((schedule_df['home_elo'] - schedule_df['away_elo']) / 400)) + 1)*100,2)
-schedule_df['Spread'] = (schedule_df['home_rating'] + (schedule_df['elo_win_prob'].apply(adjust_home_pr)) - schedule_df['away_rating']).round(2)
+schedule_df['Spread'] = ((schedule_df['home_rating'] + schedule_df.apply(lambda row: 0.3 if row['Location'] != "Neutral" else 0, axis=1)) + schedule_df['elo_win_prob'].apply(adjust_home_pr) - schedule_df['away_rating']).round(2)
 schedule_df['PEAR'] = schedule_df.apply(
     lambda row: f"{row['away_team']} {-abs(row['Spread'])}" if ((row['Spread'] <= 0)) 
     else f"{row['home_team']} {-abs(row['Spread'])}", axis=1)
@@ -892,19 +899,27 @@ straight_up_calculator = completed_schedule.copy()
 
 def rpi_components(completed_schedule):
     teams = set(completed_schedule['home_team']).union(set(completed_schedule['away_team']))
-    team_records = {team: {'wins': 0, 'losses': 0} for team in teams}
+    team_records = {team: {'wins': 0, 'losses': 0, 'weighted_wins': 0, 'weighted_losses': 0} for team in teams}
     
     for _, row in completed_schedule.iterrows():
         home_team, away_team = row['home_team'], row['away_team']
         home_score, away_score = row['home_score'], row['away_score']
+        location = row['Location']
+        
         if home_score > away_score:
+            weight = 0.7 if location == "Home" else (1.0 if location == "Neutral" else 1.3)
             team_records[home_team]['wins'] += 1
+            team_records[home_team]['weighted_wins'] += weight
             team_records[away_team]['losses'] += 1
+            team_records[away_team]['weighted_losses'] += weight
         else:
+            weight = 1.3 if location == "Away" else (1.0 if location == "Neutral" else 0.7)
             team_records[away_team]['wins'] += 1
+            team_records[away_team]['weighted_wins'] += weight
             team_records[home_team]['losses'] += 1
-
-    wp = {team: record['wins'] / (record['wins'] + record['losses']) if (record['wins'] + record['losses']) > 0 else 0 
+            team_records[home_team]['weighted_losses'] += weight
+    
+    wp = {team: record['weighted_wins'] / (record['weighted_wins'] + record['weighted_losses']) if (record['weighted_wins'] + record['weighted_losses']) > 0 else 0 
           for team, record in team_records.items()}
     
     team_opponents = {team: set() for team in teams}
@@ -912,6 +927,7 @@ def rpi_components(completed_schedule):
         home_team, away_team = row['home_team'], row['away_team']
         team_opponents[home_team].add(away_team)
         team_opponents[away_team].add(home_team)
+    
     owp = {}
     for team in teams:
         opponents = team_opponents[team]
@@ -920,32 +936,34 @@ def rpi_components(completed_schedule):
             opp_games = completed_schedule[
                 (completed_schedule['home_team'] == opp) | (completed_schedule['away_team'] == opp)
             ]
-            opp_wins = 0
-            opp_losses = 0
+            opp_wins, opp_losses, opp_weighted_wins, opp_weighted_losses = 0, 0, 0, 0
+            
             for _, game in opp_games.iterrows():
+                location = game['Location']
                 if game['home_team'] == opp:
                     opp_team = game['away_team']
-                    if game['home_score'] > game['away_score']:
-                        opp_wins += 1
-                    else:
-                        opp_losses += 1
+                    weight = 0.7 if location == "Home" else (1.0 if location == "Neutral" else 1.3)
                 else:
                     opp_team = game['home_team']
-                    if game['away_score'] > game['home_score']:
-                        opp_wins += 1
-                    else:
-                        opp_losses += 1
+                    weight = 1.3 if location == "Away" else (1.0 if location == "Neutral" else 0.7)
+                
+                if game['home_team'] == opp and game['home_score'] > game['away_score']:
+                    opp_weighted_wins += weight
+                elif game['away_team'] == opp and game['away_score'] > game['home_score']:
+                    opp_weighted_wins += weight
+                else:
+                    opp_weighted_losses += weight
                 
                 if opp_team == team:
-                    if game['home_team'] == opp:
-                        opp_wins -= 1 if game['home_score'] > game['away_score'] else 0
-                        opp_losses -= 1 if game['home_score'] < game['away_score'] else 0
+                    if game['home_team'] == opp and game['home_score'] > game['away_score']:
+                        opp_weighted_wins -= weight
+                    elif game['away_team'] == opp and game['away_score'] > game['home_score']:
+                        opp_weighted_wins -= weight
                     else:
-                        opp_wins -= 1 if game['away_score'] > game['home_score'] else 0
-                        opp_losses -= 1 if game['away_score'] < game['home_score'] else 0
-
-            if opp_wins + opp_losses > 0:
-                opponent_wps.append(opp_wins / (opp_wins + opp_losses))
+                        opp_weighted_losses -= weight
+            
+            if opp_weighted_wins + opp_weighted_losses > 0:
+                opponent_wps.append(opp_weighted_wins / (opp_weighted_wins + opp_weighted_losses))
         
         owp[team] = sum(opponent_wps) / len(opponent_wps) if opponent_wps else 0
     
@@ -961,6 +979,7 @@ def rpi_components(completed_schedule):
 
     return rpi_components_df
 
+# Example of merging with live RPI
 pear_rpi = rpi_components(completed_schedule)
 pear_rpi = pd.merge(pear_rpi, live_rpi, on='Team', how='left')
 pear_rpi = pear_rpi.dropna()
@@ -1029,9 +1048,9 @@ def calculate_average_expected_wins(group, average_team):
 
     for _, row in group.iterrows():
         if row['Team'] == row['home_team']:
-            total_expected_wins += PEAR_Win_Prob(average_team, row['away_rating']) / 100
+            total_expected_wins += PEAR_Win_Prob(average_team, row['away_rating'], row['Location']) / 100
         else:
-            total_expected_wins += 1 - PEAR_Win_Prob(row['home_rating'], average_team) / 100
+            total_expected_wins += 1 - PEAR_Win_Prob(row['home_rating'], average_team, row['Location']) / 100
 
     avg_expected_wins = total_expected_wins / len(group)
 
@@ -1116,7 +1135,7 @@ def calculate_resume_quality(group, bubble_team_rating):
         is_home = row["home_team"] == team
         is_away = row["away_team"] == team
         opponent_rating = row["away_rating"] if is_home else row["home_rating"]
-        win_prob = PEAR_Win_Prob(bubble_team_rating, opponent_rating) / 100
+        win_prob = PEAR_Win_Prob(bubble_team_rating, opponent_rating, row['Location']) / 100
         team_won = (is_home and row["home_score"] > row["away_score"]) or (is_away and row["away_score"] > row["home_score"])
         if team_won:
             resume_quality += (1-win_prob)
@@ -1133,7 +1152,7 @@ def calculate_game_resume_quality(row, one_seed_rating):
     is_away = row["away_team"] == team
     opponent_rating = row["away_rating"] if is_home else row["home_rating"]
     
-    win_prob = PEAR_Win_Prob(one_seed_rating, opponent_rating) / 100
+    win_prob = PEAR_Win_Prob(one_seed_rating, opponent_rating, row['Location']) / 100
     team_won = (is_home and row["home_score"] > row["away_score"]) or (is_away and row["away_score"] > row["home_score"])
     
     return (1 - win_prob) if team_won else -win_prob
@@ -1256,50 +1275,23 @@ stats_and_metrics['aRQI'] = stats_and_metrics['Norm_Resume'].rank(ascending=Fals
 ####################### Quadrants #######################
 
 quadrant_records = {}
-
 for team, group in completed_schedule.groupby('Team'):
-    Q1_win, Q1_loss = 0, 0  # Initialize counters
-    Q2_win, Q2_loss = 0, 0
-    Q3_win, Q3_loss = 0, 0
-    Q4_win, Q4_loss = 0, 0
-
+    quadrant_counts = {f'Q{i}_win': 0 for i in range(1, 5)}
+    quadrant_counts.update({f'Q{i}_loss': 0 for i in range(1, 5)})
+    
     for _, row in group.iterrows():
         opponent = row['Opponent']
+        opponent_index = stats_and_metrics.loc[stats_and_metrics['Team'] == opponent, "NET"].values[0] if opponent in stats_and_metrics['Team'].values else 300
+        location = row['Location']
+        team_won = (row['home_score'] > row['away_score'] and row['Team'] == row['home_team']) or \
+                   (row['away_score'] > row['home_score'] and row['Team'] == row['away_team'])
         
-        if len(stats_and_metrics[stats_and_metrics['Team'] == opponent]) > 0:
-            opponent_index = stats_and_metrics[stats_and_metrics['Team'] == opponent]["NET"].values[0]
-        else:
-            opponent_index = 300
+        quadrant_ranges = {"Home": [25, 50, 100, 307], "Neutral": [40, 80, 160, 307], "Away": [60, 120, 240, 307]}
+        quadrant = next(i + 1 for i, val in enumerate(quadrant_ranges[location]) if opponent_index <= val)
+        quadrant_counts[f'Q{quadrant}_win' if team_won else f'Q{quadrant}_loss'] += 1
 
-        team_is_home = row['Team'] == row['home_team']
-        team_won = (row['home_score'] > row['away_score'] and team_is_home) or \
-                    (row['away_score'] > row['home_score'] and not team_is_home)
+    quadrant_records[team] = {"Team": team, **{f'Q{i}': f"{quadrant_counts[f'Q{i}_win']}-{quadrant_counts[f'Q{i}_loss']}" for i in range(1, 5)}}
 
-        # Apply quadrant logic
-        if opponent_index <= 40:
-            if team_won:
-                Q1_win += 1
-            else:
-                Q1_loss += 1
-        elif opponent_index <= 80:
-            if team_won:
-                Q2_win += 1
-            else:
-                Q2_loss += 1
-        elif opponent_index <= 160:
-            if team_won:
-                Q3_win += 1
-            else:
-                Q3_loss += 1
-        else:
-            if team_won:
-                Q4_win += 1
-            else:
-                Q4_loss += 1            
-            
-
-    # Store results for the team
-    quadrant_records[team] = {'Team': team, 'Q1': f"{Q1_win}-{Q1_loss}", 'Q2': f"{Q2_win}-{Q2_loss}", 'Q3': f"{Q3_win}-{Q3_loss}", 'Q4': f"{Q4_win}-{Q4_loss}"}
 quadrant_record_df = pd.DataFrame.from_dict(quadrant_records, orient='index').reset_index(drop=True)
 stats_and_metrics = pd.merge(stats_and_metrics, quadrant_record_df, on='Team', how='left')
 
@@ -1421,17 +1413,20 @@ previous.to_csv(f"./PEAR/PEAR Baseball/y{current_season}/straight_up.csv")
 
 ####################### Projected NET #######################
 
-def PEAR_Win_Prob(home_pr, away_pr):
+def PEAR_Win_Prob(home_pr, away_pr, location = "Neutral"):
+    if location != "Neutral":
+        home_pr += 0.3
     rating_diff = home_pr - away_pr
     return round(1 / (1 + 10 ** (-rating_diff / 7.5)), 4)  # More precision, rounded later in output
 
 def remaining_games_rq(row, one_seed_rating):
     """Calculate resume quality for a single game."""
     team = row["Team"]
+    location = row['Location']
     is_home = row["home_team"] == team
     is_away = row["away_team"] == team
     opponent_rating = row["away_rating"] if is_home else row["home_rating"]
-    win_prob = PEAR_Win_Prob(one_seed_rating, opponent_rating)
+    win_prob = PEAR_Win_Prob(one_seed_rating, opponent_rating, location)
     return win_prob
 
 remaining_games['bubble_win_prob'] = remaining_games.apply(
@@ -1464,11 +1459,6 @@ def simulate_games(df, num_simulations=100):
     projected_wins_df["Remaining_Losses"] = projected_wins_df['Games_Remaining'] - projected_wins_df['Remaining_Wins']
     projected_wins_df = projected_wins_df.merge(projected_resume_quality_df, on="Team", how="left")
     return projected_wins_df
-
-
-def PEAR_Win_Prob(home_pr, away_pr):
-    rating_diff = home_pr - away_pr
-    return round(1 / (1 + 10 ** (-rating_diff / 7.5)), 4)  # More precision, rounded later in output
 
 projected_wins_df = simulate_games(remaining_games)
 stats_and_metrics = pd.merge(stats_and_metrics, projected_wins_df, how='left', on='Team')

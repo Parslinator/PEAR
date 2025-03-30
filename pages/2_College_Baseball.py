@@ -121,11 +121,13 @@ else:
     modeling_stats = None  # No valid files found
 formatted_latest_date = latest_date.strftime("%B %d, %Y")
 
-def find_spread(home_team, away_team):
+def find_spread(home_team, away_team, location = "Neutral"):
     default_pr = modeling_stats['Rating'].mean() - 1.75 * modeling_stats['Rating'].std()
     default_elo = 1200
 
     home_pr = modeling_stats.loc[modeling_stats['Team'] == home_team, 'Rating']
+    if location != "Neutral":
+        home_pr += 0.3
     away_pr = modeling_stats.loc[modeling_stats['Team'] == away_team, 'Rating']
     home_elo = modeling_stats.loc[modeling_stats['Team'] == home_team, 'ELO']
     away_elo = modeling_stats.loc[modeling_stats['Team'] == away_team, 'ELO']
@@ -143,11 +145,13 @@ def find_spread(home_team, away_team):
     else:
         return f"{away_team} {spread}"
     
-def find_spread_matchup(home_team, away_team, modeling_stats):
+def find_spread_matchup(home_team, away_team, modeling_stats, location="Neutral"):
     default_pr = modeling_stats['Rating'].mean() - 1.75 * modeling_stats['Rating'].std()
     default_elo = 1200
 
     home_pr = modeling_stats.loc[modeling_stats['Team'] == home_team, 'Rating']
+    if location != "Neutral":
+        home_pr += 0.3
     away_pr = modeling_stats.loc[modeling_stats['Team'] == away_team, 'Rating']
     home_elo = modeling_stats.loc[modeling_stats['Team'] == home_team, 'ELO']
     away_elo = modeling_stats.loc[modeling_stats['Team'] == away_team, 'ELO']
@@ -473,7 +477,7 @@ def grab_team_schedule(team_name, stats_df):
         (schedule_df["Result"].str.contains("W|L"))  # Check if "Result" contains "W" or "L"
     ].reset_index(drop=True)
     remaining_games = schedule_df[schedule_df["Comparison_Date"] > comparison_date].reset_index(drop=True)
-    remaining_games['PEAR'] = remaining_games.apply(lambda row: find_spread(row['Team'], row['Opponent']), axis=1)
+    remaining_games['PEAR'] = remaining_games.apply(lambda row: find_spread(row['Team'], row['Opponent'], row['Location']), axis=1)
 
     team_completed = completed_schedule[completed_schedule['Team'] == team_name].reset_index(drop=True)
     num_rows = len(team_completed)
@@ -836,7 +840,7 @@ def calculate_series_probabilities(win_prob):
 
     return [P_A_at_least_1,P_A_at_least_2,P_A_3], [P_B_at_least_1,P_B_at_least_2,P_B_3]
 
-def matchup_percentiles(team_1, team_2, stats_and_metrics):
+def matchup_percentiles(team_1, team_2, stats_and_metrics, location="Neutral"):
     BASE_URL = "https://www.warrennolan.com"
     percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
     custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'fWAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
@@ -878,7 +882,7 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics):
     response = requests.get(image_url)
     img2 = Image.open(BytesIO(response.content))
 
-    spread, team_2_win_prob = find_spread_matchup(team_2, team_1, stats_and_metrics)
+    spread, team_2_win_prob = find_spread_matchup(team_2, team_1, stats_and_metrics, location)
 
     max_net = 299
     w_tq = 0.70   # NET AVG
@@ -1108,9 +1112,13 @@ st.markdown(f'<h2 id="matchup-cards">Matchup Cards</h2>', unsafe_allow_html=True
 with st.form(key='calculate_spread'):
     away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
     home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+    neutrality = st.radio(
+        "Game Location",
+        ["Neutral", "On Campus"]
+    )
     spread_button = st.form_submit_button("Calculate Spread")
     if spread_button:
-        fig = matchup_percentiles(away_team, home_team, modeling_stats)
+        fig = matchup_percentiles(away_team, home_team, modeling_stats, neutrality)
         st.pyplot(fig)
 
 st.divider()
