@@ -36,14 +36,14 @@ jobs:
           fc-list | grep "Trebuchet"  # Debug: Check if fonts are available
 
       - name: Run Python Script
-        run: python baseball_power_rating.py
+        run: python baseball_update.py
 
       - name: Commit Changes
         run: |
           git config --local user.name "GitHub Action"
           git config --local user.email "action@github.com"
           git add -A
-          git diff-index --quiet HEAD || (git commit -a -m "baseball ratings update" --allow-empty)
+          git diff-index --quiet HEAD || (git commit -a -m "baseball update" --allow-empty)
       
       - name: Push Changes
         uses: ad-m/github-push-action@v0.6.0
