@@ -107,7 +107,7 @@ st.caption("If you are looking for a specific visual, it's best to search the pa
 st.markdown(f'<h2 id="pear-cfb-stats-visuals">PEAR CFB Stats Visuals</h2>', unsafe_allow_html=True)
 
 # Construct the folder path
-folder_path = f"PEAR/Visuals/y{current_year}/week_{current_week}/"
+folder_path = f"PEAR/PEAR Football/y{current_year}/Visuals/week_{current_week}/"
 
 if os.path.exists(folder_path):
     top25_file = f"{folder_path}top25.png" # used
@@ -217,7 +217,7 @@ if os.path.exists(folder_path):
     with cols[1]:
         st.image(most_deserving_team_pyramid, width=500, caption="Most Deserving Rankings Team Pyramid")
 
-folder_path = f"PEAR/Visuals/y{current_year}/week_{current_week}/Stat Profiles"
+folder_path = f"PEAR/PEAR Football/y{current_year}/Visuals/week_{current_week}/Stat Profiles"
 
 if os.path.exists(folder_path):
     # Get a list of all .png files in the folder
@@ -244,7 +244,7 @@ if os.path.exists(folder_path):
     else:
         st.warning(f"No .png files found in {folder_path}")
 
-folder_path = f"PEAR/Visuals/y{current_year}/week_{current_week}/Games"
+folder_path = f"PEAR/PEAR Football/y{current_year}/Visuals/week_{current_week}/Games"
 if os.path.exists(folder_path):
     # Get a list of all .png files in the folder
     png_files = glob.glob(os.path.join(folder_path, "*.png"))

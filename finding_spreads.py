@@ -73,8 +73,8 @@ current_year = int(current_year)
 current_week = int(current_week)
 print(f"Current Week: {current_week}, Current Year: {current_year}")
 
-team_data = pd.read_csv(f'./PEAR/Ratings/y{current_year}/PEAR_week{current_week}.csv').drop(columns=['Unnamed: 0'])
-all_data = pd.read_csv(f"./PEAR/Data/y{current_year}/team_data_week{current_week}.csv").drop(columns=['Unnamed: 0'])
+team_data = pd.read_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv').drop(columns=['Unnamed: 0'])
+all_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}.csv").drop(columns=['Unnamed: 0'])
 
 offensive_scaler = MinMaxScaler(feature_range=(35,70))
 defensive_scaler = MinMaxScaler(feature_range=(15,40))
@@ -328,4 +328,4 @@ if len(completed) > 0:
     print(f"MAE+: {round(100-MAE_plus,2)}%")
     print(f"AE < {X}: {round(count/len(completed)*100,2)}%")
 
-game_completion_info.to_excel(f'./PEAR/Spreads/y{current_year}/spreads_tracker_week{current_week}.xlsx')
+game_completion_info.to_excel(f'./PEAR/PEAR Football/y{current_year}/Spreads/spreads_tracker_week{current_week}.xlsx')

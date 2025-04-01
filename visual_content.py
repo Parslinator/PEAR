@@ -94,10 +94,10 @@ current_year = int(current_year)
 current_week = int(current_week)
 print(f"Current Week: {current_week}, Current Year: {current_year}")
 
-folder_path = f"./PEAR/Visuals/y{current_year}/week_{current_week}"
+folder_path = f"./PEAR/PEAR Football/y{current_year}/Visuals/week_{current_week}"
 os.makedirs(folder_path, exist_ok=True)
 
-conf_folder_path = f"./PEAR/Visuals/y{current_year}/week_{current_week}/Conference Projections"
+conf_folder_path = f"./PEAR/PEAR Football/y{current_year}/Visuals/week_{current_week}/Conference Projections"
 os.makedirs(conf_folder_path, exist_ok=True)
 
 logos_info_list = []
@@ -146,19 +146,19 @@ records.at[records[records['team'] == 'Utah'].index[0], 'conference_wins'] -= 1
 records.at[records[records['team'] == 'Baylor'].index[0], 'conference_losses'] -= 1
 records.at[records[records['team'] == 'Arizona'].index[0], 'conference_losses'] -= 1
 print("Records Prep Done!")
-all_data = pd.read_csv(f"./PEAR/Data/y{current_year}/team_data_week{current_week}.csv")
-team_data = pd.read_csv(f'./PEAR/Ratings/y{current_year}/PEAR_week{current_week}.csv')
+all_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}.csv")
+team_data = pd.read_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv')
 
-start_season_data = pd.read_csv(f"./PEAR/Ratings/y{current_year}/PEAR_week{current_week}.csv")
-if os.path.exists(f"./PEAR/Ratings/y{current_year}/PEAR_week{current_week-1}.csv"):
-    last_week_data = pd.read_csv(f"./PEAR/Ratings/y{current_year}/PEAR_week{current_week-1}.csv")
+start_season_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv")
+if os.path.exists(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week-1}.csv"):
+    last_week_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week-1}.csv")
 else:
-    last_week_data = pd.read_csv(f"./PEAR/Ratings/y{current_year}/PEAR_week{current_week}.csv")
+    last_week_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv")
 week_to_check = current_week - 4
 last_month_data = None
 # Loop to find the most recent existing file
 while week_to_check <= current_week:
-    file_path = f"./PEAR/Ratings/y{current_year}/PEAR_week{week_to_check}.csv"
+    file_path = f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{week_to_check}.csv"
     if os.path.exists(file_path):
         # If the file is found, read it in and break the loop
         last_month_data = pd.read_csv(file_path)
@@ -1285,7 +1285,7 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
 
     plt.tight_layout()
 
-    folder_path = f"./PEAR/Visuals/y{current_year}/week_{current_week}/Games"
+    folder_path = f"./PEAR/PEAR Football/y{current_year}/Visuals/week_{current_week}/Games"
     os.makedirs(folder_path, exist_ok=True)
 
     file_path = os.path.join(folder_path, f"{home_team} vs {away_team}")
@@ -2325,7 +2325,7 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     plt.text(0.5,-0.34, "Figure: @PEARatings | Data: @CFB_Data", ha='center', fontsize=14, fontweight='bold', transform = ax.transAxes)
     plt.tight_layout()
 
-    folder_path = f"./PEAR/Visuals/y{current_year}/week_{current_week}/Stat Profiles"
+    folder_path = f"./PEAR/PEAR Football/y{current_year}/Visuals/week_{current_week}/Stat Profiles"
     os.makedirs(folder_path, exist_ok=True)
 
     file_path = os.path.join(folder_path, f"{team}")
@@ -2575,7 +2575,7 @@ print("Prep Work Done!")
 
 try:
     top_25 = all_data[:25]
-    last_week_data = pd.read_csv(f"./PEAR/Ratings/y{current_year}/PEAR_week{current_week-1}.csv")
+    last_week_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week-1}.csv")
 
     fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
     fig.subplots_adjust(hspace=0.5, wspace=0.5)

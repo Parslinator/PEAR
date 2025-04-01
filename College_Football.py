@@ -92,8 +92,8 @@ else:
 current_week = int(current_week)
 current_year = int(current_year)
 
-team_data = pd.read_csv(f"./PEAR/Ratings/y{current_year}/PEAR_week{current_week}.csv").drop(columns=['Unnamed: 0'])
-all_data = pd.read_csv(f"./PEAR/Data/y{current_year}/team_data_week{current_week}.csv")
+team_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv").drop(columns=['Unnamed: 0'])
+all_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}.csv")
 
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
@@ -488,7 +488,7 @@ st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule
 
 st.divider()
 
-team_data = pd.read_csv("./PEAR/normalized_power_rating_across_years.csv")
+team_data = pd.read_csv("./PEAR/PEAR Football/normalized_power_rating_across_years.csv")
 
 def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 5
@@ -588,7 +588,7 @@ with st.form(key='calculate_spread_two_teams'):
 st.divider()
 
 st.markdown(f'<h2 id="2023-ratings">2023 Ratings</h2>', unsafe_allow_html=True)
-all_data = pd.read_csv("./PEAR/Data/y2023/team_data_week15.csv")
+all_data = pd.read_csv("./PEAR/PEAR Football/y2023/Data/team_data_week15.csv")
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
 all_data['OFF'] = all_data['Offense']
@@ -609,7 +609,7 @@ st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedu
 
 st.divider()
 
-all_data = pd.read_csv("./PEAR/Data/y2022/team_data_week16.csv")
+all_data = pd.read_csv("./PEAR/PEAR Football/y2022/Data/team_data_week16.csv")
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
 st.markdown(f'<h2 id="2022-ratings">2022 Ratings</h2>', unsafe_allow_html=True)
@@ -631,7 +631,7 @@ st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedu
 
 st.divider()
 
-all_data = pd.read_csv("./PEAR/Data/y2021/team_data_week16.csv")
+all_data = pd.read_csv("./PEAR/PEAR Football/y2021/Data/team_data_week16.csv")
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
 st.markdown(f'<h2 id="2021-ratings">2021 Ratings</h2>', unsafe_allow_html=True)
@@ -653,7 +653,7 @@ st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedu
 
 st.divider()
 
-all_data = pd.read_csv("./PEAR/Data/y2020/team_data_week17.csv")
+all_data = pd.read_csv("./PEAR/PEAR Football/y2020/Data/team_data_week17.csv")
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
 st.markdown(f'<h2 id="2020-ratings">2020 Ratings</h2>', unsafe_allow_html=True)
@@ -675,7 +675,7 @@ st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedu
 
 st.divider()
 
-all_data = pd.read_csv("./PEAR/Data/y2019/team_data_week17.csv")
+all_data = pd.read_csv("./PEAR/PEAR Football/y2019/Data/team_data_week17.csv")
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
 st.markdown(f'<h2 id="2019-ratings">2019 Ratings</h2>', unsafe_allow_html=True)
@@ -697,7 +697,7 @@ st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedu
 
 st.divider()
 
-all_data = pd.read_csv("./PEAR/Data/y2018/team_data_week16.csv")
+all_data = pd.read_csv("./PEAR/PEAR Football/y2018/Data/team_data_week16.csv")
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
 st.markdown(f'<h2 id="2018-ratings">2018 Ratings</h2>', unsafe_allow_html=True)
@@ -719,7 +719,7 @@ st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedu
 
 st.divider()
 
-all_data = pd.read_csv("./PEAR/Data/y2017/team_data_week16.csv")
+all_data = pd.read_csv("./PEAR/PEAR Football/y2017/Data/team_data_week16.csv")
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
 st.markdown(f'<h2 id="2017-ratings">2017 Ratings</h2>', unsafe_allow_html=True)
@@ -741,7 +741,7 @@ st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedu
 
 st.divider()
 
-all_data = pd.read_csv("./PEAR/Data/y2016/team_data_week16.csv")
+all_data = pd.read_csv("./PEAR/PEAR Football/y2016/Data/team_data_week16.csv")
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
 st.markdown(f'<h2 id="2016-ratings">2016 Ratings</h2>', unsafe_allow_html=True)
@@ -763,7 +763,7 @@ st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedu
 
 st.divider()
 
-all_data = pd.read_csv("./PEAR/Data/y2015/team_data_week16.csv")
+all_data = pd.read_csv("./PEAR/PEAR Football/y2015/Data/team_data_week16.csv")
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
 st.markdown(f'<h2 id="2015-ratings">2015 Ratings</h2>', unsafe_allow_html=True)
@@ -785,7 +785,7 @@ st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedu
 
 st.divider()
 
-all_data = pd.read_csv("./PEAR/Data/y2014/team_data_week17.csv")
+all_data = pd.read_csv("./PEAR/PEAR Football/y2014/Data/team_data_week17.csv")
 all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
 st.markdown(f'<h2 id="2014-ratings">2014 Ratings</h2>', unsafe_allow_html=True)

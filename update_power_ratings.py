@@ -830,14 +830,14 @@ team_data = pd.merge(team_data, SOS, how='left', on='team')
 team_data = pd.merge(team_data, SOR, how='left', on='team')
 team_data = pd.merge(team_data, most_deserving, how='left', on='team')
 
-folder_path = f"./PEAR/Data/y{current_year}"
+folder_path = f"./PEAR/PEAR Football/y{current_year}/Data"
 os.makedirs(folder_path, exist_ok=True)
 
-folder_path = f"./PEAR/Ratings/y{current_year}"
+folder_path = f"./PEAR/PEAR Football/y{current_year}/Ratings"
 os.makedirs(folder_path, exist_ok=True)
 
-folder_path = f"./PEAR/Spreads/y{current_year}"
+folder_path = f"./PEAR/PEAR Football/y{current_year}/Spreads"
 os.makedirs(folder_path, exist_ok=True)
 
-team_data.to_csv(f"./PEAR/Data/y{current_year}/team_data_week{current_week}_no_adjustments.csv")
-team_power_rankings.to_csv(f'./PEAR/Ratings/y{current_year}/PEAR_week{current_week}_no_adjustments.csv')
+team_data.to_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}_no_adjustments.csv")
+team_power_rankings.to_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}_no_adjustments.csv')
