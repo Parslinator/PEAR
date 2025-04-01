@@ -850,8 +850,6 @@ month_mapping = {
     "SEP": "09", "OCT": "10", "NOV": "11", "DEC": "12"
 }
 
-current_season = 2025  # Set the current season
-
 # Function to convert "FEB 14 (FRI)" format to "mm-dd-yyyy"
 def convert_date(date_str):
     # Ensure date is a string before splitting
@@ -1536,7 +1534,7 @@ if now.hour < 13 and now.hour > 7:
     from datetime import datetime, timedelta
     custom_font = fm.FontProperties(fname="./trebuc.ttf")
     plt.rcParams['font.family'] = custom_font.get_name()
-    week_1_start = datetime(2025, 2, 10)
+    week_1_start = datetime(current_season, 2, 10)
     today = datetime.today()
     days_since_start = (today - week_1_start).days
     current_week = (days_since_start // 7) + 1  # Each Monday starts a new week
