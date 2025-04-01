@@ -1532,7 +1532,7 @@ if now.hour < 13 and now.hour > 7:
     import matplotlib.offsetbox as offsetbox # type: ignore
     import matplotlib.font_manager as fm # type: ignore
     from datetime import datetime, timedelta
-    custom_font = fm.FontProperties(fname="./trebuc.ttf")
+    custom_font = fm.FontProperties(fname="./PEAR/trebuc.ttf")
     plt.rcParams['font.family'] = custom_font.get_name()
     week_1_start = datetime(current_season, 2, 10)
     today = datetime.today()

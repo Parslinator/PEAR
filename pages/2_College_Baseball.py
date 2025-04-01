@@ -14,9 +14,9 @@ import matplotlib.patheffects as pe
 from io import BytesIO
 from PIL import Image
 import matplotlib.colors as mcolors
-font_prop = fm.FontProperties(fname="./trebuc.ttf")
-fm.fontManager.addfont("./trebuc.ttf")
-fm.fontManager.addfont("./Trebuchet MS Bold.ttf")
+font_prop = fm.FontProperties(fname="./PEAR/trebuc.ttf")
+fm.fontManager.addfont("./PEAR/trebuc.ttf")
+fm.fontManager.addfont("./PEAR/Trebuchet MS Bold.ttf")
 plt.rcParams['font.family'] = font_prop.get_name()
 
 cst = pytz.timezone('America/Chicago')
