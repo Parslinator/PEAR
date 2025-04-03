@@ -1105,6 +1105,12 @@ def conference_team_sheets(this_conference, stats_and_metrics):
     tab.columns["Team"].set_facecolor('#CECEB2')
     plt.text(0.055,-1.65, f"{this_conference} Team Sheets", fontsize = 24, fontweight='bold', ha='left')
     plt.text(0.055,-1, f"@PEARatings", fontsize = 16, ha='left')
+    plt.text(0.055,len(conference)+0.6, f"NET - PEAR's Ranking", fontsize = 16, ha='left')
+    plt.text(1.05,len(conference)+0.6, f"RPI - Nolan's Live RPI", fontsize = 16, ha='left')
+    plt.text(0.055,len(conference)+1.2, f"PYT - Pythagorean Win Percentage", fontsize = 16, ha='left')
+    plt.text(1.05,len(conference)+1.2, f"TSR - Team Strength Rating", fontsize = 16, ha='left')
+    plt.text(0.055,len(conference)+1.8, f"RQI - Resume Quality Index", fontsize = 16, ha='left')
+    plt.text(1.05,len(conference)+1.8, f"WAB - Wins Above Bubble", fontsize = 16, ha='left')
     return fig
 
 st.title(f"{current_season} CBASE PEAR")
