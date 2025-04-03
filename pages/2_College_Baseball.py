@@ -14,6 +14,12 @@ import matplotlib.patheffects as pe
 from io import BytesIO
 from PIL import Image
 import matplotlib.colors as mcolors
+from plottable import Table # type: ignore
+from plottable.plots import image, circled_image # type: ignore
+from plottable import ColumnDefinition # type: ignore
+from plottable.cmap import normed_cmap
+from matplotlib.colors import LinearSegmentedColormap
+import matplotlib
 font_prop = fm.FontProperties(fname="./PEAR/trebuc.ttf")
 fm.fontManager.addfont("./PEAR/trebuc.ttf")
 fm.fontManager.addfont("./PEAR/Trebuchet MS Bold.ttf")
@@ -1035,6 +1041,72 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics, location="Neutral"):
 
     return fig
 
+def conference_team_sheets(this_conference, stats_and_metrics):
+    stats_and_metrics['WAR'] = stats_and_metrics['fWAR'].rank(ascending=False).astype(int)
+    stats_and_metrics['PYT'] = stats_and_metrics['PYTHAG'].rank(ascending=False).astype(int)
+    stats_and_metrics['wRPI'] = stats_and_metrics['Live_RPI']
+    conference = stats_and_metrics[stats_and_metrics['Conference'] == this_conference].reset_index(drop=True)
+    conference = conference[['Team', 'NET', 'wRPI', 'PRR', 'PYT', 'RQI', 'WAB']]
+
+    cmap = LinearSegmentedColormap.from_list(
+        name="green_red",
+        colors=[
+            '#006400',  # Dark Green (start)
+            '#d5f5e3',  # Light Green (transition from green)
+            '#ffb6b6',  # Light Red (transition from green to red)
+            '#8b0000'   # Dark Red (end)
+        ],
+        N=299  # Total color bins (1 to 299)
+    )
+
+    make_table = conference.set_index('Team')
+    fig, ax = plt.subplots(figsize=(10, len(conference)*0.7))
+    fig.patch.set_facecolor('#CECEB2')
+
+    column_definitions = [
+        ColumnDefinition(name='Team', # name of the column to change
+                        title='Team', # new title for the column
+                        textprops={"ha": "left", "weight": "bold", "fontsize": 16}, width = 0.55 # properties to apply
+                        ),
+        ColumnDefinition(name='NET', # name of the column to change
+                        title='NET', # new title for the column
+                        textprops={"ha": "center", "fontsize": 16}, width = 0.2,
+                        cmap=cmap # properties to apply
+                        ),
+        ColumnDefinition(name='wRPI', # name of the column to change
+                        title='wRPI', # new title for the column
+                        textprops={"ha": "center", "fontsize": 16}, width = 0.2,
+                        cmap=cmap # properties to apply
+                        ),
+        ColumnDefinition(name='PRR', # name of the column to change
+                        title='TSR', # new title for the column
+                        textprops={"ha": "center", "fontsize": 16}, width = 0.2,
+                        cmap=cmap # properties to apply
+                        ),
+        ColumnDefinition(name='PYT', # name of the column to change
+                        title='PYT', # new title for the column
+                        textprops={"ha": "center", "fontsize": 16}, width = 0.2,
+                        cmap=cmap # properties to apply
+                        ),
+        ColumnDefinition(name='RQI', # name of the column to change
+                        title='RQI', # new title for the column
+                        textprops={"ha": "center", "fontsize": 16}, width = 0.2,
+                        cmap=cmap # properties to apply
+                        ),
+        ColumnDefinition(name='WAB', # name of the column to change
+                        title='WAB', # new title for the column
+                        textprops={"ha": "center", "fontsize": 16}, width = 0.2,
+                        cmap=cmap # properties to apply
+                        )
+    ]
+
+    tab = Table(make_table, column_definitions=column_definitions, footer_divider=True, row_divider_kw={"linewidth": 1})
+    tab.col_label_row.set_facecolor('#CECEB2')
+    tab.columns["Team"].set_facecolor('#CECEB2')
+    plt.text(0.055,-1.65, f"{this_conference} Team Sheets", fontsize = 24, fontweight='bold', ha='left')
+    plt.text(0.055,-1, f"@PEARatings", fontsize = 16, ha='left')
+    return fig
+
 st.title(f"{current_season} CBASE PEAR")
 st.logo("./PEAR/pear_logo.jpg", size = 'large')
 st.caption(f"Ratings Updated {formatted_latest_date}")
@@ -1066,6 +1138,7 @@ st.sidebar.markdown("""
     <a class="nav-link" href="#matchup-cards">Matchup Cards</a>
     <a class="nav-link" href="#team-schedule">Team Schedule</a>
     <a class="nav-link" href="#team-percentiles">Team Percentiles</a>
+    <a class="nav-link" href="#conference-team-sheets">Conference Team Sheets</a>
     <a class="nav-link" href="#team-net-changes">Team NET Changes</a>
 """, unsafe_allow_html=True)
 
@@ -1175,6 +1248,16 @@ with st.form(key='team_percentile'):
     team_percentile = st.form_submit_button("Team Percentiles")
     if team_percentile:
         fig = team_percentiles_chart(team_name, modeling_stats)
+        st.pyplot(fig)
+
+st.divider()
+
+st.markdown(f'<h2 id="conference-team-sheets">Conference Team Sheets</h2>', unsafe_allow_html=True)
+with st.form(key='conference_team_sheets'):
+    conference = st.selectbox("Conference", ["Select Conference"] + list(sorted(modeling_stats['Conference'])))
+    conference_team = st.form_submit_button("Team Sheets")
+    if conference_team:
+        fig = conference_team_sheets(conference, modeling_stats)
         st.pyplot(fig)
 
 st.divider()
