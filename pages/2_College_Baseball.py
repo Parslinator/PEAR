@@ -1139,7 +1139,6 @@ st.sidebar.markdown("""
     <a class="nav-link" href="#team-schedule">Team Schedule</a>
     <a class="nav-link" href="#team-percentiles">Team Percentiles</a>
     <a class="nav-link" href="#conference-team-sheets">Conference Team Sheets</a>
-    <a class="nav-link" href="#team-net-changes">Team NET Changes</a>
 """, unsafe_allow_html=True)
 
 st.divider()
@@ -1254,20 +1253,10 @@ st.divider()
 
 st.markdown(f'<h2 id="conference-team-sheets">Conference Team Sheets</h2>', unsafe_allow_html=True)
 with st.form(key='conference_team_sheets'):
-    conference = st.selectbox("Conference", ["Select Conference"] + list(sorted(modeling_stats['Conference'])))
+    conference = st.selectbox("Conference", ["Select Conference"] + list(sorted(modeling_stats['Conference'].unique())))
     conference_team = st.form_submit_button("Team Sheets")
     if conference_team:
         fig = conference_team_sheets(conference, modeling_stats)
-        st.pyplot(fig)
-
-st.divider()
-
-st.markdown(f'<h2 id="team-net-changes">Team NET Changes</h2>', unsafe_allow_html=True)
-with st.form(key='net_change'):
-    team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
-    net_change = st.form_submit_button("Enter")
-    if net_change:
-        fig = team_net_tracker(team_name)
         st.pyplot(fig)
 
 st.divider()
