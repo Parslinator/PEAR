@@ -1066,38 +1066,31 @@ def conference_team_sheets(this_conference, stats_and_metrics):
     column_definitions = [
         ColumnDefinition(name='Team', # name of the column to change
                         title='Team', # new title for the column
-                        textprops={"ha": "left", "weight": "bold", "fontsize": 16}, width = 0.55 # properties to apply
-                        ),
+                        textprops={"ha": "left", "weight": "bold", "fontsize": 16}, width = 0.55),
         ColumnDefinition(name='NET', # name of the column to change
                         title='NET', # new title for the column
                         textprops={"ha": "center", "fontsize": 16}, width = 0.2,
-                        cmap=cmap # properties to apply
-                        ),
+                        cmap=cmap, border='left'),
         ColumnDefinition(name='wRPI', # name of the column to change
                         title='RPI', # new title for the column
                         textprops={"ha": "center", "fontsize": 16}, width = 0.2,
-                        cmap=cmap # properties to apply
-                        ),
+                        cmap=cmap),
         ColumnDefinition(name='PRR', # name of the column to change
                         title='TSR', # new title for the column
                         textprops={"ha": "center", "fontsize": 16}, width = 0.2,
-                        cmap=cmap # properties to apply
-                        ),
+                        cmap=cmap, border='left'),
         ColumnDefinition(name='PYT', # name of the column to change
                         title='PYT', # new title for the column
                         textprops={"ha": "center", "fontsize": 16}, width = 0.2,
-                        cmap=cmap # properties to apply
-                        ),
+                        cmap=cmap),
         ColumnDefinition(name='RQI', # name of the column to change
                         title='RQI', # new title for the column
                         textprops={"ha": "center", "fontsize": 16}, width = 0.2,
-                        cmap=cmap # properties to apply
-                        ),
+                        cmap=cmap, border='left'),
         ColumnDefinition(name='WAB', # name of the column to change
                         title='WAB', # new title for the column
                         textprops={"ha": "center", "fontsize": 16}, width = 0.2,
-                        cmap=cmap # properties to apply
-                        )
+                        cmap=cmap, border='right')
     ]
 
     tab = Table(make_table, column_definitions=column_definitions, footer_divider=True, row_divider_kw={"linewidth": 1})
