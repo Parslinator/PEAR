@@ -1074,7 +1074,7 @@ def conference_team_sheets(this_conference, stats_and_metrics):
                         cmap=cmap # properties to apply
                         ),
         ColumnDefinition(name='wRPI', # name of the column to change
-                        title='wRPI', # new title for the column
+                        title='RPI', # new title for the column
                         textprops={"ha": "center", "fontsize": 16}, width = 0.2,
                         cmap=cmap # properties to apply
                         ),
