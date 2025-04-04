@@ -703,7 +703,7 @@ def fetch_all_schedules(elo_df, session, max_workers=10):
             for _, row in elo_df.iterrows()
         }
 
-        for future in tqdm(as_completed(futures), total=len(futures), desc="Fetching Schedules"):
+        for future in as_completed(futures):
             try:
                 data = future.result()
                 schedule_data.extend(data)
