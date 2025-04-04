@@ -612,91 +612,108 @@ else:
     print("Table not found on the page.")
 print("Elo Load Done")
 
-import requests # type: ignore
-from bs4 import BeautifulSoup # type: ignore
-import pandas as pd # type: ignore
-import time
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from tqdm import tqdm
 
 ####################### Schedule Load #######################
 
 BASE_URL = "https://www.warrennolan.com"
 
-# Initialize storage for schedule data
-schedule_data = []
-schedule_counter = 1
-# Iterate over each team's schedule link
-for _, row in elo_data.iterrows():
-    team_name = row["Team"]
-    if (schedule_counter % 50 == 0):
-        print(f"{schedule_counter}/{len(elo_data)}")
-    schedule_counter += 1
-    team_schedule_url = BASE_URL + row["Team Link"]
-    
-    response = requests.get(team_schedule_url)
-    soup = BeautifulSoup(response.text, 'html.parser')
+session = requests.Session()
+session.headers.update({"User-Agent": "Mozilla/5.0"})
 
-    # Find the team schedule list
+def extract_schedule_data(team_name, team_url, session):
+    schedule_url = BASE_URL + team_url
+    team_schedule = []
+
+    try:
+        response = session.get(schedule_url, timeout=10)
+        response.raise_for_status()
+    except Exception as e:
+        print(f"[Error] {team_name} → {e}")
+        return []
+
+    soup = BeautifulSoup(response.text, 'html.parser')
     schedule_lists = soup.find_all("ul", class_="team-schedule")
     if not schedule_lists:
-        continue  # Skip if no schedule is found
+        return []
 
     schedule_list = schedule_lists[0]
 
-    # Iterate over each game row in the schedule
     for game in schedule_list.find_all('li', class_='team-schedule'):
-        # Extract Date
-        date_month = game.find('span', class_='team-schedule__game-date--month').text.strip()
-        date_day = game.find('span', class_='team-schedule__game-date--day').text.strip()
-        date_dow = game.find('span', class_='team-schedule__game-date--dow').text.strip()
-        game_date = f"{date_month} {date_day} ({date_dow})"
+        try:
+            # Date
+            month = game.find('span', class_='team-schedule__game-date--month')
+            day = game.find('span', class_='team-schedule__game-date--day')
+            dow = game.find('span', class_='team-schedule__game-date--dow')
+            game_date = f"{month.get_text(strip=True)} {day.get_text(strip=True)} ({dow.get_text(strip=True)})"
 
-        # Extract Opponent Name (Handle missing cases)
-        opponent_info = game.find('div', class_='team-schedule__opp')
-        if opponent_info:
-            opponent_link_element = opponent_info.find('a', class_='team-schedule__opp-line-link')
-            opponent_name = opponent_link_element.text.strip() if opponent_link_element else ""
-        else:
-            opponent_name = ""
-        
-        # Extract Game Location
-        location_div = game.find('div', class_='team-schedule__location')
-        if location_div:
-            location_text = location_div.text.strip()
+            # Opponent
+            opponent_link = game.select_one('.team-schedule__opp-line-link')
+            opponent_name = opponent_link.get_text(strip=True) if opponent_link else ""
+
+            # Location
+            location_div = game.find('div', class_='team-schedule__location')
+            location_text = location_div.get_text(strip=True) if location_div else ""
             if "VS" in location_text:
                 game_location = "Neutral"
             elif "AT" in location_text:
                 game_location = "Away"
             else:
                 game_location = "Home"
-        else:
-            game_location = "Home"
 
-        # Extract Game Result
-        result_info = game.find('div', class_='team-schedule__result')
-        result_text = result_info.text.strip() if result_info else "N/A"
+            # Result
+            result_info = game.find('div', class_='team-schedule__result')
+            result_text = result_info.get_text(strip=True) if result_info else "N/A"
 
-        # Extract Home/Away Teams from Box Score and scores
-        home_score, away_score = "", ""  # Initialize scores as empty strings
+            # Box score
+            box_score_table = game.find('table', class_='team-schedule-bottom__box-score')
+            home_team = away_team = home_score = away_score = "N/A"
 
-        box_score_table = game.find('table', class_='team-schedule-bottom__box-score')
-        if box_score_table:
-            rows = box_score_table.find_all('tr')
-            if len(rows) > 2:
-                away_team = rows[1].find_all('td')[0].text.strip()
-                home_team = rows[2].find_all('td')[0].text.strip()
+            if box_score_table:
+                rows = box_score_table.find_all('tr')
+                if len(rows) > 2:
+                    away_row = rows[1].find_all('td')
+                    home_row = rows[2].find_all('td')
+                    away_team = away_row[0].get_text(strip=True)
+                    home_team = home_row[0].get_text(strip=True)
+                    away_score = away_row[-3].get_text(strip=True)
+                    home_score = home_row[-3].get_text(strip=True)
 
-                # Extracting Runs
-                away_score = rows[1].find_all('td')[-3].text.strip()  # Away runs
-                home_score = rows[2].find_all('td')[-3].text.strip()  # Home runs
-            else:
-                home_team, away_team = "N/A", "N/A"
-        else:
-            home_team, away_team = "N/A", "N/A"
+            team_schedule.append([
+                team_name, game_date, opponent_name, game_location,
+                result_text, home_team, away_team, home_score, away_score
+            ])
+        except Exception as e:
+            print(f"[Parse Error] {team_name} game row → {e}")
+            continue
 
-        # Append to schedule data
-        schedule_data.append([team_name, game_date, opponent_name, game_location, result_text, home_team, away_team, home_score, away_score])
+    return team_schedule
 
-# Convert to DataFrame
+# ThreadPool wrapper function
+def fetch_all_schedules(elo_df, session, max_workers=10):
+    schedule_data = []
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {
+            executor.submit(extract_schedule_data, row["Team"], row["Team Link"], session): row["Team"]
+            for _, row in elo_df.iterrows()
+        }
+
+        for future in tqdm(as_completed(futures), total=len(futures), desc="Fetching Schedules"):
+            try:
+                data = future.result()
+                schedule_data.extend(data)
+            except Exception as e:
+                print(f"[Thread Error] {e}")
+
+    return schedule_data
+
+schedule_data = fetch_all_schedules(elo_data, session, max_workers=10)
+
 columns = ["Team", "Date", "Opponent", "Location", "Result", "home_team", "away_team", "home_score", "away_score"]
 schedule_df = pd.DataFrame(schedule_data, columns=columns)
 schedule_df = schedule_df.astype({col: 'str' for col in schedule_df.columns if col not in ['home_score', 'away_score']})
