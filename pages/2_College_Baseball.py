@@ -866,7 +866,7 @@ def calculate_series_probabilities(win_prob):
 def matchup_percentiles(team_1, team_2, stats_and_metrics, location="Neutral"):
     BASE_URL = "https://www.warrennolan.com"
     percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
-    custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'fWAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
+    custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'WAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
     team1_data = stats_and_metrics[stats_and_metrics['Team'] == team_1]
     team1_record = get_total_record(team1_data.iloc[0])
     team1_proj_record = team1_data['Projected_Record'].values[0]
@@ -1003,7 +1003,7 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics, location="Neutral"):
     plt.text(-135, 4.4, f"Win 1: {round(team_2_one_win*100)}%", ha='center', fontsize=16)
     plt.text(-135, 4.9, f"Win 2: {round(team_2_two_win*100)}%", ha='center', fontsize=16)
     plt.text(-135, 5.4, f"Win 3: {round(team_2_three_win*100)}%", ha='center', fontsize=16)
-    plt.text(-135, 6.6, "Quadrants", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-135, 6.6, "NET Quads", ha='center', fontsize=16, fontweight='bold')
     plt.text(-148, 7.1, f"Q1: {team2_Q1}", ha='left', fontsize=16)
     plt.text(-148, 7.6, f"Q2: {team2_Q2}", ha='left', fontsize=16)
     plt.text(-148, 8.1, f"Q3: {team2_Q3}", ha='left', fontsize=16)
@@ -1013,7 +1013,6 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics, location="Neutral"):
     plt.text(-135, 11.5, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
     plt.text(-135, 12.0, f"{team2_proj_record}", ha='center', fontsize=16)
 
-
     plt.text(135, 0.5, f"{team_1}", ha='center', fontsize=16, fontweight='bold')
     plt.text(135, 1.0, f"{team1_record}", ha='center', fontsize=16)
     plt.text(135, 2.2, "Single Game", ha='center', fontsize=16, fontweight='bold')
@@ -1022,7 +1021,7 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics, location="Neutral"):
     plt.text(135, 4.4, f"Win 1: {round(team_1_one_win*100)}%", ha='center', fontsize=16)
     plt.text(135, 4.9, f"Win 2: {round(team_1_two_win*100)}%", ha='center', fontsize=16)
     plt.text(135, 5.4, f"Win 3: {round(team_1_three_win*100)}%", ha='center', fontsize=16)
-    plt.text(135, 6.6, "Quadrants", ha='center', fontsize=16, fontweight='bold')
+    plt.text(135, 6.6, "NET Quads", ha='center', fontsize=16, fontweight='bold')
     plt.text(122, 7.1, f"Q1: {team1_Q1}", ha='left', fontsize=16)
     plt.text(122, 7.6, f"Q2: {team1_Q2}", ha='left', fontsize=16)
     plt.text(122, 8.1, f"Q3: {team1_Q3}", ha='left', fontsize=16)
@@ -1031,6 +1030,13 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics, location="Neutral"):
     plt.text(135, 10.3, f"#{team1_proj_net}", ha='center', fontsize=16)
     plt.text(135, 11.5, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
     plt.text(135, 12.0, f"{team1_proj_record}", ha='center', fontsize=16)
+
+    plt.text(-150, 13.2, "Middle Bubble is Difference Between Team Percentiles", ha='left', fontsize = 12)
+    plt.text(150, 13.2, "Series Percentages are the Chance to Win __ Games", ha='right', fontsize = 12)
+    plt.text(-150, 13.6, "NET - PEAR's Ranking System, Combining TSR and RQI", ha='left', fontsize = 12)
+    plt.text(150, 13.6, "TSR - Team Strength Rating, How Good Your Team Is", ha='right', fontsize = 12)
+    plt.text(-150, 14.0, "RQI - Resume Quality Index, How Good Your Wins Are", ha='left', fontsize = 12)
+    plt.text(150, 14.0, "PWP - Pythagorean Win Percent, Expected Win Rate", ha='right', fontsize = 12)
 
     ax_img1 = fig.add_axes([0.94, 0.83, 0.15, 0.15])
     ax_img1.imshow(img1)
