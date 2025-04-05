@@ -238,202 +238,224 @@ projected_rpi['Team'] = projected_rpi['Team'].replace(team_replacements)
 live_rpi['Team'] = live_rpi['Team'].str.replace('State', 'St.', regex=False)
 live_rpi['Team'] = live_rpi['Team'].replace(team_replacements)
 
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+####################### CONFIG #######################
+
+# Must be defined elsewhere in your script:
+# - stat_links: dict of stat_name -> URL
+# - get_soup(url): function that returns BeautifulSoup of given URL
+
+####################### Core Stat Fetching #######################
+
 def get_stat_dataframe(stat_name):
-    """Fetches the specified stat table from multiple pages and returns a combined DataFrame,
-    keeps 'Team' as string, and converts all other columns to float."""
-    
     if stat_name not in stat_links:
         print(f"Stat '{stat_name}' not found. Available stats: {list(stat_links.keys())}")
         return None
-    
-    # Initialize the DataFrame to store all pages' data
+
     all_data = []
-    page_num = 1  # Start from the first page
+    page_num = 1
 
     while True:
         url = stat_links[stat_name]
         if page_num > 1:
-            # Modify the URL to include the page number
             url = f"{url}/p{page_num}"
-        
-        # print(f"Fetching data for: {stat_name} (Page {page_num} - {url})")
 
         try:
-            # Get stats page content
             soup = get_soup(url)
-
-            # Locate table
             table = soup.find("table")
             if not table:
-                print(f"No table found for {stat_name} on page {page_num}")
-                break  # Exit the loop if no table is found (end of valid pages)
+                break
 
-            # Extract table headers
             headers = [th.text.strip() for th in table.find_all("th")]
-
-            # Extract table rows
             data = []
-            for row in table.find_all("tr")[1:]:  # Skip header row
+            for row in table.find_all("tr")[1:]:
                 cols = row.find_all("td")
                 data.append([col.text.strip() for col in cols])
 
-            all_data.extend(data)  # Add the data from this page to the list of all data
-        
-        except requests.exceptions.HTTPError as e:
-            print(f"{stat_name} Done")
-            break  # Exit the loop on HTTPError (page doesn't exist)
+            all_data.extend(data)
+
+        except requests.exceptions.HTTPError:
+            break
         except Exception as e:
-            print(f"An error occurred: {e}")
-            break  # Exit the loop on any other error
+            print(f"Error for {stat_name}, page {page_num}: {e}")
+            break
 
-        page_num += 1  # Go to the next page
+        page_num += 1
 
-    # Convert to DataFrame
     if all_data:
         df = pd.DataFrame(all_data, columns=headers)
-
-        # Convert all columns to float except "Team"
         for col in df.columns:
             if col != "Team":
-                df[col] = pd.to_numeric(df[col], errors="coerce")  # Converts to float, invalid values become NaN
-
+                df[col] = pd.to_numeric(df[col], errors="coerce")
         return df
     else:
-        print("No data collected.")
         return None
 
-####################### Stat Pull #######################
+####################### Threading #######################
 
-stat_name_input = "Batting Average"  # Change this to the desired stat
-ba = get_stat_dataframe(stat_name_input)
-ba["HPG"] = ba["H"] / ba["G"]
-ba["ABPG"] = ba["AB"] / ba["G"]
-ba["HPAB"] = ba["H"] / ba["AB"]
-ba = ba.drop(columns=['Rank'])
+def threaded_stat_fetch(stat_names, max_workers=10):
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_stat = {
+            executor.submit(get_stat_dataframe, stat): stat
+            for stat in stat_names
+        }
+        results = {}
+        for future in as_completed(future_to_stat):
+            stat = future_to_stat[future]
+            try:
+                results[stat] = future.result()
+            except Exception as e:
+                print(f"Failed to fetch {stat}: {e}")
+    return results
 
-stat_name_input = "Base on Balls"
-bb = get_stat_dataframe(stat_name_input)
-bb["BBPG"] = bb["BB"] / bb["G"]
-bb = bb.drop(columns=['Rank', 'G'])
+####################### Utility #######################
 
-stat_name_input = "Double Plays Per Game"
-dp = get_stat_dataframe(stat_name_input)
-dp.rename(columns={"PG": "DPPG"}, inplace=True)
-dp = dp.drop(columns=['Rank', 'G'])
+def clean_duplicates(df, group_col, min_col):
+    duplicates = df[df.duplicated(group_col, keep=False)]
+    filtered = duplicates.loc[duplicates.groupby(group_col)[min_col].idxmin()]
+    cleaned = df[~df[group_col].isin(duplicates[group_col])]
+    return pd.concat([cleaned, filtered], ignore_index=True)
 
-stat_name_input = "Earned Run Average"
-era = get_stat_dataframe(stat_name_input)
-era.rename(columns={"R":"RA"}, inplace=True)
-era = era.drop(columns=['Rank', 'G'])
+####################### Transform Config #######################
 
-stat_name_input = "Fielding Percentage"
-fp = get_stat_dataframe(stat_name_input)
-fp["APG"] = fp["A"] / fp["G"]
-fp["EPG"] = fp["E"] / fp["G"]
-fp = fp.drop(columns=['Rank', 'G'])
+STAT_TRANSFORMS = {
+    "Batting Average": lambda df: df.assign(
+        HPG=df["H"] / df["G"],
+        ABPG=df["AB"] / df["G"],
+        HPAB=df["H"] / df["AB"]
+    ).drop(columns=['Rank']),
 
-stat_name_input = "Hits Allowed Per Nine Innings"
-ha = get_stat_dataframe(stat_name_input)
-ha.rename(columns={"PG": "HAPG"}, inplace=True)
-ha = ha.drop(columns=['Rank', 'G', 'IP'])
+    "Base on Balls": lambda df: df.assign(
+        BBPG=df["BB"] / df["G"]
+    ).drop(columns=['Rank', 'G']),
 
-stat_name_input = "Home Runs Per Game"
-hr = get_stat_dataframe(stat_name_input)
-hr.rename(columns={"PG": "HRPG"}, inplace=True)
-hr = hr.drop(columns=['Rank', 'G'])
-duplicate_teams = hr[hr.duplicated('Team', keep=False)]
-filtered_teams = duplicate_teams.loc[duplicate_teams.groupby('Team')["HR"].idxmin()]
-hr_cleaned = hr[~hr["Team"].isin(duplicate_teams["Team"])]
-hr = pd.concat([hr_cleaned, filtered_teams], ignore_index=True)
+    "Earned Run Average": lambda df: df.rename(columns={"R": "RA"}).drop(columns=['Rank', 'G']),
 
-stat_name_input = "On Base Percentage"
-obp = get_stat_dataframe(stat_name_input)
-obp.rename(columns={"PCT": "OBP"}, inplace=True)
-obp["HBPPG"] = obp["HBP"] / obp["G"]
-obp = obp.drop(columns=['Rank', 'G', 'AB', 'H', 'BB', 'SF', 'SH'])
+    "Fielding Percentage": lambda df: df.assign(
+        APG=df["A"] / df["G"],
+        EPG=df["E"] / df["G"]
+    ).drop(columns=['Rank', 'G']),
 
-stat_name_input = "Runs"
-runs = get_stat_dataframe(stat_name_input)
-runs["RPG"] = runs["R"] / runs["G"]
-runs.rename(columns={"R": "RS"}, inplace=True)
-runs = runs.drop(columns=['Rank', 'G'])
+    "On Base Percentage": lambda df: df.rename(columns={"PCT": "OBP"}).assign(
+        HBPPG=df["HBP"] / df["G"]
+    ).drop(columns=['Rank', 'G', 'AB', 'H', 'BB', 'SF', 'SH']),
 
-stat_name_input = "Sacrifice Bunts"
-sb = get_stat_dataframe(stat_name_input)
-sb.rename(columns={"SH": "SB"}, inplace=True)
-sb["SBPG"] = sb["SB"] / sb["G"]
-sb = sb.drop(columns=['Rank', 'G'])
+    "Runs": lambda df: df.assign(
+        RPG=df["R"] / df["G"]
+    ).rename(columns={"R": "RS"}).drop(columns=['Rank', 'G']),
 
-stat_name_input = "Sacrifice Flies"
-sf = get_stat_dataframe(stat_name_input)
-sf["SFPG"] = sf["SF"] / sf["G"]
-sf = sf.drop(columns=['Rank', 'G'])
+    "Slugging Percentage": lambda df: df.rename(columns={"SLG PCT": "SLG"}).drop(columns=['Rank', 'G', 'AB']),
 
-stat_name_input = "Slugging Percentage"
-slg = get_stat_dataframe(stat_name_input)
-slg.rename(columns={"SLG PCT": "SLG"}, inplace=True)
-slg = slg.drop(columns=['Rank', 'G', 'AB'])
+    "Strikeouts Per Nine Innings": lambda df: df.rename(columns={"K/9": "KP9"}).drop(columns=['Rank', 'G', 'IP', 'SO']),
 
-stat_name_input = "Stolen Bases"
-stl = get_stat_dataframe(stat_name_input)
-stl["STLP"] = stl["SB"] / (stl["SB"] + stl["CS"])
-stl["STLPG"] = stl["SB"] / stl["G"]
-stl["CSPG"] = stl["CS"] / stl["G"]
-stl["SAPG"] = (stl["SB"] + stl["CS"]) / stl["G"]
-stl.rename(columns={"SB": "STL"}, inplace=True)
-stl = stl.drop(columns=['Rank', 'G'])
+    "Walks Allowed Per Nine Innings": lambda df: df.rename(columns={"PG": "WP9"}).drop(columns=['Rank', 'G', 'IP', 'BB']),
 
-stat_name_input = "Strikeout-to-Walk Ratio"
-kbb = get_stat_dataframe(stat_name_input)
-kbb["IP"] = round(kbb["IP"])
-kbb.rename(columns={"K/BB": "KBB"}, inplace=True)
-kbb.rename(columns={"BB": "PBB"}, inplace=True)
-kbb = kbb.drop(columns=['Rank', 'App', 'IP'])
+    "WHIP": lambda df: df.drop(columns=['Rank', 'HA', 'IP', 'BB']),
+}
 
-stat_name_input = "Strikeouts Per Nine Innings"
-kp9 = get_stat_dataframe(stat_name_input)
-kp9.rename(columns={"K/9": "KP9"}, inplace=True)
-kp9 = kp9.drop(columns=['Rank', 'G', 'IP', 'SO'])
+####################### Merging + Final Stats #######################
 
-stat_name_input = "Walks Allowed Per Nine Innings"
-wp9 = get_stat_dataframe(stat_name_input)
-wp9.rename(columns={"PG": "WP9"}, inplace=True)
-wp9 = wp9.drop(columns=['Rank', 'G', 'IP', 'BB'])
+def clean_and_merge(stats_raw, transforms_dict):
+    dfs = []
+    for stat, df in stats_raw.items():
+        if df is not None and stat in transforms_dict:
+            df["Team"] = df["Team"].str.strip()
+            df_clean = transforms_dict[stat](df)
+            dfs.append(df_clean)
 
-stat_name_input = "WHIP"
-whip = get_stat_dataframe(stat_name_input)
-whip = whip.drop(columns=['Rank', 'HA', 'IP', 'BB'])
+    merged = dfs[0]
+    for df in dfs[1:]:
+        merged = pd.merge(merged, df, on="Team", how="inner")
 
-dfs = [ba, bb, era, fp, obp, runs, slg, kp9, wp9, whip, elo_data]
-for df in dfs:
-    df["Team"] = df["Team"].str.strip()
-df_combined = dfs[0]
-for df in dfs[1:]:
-    df_combined = pd.merge(df_combined, df, on="Team", how="inner")
-baseball_stats = df_combined.loc[:, ~df_combined.columns.duplicated()].sort_values('Team').reset_index(drop=True)
-baseball_stats['OPS'] = baseball_stats['SLG'] + baseball_stats['OBP']
-baseball_stats['PYTHAG'] = round((baseball_stats['RS'] ** 1.83) / ((baseball_stats['RS'] ** 1.83) + (baseball_stats['RA'] ** 1.83)),3)
+    merged = merged.loc[:, ~merged.columns.duplicated()].sort_values('Team').reset_index(drop=True)
+    merged["OPS"] = merged["SLG"] + merged["OBP"]
+    merged["PYTHAG"] = round(
+        (merged["RS"] ** 1.83) / ((merged["RS"] ** 1.83) + (merged["RA"] ** 1.83)), 3
+    )
+    return merged
 
-####################### Advanced Stats #######################
+####################### Run It #######################
 
-hbp = get_stat_dataframe('Hit by Pitch')[['Team', 'G', 'HBP']]
-hits = get_stat_dataframe('Hits')[['Team', 'AB', 'H']]
-doubles = get_stat_dataframe('Doubles')[['Team', '2B']]
-triples = get_stat_dataframe('Triples')[['Team', '3B']]
-sacrifice_flies = get_stat_dataframe('Sacrifice Flies')[['Team', 'SF']]
-hit_batters = get_stat_dataframe('Hit Batters')[['Team', 'HB']]
-stw_ratio = get_stat_dataframe('Strikeout-to-Walk Ratio')[['Team', 'K/BB', 'BB', 'SO']]
-stw_ratio.rename(columns={'BB': 'PBB'}, inplace=True)
-dfs = [bb, hbp, hits, doubles, triples, hr, sacrifice_flies, runs, sb, era, stw_ratio, ha, hit_batters]
-for df in dfs:
-    df["Team"] = df["Team"].str.strip()
+# Example stat pull
+stat_list = list(STAT_TRANSFORMS.keys())
+raw_stats = threaded_stat_fetch(stat_list, max_workers=10)
+baseball_stats = clean_and_merge(raw_stats, STAT_TRANSFORMS)
+baseball_stats = pd.merge(baseball_stats, elo_data, on='Team', how='left')
+
+####################### wOBA Stat Transforms #######################
+
+STAT_TRANSFORMS_WOBA = {
+    "Base on Balls": lambda df: df.assign(
+        BBPG=df["BB"] / df["G"]
+    )[["Team", "BB", "G", "BBPG"]],
+    
+    "Hit by Pitch": lambda df: df[["Team", "HBP"]],
+    
+    "Hits": lambda df: df[["Team", "AB", "H"]],
+    
+    "Doubles": lambda df: df[["Team", "2B"]],
+    
+    "Triples": lambda df: df[["Team", "3B"]],
+    
+    "Home Runs Per Game": lambda df: (
+        lambda _df: pd.concat([
+            _df[~_df["Team"].isin(
+                _df[_df.duplicated("Team", keep=False)]["Team"]
+            )],
+            _df[_df.duplicated("Team", keep=False)].groupby("Team", as_index=False).apply(
+                lambda g: g.loc[g["HR"].idxmin()]
+            )
+        ], ignore_index=True)
+    )(df.rename(columns={"PG": "HRPG"}).drop(columns=["Rank", "G"])),
+    
+    "Sacrifice Flies": lambda df: df[["Team", "SF"]],
+    
+    "Runs": lambda df: df.assign(
+        RPG=df["R"] / df["G"]
+    ).rename(columns={"R": "RS"}).drop(columns=["Rank", "G"]),
+    
+    "Sacrifice Bunts": lambda df: df.rename(columns={"SH": "SB"}).assign(
+        SBPG=lambda x: x["SB"] / x["G"]
+    ).drop(columns=["Rank", "G"]),
+    
+    "Earned Run Average": lambda df: df.rename(columns={"R": "RA"}).drop(columns=["Rank", "G"]),
+    
+    "Strikeout-to-Walk Ratio": lambda df: df.rename(columns={"BB": "PBB"})[["Team", "K/BB", "PBB", "SO"]],
+    
+    "Hits Allowed Per Nine Innings": lambda df: df.rename(columns={"PG": "HAPG"})[["Team", "HA", "HAPG"]],
+    
+    "Hit Batters": lambda df: df[["Team", "HB"]],
+}
+
+####################### Fetch + Transform + Merge #######################
+
+# Only pull stats we need
+woba_stats = list(STAT_TRANSFORMS_WOBA.keys())
+
+# Threaded fetch
+raw_woba_stats = threaded_stat_fetch(woba_stats)
+
+# Apply transforms + merge
+dfs = []
+for stat, df in raw_woba_stats.items():
+    if df is not None and stat in STAT_TRANSFORMS_WOBA:
+        df["Team"] = df["Team"].str.strip()
+        dfs.append(STAT_TRANSFORMS_WOBA[stat](df))
+
+# Merge all together
 wOBA = dfs[0]
 for df in dfs[1:]:
     wOBA = pd.merge(wOBA, df, on="Team", how="left")
+
+# Fill and compute final metrics
 wOBA = wOBA.fillna(0)
-wOBA['PA'] = wOBA['AB'] + wOBA['BB'] + wOBA['HBP'] + wOBA['SF'] + wOBA['SB']
-league_HR_per_game = wOBA['HR'].sum() / wOBA['G'].sum()
-wOBA['HR_A'] = wOBA['G'] * league_HR_per_game
+wOBA["PA"] = wOBA["AB"] + wOBA["BB"] + wOBA["HBP"] + wOBA["SF"] + wOBA["SB"]
+league_HR_per_game = wOBA["HR"].sum() / wOBA["G"].sum()
+wOBA["HR_A"] = wOBA["G"] * league_HR_per_game
 wOBA['1B'] = wOBA['H'] - wOBA['2B'] - wOBA['3B'] - wOBA['HR']
 wOBA['wOBA'] = ((0.69 * wOBA['BB']) + (0.72 * wOBA['HBP']) + (0.88 * wOBA['1B']) + (1.24 * wOBA['2B']) + (1.56 * wOBA['3B']) + (1.95 * wOBA['HR'])) / (wOBA['PA'])
 league_wOBA = (wOBA['wOBA'] * wOBA['PA']).sum() / wOBA['PA'].sum()
