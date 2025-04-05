@@ -716,7 +716,7 @@ def extract_schedule_data(team_name, team_url, session):
     return team_schedule
 
 # ThreadPool wrapper function
-def fetch_all_schedules(elo_df, session, max_workers=10):
+def fetch_all_schedules(elo_df, session, max_workers=12):
     schedule_data = []
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -734,7 +734,7 @@ def fetch_all_schedules(elo_df, session, max_workers=10):
 
     return schedule_data
 
-schedule_data = fetch_all_schedules(elo_data, session, max_workers=10)
+schedule_data = fetch_all_schedules(elo_data, session, max_workers=12)
 
 columns = ["Team", "Date", "Opponent", "Location", "Result", "home_team", "away_team", "home_score", "away_score"]
 schedule_df = pd.DataFrame(schedule_data, columns=columns)
@@ -933,123 +933,6 @@ completed_schedule = completed_schedule[completed_schedule["Result"].str.startsw
 
 straight_up_calculator = completed_schedule.copy()
 
-####################### RPI #######################
-
-def rpi_components(completed_schedule):
-    teams = set(completed_schedule['home_team']).union(set(completed_schedule['away_team']))
-    team_records = {team: {'wins': 0, 'losses': 0, 'weighted_wins': 0, 'weighted_losses': 0} for team in teams}
-    
-    for _, row in completed_schedule.iterrows():
-        home_team, away_team = row['home_team'], row['away_team']
-        home_score, away_score = row['home_score'], row['away_score']
-        location = row['Location']
-        
-        if home_score > away_score:
-            weight = 0.7 if location == "Home" else (1.0 if location == "Neutral" else 1.3)
-            team_records[home_team]['wins'] += 1
-            team_records[home_team]['weighted_wins'] += weight
-            team_records[away_team]['losses'] += 1
-            team_records[away_team]['weighted_losses'] += weight
-        else:
-            weight = 1.3 if location == "Away" else (1.0 if location == "Neutral" else 0.7)
-            team_records[away_team]['wins'] += 1
-            team_records[away_team]['weighted_wins'] += weight
-            team_records[home_team]['losses'] += 1
-            team_records[home_team]['weighted_losses'] += weight
-    
-    wp = {team: record['weighted_wins'] / (record['weighted_wins'] + record['weighted_losses']) if (record['weighted_wins'] + record['weighted_losses']) > 0 else 0 
-          for team, record in team_records.items()}
-    
-    team_opponents = {team: set() for team in teams}
-    for _, row in completed_schedule.iterrows():
-        home_team, away_team = row['home_team'], row['away_team']
-        team_opponents[home_team].add(away_team)
-        team_opponents[away_team].add(home_team)
-    
-    owp = {}
-    for team in teams:
-        opponents = team_opponents[team]
-        opponent_wps = []
-        for opp in opponents:
-            opp_games = completed_schedule[
-                (completed_schedule['home_team'] == opp) | (completed_schedule['away_team'] == opp)
-            ]
-            opp_wins, opp_losses, opp_weighted_wins, opp_weighted_losses = 0, 0, 0, 0
-            
-            for _, game in opp_games.iterrows():
-                location = game['Location']
-                if game['home_team'] == opp:
-                    opp_team = game['away_team']
-                    weight = 0.7 if location == "Home" else (1.0 if location == "Neutral" else 1.3)
-                else:
-                    opp_team = game['home_team']
-                    weight = 1.3 if location == "Away" else (1.0 if location == "Neutral" else 0.7)
-                
-                if game['home_team'] == opp and game['home_score'] > game['away_score']:
-                    opp_weighted_wins += weight
-                elif game['away_team'] == opp and game['away_score'] > game['home_score']:
-                    opp_weighted_wins += weight
-                else:
-                    opp_weighted_losses += weight
-                
-                if opp_team == team:
-                    if game['home_team'] == opp and game['home_score'] > game['away_score']:
-                        opp_weighted_wins -= weight
-                    elif game['away_team'] == opp and game['away_score'] > game['home_score']:
-                        opp_weighted_wins -= weight
-                    else:
-                        opp_weighted_losses -= weight
-            
-            if opp_weighted_wins + opp_weighted_losses > 0:
-                opponent_wps.append(opp_weighted_wins / (opp_weighted_wins + opp_weighted_losses))
-        
-        owp[team] = sum(opponent_wps) / len(opponent_wps) if opponent_wps else 0
-    
-    oowp = {team: sum(owp[opp] for opp in team_opponents[team]) / len(team_opponents[team]) if team_opponents[team] else 0 
-            for team in teams}
-    
-    rpi_components_df = pd.DataFrame({
-        "Team": list(teams),
-        "WP": [wp[team] for team in teams],
-        "OWP": [owp[team] for team in teams],
-        "OOWP": [oowp[team] for team in teams]
-    })
-
-    return rpi_components_df
-
-# Example of merging with live RPI
-pear_rpi = rpi_components(completed_schedule)
-pear_rpi = pd.merge(pear_rpi, live_rpi, on='Team', how='left')
-pear_rpi = pear_rpi.dropna()
-
-def rpi_calculation(weights):
-    w_wp, w_owp = weights
-    w_oowp = 1 - (w_wp + w_owp)
-
-    if w_oowp < 0 or w_oowp > 1:
-        return float('inf')
-
-    pear_rpi['RPI_Score'] = (
-        w_wp * pear_rpi['WP'] +
-        w_owp * pear_rpi['OWP'] +
-        w_oowp * pear_rpi['OOWP']
-    )
-
-    pear_rpi['RPI'] = pear_rpi['RPI_Score'].rank(ascending=False).astype(int)
-    pear_rpi['combined_rank'] = pear_rpi['Live_RPI']
-    spearman_corr = pear_rpi[['RPI', 'combined_rank']].corr(method='spearman').iloc[0,1]
-
-    return -spearman_corr
-
-bounds = [(0,1), (0,1)]  
-result = differential_evolution(rpi_calculation, bounds, strategy='best1bin', maxiter=500, tol=1e-4, seed=42)
-optimized_weights = result.x
-print("RPI Calculation Weights:")
-print("------------------------")
-print(f"Win Prob: {optimized_weights[0]}")
-print(f"Opp Win Prob: {optimized_weights[1]}")
-print(f"Opp Opp Win Prob: {1 - (optimized_weights[0] + optimized_weights[1])}")
-
 ####################### Expected Wins #######################
 
 def calculate_expected_wins(group):
@@ -1208,9 +1091,11 @@ df_2 = pd.merge(df_1, avg_team_expected_wins[['Team', 'avg_expected_wins', 'tota
 df_3 = pd.merge(df_2, rem_avg_expected_wins[['Team', 'rem_avg_expected_wins', 'rem_total_expected_wins']], on='Team', how='left')
 df_4 = pd.merge(df_3, projected_rpi[['Team', 'RPI', 'Conference']], on='Team', how='left')
 df_4.rename(columns={'RPI': 'Projected_RPI'}, inplace=True)
-df_5 = pd.merge(df_4, pear_rpi, on='Team', how='left')
+df_5 = pd.merge(df_4, live_rpi[['Team', 'Live_RPI']], on='Team', how='left')
+df_5.rename(columns={'Live_RPI': 'RPI'}, inplace=True)
+df_5['RPI'] = df_5['RPI'].astype(int)
 stats_and_metrics = pd.merge(df_5, kpi_results, on='Team', how='left')
-stats_and_metrics['RPI'] = stats_and_metrics['RPI_Score'].rank(ascending=False).astype(int)
+stats_and_metrics['Norm_RPI'] = stats_and_metrics['RPI'].apply(lambda x: 100 - ((x - 1) / (299 - 1)) * 99 if 299 > 1 else 100)
 
 stats_and_metrics['wins_above_expected'] = round(stats_and_metrics['Wins'] - stats_and_metrics['total_expected_wins'],2)
 stats_and_metrics['SOR'] = stats_and_metrics['wins_above_expected'].rank(method='min', ascending=False).astype(int)
@@ -1283,7 +1168,6 @@ schedule_df["resume_quality"] = schedule_df.apply(lambda row: calculate_game_res
 
 stats_and_metrics["Norm_Rating"] = (stats_and_metrics["Rating"] - stats_and_metrics["Rating"].min()) / (stats_and_metrics["Rating"].max() - stats_and_metrics["Rating"].min())
 stats_and_metrics["Norm_RQI"] = (stats_and_metrics["resume_quality"] - stats_and_metrics["resume_quality"].min()) / (stats_and_metrics["resume_quality"].max() - stats_and_metrics["resume_quality"].min())
-stats_and_metrics["Norm_RPI"] = (stats_and_metrics["RPI_Score"] - stats_and_metrics["RPI_Score"].min()) / (stats_and_metrics["RPI_Score"].max() - stats_and_metrics["RPI_Score"].min())
 stats_and_metrics["Norm_SOS"] = 1 - (stats_and_metrics["avg_expected_wins"] - stats_and_metrics["avg_expected_wins"].min()) / (stats_and_metrics["avg_expected_wins"].max() - stats_and_metrics["avg_expected_wins"].min())  # Inverted
 
 def calculate_net(weights):
@@ -1571,333 +1455,259 @@ if now.hour < 13 and now.hour > 7:
     import matplotlib.offsetbox as offsetbox # type: ignore
     import matplotlib.font_manager as fm # type: ignore
     from datetime import datetime, timedelta
+    from concurrent.futures import ThreadPoolExecutor
+    from datetime import datetime
+
+    # --- Config & Setup ---
+    BASE_URL = "https://www.warrennolan.com"
     custom_font = fm.FontProperties(fname="./PEAR/trebuc.ttf")
     plt.rcParams['font.family'] = custom_font.get_name()
+    current_season = datetime.now().year
     week_1_start = datetime(current_season, 2, 10)
     today = datetime.today()
     days_since_start = (today - week_1_start).days
-    current_week = (days_since_start // 7) + 1  # Each Monday starts a new week
-
-    BASE_URL = "https://www.warrennolan.com"
-
-    top_25 = stats_and_metrics[0:25]
-    fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
-    fig.subplots_adjust(hspace=0.5, wspace=0.5)
-    fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Week {current_week} CBASE PEAR", fontsize=20, fontweight='bold', color='black')
-    fig.text(0.5, 0.92, "NET Ranking Incorporating Team Strength and Resume", fontsize=10, ha='center', color='black')
-    fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
-
-    for i, ax in enumerate(axs.ravel()):
-        team = top_25.loc[i, 'Team']
-        team_url = BASE_URL + elo_data[elo_data['Team'] == team]['Team Link'].values[0]
-        response = requests.get(team_url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        img_tag = soup.find("img", class_="team-menu__image")
-        img_src = img_tag.get("src")
-        image_url = BASE_URL + img_src
-        response = requests.get(image_url)
-        img = Image.open(BytesIO(response.content))
-        ax.imshow(img)
-        ax.set_facecolor('#f0f0f0')
-        ax.set_title(f"#{i+1} {team}", fontsize=8, fontweight='bold')
-        ax.axis('off')
-    plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/NET/net_{formatted_date}.png", bbox_inches='tight')
-    print('NET Done')
-
-    top_25 = stats_and_metrics.sort_values('RQI').reset_index(drop=True)[0:25]
-    fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
-    fig.subplots_adjust(hspace=0.5, wspace=0.5)
-    fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Week {current_week} CBASE Resume Quality", fontsize=20, fontweight='bold', color='black')
-    fig.text(0.5, 0.92, "Team Performance Relative to Strength of Schedule", fontsize=10, ha='center', color='black')
-    fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
-
-    for i, ax in enumerate(axs.ravel()):
-        team = top_25.loc[i, 'Team']
-        team_url = BASE_URL + elo_data[elo_data['Team'] == team]['Team Link'].values[0]
-        response = requests.get(team_url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        img_tag = soup.find("img", class_="team-menu__image")
-        img_src = img_tag.get("src")
-        image_url = BASE_URL + img_src
-        response = requests.get(image_url)
-        img = Image.open(BytesIO(response.content))
-        ax.imshow(img)
-        ax.set_facecolor('#f0f0f0')
-        ax.set_title(f"#{i+1} {team}", fontsize=8, fontweight='bold')
-        ax.axis('off')
-    plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/RQI/rqi_{formatted_date}.png", bbox_inches='tight')
-    print('RQI Done')
-
-    top_25 = stats_and_metrics.sort_values('PRR').reset_index(drop=True)[0:25]
-    fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
-    fig.subplots_adjust(hspace=0.5, wspace=0.5)
-    fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Week {current_week} CBASE Team Strength", fontsize=20, fontweight='bold', color='black')
-    fig.text(0.5, 0.92, "Team Rating Based on Team Stats", fontsize=10, ha='center', color='black')
-    fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
-
-    for i, ax in enumerate(axs.ravel()):
-        team = top_25.loc[i, 'Team']
-        team_url = BASE_URL + elo_data[elo_data['Team'] == team]['Team Link'].values[0]
-        response = requests.get(team_url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        img_tag = soup.find("img", class_="team-menu__image")
-        img_src = img_tag.get("src")
-        image_url = BASE_URL + img_src
-        response = requests.get(image_url)
-        img = Image.open(BytesIO(response.content))
-        ax.imshow(img)
-        ax.set_facecolor('#f0f0f0')
-        ax.set_title(f"#{i+1} {team}", fontsize=8, fontweight='bold')
-        ax.axis('off')
-    plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/PRR/prr_{formatted_date}.png", bbox_inches='tight')
-    print('PRR Done')
-
-    top_25 = stats_and_metrics.sort_values('RPI').reset_index(drop=True)[0:25]
-    fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
-    fig.subplots_adjust(hspace=0.5, wspace=0.5)
-    fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Week {current_week} CBASE RPI", fontsize=20, fontweight='bold', color='black')
-    fig.text(0.5, 0.92, "PEAR's RPI Rankings", fontsize=10, ha='center', color='black')
-    fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
-
-    for i, ax in enumerate(axs.ravel()):
-        team = top_25.loc[i, 'Team']
-        team_url = BASE_URL + elo_data[elo_data['Team'] == team]['Team Link'].values[0]
-        response = requests.get(team_url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        img_tag = soup.find("img", class_="team-menu__image")
-        img_src = img_tag.get("src")
-        image_url = BASE_URL + img_src
-        response = requests.get(image_url)
-        img = Image.open(BytesIO(response.content))
-        ax.imshow(img)
-        ax.set_facecolor('#f0f0f0')
-        ax.set_title(f"#{i+1} {team}", fontsize=8, fontweight='bold')
-        ax.axis('off')
-    plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/RPI/rpi_{formatted_date}.png", bbox_inches='tight')
-    print('RPI Done')
-
+    current_week = (days_since_start // 7) + 1
     major_conferences = ['SEC', 'ACC', 'Independent', 'Big 12', 'Big Ten']
-    top_25 = stats_and_metrics[~stats_and_metrics['Conference'].isin(major_conferences)].reset_index(drop=True)[0:25]
-    fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
-    fig.subplots_adjust(hspace=0.5, wspace=0.5)
+
+    # --- Build Team Image Cache ---
+    def fetch_team_logo(team):
+        try:
+            team_url = BASE_URL + elo_data[elo_data['Team'] == team]['Team Link'].values[0]
+            response = requests.get(team_url, timeout=10)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            img_tag = soup.find("img", class_="team-menu__image")
+            img_src = img_tag.get("src")
+            image_url = BASE_URL + img_src
+            img_response = requests.get(image_url, timeout=10)
+            img = Image.open(BytesIO(img_response.content))
+            return team, img
+        except Exception as e:
+            print(f"Error fetching {team}: {e}")
+            return team, None
+
+    # Get all top teams needed across plots
+    all_top_teams = set(stats_and_metrics.head(25)['Team']) \
+        | set(stats_and_metrics.sort_values('RQI').head(25)['Team']) \
+        | set(stats_and_metrics.sort_values('PRR').head(25)['Team']) \
+        | set(stats_and_metrics.sort_values('RPI').head(25)['Team']) \
+        | set(stats_and_metrics[~stats_and_metrics['Conference'].isin(major_conferences)].head(25)['Team'])
+
+    with ThreadPoolExecutor(max_workers=20) as executor:
+        results = list(executor.map(fetch_team_logo, all_top_teams))
+
+    team_images = {team: img for team, img in results if img is not None}
+
+    # --- Plotting Function ---
+    def plot_top_25(title, subtitle, sorted_df, save_path):
+        top_25 = sorted_df.reset_index(drop=True).head(25)
+        fig, axs = plt.subplots(5, 5, figsize=(7, 7), dpi=125)
+        fig.subplots_adjust(hspace=0.5, wspace=0.5)
+        fig.patch.set_facecolor('#CECEB2')
+
+        plt.suptitle(title, fontsize=20, fontweight='bold', color='black')
+        fig.text(0.5, 0.92, subtitle, fontsize=10, ha='center', color='black')
+        fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
+
+        for i, ax in enumerate(axs.ravel()):
+            team = top_25.loc[i, 'Team']
+            img = team_images.get(team)
+            if img:
+                ax.imshow(img)
+            ax.set_facecolor('#f0f0f0')
+            ax.set_title(f"#{i+1} {team}", fontsize=8, fontweight='bold')
+            ax.axis('off')
+
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.close(fig)
+
+    # --- Generate Plots ---
+    plot_top_25(
+        title=f"Week {current_week} CBASE PEAR",
+        subtitle="NET Ranking Incorporating Team Strength and Resume",
+        sorted_df=stats_and_metrics.head(25),
+        save_path=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/NET/net_{formatted_date}.png"
+    )
+    print("NET Done")
+
+    plot_top_25(
+        title=f"Week {current_week} CBASE Resume Quality",
+        subtitle="Team Performance Relative to Strength of Schedule",
+        sorted_df=stats_and_metrics.sort_values('RQI'),
+        save_path=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/RQI/rqi_{formatted_date}.png"
+    )
+    print("RQI Done")
+
+    plot_top_25(
+        title=f"Week {current_week} CBASE Team Strength",
+        subtitle="Team Rating Based on Team Stats",
+        sorted_df=stats_and_metrics.sort_values('PRR'),
+        save_path=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/PRR/prr_{formatted_date}.png"
+    )
+    print("PRR Done")
+
+    plot_top_25(
+        title=f"Week {current_week} CBASE RPI",
+        subtitle="PEAR's RPI Rankings",
+        sorted_df=stats_and_metrics.sort_values('RPI'),
+        save_path=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/RPI/rpi_{formatted_date}.png"
+    )
+    print("RPI Done")
+
+    plot_top_25(
+        title=f"Week {current_week} Mid-Major CBASE PEAR",
+        subtitle="NET Ranking Incorporating Team Strength and Resume",
+        sorted_df=stats_and_metrics[~stats_and_metrics['Conference'].isin(major_conferences)],
+        save_path=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Mid_Major/mid_major_{formatted_date}.png"
+    )
+    print("Mid Major Done")
+
+    # ---------------------------
+    # Helper Functions
+    # ---------------------------
+
+    def fetch_team_logo(team):
+        try:
+            team_url = BASE_URL + elo_data[elo_data['Team'] == team]['Team Link'].values[0]
+            response = requests.get(team_url, timeout=10)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            img_tag = soup.find("img", class_="team-menu__image")
+            img_src = img_tag.get("src")
+            image_url = BASE_URL + img_src
+            img_response = requests.get(image_url, timeout=10)
+            return team, Image.open(BytesIO(img_response.content))
+        except Exception as e:
+            print(f"Logo fetch failed for {team}: {e}")
+            return team, None
+
+    def plot_logo_bar(data, title, filename, reference_score, zoom=0.3):
+        data = data.copy()
+        data["percentage_away"] = round((data["NET_Score"] - reference_score) / reference_score * 100, 2)
+        data = data.sort_values("percentage_away", ascending=False)
+
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            results = executor.map(fetch_team_logo, data["Team"])
+        team_logos = {team: img for team, img in results if img is not None}
+
+        colors = ["#2ECC71" if x >= 0 else "#E74C3C" for x in data["percentage_away"]]
+        fig, ax = plt.subplots(figsize=(10, 8))
+        fig.set_facecolor("#CECEB2")
+        ax.set_facecolor("#CECEB2")
+
+        sns.barplot(data=data, x="percentage_away", y="Team", ax=ax, width=0.2, palette=colors, hue="Team", legend=False)
+        ax.set_xlim(-data["percentage_away"].abs().max() - 0.5, data["percentage_away"].abs().max() + 0.5)
+        ax.set_yticks([])
+        for spine in ["top", "right", "left"]:
+            ax.spines[spine].set_visible(False)
+
+        for i, (team, pct) in enumerate(zip(data["Team"], data["percentage_away"])):
+            if team in team_logos:
+                ab = offsetbox.AnnotationBbox(offsetbox.OffsetImage(team_logos[team], zoom=zoom), 
+                                            (pct, i), 
+                                            xybox=(10 if pct >= 0 else -10, 0),
+                                            boxcoords="offset points", 
+                                            frameon=False)
+                ax.add_artist(ab)
+
+        ax.set_xlabel("")
+        ax.set_ylabel("")
+        plt.text(-max(data["percentage_away"].abs()) - 1, -2, title, fontsize=20, ha='left', fontweight='bold')
+        plt.text(-max(data["percentage_away"].abs()) - 1, -1, "@PEARatings", fontsize=12, ha='left')
+        plt.savefig(filename, bbox_inches="tight")
+        plt.close()
+
+    # ---------------------------
+    # Main Logic
+    # ---------------------------
+
+    aqs = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
+    non_aqs = stats_and_metrics.drop(aqs.index)
+
+    at_large = non_aqs.nsmallest(34, "NET")
+    last_four_in = at_large[-8:].reset_index(drop=True)
+    next_8 = non_aqs.nsmallest(42, "NET").iloc[34:].reset_index(drop=True)
+    bubble_teams = non_aqs.nsmallest(50, "NET").iloc[42:].reset_index(drop=True)
+    all_at_large = pd.concat([at_large, next_8, bubble_teams]).sort_values("NET").reset_index(drop=True)
+
+    tournament = pd.concat([at_large, aqs, next_8]).sort_values("NET").reset_index(drop=True)
+    sorted_aqs = aqs.sort_values("NET").reset_index(drop=True)
+    last_team_in = last_four_in.loc[7, "Team"]
+    last_team_in_index = all_at_large[all_at_large["Team"] == last_team_in].index[0]
+
+    # Ratings vs Resume Scatter Plot
+    fig, ax = plt.subplots(figsize=(15, 12), dpi=125)
     fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Week {current_week} Mid-Major CBASE PEAR", fontsize=20, fontweight='bold', color='black')
-    fig.text(0.5, 0.92, "NET Ranking Incorporating Team Strength and Resume", fontsize=10, ha='center', color='black')
-    fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
-
-    for i, ax in enumerate(axs.ravel()):
-        team = top_25.loc[i, 'Team']
-        team_url = BASE_URL + elo_data[elo_data['Team'] == team]['Team Link'].values[0]
-        response = requests.get(team_url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        img_tag = soup.find("img", class_="team-menu__image")
-        img_src = img_tag.get("src")
-        image_url = BASE_URL + img_src
-        response = requests.get(image_url)
-        img = Image.open(BytesIO(response.content))
-        ax.imshow(img)
-        ax.set_facecolor('#f0f0f0')
-        ax.set_title(f"#{i+1} {team}", fontsize=8, fontweight='bold')
-        ax.axis('off')
-    plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Mid_Major/mid_major_{formatted_date}.png", bbox_inches='tight')
-    print('Mid Major Done')
-
-    automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
-    at_large = stats_and_metrics.drop(automatic_qualifiers.index)
-    at_large = at_large.nsmallest(34, "NET")
-    last_four_in = at_large[-8:].reset_index()
-    next_8_teams = stats_and_metrics.drop(automatic_qualifiers.index).nsmallest(42, "NET").iloc[34:].reset_index(drop=True)
-    extended_bubble = stats_and_metrics.drop(automatic_qualifiers.index).nsmallest(50, "NET").iloc[42:].reset_index(drop=True)
-    tournament = pd.concat([at_large, automatic_qualifiers, next_8_teams])
-    all_at_large_teams = pd.concat([at_large, next_8_teams, extended_bubble]).sort_values(by='NET').reset_index(drop=True)
-    tournament = tournament.sort_values(by="NET").reset_index(drop=True)
-    last_team_in = last_four_in.loc[len(last_four_in)-1, 'Team']
-    last_team_in_index = all_at_large_teams[all_at_large_teams['Team'] == last_team_in].index.values[0]
-    sorted_aqs = automatic_qualifiers.sort_values('NET').reset_index(drop=True)
-
-    fig, ax = plt.subplots(figsize=(15, 12),dpi=125)
-    plt.gca().set_facecolor('#CECEB2')
-    plt.gcf().set_facecolor('#CECEB2')
+    ax.set_facecolor('#CECEB2')
     logo_size = 5
 
-    for i in range(len(all_at_large_teams)):
-        team = all_at_large_teams.loc[i, 'Team']
-        team_url = BASE_URL + elo_data[elo_data['Team'] == team]['Team Link'].values[0]
-        response = requests.get(team_url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        img_tag = soup.find("img", class_="team-menu__image")
-        img_src = img_tag.get("src")
-        image_url = BASE_URL + img_src
+    for i, row in all_at_large.iterrows():
+        team = row["Team"]
+        x = row["PRR"]
+        y = row["aRQI"]
+        above = last_team_in_index - i
+        img = team_images.get(team)
 
-        img_response = requests.get(image_url)
-        img = Image.open(BytesIO(img_response.content))
+        if img:
+            ax.imshow(img, extent=(x - (logo_size - 1.2), x + (logo_size - 1.2), y - logo_size, y + logo_size), aspect='auto')
 
-        x = all_at_large_teams['PRR'].iloc[i]
-        y = all_at_large_teams['aRQI'].iloc[i]
-        above = last_team_in_index - all_at_large_teams.index[i]
-
-        ax.imshow(img, aspect='auto', 
-                extent=(x - (logo_size - 1.2), x + (logo_size - 1.2), 
-                        y - logo_size, y + logo_size))
-        
-        if team in last_four_in['Team'].values:
-            circle = plt.Circle((x, y), logo_size, color='#2ECC71', fill=True, alpha=0.3, linewidth=2)
-            ax.add_patch(circle)
+        if team in last_four_in["Team"].values:
+            ax.add_patch(plt.Circle((x, y), logo_size, color='#2ECC71', alpha=0.3))
+            ax.text(x, y + logo_size, above, fontsize=14, fontweight='bold', ha='center')
+        elif team in next_8["Team"].values:
+            ax.add_patch(plt.Circle((x, y), logo_size, color='#F39C12', alpha=0.3))
+            ax.text(x, y + logo_size, above, fontsize=14, fontweight='bold', ha='center')
+        elif team in bubble_teams["Team"].values:
+            ax.add_patch(plt.Circle((x, y), logo_size, color='#E74C3C', alpha=0.3))
             ax.text(x, y + logo_size, above, fontsize=14, fontweight='bold', ha='center')
 
-        if team in next_8_teams['Team'].values:
-            circle = plt.Circle((x, y), logo_size, color='#F39C12', fill=True, alpha=0.3, linewidth=2)
-            ax.add_patch(circle)
-            ax.text(x, y + logo_size, above, fontsize=14, fontweight='bold', ha='center')
-
-        if team in extended_bubble['Team'].values:
-            circle = plt.Circle((x, y), logo_size, color='#E74C3C', fill=True, alpha=0.3, linewidth=2)
-            ax.add_patch(circle)
-            ax.text(x, y + logo_size, above, fontsize=14, fontweight='bold', ha='center')
-
-
-    if all_at_large_teams['PRR'].max() > all_at_large_teams['aRQI'].max():
-        max_range = all_at_large_teams['PRR'].max()
-    else:
-        max_range = all_at_large_teams['aRQI'].max()
-
+    max_range = max(all_at_large["PRR"].max(), all_at_large["aRQI"].max())
     height = max_range + 4
-    plt.text(max_range+24, height + 3, "Automatic Qualifiers", ha='center', fontweight='bold', fontsize = 18)
-    for i in range(len(sorted_aqs)):
-        team = sorted_aqs.loc[i, 'Team']
-        conference = sorted_aqs.loc[i, 'Conference']
-        plt.text(max_range+24, height, f"{team}", ha='center', fontsize=16)
-        height = height - 3
+    plt.text(max_range + 24, height + 3, "Automatic Qualifiers", ha='center', fontweight='bold', fontsize=18)
+    for _, row in sorted_aqs.iterrows():
+        plt.text(max_range + 24, height, row["Team"], ha='center', fontsize=16)
+        height -= 3
 
-    ax.set_xlabel('Team Strength Rank', fontsize = 16)
-    ax.set_ylabel('Adjusted Resume Rank', fontsize = 16)
-    # ax.set_title('At Large Ratings vs. Adjusted Resume', fontweight='bold', fontsize=14)
-    plt.text(0, max_range + 20, "At Large Team Strength vs. Adjusted Resume", ha='left', fontsize = 32, fontweight = 'bold')
-    plt.text(0, max_range + 16, f"Automatic Qualifiers Removed, Bubble Teams Highlighted - Through {(today - timedelta(days=1)).strftime('%m/%d')}", fontsize = 24)
-    plt.text(0, max_range + 12, "@PEARatings", ha='left', fontsize=24, fontweight='bold')
-    plt.text(max_range + 8, max_range + 7, f"Projected At Large Bids ONLY (Based on PEAR NET Rankings)", ha='right', fontsize=16)
-    plt.text(max_range + 8, max_range + 4, f"Green - Last 8 In, Orange - First 8 Out, Red - Next 8 Out", ha='right', fontsize=16)
-    plt.text(max_range + 8, max_range + 1, f"Value indicates distance from being the last team in", ha='right', fontsize=16)
+    ax.set_xlabel("Team Strength Rank", fontsize=16)
+    ax.set_ylabel("Adjusted Resume Rank", fontsize=16)
+    plt.text(0, max_range + 20, "At Large Team Strength vs. Adjusted Resume", fontsize=32, fontweight='bold')
+    plt.text(0, max_range + 16, f"Bubble Teams Highlighted - Through {(today - timedelta(days=1)).strftime('%m/%d')}", fontsize=24)
+    plt.text(0, max_range + 12, "@PEARatings", fontsize=24, fontweight='bold')
+    plt.text(max_range + 8, max_range + 7, "Projected At-Large Bids Only (Based on PEAR NET)", fontsize=16)
+    plt.text(max_range + 8, max_range + 4, "Green - Last 8 In, Orange - First 8 Out, Red - Next 8 Out", fontsize=16)
+    plt.text(max_range + 8, max_range + 1, "Value = Distance from Last Team In", fontsize=16)
     plt.xlim(-2, max_range + 10)
     plt.ylim(-2, max_range + 10)
     plt.grid(False)
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Ratings_vs_Resume/ratings_vs_resume_{formatted_date}.png", bbox_inches='tight')
-    print('Ratings vs Resume Done')
+    plt.close()
+    print("Ratings vs Resume Done")
 
-    bubble = pd.concat([last_four_in, next_8_teams, extended_bubble]).sort_values('NET').reset_index(drop=True)[['Team', 'NET', 'NET_Score']]
-    last_net_score = bubble[bubble['Team'] == last_team_in]['NET_Score'].values[0]
-    bubble["percentage_away"] = round((
-        (bubble["NET_Score"] - last_net_score) / last_net_score
-    ) * 100, 2)
+    # ---------------------------
+    # Bubble Distance Bar Plot
+    # ---------------------------
 
-    def get_team_logo(team):
-        team_url = BASE_URL + elo_data[elo_data['Team'] == team]['Team Link'].values[0]
-        response = requests.get(team_url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        img_tag = soup.find("img", class_="team-menu__image")
-        
-        if img_tag:
-            img_src = img_tag.get("src")
-            image_url = BASE_URL + img_src
-            img_response = requests.get(image_url)
-            img = Image.open(BytesIO(img_response.content))
-            return img
-        return None
+    bubble_df = pd.concat([last_four_in, next_8, bubble_teams]).sort_values("NET").reset_index(drop=True)[["Team", "NET", "NET_Score"]]
+    last_net_score = bubble_df[bubble_df["Team"] == last_team_in]["NET_Score"].values[0]
+    plot_logo_bar(
+        bubble_df,
+        title=f"NET Score Distance From Last Team In - Through {(today - timedelta(days=1)).strftime('%m-%d')}",
+        filename=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Team_In/last_team_in_{formatted_date}.png",
+        reference_score=last_net_score
+    )
+    print("Last Team In Done")
 
-    team_logos = {team: get_team_logo(team) for team in bubble["Team"]}
-    bubble = bubble.sort_values(by="percentage_away", ascending=False)
-    max_abs_value = bubble["percentage_away"].abs().max() + 0.2
-    colors = ["#2ECC71" if x >= 0 else "#E74C3C" for x in bubble["percentage_away"]]
-    fig, ax = plt.subplots(figsize=(10, 8))
-    fig.set_facecolor("#CECEB2")
-    ax.set_facecolor("#CECEB2")
-    sns.barplot(data=bubble, x="percentage_away", y="Team", ax=ax, width=0.2, palette=colors, hue='Team', legend=False)
+    # ---------------------------
+    # Hosting Distance Bar Plot
+    # ---------------------------
 
-    ax.set_xlim(-max_abs_value, max_abs_value)
-    ax.set_yticks([])
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["left"].set_visible(False)
-
-    # Add team logos
-    for i, (team, percentage) in enumerate(zip(bubble["Team"], bubble["percentage_away"])):
-        if team in team_logos and team_logos[team]:
-            img = team_logos[team]
-            xybox = (10, 0) if percentage >= 0 else (-10, 0)
-            imagebox = offsetbox.OffsetImage(img, zoom=0.3)
-            ab = offsetbox.AnnotationBbox(imagebox, (percentage, i), 
-                                        xybox=xybox,  
-                                        boxcoords="offset points", 
-                                        frameon=False)
-            ax.add_artist(ab)
-
-    ax.set_xlabel("")
-    # ax.set_xlabel("")
-    ax.set_ylabel("")
-    # ax.set_title("NET Score Distance from Last Team In", fontsize = 16)
-    plt.text(-max_abs_value, -2, f"NET Score Distance From Last Team In - Through {(today - timedelta(days=1)).strftime('%m-%d')}", fontsize=20, ha='left', fontweight='bold')
-    plt.text(-max_abs_value, -1, "@PEARatings", ha='left', fontsize = 12)
-
-    plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Team_In/last_team_in_{formatted_date}.png", bbox_inches='tight')
-    print('Last Team In Done')
-
-    hosting = stats_and_metrics[0:24][['Team', 'NET', 'NET_Score']]
-    last_host_score = hosting[hosting['NET'] == 16]['NET_Score'].values[0]
-    hosting["percentage_away"] = round((
-        (hosting["NET_Score"] - last_host_score) / last_host_score
-    ) * 100, 2)
-
-    def get_team_logo(team):
-        team_url = BASE_URL + elo_data[elo_data['Team'] == team]['Team Link'].values[0]
-        response = requests.get(team_url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        img_tag = soup.find("img", class_="team-menu__image")
-        
-        if img_tag:
-            img_src = img_tag.get("src")
-            image_url = BASE_URL + img_src
-            img_response = requests.get(image_url)
-            img = Image.open(BytesIO(img_response.content))
-            return img
-        return None
-
-    team_logos = {team: get_team_logo(team) for team in hosting["Team"]}
-    hosting = hosting.sort_values(by="percentage_away", ascending=False)
-    max_abs_value = hosting["percentage_away"].abs().max() + 0.2
-    colors = ["#2ECC71" if x >= 0 else "#E74C3C" for x in hosting["percentage_away"]]
-    fig, ax = plt.subplots(figsize=(10, 8))
-    fig.set_facecolor("#CECEB2")
-    ax.set_facecolor("#CECEB2")
-    sns.barplot(data=hosting, x="percentage_away", y="Team", ax=ax, width=0.2, palette=colors, hue='Team', legend=False)
-
-    ax.set_xlim(-max_abs_value, max_abs_value)
-    ax.set_yticks([])
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["left"].set_visible(False)
-
-    # Add team logos
-    for i, (team, percentage) in enumerate(zip(hosting["Team"], hosting["percentage_away"])):
-        if team in team_logos and team_logos[team]:
-            img = team_logos[team]
-            xybox = (10, 0) if percentage >= 0 else (-10, 0)
-            imagebox = offsetbox.OffsetImage(img, zoom=0.3)
-            ab = offsetbox.AnnotationBbox(imagebox, (percentage, i), 
-                                        xybox=xybox,  
-                                        boxcoords="offset points", 
-                                        frameon=False)
-            ax.add_artist(ab)
-
-    ax.set_xlabel("")
-    ax.set_ylabel("")
-    plt.text(-max_abs_value, -2, f"NET Score Distance From Last Host Seed - Through {(today - timedelta(days=1)).strftime('%m-%d')}", fontsize=20, ha='left', fontweight='bold')
-    plt.text(-max_abs_value, -1, "@PEARatings", ha='left', fontsize = 12)
-    plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Host/last_host_{formatted_date}.png", bbox_inches='tight')
-    print('Last Host Seed Done')
+    hosting_df = stats_and_metrics.head(24)[["Team", "NET", "NET_Score"]]
+    last_host_score = hosting_df[hosting_df["NET"] == 16]["NET_Score"].values[0]
+    plot_logo_bar(
+        hosting_df,
+        title=f"NET Score Distance From Last Host Seed - Through {(today - timedelta(days=1)).strftime('%m-%d')}",
+        filename=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Host/last_host_{formatted_date}.png",
+        reference_score=last_host_score
+    )
+    print("Last Host Seed Done")
 
     automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
     at_large = stats_and_metrics.drop(automatic_qualifiers.index)
