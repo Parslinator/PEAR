@@ -1050,7 +1050,6 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics, location="Neutral"):
 def conference_team_sheets(this_conference, stats_and_metrics):
     stats_and_metrics['WAR'] = stats_and_metrics['fWAR'].rank(ascending=False).astype(int)
     stats_and_metrics['PYT'] = stats_and_metrics['PYTHAG'].rank(ascending=False).astype(int)
-    stats_and_metrics['RPI'] = stats_and_metrics['Live_RPI']
     conference = stats_and_metrics[stats_and_metrics['Conference'] == this_conference].reset_index(drop=True)
     conference = conference[['Team', 'NET', 'RPI', 'PRR', 'PYT', 'RQI', 'WAB']]
 
@@ -1153,7 +1152,6 @@ st.caption("Updated when page updates. Weekly rankings are taken Monday at 11 AM
 modeling_stats_copy = modeling_stats.copy()
 modeling_stats_copy.set_index("Team", inplace=True)
 modeling_stats_copy['TSR'] = modeling_stats_copy['PRR']
-modeling_stats_copy['RPI'] = modeling_stats_copy['Live_RPI']
 with st.container(border=True, height=440):
     st.dataframe(modeling_stats_copy[['NET', 'RPI', 'TSR', 'RQI', 'SOS', 'RemSOS', 'Q1', 'Q2', 'Q3', 'Q4', 'Conference']], use_container_width=True)
 st.caption("NET - Mimicing the NCAA Evaluation Tool using TSR, RQI, SOS")
