@@ -488,7 +488,7 @@ team_data['in_house_pr'] = round(team_data['in_house_pr'] - team_data['in_house_
 ###############################################################################
 ###############################################################################
 
-pbar = tqdm(total=500, desc="Optimization Progress")
+pbar = tqdm(total=300, desc="Optimization Progress")
 def progress_callback(xk, convergence):
     """Callback to update the progress bar after each iteration."""
     pbar.update(1)
@@ -603,7 +603,7 @@ bounds = [
     (0, 1)    # SP+ Weight
 ]
 
-result = differential_evolution(objective_function, bounds, strategy='best1bin', maxiter=500, tol=1e-4, seed=42, callback=progress_callback)
+result = differential_evolution(objective_function, bounds, strategy='best1bin', maxiter=300, tol=1e-4, seed=42, callback=progress_callback)
 optimized_weights = result.x
 
 ######################################## USING OUTPUT FROM OPTIMIZATION TO CREATE POWER RANKING #################################################
@@ -704,150 +704,148 @@ team_power_rankings.index = team_power_rankings.index + 1
 team_power_rankings['week'] = current_week
 team_power_rankings['year'] = current_year
 
-## year long schedule
+from joblib import Parallel, delayed
+from collections import defaultdict
+import numpy as np
+import pandas as pd
+
+# --- Vectorized PEAR Win Prob function ---
+def PEAR_Win_Prob_vectorized(home_pr, away_pr):
+    rating_diff = np.array(home_pr) - np.array(away_pr)
+    return np.round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
+
+# --- Get games and build base schedule ---
 start_week = 1
 end_week = 17
-
 games_list = []
-for week in range(start_week,end_week):
-    response = games_api.get_games(year=current_year, week=week,division = 'fbs')
-    games_list = [*games_list, *response]
+for week in range(start_week, end_week):
+    response = games_api.get_games(year=current_year, week=week, division='fbs')
+    games_list.extend(response)
 if postseason:
-    response = games_api.get_games(year=current_year, division = 'fbs', season_type='postseason')
-    games_list = [*games_list, *response]
-games = [dict(
-            id=g.id,
-            season=g.season,
-            week=g.week,
-            start_date=g.start_date,
-            home_team=g.home_team,
-            home_elo=g.home_pregame_elo,
-            away_team=g.away_team,
-            away_elo=g.away_pregame_elo,
-            home_points = g.home_points,
-            away_points = g.away_points,
-            neutral = g.neutral_site
-            ) for g in games_list if g.home_pregame_elo is not None and g.away_pregame_elo is not None]
+    response = games_api.get_games(year=current_year, division='fbs', season_type='postseason')
+    games_list.extend(response)
+
+games = [
+    dict(
+        id=g.id, season=g.season, week=g.week, start_date=g.start_date,
+        home_team=g.home_team, home_elo=g.home_pregame_elo,
+        away_team=g.away_team, away_elo=g.away_pregame_elo,
+        home_points=g.home_points, away_points=g.away_points,
+        neutral=g.neutral_site
+    )
+    for g in games_list if g.home_pregame_elo is not None and g.away_pregame_elo is not None
+]
+
 games.sort(key=date_sort)
 year_long_schedule = pd.DataFrame(games)
 
-year_long_schedule = year_long_schedule.merge(team_data[['team', 'power_rating']], 
-                                    left_on='home_team', 
-                                    right_on='team', 
-                                    how='left').rename(columns={'power_rating': 'home_pr'})
-year_long_schedule = year_long_schedule.drop(columns=['team'])
-year_long_schedule = year_long_schedule.merge(team_data[['team', 'power_rating']], 
-                                    left_on='away_team', 
-                                    right_on='team', 
-                                    how='left').rename(columns={'power_rating': 'away_pr'})
-year_long_schedule = year_long_schedule.drop(columns=['team'])
+# --- Merge power ratings ---
+year_long_schedule = year_long_schedule.merge(team_data[['team', 'power_rating']],
+                                              left_on='home_team', right_on='team', how='left')\
+                                       .rename(columns={'power_rating': 'home_pr'}).drop(columns='team')
+year_long_schedule = year_long_schedule.merge(team_data[['team', 'power_rating']],
+                                              left_on='away_team', right_on='team', how='left')\
+                                       .rename(columns={'power_rating': 'away_pr'}).drop(columns='team')
 
-# Apply the PEAR_Win_Prob function to the schedule_info DataFrame
-year_long_schedule['PEAR_win_prob'] = year_long_schedule.apply(
-    lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr']), axis=1
+# --- Add Win Probabilities ---
+year_long_schedule['PEAR_win_prob'] = PEAR_Win_Prob_vectorized(
+    year_long_schedule['home_pr'], year_long_schedule['away_pr']
 )
-year_long_schedule['home_win_prob'] = round((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) / ((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) + 1)*100,2)
 
+year_long_schedule['home_win_prob'] = np.round(
+    (10 ** ((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) /
+    ((10 ** ((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) + 1) * 100, 2
+)
 
-## sos calculation
-average_elo = elo_ratings['elo'].mean()
+# --- Pre-index schedules ---
+team_schedules = {team: year_long_schedule[(year_long_schedule['home_team'] == team) | 
+                                           (year_long_schedule['away_team'] == team)]
+                  for team in team_data['team']}
+
+# --- SOS Calculation ---
 average_pr = round(team_data['power_rating'].mean(), 2)
-good_team_pr = round(team_data['power_rating'].std() + team_data['power_rating'].mean(),2)
-elite_team_pr = round(2*team_data['power_rating'].std() + team_data['power_rating'].mean(),2)
-expected_wins_list = []
-for team in team_data['team']:
-    schedule = year_long_schedule[(year_long_schedule['home_team'] == team) | (year_long_schedule['away_team'] == team)]
+good_team_pr = round(team_data['power_rating'].std() + average_pr, 2)
+elite_team_pr = round(2 * team_data['power_rating'].std() + average_pr, 2)
+
+def calc_expected(team):
+    schedule = team_schedules[team]
     df = average_team_distribution(1000, schedule, elite_team_pr, team)
-    expected_wins = df['expected_wins'].values[0]
-    expected_wins_list.append(expected_wins)
-SOS = pd.DataFrame(zip(team_data['team'], expected_wins_list), columns=['team', 'avg_expected_wins'])
-SOS = SOS.sort_values('avg_expected_wins').reset_index(drop = True)
+    return df['expected_wins'].values[0]
+
+expected_wins_list = Parallel(n_jobs=-1)(delayed(calc_expected)(team) for team in team_data['team'])
+
+SOS = pd.DataFrame({'team': team_data['team'], 'avg_expected_wins': expected_wins_list})
+SOS = SOS.sort_values('avg_expected_wins').reset_index(drop=True)
 SOS['SOS'] = SOS.index + 1
 print("SOS Calculation Done")
 
+# --- SOR Calculation ---
+completed_games = year_long_schedule[year_long_schedule['home_points'].notna()].copy()
 
-## sor calculation
-completed_games = year_long_schedule[year_long_schedule['home_points'].notna()]
-current_xWins_list = []
-good_xWins_list = []
-elite_xWins_list = []
-for team in team_data['team']:
-    team_completed_games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
-    games_played = records[records['team'] == team]['games_played'].values[0]
-    wins = records[records['team'] == team]['wins'].values[0]
-    team_completed_games['avg_win_prob'] = np.where(team_completed_games['home_team'] == team,
-                                                    PEAR_Win_Prob(average_pr, team_completed_games['away_pr']),
-                                                    100 - PEAR_Win_Prob(team_completed_games['home_pr'], average_pr))
-    team_completed_games['good_win_prob'] = np.where(team_completed_games['home_team'] == team,
-                                                    PEAR_Win_Prob(good_team_pr, team_completed_games['away_pr']),
-                                                    100 - PEAR_Win_Prob(team_completed_games['home_pr'], good_team_pr))
-    team_completed_games['elite_win_prob']  = np.where(team_completed_games['home_team'] == team,
-                                                    PEAR_Win_Prob(elite_team_pr, team_completed_games['away_pr']),
-                                                    100 - PEAR_Win_Prob(team_completed_games['home_pr'], elite_team_pr))
+def calc_sor(team):
+    games_played = records.loc[records['team'] == team, 'games_played'].values[0]
+    wins = records.loc[records['team'] == team, 'wins'].values[0]
+    team_games = completed_games[(completed_games['home_team'] == team) | 
+                                 (completed_games['away_team'] == team)].copy()
 
-    # team_completed_games['avg_win_prob'] = np.where(team_completed_games['home_team'] == team, 
-    #                             round((10**((average_elo-team_completed_games['away_elo']) / 400)) / ((10**((average_elo-team_completed_games['away_elo']) / 400)) + 1)*100, 2), 
-    #                             100 - round((10**((team_completed_games['home_elo'] - average_elo) / 400)) / ((10**((team_completed_games['home_elo']- average_elo) / 400)) + 1)*100, 2))
-    current_xWins = round(sum(team_completed_games['avg_win_prob']) / 100, 2)
-    good_xWins = round(sum(team_completed_games['good_win_prob']) / 100, 2)
-    elite_xWins = round(sum(team_completed_games['elite_win_prob']) / 100, 2)
-    if games_played != len(team_completed_games):
+    home_probs = PEAR_Win_Prob_vectorized(good_team_pr, team_games['away_pr'])
+    away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_pr'], good_team_pr)
+
+    team_games['good_win_prob'] = np.where(team_games['home_team'] == team, home_probs, away_probs)
+
+    home_probs = PEAR_Win_Prob_vectorized(average_pr, team_games['away_pr'])
+    away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_pr'], average_pr)
+    team_games['avg_win_prob'] = np.where(team_games['home_team'] == team, home_probs, away_probs)
+
+    home_probs = PEAR_Win_Prob_vectorized(elite_team_pr, team_games['away_pr'])
+    away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_pr'], elite_team_pr)
+    team_games['elite_win_prob'] = np.where(team_games['home_team'] == team, home_probs, away_probs)
+
+    current_xWins = round(team_games['avg_win_prob'].sum() / 100, 2)
+    good_xWins = round(team_games['good_win_prob'].sum() / 100, 2)
+    elite_xWins = round(team_games['elite_win_prob'].sum() / 100, 2)
+
+    if games_played != len(team_games):
         current_xWins += 1
         good_xWins += 1
         elite_xWins += 1
-    relative_current_xWins = round(wins - current_xWins, 2)
-    relative_good_xWins = round(wins - good_xWins, 2)
-    relative_elite_xWins = round(wins - elite_xWins, 2)
-    current_xWins_list.append(relative_current_xWins)
-    good_xWins_list.append(relative_good_xWins)
-    elite_xWins_list.append(relative_elite_xWins)
-SOR = pd.DataFrame(zip(team_data['team'], current_xWins_list, good_xWins_list, elite_xWins_list), columns=['team','wins_above_average','wins_above_good','wins_above_elite'])
+
+    return round(wins - current_xWins, 2), round(wins - good_xWins, 2), round(wins - elite_xWins, 2)
+
+sor_results = Parallel(n_jobs=-1)(delayed(calc_sor)(team) for team in team_data['team'])
+SOR = pd.DataFrame(sor_results, columns=['wins_above_average','wins_above_good','wins_above_elite'])
+SOR.insert(0, 'team', team_data['team'])
 SOR = SOR.sort_values('wins_above_good', ascending=False).reset_index(drop=True)
 SOR['SOR'] = SOR.index + 1
 print("SOR Calculation Done")
 
+# --- Most Deserving Calculation ---
+num_12_pr = team_data['power_rating'].iloc[11]
 
-## most deserving calculation
-num_12_pr = team_data['power_rating'][11]
+def f(mov):
+    return np.clip(np.log(np.abs(mov) + 1) * np.sign(mov), -10, 10)
 
-# Ensure MOV is calculated in the completed_games DataFrame
-completed_games = year_long_schedule[year_long_schedule['home_points'].notna()]
 completed_games['margin_of_victory'] = completed_games['home_points'] - completed_games['away_points']
 
-# Function to scale MOV
-def f(mov):
-    return np.clip(np.log(abs(mov) + 1) * np.sign(mov), -10, 10)
+def calc_deserving(team):
+    games_played = records.loc[records['team'] == team, 'games_played'].values[0]
+    wins = records.loc[records['team'] == team, 'wins'].values[0]
+    team_games = completed_games[(completed_games['home_team'] == team) |
+                                 (completed_games['away_team'] == team)].copy()
 
-current_xWins_list = []
+    mov_adj = f(team_games['margin_of_victory'])
 
-for team in team_data['team']:
-    # Filter completed games for the current team
-    team_completed_games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
-    
-    # Get the current team's record
-    games_played = records[records['team'] == team]['games_played'].values[0]
-    wins = records[records['team'] == team]['wins'].values[0]
-    
-    # Adjust win probability with MOV influence
-    team_completed_games['avg_win_prob'] = np.where(
-        team_completed_games['home_team'] == team,
-        PEAR_Win_Prob(num_12_pr, team_completed_games['away_pr']) + f(team_completed_games['margin_of_victory']),
-        100 - PEAR_Win_Prob(team_completed_games['home_pr'], num_12_pr) - f(-team_completed_games['margin_of_victory'])
-    )
-    
-    # Calculate expected wins (xWins)
-    current_xWins = round(sum(team_completed_games['avg_win_prob']) / 100, 3)
-    
-    # Adjust for incomplete games
-    if games_played != len(team_completed_games):
-        current_xWins += 1
-    
-    # Calculate relative xWins (wins vs. expected wins)
-    relative_current_xWins = round(wins - current_xWins, 3)
-    current_xWins_list.append(relative_current_xWins)
+    home_probs = PEAR_Win_Prob_vectorized(num_12_pr, team_games['away_pr']) + mov_adj
+    away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_pr'], num_12_pr) - mov_adj
+    team_games['adj_win_prob'] = np.where(team_games['home_team'] == team, home_probs, away_probs)
 
-# Create the "most deserving" DataFrame
-most_deserving = pd.DataFrame(zip(team_data['team'], current_xWins_list), columns=['team', 'most_deserving_wins'])
+    xWins = round(team_games['adj_win_prob'].sum() / 100, 3)
+    if games_played != len(team_games):
+        xWins += 1
+    return round(wins - xWins, 3)
+
+deserving_results = Parallel(n_jobs=-1)(delayed(calc_deserving)(team) for team in team_data['team'])
+most_deserving = pd.DataFrame({'team': team_data['team'], 'most_deserving_wins': deserving_results})
 most_deserving = most_deserving.sort_values('most_deserving_wins', ascending=False).reset_index(drop=True)
 most_deserving['most_deserving'] = most_deserving.index + 1
 print("Most Deserving Calculation Done")
