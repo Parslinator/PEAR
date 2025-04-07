@@ -1282,16 +1282,16 @@ def process_result(row):
     result = row["Result"]
     
     if result.startswith("W"):
-        return re.sub(r"^W\s+", row["Team"] + " ", result)  # Replace "W" with Team name
-
-    elif result.startswith("L"):
-        # Extract scores and swap them
-        match = re.search(r"L\s+(\d+)\s*-\s*(\d+)", result)
-        if match:
-            swapped_score = f"{row['Opponent']} {match.group(2)} - {match.group(1)}"
-            return re.sub(r"L\s+\d+\s*-\s*\d+", swapped_score, result)  # Replace score section
+        # Replace 'W' with team name and space
+        return re.sub(r"^W", row["Team"] + " ", result)
     
-    return result  # Leave other cases unchanged
+    elif result.startswith("L"):
+        # Match pattern like 'L3-5', extract and swap scores
+        match = re.match(r"L(\d+) - (\d+)", result)
+        if match:
+            return f"{row['Opponent']} {match.group(2)} - {match.group(1)}"
+
+    return result  # In case it's not W or L
 
 ####################### Straight Up Tracking #######################
 
