@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore")
 
 def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
     if location != "Neutral":
-        home_pr += 0.3
+        home_pr += 0.5
     rating_diff = home_pr - away_pr
     win_prob = round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
     return win_prob
@@ -1343,7 +1343,7 @@ previous.to_csv(f"./PEAR/PEAR Baseball/y{current_season}/straight_up.csv")
 
 def PEAR_Win_Prob(home_pr, away_pr, location = "Neutral"):
     if location != "Neutral":
-        home_pr += 0.3
+        home_pr += 0.5
     rating_diff = home_pr - away_pr
     return round(1 / (1 + 10 ** (-rating_diff / 7.5)), 4)  # More precision, rounded later in output
 
