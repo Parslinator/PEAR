@@ -386,6 +386,12 @@ raw_stats = threaded_stat_fetch(stat_list, max_workers=10)
 baseball_stats = clean_and_merge(raw_stats, STAT_TRANSFORMS)
 baseball_stats = pd.merge(baseball_stats, elo_data, on='Team', how='left')
 
+missing_teams = set(elo_data['Team']) - set(baseball_stats['Team'])
+elo_data_sorted = elo_data.sort_values(by='ELO_Rank')
+elo_data_sorted['Percentile'] = 100 - (elo_data_sorted['ELO_Rank'].rank() - 1) / (elo_data_sorted.shape[0] - 1) * 100
+matched_percentiles = elo_data_sorted[elo_data_sorted['Team'].isin(missing_teams)][['Team', 'Percentile']]
+percentile_dict = dict(zip(matched_percentiles['Team'], matched_percentiles['Percentile']))
+
 ####################### wOBA Stat Transforms #######################
 
 STAT_TRANSFORMS_WOBA = {
@@ -882,6 +888,11 @@ elo_data['Team'] = elo_data['Team'].replace(team_replacements)
 
 import pandas as pd # type: ignore
 
+team_rating_quantiles = {}
+for team, elo_percentile in percentile_dict.items():
+    rating_at_percentile = ending_data['Rating'].quantile(elo_percentile / 100.0)
+    team_rating_quantiles[team] = rating_at_percentile
+
 # Mapping months to numerical values
 month_mapping = {
     "JAN": "01", "FEB": "02", "MAR": "03", "APR": "04",
@@ -912,7 +923,8 @@ schedule_df = schedule_df.merge(ending_data[['Team', 'Rating']], left_on='away_t
 schedule_df.rename(columns={'Rating': 'away_rating'}, inplace=True)
 schedule_df.drop(columns=['Team', 'Team_y'], inplace=True)
 schedule_df.rename(columns={'Team_x':'Team'}, inplace=True)
-schedule_df = schedule_df.dropna(subset=['home_rating', 'away_rating']).reset_index(drop=True)
+schedule_df['home_rating'].fillna(schedule_df['home_team'].map(team_rating_quantiles), inplace=True)
+schedule_df['away_rating'].fillna(schedule_df['away_team'].map(team_rating_quantiles), inplace=True)
 schedule_df['home_win_prob'] = schedule_df.apply(
     lambda row: PEAR_Win_Prob(row['home_rating'], row['away_rating']) / 100, axis=1
 )
