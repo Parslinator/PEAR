@@ -922,7 +922,7 @@ remaining_games = schedule_df[schedule_df["Date"] > comparison_date].reset_index
 def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 1.5
 schedule_df['elo_win_prob'] = round((10**((schedule_df['home_elo'] - schedule_df['away_elo']) / 400)) / ((10**((schedule_df['home_elo'] - schedule_df['away_elo']) / 400)) + 1)*100,2)
-schedule_df['Spread'] = ((schedule_df['home_rating'] + schedule_df.apply(lambda row: 0.3 if row['Location'] != "Neutral" else 0, axis=1)) + schedule_df['elo_win_prob'].apply(adjust_home_pr) - schedule_df['away_rating']).round(2)
+schedule_df['Spread'] = ((schedule_df['home_rating'] + schedule_df.apply(lambda row: 0.5 if row['Location'] != "Neutral" else 0, axis=1)) + schedule_df['elo_win_prob'].apply(adjust_home_pr) - schedule_df['away_rating']).round(2)
 schedule_df['PEAR'] = schedule_df.apply(
     lambda row: f"{row['away_team']} {-abs(row['Spread'])}" if ((row['Spread'] <= 0)) 
     else f"{row['home_team']} {-abs(row['Spread'])}", axis=1)
