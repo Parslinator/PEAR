@@ -16,6 +16,9 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 1  # Shallow clone speeds up checkout
+          submodules: false  # Only enable if you need them
 
       - name: Set up Python
         uses: actions/setup-python@v4
