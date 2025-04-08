@@ -912,8 +912,7 @@ schedule_df = schedule_df.merge(ending_data[['Team', 'Rating']], left_on='away_t
 schedule_df.rename(columns={'Rating': 'away_rating'}, inplace=True)
 schedule_df.drop(columns=['Team', 'Team_y'], inplace=True)
 schedule_df.rename(columns={'Team_x':'Team'}, inplace=True)
-schedule_df['home_rating'].fillna(missing_rating, inplace=True)
-schedule_df['away_rating'].fillna(missing_rating, inplace=True)
+schedule_df = schedule_df.dropna(subset=['home_rating', 'away_rating']).reset_index(drop=True)
 schedule_df['home_win_prob'] = schedule_df.apply(
     lambda row: PEAR_Win_Prob(row['home_rating'], row['away_rating']) / 100, axis=1
 )
