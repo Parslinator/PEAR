@@ -500,7 +500,14 @@ def grab_team_schedule(team_name, stats_df):
         (schedule_df["Result"].str.contains("W|L"))  # Check if "Result" contains "W" or "L"
     ].reset_index(drop=True)
     remaining_games = schedule_df[schedule_df["Comparison_Date"] > comparison_date].reset_index(drop=True)
-    remaining_games['PEAR'] = remaining_games.apply(lambda row: find_spread(row['Team'], row['Opponent'], row['Location']), axis=1)
+    remaining_games['PEAR'] = remaining_games.apply(
+        lambda row: find_spread(
+            row['Opponent'], row['Team'], row['Location']
+        ) if row['Location'] == 'Away' else find_spread(
+            row['Team'], row['Opponent'], row['Location']
+        ),
+        axis=1
+    )
 
     team_completed = completed_schedule[completed_schedule['Team'] == team_name].reset_index(drop=True)
     num_rows = len(team_completed)
