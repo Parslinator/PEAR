@@ -1,167 +1,129 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
 from datetime import datetime
+import pytz
+import warnings
 import os
 import textwrap
-import pytz # type: ignore
+import re
 
+warnings.filterwarnings("ignore")
+
+# --- Timezone Setup ---
 cst = pytz.timezone('America/Chicago')
 formatted_date = datetime.now(cst).strftime('%m_%d_%Y')
 current_season = datetime.today().year
 
+# --- Creating Folder Path ---
 folder_path = f"./PEAR/PEAR Baseball/y{current_season}"
 os.makedirs(folder_path, exist_ok=True)
 
-import requests # type: ignore
-import re # type: ignore
-from bs4 import BeautifulSoup # type: ignore
-import pandas as pd # type: ignore
-from sklearn.preprocessing import MinMaxScaler # type: ignore
-import warnings
-warnings.filterwarnings("ignore")
-
+# --- PEAR Win Probability ---
 def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
     if location != "Neutral":
         home_pr += 0.5
     rating_diff = home_pr - away_pr
-    win_prob = round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
-    return win_prob
+    return round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
 
-# Base URL for NCAA stats
-base_url = "https://www.ncaa.com"
-stats_page = f"{base_url}/stats/baseball/d1"
-
-# Function to get page content
+# --- Helper Functions ---
 def get_soup(url):
     response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
-    response.raise_for_status()  # Ensure request was successful
+    response.raise_for_status()
     return BeautifulSoup(response.text, "html.parser")
 
-# Get main page content
-soup = get_soup(stats_page)
+def scrape_warrennolan_table(url, expected_columns):
+    soup = get_soup(url)
+    table = soup.find('table', class_='normal-grid alternating-rows stats-table')
+    data = []
+    if table:
+        for row in table.find('tbody').find_all('tr'):
+            cells = row.find_all('td')
+            if len(cells) >= 2:
+                name_div = cells[1].find('div', class_='name-subcontainer')
+                full_text = name_div.text.strip() if name_div else cells[1].text.strip()
+                parts = full_text.split("\n")
+                team_name = parts[0].strip()
+                conference = parts[1].split("(")[0].strip() if len(parts) > 1 else ""
+                data.append([cells[0].text.strip(), team_name, conference])
+    return pd.DataFrame(data, columns=expected_columns)
 
-# Find the dropdown container and extract stat URLs
+def clean_team_names(df, column='Team'):
+    df[column] = df[column].str.replace('State', 'St.', regex=False)
+    df[column] = df[column].replace(team_replacements)
+    return df
+
+# --- NCAA Stats Dropdown ---
+base_url = "https://www.ncaa.com"
+soup = get_soup(f"{base_url}/stats/baseball/d1")
 dropdown = soup.find("select", {"id": "select-container-team"})
-options = dropdown.find_all("option")
-
-# Extract stat names and links
 stat_links = {
     option.text.strip(): base_url + option["value"]
-    for option in options if option.get("value")
+    for option in dropdown.find_all("option") if option.get("value")
 }
 
-url = "https://www.ncaa.com/rankings/baseball/d1/rpi"
-response = requests.get(url)
-response.raise_for_status()  # Ensure request was successful
-soup = BeautifulSoup(response.text, "html.parser")
-table = soup.find("table", class_="sticky")
+# --- NCAA RPI Table ---
+rpi_url = "https://www.ncaa.com/rankings/baseball/d1/rpi"
+rpi_soup = get_soup(rpi_url)
+table = rpi_soup.find("table", class_="sticky")
+
 if table:
     headers = [th.text.strip() for th in table.find_all("th")]
-    data = []
-    for row in table.find_all("tr")[1:]:  # Skip header row
-        cols = row.find_all("td")
-        data.append([col.text.strip() for col in cols])
-    rpi = pd.DataFrame(data, columns=headers)
-    rpi = rpi.drop(columns = ['Previous'])
+    data = [
+        [td.text.strip() for td in row.find_all("td")]
+        for row in table.find_all("tr")[1:]
+    ]
+    rpi = pd.DataFrame(data, columns=headers).drop(columns=["Previous"])
     rpi.rename(columns={"School": "Team"}, inplace=True)
 else:
-    print("Table not found.")
+    print("NCAA RPI Table not found.")
+    rpi = pd.DataFrame()
 
-url = 'https://www.warrennolan.com/baseball/2025/rpi-predict'
-response = requests.get(url)
-soup = BeautifulSoup(response.text, 'html.parser')
-table = soup.find('table', class_='normal-grid alternating-rows stats-table')
-headers = [th.text.strip() for th in table.find('thead').find_all('th')]
+# --- Projected RPI ---
+projected_rpi = scrape_warrennolan_table(
+    'https://www.warrennolan.com/baseball/2025/rpi-predict',
+    expected_columns=["RPI", "Team", "Conference"]
+)
 
-data = []
-for row in table.find('tbody').find_all('tr'):
-    cells = row.find_all('td')
-    if len(cells) >= 2:
-        rank = cells[0].text.strip()  # First element (ranking)
-        name_div = cells[1].find('div', class_='name-subcontainer')
-        if name_div:
-            full_text = name_div.text.strip()
-        else:
-            full_text = cells[1].text.strip()  # Fallback
-        
-        # Split the text to extract Team Name and Conference
-        parts = full_text.split("\n")
-        team_name = parts[0].strip()  # Extract just the team name
-        conference = parts[1].split("(")[0].strip() if len(parts) > 1 else ""  # Extract conference
-        data.append([rank, team_name, conference]) 
-projected_rpi = pd.DataFrame(data, columns=["RPI", "Team", "Conference"])
+# --- Live RPI ---
+live_rpi = scrape_warrennolan_table(
+    'https://www.warrennolan.com/baseball/2025/rpi-live',
+    expected_columns=["Live_RPI", "Team", "Conference"]
+)
 
-url = 'https://www.warrennolan.com/baseball/2025/rpi-live'
-response = requests.get(url)
-soup = BeautifulSoup(response.text, 'html.parser')
-table = soup.find('table', class_='normal-grid alternating-rows stats-table')
-headers = [th.text.strip() for th in table.find('thead').find_all('th')]
+# --- ELO Ratings ---
+elo_url = 'https://www.warrennolan.com/baseball/2025/elo'
+elo_soup = get_soup(elo_url)
+elo_table = elo_soup.find('table', class_='normal-grid alternating-rows stats-table')
 
-data = []
-for row in table.find('tbody').find_all('tr'):
-    cells = row.find_all('td')
-    if len(cells) >= 2:
-        rank = cells[0].text.strip()  # First element (ranking)
-        name_div = cells[1].find('div', class_='name-subcontainer')
-        if name_div:
-            full_text = name_div.text.strip()
-        else:
-            full_text = cells[1].text.strip()  # Fallback
-        
-        # Split the text to extract Team Name and Conference
-        parts = full_text.split("\n")
-        team_name = parts[0].strip()  # Extract just the team name
-        conference = parts[1].split("(")[0].strip() if len(parts) > 1 else ""  # Extract conference
-        data.append([rank, team_name, conference]) 
-live_rpi = pd.DataFrame(data, columns=["Live_RPI", "Team", "Conference"])
-
-# URL of the page to scrape
-url = 'https://www.warrennolan.com/baseball/2025/elo'
-
-# Fetch the webpage content
-response = requests.get(url)
-soup = BeautifulSoup(response.text, 'html.parser')
-
-# Find the table with the specified class
-table = soup.find('table', class_='normal-grid alternating-rows stats-table')
-
-if table:
-    # Extract table headers
-    headers = [th.text.strip() for th in table.find('thead').find_all('th')]
-    headers.insert(1, "Team Link")  # Adding extra column for team link
-
-    # Extract table rows
+if elo_table:
+    headers = [th.text.strip() for th in elo_table.find('thead').find_all('th')]
+    headers.insert(1, "Team Link")
     data = []
-    for row in table.find('tbody').find_all('tr'):
+    for row in elo_table.find('tbody').find_all('tr'):
         cells = row.find_all('td')
         row_data = []
         for i, cell in enumerate(cells):
-            # If it's the first cell, extract team name and link from 'name-subcontainer'
             if i == 0:
                 name_container = cell.find('div', class_='name-subcontainer')
-                if name_container:
-                    team_name = name_container.text.strip()
-                    team_link_tag = name_container.find('a')
-                    team_link = team_link_tag['href'] if team_link_tag else ''
-                else:
-                    team_name = cell.text.strip()
-                    team_link = ''
-                row_data.append(team_name)
-                row_data.append(team_link)  # Add team link separately
+                team_name = name_container.text.strip() if name_container else cell.text.strip()
+                team_link = name_container.find('a')['href'] if name_container and name_container.find('a') else ''
+                row_data.extend([team_name, team_link])
             else:
                 row_data.append(cell.text.strip())
         data.append(row_data)
 
-
-    elo_data = pd.DataFrame(data, columns=[headers])
-    elo_data.columns = elo_data.columns.get_level_values(0)
+    elo_data = pd.DataFrame(data, columns=headers)
     elo_data = elo_data.drop_duplicates(subset='Team', keep='first')
-    elo_data = elo_data.astype({col: 'str' for col in elo_data.columns if col not in ['ELO', 'Rank']})
-    elo_data['ELO'] = elo_data['ELO'].astype(float, errors='ignore')
-    elo_data['Rank'] = elo_data['Rank'].astype(int, errors='ignore')
-
+    elo_data['ELO'] = pd.to_numeric(elo_data['ELO'], errors='coerce')
+    elo_data['Rank'] = pd.to_numeric(elo_data['Rank'], errors='coerce')
+    elo_data.rename(columns={'Rank': 'ELO_Rank'}, inplace=True)
 else:
-    print("Table not found on the page.")
-print("Elo Load Done")
+    print("ELO table not found.")
+    elo_data = pd.DataFrame()
 
+# --- Team Name Replacements ---
 team_replacements = {
     'North Carolina St.': 'NC State',
     'Southern Miss': 'Southern Miss.',
@@ -226,17 +188,14 @@ team_replacements = {
     'Central Connecticut': 'Central Conn. St.',
     'Saint Thomas': 'St. Thomas (MN)',
     'Northern Illinois': 'NIU',
-    'UMass':'Massachusetts',
-    'Loyola-Marymount':'LMU (CA)'
+    'UMass': 'Massachusetts',
+    'Loyola-Marymount': 'LMU (CA)'
 }
 
-elo_data['Team'] = elo_data['Team'].str.replace('State', 'St.', regex=False)
-elo_data['Team'] = elo_data['Team'].replace(team_replacements)
-elo_data.rename(columns={'Rank':'ELO_Rank'}, inplace=True)
-projected_rpi['Team'] = projected_rpi['Team'].str.replace('State', 'St.', regex=False)
-projected_rpi['Team'] = projected_rpi['Team'].replace(team_replacements)
-live_rpi['Team'] = live_rpi['Team'].str.replace('State', 'St.', regex=False)
-live_rpi['Team'] = live_rpi['Team'].replace(team_replacements)
+# Apply team name cleanup
+elo_data = clean_team_names(elo_data)
+projected_rpi = clean_team_names(projected_rpi)
+live_rpi = clean_team_names(live_rpi)
 
 import requests
 from bs4 import BeautifulSoup
@@ -754,129 +713,6 @@ schedule_df.rename(columns={'ELO': 'away_elo'}, inplace=True)
 schedule_df.drop(columns=['Team', 'Team_y'], inplace=True)
 schedule_df.rename(columns={'Team_x':'Team'}, inplace=True)
 
-print("Schedule Load Done")
-
-import requests # type: ignore
-from bs4 import BeautifulSoup # type: ignore
-import pandas as pd # type: ignore
-
-# URL of the page to scrape
-url = 'https://www.warrennolan.com/baseball/2025/elo'
-
-# Fetch the webpage content
-response = requests.get(url)
-soup = BeautifulSoup(response.text, 'html.parser')
-
-# Find the table with the specified class
-table = soup.find('table', class_='normal-grid alternating-rows stats-table')
-
-if table:
-    # Extract table headers
-    headers = [th.text.strip() for th in table.find('thead').find_all('th')]
-    headers.insert(1, "Team Link")  # Adding extra column for team link
-
-    # Extract table rows
-    data = []
-    for row in table.find('tbody').find_all('tr'):
-        cells = row.find_all('td')
-        row_data = []
-        for i, cell in enumerate(cells):
-            # If it's the first cell, extract team name and link from 'name-subcontainer'
-            if i == 0:
-                name_container = cell.find('div', class_='name-subcontainer')
-                if name_container:
-                    team_name = name_container.text.strip()
-                    team_link_tag = name_container.find('a')
-                    team_link = team_link_tag['href'] if team_link_tag else ''
-                else:
-                    team_name = cell.text.strip()
-                    team_link = ''
-                row_data.append(team_name)
-                row_data.append(team_link)  # Add team link separately
-            else:
-                row_data.append(cell.text.strip())
-        data.append(row_data)
-
-
-    elo_data = pd.DataFrame(data, columns=[headers])
-    elo_data.columns = elo_data.columns.get_level_values(0)
-    elo_data = elo_data.drop_duplicates(subset='Team', keep='first')
-    elo_data = elo_data.astype({col: 'str' for col in elo_data.columns if col not in ['ELO', 'Rank']})
-    elo_data['ELO'] = elo_data['ELO'].astype(float, errors='ignore')
-    elo_data['Rank'] = elo_data['Rank'].astype(int, errors='ignore')
-
-else:
-    print("Table not found on the page.")
-
-# Define mapping for team name replacements
-team_replacements = {
-    'North Carolina St.': 'NC State',
-    'Southern Miss': 'Southern Miss.',
-    'USC': 'Southern California',
-    'Dallas Baptist': 'DBU',
-    'Charleston': 'Col. of Charleston',
-    'Georgia Southern': 'Ga. Southern',
-    'UNCG': 'UNC Greensboro',
-    'East Tennessee St.': 'ETSU',
-    'Lamar': 'Lamar University',
-    "Saint Mary's College": "Saint Mary's (CA)",
-    'Western Kentucky': 'Western Ky.',
-    'FAU': 'Fla. Atlantic',
-    'Connecticut': 'UConn',
-    'Southeast Missouri': 'Southeast Mo. St.',
-    'Alcorn St.': 'Alcorn',
-    'Appalachian St.': 'App State',
-    'Arkansas-Pine Bluff': 'Ark.-Pine Bluff',
-    'Army': 'Army West Point',
-    'Cal St. Bakersfield': 'CSU Bakersfield',
-    'Cal St. Northridge': 'CSUN',
-    'Central Arkansas': 'Central Ark.',
-    'Central Michigan': 'Central Mich.',
-    'Charleston Southern': 'Charleston So.',
-    'Eastern Illinois': 'Eastern Ill.',
-    'Eastern Kentucky': 'Eastern Ky.',
-    'Eastern Michigan': 'Eastern Mich.',
-    'Fairleigh Dickinson': 'FDU',
-    'Grambling St.': 'Grambling',
-    'Incarnate Word': 'UIW',
-    'Long Island': 'LIU',
-    'Maryland Eastern Shore': 'UMES',
-    'Middle Tennessee': 'Middle Tenn.',
-    'Mississippi Valley St.': 'Mississippi Val.',
-    "Mount Saint Mary's": "Mount St. Mary's",
-    'North Alabama': 'North Ala.',
-    'North Carolina A&T': 'N.C. A&T',
-    'Northern Colorado': 'Northern Colo.',
-    'Northern Kentucky': 'Northern Ky.',
-    'Prairie View A&M': 'Prairie View',
-    'Presbyterian College': 'Presbyterian',
-    'Saint Bonaventure': 'St. Bonaventure',
-    "Saint John's": "St. John's (NY)",
-    'Sam Houston St.': 'Sam Houston',
-    'Seattle University': 'Seattle U',
-    'South Carolina Upstate': 'USC Upstate',
-    'South Florida': 'South Fla.',
-    'Southeastern Louisiana': 'Southeastern La.',
-    'Southern': 'Southern U.',
-    'Southern Illinois': 'Southern Ill.',
-    'Stephen F. Austin': 'SFA',
-    'Tennessee-Martin': 'UT Martin',
-    'Texas A&M-Corpus Christi': 'A&M-Corpus Christi',
-    'UMass-Lowell': 'UMass Lowell',
-    'UTA': 'UT Arlington',
-    'Western Carolina': 'Western Caro.',
-    'Western Illinois': 'Western Ill.',
-    'Western Michigan': 'Western Mich.',
-    'Albany': 'UAlbany',
-    'Southern Indiana': 'Southern Ind.',
-    'Queens': 'Queens (NC)',
-    'Central Connecticut': 'Central Conn. St.',
-    'Saint Thomas': 'St. Thomas (MN)',
-    'Northern Illinois': 'NIU',
-    'UMass':'Massachusetts',
-    'Loyola-Marymount':'LMU (CA)'
-}
-
 # Apply replacements and standardize 'State' to 'St.'
 columns_to_replace = ['Team', 'home_team', 'away_team', 'Opponent']
 
@@ -886,7 +722,7 @@ for col in columns_to_replace:
 elo_data['Team'] = elo_data['Team'].str.replace('State', 'St.', regex=False)
 elo_data['Team'] = elo_data['Team'].replace(team_replacements)
 
-import pandas as pd # type: ignore
+print("Schedule Load Done")
 
 team_rating_quantiles = {}
 for team, elo_percentile in percentile_dict.items():
@@ -999,64 +835,57 @@ rem_avg_expected_wins.rename(columns={"avg_expected_wins": "rem_avg_expected_win
 ####################### KPI #######################
 
 def calculate_kpi(completed_schedule, ending_data):
-    def get_team_rank(team):
-        match = ending_data.loc[ending_data["Team"] == team]
-        return match.index[0] if not match.empty else len(ending_data) + 1
+    # Precompute lookup dictionaries for faster rank access
+    rank_lookup = {team: rank for rank, team in enumerate(ending_data["Team"])}
+    default_rank = len(ending_data)
 
-    def get_opponent_rank(opponent):
-        match = ending_data.loc[ending_data["Team"] == opponent]
-        return match.index[0] if not match.empty else len(ending_data) + 1
+    def get_rank(team):
+        return rank_lookup.get(team, default_rank)
 
+    total_teams = len(ending_data)
     kpi_scores = []
 
-    for _, game in completed_schedule.iterrows():
-        team = game["Team"]
-        opponent = game["Opponent"]
-        home_team = game["home_team"]
-        
-        # Team strength
-        team_rank = get_team_rank(team)
-        opponent_rank = get_opponent_rank(opponent)
+    for game in completed_schedule.itertuples(index=False):
+        team = game.Team
+        opponent = game.Opponent
+        home_team = game.home_team
 
-        # Opponent strength calculation
-        opponent_strength_win = 1 - (opponent_rank / (len(ending_data) + 1))
-        opponent_strength_loss = (opponent_rank / (len(ending_data) + 1))
-        
-        # Determine if the team is home
+        team_rank = get_rank(team)
+        opponent_rank = get_rank(opponent)
+
+        # Rank-based strength (inverted)
+        opponent_strength_win = 1 - (opponent_rank / (total_teams + 1))
+        opponent_strength_loss = 1 - opponent_strength_win  # Equivalent to (opponent_rank / (total_teams + 1))
+
+        # Determine if team was home or away
         is_home = team == home_team
-        
-        # Scoring margin
-        margin = game["home_score"] - game["away_score"]
-        if not is_home:
-            margin = -margin  # Flip if the team is away
 
-        # Win or loss multiplier
+        # Calculate margin (positive if team won)
+        margin = game.home_score - game.away_score
+        if not is_home:
+            margin = -margin
+
+        # Win/loss factor
         result_multiplier = 1.5 if margin > 0 else -1.5
 
         # Margin factor
-        if margin > 0:
-            margin_factor = 1 + (min(margin, 20) / 20)
-            opponent_strength = opponent_strength_win
-        else:
-            margin_factor = max(0.1, 1 - (min(abs(margin), 20) / 20))
-            opponent_strength = opponent_strength_loss
+        capped_margin = min(abs(margin), 20)
+        margin_factor = 1 + (capped_margin / 20) if margin > 0 else max(0.1, 1 - (capped_margin / 20))
+        opponent_strength = opponent_strength_win if margin > 0 else opponent_strength_loss
 
-        # Team strength adjustment
-        team_strength_adj = 1 - (team_rank / (len(ending_data) + 1))
+        # Team strength factor
+        team_strength_adj = 1 - (team_rank / (total_teams + 1))
 
         # Adjusted KPI formula
         adj_grv = (opponent_strength * result_multiplier * margin_factor / 1.5) * (1 + (team_strength_adj / 2))
-        
-        # Store result
-        kpi_scores.append({"Team": team, "KPI_Score": adj_grv})
+        kpi_scores.append((team, adj_grv))
 
-    # Convert to DataFrame and get average per team
-    kpi_df = pd.DataFrame(kpi_scores)
-    kpi_avg = kpi_df.groupby("Team")["KPI_Score"].mean().reset_index()
+    # Convert to DataFrame and aggregate
+    kpi_df = pd.DataFrame(kpi_scores, columns=["Team", "KPI_Score"])
+    kpi_avg = kpi_df.groupby("Team", as_index=False)["KPI_Score"].mean()
 
     return kpi_avg
 
-# Call function
 kpi_results = calculate_kpi(completed_schedule, ending_data).sort_values('KPI_Score', ascending=False).reset_index(drop=True)
 
 ####################### Resume Quality #######################
@@ -1215,26 +1044,58 @@ stats_and_metrics['aRQI'] = stats_and_metrics['Norm_Resume'].rank(ascending=Fals
 
 ####################### Quadrants #######################
 
-quadrant_records = {}
-for team, group in completed_schedule.groupby('Team'):
-    quadrant_counts = {f'Q{i}_win': 0 for i in range(1, 5)}
-    quadrant_counts.update({f'Q{i}_loss': 0 for i in range(1, 5)})
-    
-    for _, row in group.iterrows():
-        opponent = row['Opponent']
-        opponent_index = stats_and_metrics.loc[stats_and_metrics['Team'] == opponent, "NET"].values[0] if opponent in stats_and_metrics['Team'].values else 300
-        location = row['Location']
-        team_won = (row['home_score'] > row['away_score'] and row['Team'] == row['home_team']) or \
-                   (row['away_score'] > row['home_score'] and row['Team'] == row['away_team'])
-        
-        quadrant_ranges = {"Home": [25, 50, 100, 307], "Neutral": [40, 80, 160, 307], "Away": [60, 120, 240, 307]}
-        quadrant = next(i + 1 for i, val in enumerate(quadrant_ranges[location]) if opponent_index <= val)
-        quadrant_counts[f'Q{quadrant}_win' if team_won else f'Q{quadrant}_loss'] += 1
+def calculate_quadrant_records(completed_schedule, stats_and_metrics):
+    # Precompute NET rankings lookup for fast access
+    net_lookup = stats_and_metrics.set_index('Team')['NET'].to_dict()
+    default_net = 300
 
-    quadrant_records[team] = {"Team": team, **{f'Q{i}': f"{quadrant_counts[f'Q{i}_win']}-{quadrant_counts[f'Q{i}_loss']}" for i in range(1, 5)}}
+    # Quadrant thresholds by location
+    quadrant_thresholds = {
+        "Home": [25, 50, 100, 307],
+        "Neutral": [40, 80, 160, 307],
+        "Away": [60, 120, 240, 307]
+    }
 
-quadrant_record_df = pd.DataFrame.from_dict(quadrant_records, orient='index').reset_index(drop=True)
-stats_and_metrics = pd.merge(stats_and_metrics, quadrant_record_df, on='Team', how='left')
+    records = []
+
+    # Group by team
+    for team, group in completed_schedule.groupby('Team'):
+        counts = {f'Q{i}_win': 0 for i in range(1, 5)}
+        counts.update({f'Q{i}_loss': 0 for i in range(1, 5)})
+
+        for row in group.itertuples(index=False):
+            opponent = row.Opponent
+            location = row.Location
+
+            # Get opponent NET ranking
+            opponent_net = net_lookup.get(opponent, default_net)
+
+            # Determine if team won
+            team_won = (
+                (row.Team == row.home_team and row.home_score > row.away_score) or
+                (row.Team == row.away_team and row.away_score > row.home_score)
+            )
+
+            # Determine quadrant
+            thresholds = quadrant_thresholds[location]
+            quadrant = next(i + 1 for i, val in enumerate(thresholds) if opponent_net <= val)
+
+            # Increment win/loss count
+            result_key = f'Q{quadrant}_win' if team_won else f'Q{quadrant}_loss'
+            counts[result_key] += 1
+
+        # Build final formatted record: "wins-losses"
+        record = {"Team": team}
+        for i in range(1, 5):
+            record[f"Q{i}"] = f"{counts[f'Q{i}_win']}-{counts[f'Q{i}_loss']}"
+
+        records.append(record)
+
+    # Convert to DataFrame and merge
+    quadrant_record_df = pd.DataFrame(records)
+    return pd.merge(stats_and_metrics, quadrant_record_df, on='Team', how='left')
+
+stats_and_metrics = calculate_quadrant_records(completed_schedule, stats_and_metrics)
 
 stats_and_metrics.fillna(0, inplace=True)
 stats_and_metrics = stats_and_metrics.sort_values('Rating', ascending=False).reset_index(drop=True)
