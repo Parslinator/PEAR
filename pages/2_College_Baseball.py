@@ -1118,6 +1118,61 @@ def conference_team_sheets(this_conference, stats_and_metrics):
     plt.text(1.05,len(conference)+1.8, f"WAB - Wins Above Bubble", fontsize = 16, ha='left')
     return fig
 
+def get_conference(team, stats_df):
+    return stats_df.loc[stats_df["Team"] == team, "Conference"].values[0]
+
+def has_conflict(row, stats_df):
+    teams = [row[col] for col in ["1 Seed", "2 Seed", "3 Seed", "4 Seed"]]
+    conferences = [get_conference(team, stats_df) for team in teams]
+    return len(conferences) != len(set(conferences))  # True if there's a conflict
+
+def find_conflicting_teams(row, stats_df):
+    teams = [row[col] for col in ["1 Seed", "2 Seed", "3 Seed", "4 Seed"]]
+    confs = [get_conference(team, stats_df) for team in teams]
+    seen = set()
+    dupes = set()
+    for i, c in enumerate(confs):
+        if c in seen:
+            dupes.add(c)
+        else:
+            seen.add(c)
+    # Return teams involved in the conflict (excluding 1 Seed)
+    return [team for team in teams[1:] if get_conference(team, stats_df) in dupes]
+
+def resolve_conflicts(formatted_df, stats_df):
+    seed_cols = ["2 Seed", "3 Seed", "4 Seed"]
+
+    for seed_col in seed_cols:
+        for idx, row in formatted_df.iterrows():
+            original_team = row[seed_col]
+            regional_teams = [row[col] for col in ["1 Seed", "2 Seed", "3 Seed", "4 Seed"]]
+            regional_confs = [get_conference(t, stats_df) for t in regional_teams]
+
+            if regional_confs.count(get_conference(original_team, stats_df)) > 1:
+                # Conflict exists; attempt to swap
+                for alt_idx in formatted_df.index:
+                    if alt_idx == idx:
+                        continue
+                    alt_team = formatted_df.at[alt_idx, seed_col]
+                    alt_row = formatted_df.loc[alt_idx]
+                    
+                    # Check if swapping removes conflicts for both rows
+                    test_row_1 = regional_teams.copy()
+                    test_row_1[seed_cols.index(seed_col)+1] = alt_team
+                    test_confs_1 = [get_conference(t, stats_df) for t in test_row_1]
+
+                    test_row_2 = [alt_row[col] for col in ["1 Seed", "2 Seed", "3 Seed", "4 Seed"]]
+                    test_row_2[seed_cols.index(seed_col)+1] = original_team
+                    test_confs_2 = [get_conference(t, stats_df) for t in test_row_2]
+
+                    if len(set(test_confs_1)) == 4 and len(set(test_confs_2)) == 4:
+                        # Perform swap
+                        formatted_df.at[idx, seed_col] = alt_team
+                        formatted_df.at[alt_idx, seed_col] = original_team
+                        break
+    return formatted_df
+
+
 st.title(f"{current_season} CBASE PEAR")
 st.logo("./PEAR/pear_logo.jpg", size = 'large')
 st.caption(f"Ratings Updated {formatted_latest_date}")
@@ -1197,6 +1252,7 @@ formatted_df = tournament.pivot_table(index="Host", columns="Seed", values="Team
 formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
 formatted_df = formatted_df.reset_index()
 formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
+formatted_df = resolve_conflicts(formatted_df, modeling_stats)
 formatted_df.set_index('Host')
 formatted_df.index = formatted_df.index + 1
 st.markdown(f'<h2 id="tournament-outlook">Tournament Outlook</h2>', unsafe_allow_html=True)

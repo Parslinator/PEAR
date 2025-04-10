@@ -1489,6 +1489,60 @@ if now.hour < 13 and now.hour > 7:
         plt.savefig(filename, bbox_inches="tight")
         plt.close()
 
+    def get_conference(team, stats_df):
+        return stats_df.loc[stats_df["Team"] == team, "Conference"].values[0]
+
+    def has_conflict(row, stats_df):
+        teams = [row[col] for col in ["1 Seed", "2 Seed", "3 Seed", "4 Seed"]]
+        conferences = [get_conference(team, stats_df) for team in teams]
+        return len(conferences) != len(set(conferences))  # True if there's a conflict
+
+    def find_conflicting_teams(row, stats_df):
+        teams = [row[col] for col in ["1 Seed", "2 Seed", "3 Seed", "4 Seed"]]
+        confs = [get_conference(team, stats_df) for team in teams]
+        seen = set()
+        dupes = set()
+        for i, c in enumerate(confs):
+            if c in seen:
+                dupes.add(c)
+            else:
+                seen.add(c)
+        # Return teams involved in the conflict (excluding 1 Seed)
+        return [team for team in teams[1:] if get_conference(team, stats_df) in dupes]
+
+    def resolve_conflicts(formatted_df, stats_df):
+        seed_cols = ["2 Seed", "3 Seed", "4 Seed"]
+
+        for seed_col in seed_cols:
+            for idx, row in formatted_df.iterrows():
+                original_team = row[seed_col]
+                regional_teams = [row[col] for col in ["1 Seed", "2 Seed", "3 Seed", "4 Seed"]]
+                regional_confs = [get_conference(t, stats_df) for t in regional_teams]
+
+                if regional_confs.count(get_conference(original_team, stats_df)) > 1:
+                    # Conflict exists; attempt to swap
+                    for alt_idx in formatted_df.index:
+                        if alt_idx == idx:
+                            continue
+                        alt_team = formatted_df.at[alt_idx, seed_col]
+                        alt_row = formatted_df.loc[alt_idx]
+                        
+                        # Check if swapping removes conflicts for both rows
+                        test_row_1 = regional_teams.copy()
+                        test_row_1[seed_cols.index(seed_col)+1] = alt_team
+                        test_confs_1 = [get_conference(t, stats_df) for t in test_row_1]
+
+                        test_row_2 = [alt_row[col] for col in ["1 Seed", "2 Seed", "3 Seed", "4 Seed"]]
+                        test_row_2[seed_cols.index(seed_col)+1] = original_team
+                        test_confs_2 = [get_conference(t, stats_df) for t in test_row_2]
+
+                        if len(set(test_confs_1)) == 4 and len(set(test_confs_2)) == 4:
+                            # Perform swap
+                            formatted_df.at[idx, seed_col] = alt_team
+                            formatted_df.at[alt_idx, seed_col] = original_team
+                            break
+        return formatted_df
+
     # ---------------------------
     # Main Logic
     # ---------------------------
@@ -1599,6 +1653,7 @@ if now.hour < 13 and now.hour > 7:
     formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
     formatted_df = formatted_df.reset_index()
     formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
+    formatted_df = resolve_conflicts(formatted_df, stats_and_metrics)
     formatted_df.index = formatted_df.index + 1
     from plottable import Table # type: ignore
     from plottable.plots import image, circled_image # type: ignore
@@ -1683,6 +1738,7 @@ if now.hour < 13 and now.hour > 7:
     formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
     formatted_df = formatted_df.reset_index()
     formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
+    formatted_df = resolve_conflicts(formatted_df, stats_and_metrics)
     formatted_df.index = formatted_df.index + 1
     from plottable import Table # type: ignore
     from plottable.plots import image, circled_image # type: ignore
@@ -2100,6 +2156,7 @@ if now.hour < 13 and now.hour > 7:
     formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
     formatted_df = formatted_df.reset_index()
     formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
+    formatted_df = resolve_conflicts(formatted_df, stats_and_metrics)
 
     tournament_sim = simulate_full_tournament(formatted_df, stats_and_metrics, 1000)
     top_25_teams = tournament_sim[0:25]
@@ -2161,3 +2218,127 @@ if now.hour < 13 and now.hour > 7:
     plt.text(0, 0.08, f"Based on Projected NET Tournament {today.strftime('%m/%d')}", fontsize=16, ha='center')
     plt.text(0, 0.074, f"@PEARatings", fontsize=16, fontweight='bold', ha='center')
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Tournament_Odds/tournament_odds_{formatted_date}.png", bbox_inches='tight')
+
+    # --- Utility Functions ---
+
+    def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
+        if location != "Neutral":
+            home_pr += 0.5
+        rating_diff = home_pr - away_pr
+        return round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
+
+    def normalize_array(values):
+        values = np.array(values)
+        non_zero = values[values > 0]
+        min_val, max_val = non_zero.min(), non_zero.max() if len(non_zero) else (0, 1)
+        return np.where(values == 0, 0, (values - min_val) / (max_val - min_val))
+
+    # --- Simulation Functions ---
+
+    def simulate_tournament(teams, ratings):
+        team_a, team_b, team_c, team_d = teams
+        r = ratings
+
+        w1, l1 = (team_a, team_d) if random.random() < PEAR_Win_Prob(r[team_a], r[team_d]) / 100 else (team_d, team_a)
+        w2, l2 = (team_b, team_c) if random.random() < PEAR_Win_Prob(r[team_b], r[team_c]) / 100 else (team_c, team_b)
+        w3 = l2 if random.random() < PEAR_Win_Prob(r[l2], r[l1]) / 100 else l1
+        w4, l4 = (w1, w2) if random.random() < PEAR_Win_Prob(r[w1], r[w2]) / 100 else (w2, w1)
+        w5 = l4 if random.random() < PEAR_Win_Prob(r[l4], r[w3]) / 100 else w3
+        game6_prob = PEAR_Win_Prob(r[w4], r[w5]) / 100
+        w6 = w4 if random.random() < game6_prob else w5
+
+        return w6 if w6 == w4 else (w4 if random.random() < game6_prob else w5)
+
+    def run_simulation(teams, stats_and_metrics, num_simulations=1000):
+        ratings = {team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].iloc[0] for team in teams}
+        results = defaultdict(int)
+
+        for _ in range(num_simulations):
+            winner = simulate_tournament(teams, ratings)
+            results[winner] += 1
+
+        total = num_simulations
+        return defaultdict(float, {team: round(count / total, 3) for team, count in results.items()})
+
+    # --- Bracket Construction ---
+
+    automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
+    at_large = stats_and_metrics.drop(automatic_qualifiers.index).nsmallest(34, "NET")
+    tournament = pd.concat([automatic_qualifiers, at_large]).sort_values("NET").reset_index(drop=True)
+
+    tournament["Seed"] = (tournament.index // 16) + 1
+    pod_order = list(range(1, 17)) + list(range(16, 0, -1)) + list(range(1, 17)) + list(range(16, 0, -1))
+    tournament["Host"] = pod_order[:len(tournament)]
+
+    formatted_df = tournament.pivot_table(index="Host", columns="Seed", values="Team", aggfunc=lambda x: ' '.join(x))
+    formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
+    formatted_df = formatted_df.reset_index()
+    formatted_df['Host'] = formatted_df['1 Seed']
+    formatted_df = resolve_conflicts(formatted_df, stats_and_metrics)
+
+    # --- Visualization ---
+
+    fig, axes = plt.subplots(4, 4, figsize=(12, 12), dpi=125)
+    fig.patch.set_facecolor('#CECEB2')
+    axes = axes.flatten()
+
+    cmap = LinearSegmentedColormap.from_list('custom_green', ['#d5f5e3', '#006400'])
+
+    for idx in range(16):
+        teams = list(formatted_df.iloc[idx, 1:5])
+        sim_results = run_simulation(teams, stats_and_metrics)
+
+        # Preserve team order from input
+        regional_prob = pd.DataFrame({
+            "Team": teams,
+            "Win": [sim_results.get(team, 0) * 100 for team in teams]
+        })
+
+        win_vals = regional_prob["Win"].values
+        norm_vals = normalize_array(win_vals)
+
+        ax = axes[idx]
+        ax.axis('tight')
+        ax.axis('off')
+
+        table = ax.table(
+            cellText=regional_prob.values,
+            colLabels=["Team", "Win %"],
+            cellLoc='center',
+            loc='center',
+            colColours=['#CECEB2'] * 2,
+            bbox=[0, 0, 1, 1]
+        )
+
+        for (i, j), cell in table.get_celld().items():
+            cell.set_edgecolor('black')
+            cell.set_linewidth(1.2)
+            cell.set_height(0.15)
+
+            if j == 0:
+                cell.set_width(0.7)
+            else:
+                cell.set_width(0.3)
+
+            font_props = {'fontsize': 16, 'weight': 'bold', 'color': 'black'}
+            cell.set_text_props(**font_props)
+
+            if i == 0:
+                cell.set_facecolor('#CECEB2')
+            else:
+                if j == 1:
+                    color = cmap(norm_vals[i - 1])
+                    cell.set_facecolor(color)
+                    cell.get_text().set_text(f"{win_vals[i - 1]:.1f}%")
+                    cell.set_text_props(fontsize=16, fontweight='bold')
+                else:
+                    cell.set_facecolor('#CECEB2')
+
+        ax.text(0.5, 1.05, f'#{idx + 1} {teams[0]} Regional',
+                fontsize=10, fontweight='bold', ha='center', transform=ax.transAxes)
+
+    fig.text(0.5, 0.95, "PEAR's Regional Winner Projections", ha='center', fontweight='bold', fontsize=24)
+    fig.text(0.5, 0.93, "Based on PEAR's Tournament - No Consideration for Regional Proximity", 
+            ha='center', fontsize=16)
+    fig.text(0.5, 0.91, "@PEARatings", ha='center', fontweight='bold', fontsize=16)
+    plt.savefig(f"./PEAR/PEAR Baseball/y2025/Visuals/Regional_Win_Prob/regional_win_prob_{formatted_date}.png", bbox_inches='tight')
