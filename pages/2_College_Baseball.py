@@ -1211,7 +1211,6 @@ def run_simulation(team_a, team_b, team_c, team_d, stats_and_metrics, num_simula
 
 def simulate_regional(team_a, team_b, team_c, team_d, stats_and_metrics):
 
-    team_a, team_b, team_c, team_d = "Arkansas", "Duke", "Northeastern", "Missouri St."
     output = run_simulation(team_a, team_b, team_c, team_d, stats_and_metrics)
     regional_prob = pd.DataFrame(list(output.items()), columns=["Team", "Win Regional"])
     seed_map = {
