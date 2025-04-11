@@ -2288,9 +2288,10 @@ if now.hour < 13 and now.hour > 7:
         teams = list(formatted_df.iloc[idx, 1:5])
         sim_results = run_simulation(teams, stats_and_metrics)
 
+        seeded_teams = [f"#{i+1} {team}" for i, team in enumerate(teams)]
         # Preserve team order from input
         regional_prob = pd.DataFrame({
-            "Team": teams,
+            "Team": seeded_teams,
             "Win": [sim_results.get(team, 0) * 100 for team in teams]
         })
 

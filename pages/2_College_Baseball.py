@@ -20,6 +20,8 @@ from plottable import ColumnDefinition # type: ignore
 from plottable.cmap import normed_cmap
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib
+from collections import defaultdict
+import random
 font_prop = fm.FontProperties(fname="./PEAR/trebuc.ttf")
 fm.fontManager.addfont("./PEAR/trebuc.ttf")
 fm.fontManager.addfont("./PEAR/Trebuchet MS Bold.ttf")
@@ -1172,6 +1174,110 @@ def resolve_conflicts(formatted_df, stats_df):
                         break
     return formatted_df
 
+def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
+    if location != "Neutral":
+        home_pr += 0.5
+    rating_diff = home_pr - away_pr
+    return round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
+
+def simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics):
+    teams = [team_a, team_b, team_c, team_d]
+    r = {team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].iloc[0] for team in teams}
+
+    w1, l1 = (team_a, team_d) if random.random() < PEAR_Win_Prob(r[team_a], r[team_d]) / 100 else (team_d, team_a)
+    w2, l2 = (team_b, team_c) if random.random() < PEAR_Win_Prob(r[team_b], r[team_c]) / 100 else (team_c, team_b)
+    w3 = l2 if random.random() < PEAR_Win_Prob(r[l2], r[l1]) / 100 else l1
+    w4, l4 = (w1, w2) if random.random() < PEAR_Win_Prob(r[w1], r[w2]) / 100 else (w2, w1)
+    w5 = l4 if random.random() < PEAR_Win_Prob(r[l4], r[w3]) / 100 else w3
+    game6_prob = PEAR_Win_Prob(r[w4], r[w5]) / 100
+    w6 = w4 if random.random() < game6_prob else w5
+
+    return w6 if w6 == w4 else (w4 if random.random() < game6_prob else w5)
+
+def run_simulation(team_a, team_b, team_c, team_d, stats_and_metrics, num_simulations=1000):
+    results = defaultdict(int)
+
+    for _ in range(num_simulations):
+        winner = simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics)
+        results[winner] += 1
+
+    # Sort and format results
+    sorted_results = sorted(results.items(), key=lambda x: x[1], reverse=True)
+    
+    # Return a defaultdict to maintain the same structure
+    formatted_results = defaultdict(float, {team: round(wins / num_simulations, 3) for team, wins in sorted_results})
+    
+    return formatted_results
+
+def simulate_regional(team_a, team_b, team_c, team_d, stats_and_metrics):
+
+    team_a, team_b, team_c, team_d = "Arkansas", "Duke", "Northeastern", "Missouri St."
+    output = run_simulation(team_a, team_b, team_c, team_d, stats_and_metrics)
+    regional_prob = pd.DataFrame(list(output.items()), columns=["Team", "Win Regional"])
+    seed_map = {
+        team_a: "#1 " + team_a,
+        team_b: "#2 " + team_b,
+        team_c: "#3 " + team_c,
+        team_d: "#4 " + team_d,
+    }
+    regional_prob["Team"] = regional_prob["Team"].map(seed_map)
+    regional_prob['Win Regional'] = regional_prob['Win Regional'] * 100
+
+    # Normalize values for color gradient (excluding 0 values)
+    min_value = regional_prob.iloc[:, 1:].replace(0, np.nan).min().min()  # Min of all probabilities
+    max_value = regional_prob.iloc[:, 1:].max().max()  # Max of all probabilities
+
+    def normalize(value, min_val, max_val):
+        """ Normalize values between 0 and 1 for colormap. """
+        if pd.isna(value) or value == 0:
+            return 0  # Keep 0 values at the lowest color
+        return (value - min_val) / (max_val - min_val)
+
+    # Define custom colormap (lighter green to dark green)
+    cmap = LinearSegmentedColormap.from_list('custom_green', ['#d5f5e3', '#006400'])
+
+    # Create figure and axis
+    fig, ax = plt.subplots(figsize=(4, 4), dpi=125)
+    fig.patch.set_facecolor('#CECEB2')
+
+    ax.axis('tight')
+    ax.axis('off')
+
+    # Add the table
+    table = ax.table(
+        cellText=regional_prob.values,
+        colLabels=regional_prob.columns,
+        cellLoc='center',
+        loc='center',
+        colColours=['#CECEB2'] * len(regional_prob.columns)  # Set the header background color
+    )
+    for (i, j), cell in table.get_celld().items():
+        cell.set_edgecolor('black')
+        cell.set_linewidth(1.2)
+        if i == 0:
+            cell.set_facecolor('#CECEB2')  
+            cell.set_text_props(fontsize=14, weight='bold', color='black')
+        elif j == 0:
+            cell.set_facecolor('#CECEB2')
+            cell.set_text_props(fontsize=14, weight='bold', color='black')
+
+        else:
+            value = regional_prob.iloc[i-1, j]  # Skip header row
+            normalized_value = normalize(value, min_value, max_value)
+            color = cmap(normalized_value)
+            cell.set_facecolor(color)
+            cell.set_text_props(fontsize=14, weight='bold', color='black')
+            if value == 0:
+                cell.get_text().set_text("<1%")
+            else:
+                cell.get_text().set_text(f"{value:.1f}%")
+
+        cell.set_height(0.2)
+
+    # Show the plot
+    plt.text(0, 0.07, f'{team_a} Regional', fontsize=16, fontweight='bold', ha='center')
+    plt.text(0, 0.06, f"@PEARatings", fontsize=12, fontweight='bold', ha='center')
+    return fig
 
 st.title(f"{current_season} CBASE PEAR")
 st.logo("./PEAR/pear_logo.jpg", size = 'large')
@@ -1326,6 +1432,17 @@ with st.form(key='conference_team_sheets'):
         st.pyplot(fig)
 
 st.divider()
+
+st.markdown(f'<h2 id="simulate-regional">Simulate Regional</h2>', unsafe_allow_html=True)
+with st.form(key='simulate_regional'):
+    team_a = st.selectbox("1 Seed", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+    team_b = st.selectbox("2 Seed", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+    team_c = st.selectbox("3 Seed", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+    team_d = st.selectbox("4 Seed", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+    sim_region = st.form_submit_button("Simulate Regional")
+    if sim_region:
+        fig = simulate_regional(team_a, team_b, team_c, team_d, modeling_stats)
+        st.pyplot(fig)
 
 comparison_date = comparison_date.strftime("%B %d, %Y")
 st.subheader(f"{comparison_date} Games")
