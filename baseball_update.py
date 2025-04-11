@@ -2284,7 +2284,8 @@ if now.hour < 13 and now.hour > 7:
 
     cmap = LinearSegmentedColormap.from_list('custom_green', ['#d5f5e3', '#006400'])
 
-    for idx in range(16):
+    custom_order = [0, 15, 4, 11, 1, 14, 5, 10, 2, 13, 6, 9, 3, 12, 7, 8]
+    for plot_idx, idx in enumerate(custom_order):
         teams = list(formatted_df.iloc[idx, 1:5])
         sim_results = run_simulation(teams, stats_and_metrics)
 
@@ -2298,7 +2299,7 @@ if now.hour < 13 and now.hour > 7:
         win_vals = regional_prob["Win"].values
         norm_vals = normalize_array(win_vals)
 
-        ax = axes[idx]
+        ax = axes[plot_idx]
         ax.axis('tight')
         ax.axis('off')
 
