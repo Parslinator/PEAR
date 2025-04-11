@@ -1311,6 +1311,7 @@ st.sidebar.markdown("""
     <a class="nav-link" href="#team-schedule">Team Schedule</a>
     <a class="nav-link" href="#team-percentiles">Team Percentiles</a>
     <a class="nav-link" href="#conference-team-sheets">Conference Team Sheets</a>
+    <a class="nav-link" href="#simulate-regional">Simulate Regional</a>
 """, unsafe_allow_html=True)
 
 st.divider()
