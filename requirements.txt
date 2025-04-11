@@ -14,5 +14,3 @@ beautifulsoup4
 requests
 tqdm
 plottable
-collections
-random
