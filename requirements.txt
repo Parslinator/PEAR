@@ -1,6 +1,6 @@
 cfbd==4.5.2
 openpyxl
-streamlit==1.44.0
+streamlit
 pandas
 numpy
 altair
