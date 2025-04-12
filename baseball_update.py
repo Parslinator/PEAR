@@ -770,8 +770,30 @@ remaining_games = schedule_df[schedule_df["Date"] > comparison_date].reset_index
 
 def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 1.5
-schedule_df['elo_win_prob'] = round((10**((schedule_df['home_elo'] - schedule_df['away_elo']) / 400)) / ((10**((schedule_df['home_elo'] - schedule_df['away_elo']) / 400)) + 1)*100,2)
-schedule_df['Spread'] = ((schedule_df['home_rating'] + schedule_df.apply(lambda row: 0.5 if row['Location'] != "Neutral" else 0, axis=1)) + schedule_df['elo_win_prob'].apply(adjust_home_pr) - schedule_df['away_rating']).round(2)
+
+def calculate_spread_from_stats(home_pr, away_pr, home_elo, away_elo, location):
+    if location != "Neutral":
+        home_pr += 0.5
+    elo_win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1) * 100, 2)
+    spread = round(adjust_home_pr(elo_win_prob) + home_pr - away_pr, 2)
+    return spread, elo_win_prob
+
+schedule_df['Spread'] = schedule_df.apply(
+    lambda row: calculate_spread_from_stats(
+        row['home_rating'], row['away_rating'],
+        row['home_elo'], row['away_elo'],
+        row['Location']
+    )[0],  # Only take the spread
+    axis=1
+)
+schedule_df['elo_win_prob'] = schedule_df.apply(
+    lambda row: calculate_spread_from_stats(
+        row['home_rating'], row['away_rating'],
+        row['home_elo'], row['away_elo'],
+        row['Location']
+    )[1],  # Only take the win prob
+    axis=1
+)
 schedule_df['PEAR'] = schedule_df.apply(
     lambda row: f"{row['away_team']} {-abs(row['Spread'])}" if ((row['Spread'] <= 0)) 
     else f"{row['home_team']} {-abs(row['Spread'])}", axis=1)
