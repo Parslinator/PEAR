@@ -1126,55 +1126,68 @@ def conference_team_sheets(this_conference, stats_and_metrics):
 def get_conference(team, stats_df):
     return stats_df.loc[stats_df["Team"] == team, "Conference"].values[0]
 
-def has_conflict(row, stats_df):
-    teams = [row[col] for col in ["1 Seed", "2 Seed", "3 Seed", "4 Seed"]]
+def is_valid_regional(teams, stats_df):
     conferences = [get_conference(team, stats_df) for team in teams]
-    return len(conferences) != len(set(conferences))  # True if there's a conflict
-
-def find_conflicting_teams(row, stats_df):
-    teams = [row[col] for col in ["1 Seed", "2 Seed", "3 Seed", "4 Seed"]]
-    confs = [get_conference(team, stats_df) for team in teams]
-    seen = set()
-    dupes = set()
-    for i, c in enumerate(confs):
-        if c in seen:
-            dupes.add(c)
-        else:
-            seen.add(c)
-    # Return teams involved in the conflict (excluding 1 Seed)
-    return [team for team in teams[1:] if get_conference(team, stats_df) in dupes]
+    return len(set(conferences)) == len(conferences)
 
 def resolve_conflicts(formatted_df, stats_df):
     seed_cols = ["2 Seed", "3 Seed", "4 Seed"]
 
     for seed_col in seed_cols:
-        for idx, row in formatted_df.iterrows():
-            original_team = row[seed_col]
-            regional_teams = [row[col] for col in ["1 Seed", "2 Seed", "3 Seed", "4 Seed"]]
-            regional_confs = [get_conference(t, stats_df) for t in regional_teams]
+        num_regionals = len(formatted_df)
 
-            if regional_confs.count(get_conference(original_team, stats_df)) > 1:
-                # Conflict exists; attempt to swap
-                for alt_idx in formatted_df.index:
-                    if alt_idx == idx:
+        for i in range(num_regionals):
+            current_row = formatted_df.loc[i]
+            current_regional = [
+                current_row["1 Seed"],
+                current_row["2 Seed"],
+                current_row["3 Seed"],
+                current_row["4 Seed"]
+            ]
+
+            if not is_valid_regional(current_regional, stats_df):
+                # Only consider the seed we're allowed to move
+                problem_team = current_row[seed_col]
+                problem_team_conf = get_conference(problem_team, stats_df)
+
+                # Try swapping with another team of same seed
+                closest_distance = float("inf")
+                best_swap_index = None
+
+                for j in range(num_regionals):
+                    if i == j:
                         continue
-                    alt_team = formatted_df.at[alt_idx, seed_col]
-                    alt_row = formatted_df.loc[alt_idx]
-                    
-                    # Check if swapping removes conflicts for both rows
-                    test_row_1 = regional_teams.copy()
-                    test_row_1[seed_cols.index(seed_col)+1] = alt_team
-                    test_confs_1 = [get_conference(t, stats_df) for t in test_row_1]
 
-                    test_row_2 = [alt_row[col] for col in ["1 Seed", "2 Seed", "3 Seed", "4 Seed"]]
-                    test_row_2[seed_cols.index(seed_col)+1] = original_team
-                    test_confs_2 = [get_conference(t, stats_df) for t in test_row_2]
+                    candidate_team = formatted_df.at[j, seed_col]
 
-                    if len(set(test_confs_1)) == 4 and len(set(test_confs_2)) == 4:
-                        # Perform swap
-                        formatted_df.at[idx, seed_col] = alt_team
-                        formatted_df.at[alt_idx, seed_col] = original_team
-                        break
+                    # Try the swap
+                    temp_i_row = current_regional.copy()
+                    temp_j_row = [
+                        formatted_df.at[j, "1 Seed"],
+                        formatted_df.at[j, "2 Seed"],
+                        formatted_df.at[j, "3 Seed"],
+                        formatted_df.at[j, "4 Seed"]
+                    ]
+
+                    # Swap in temp rows
+                    temp_i_row[seed_cols.index(seed_col)+1] = candidate_team
+                    temp_j_row[seed_cols.index(seed_col)+1] = problem_team
+
+                    if (
+                        is_valid_regional(temp_i_row, stats_df)
+                        and is_valid_regional(temp_j_row, stats_df)
+                    ):
+                        # Valid swap — prefer closer regionals
+                        if abs(j - i) < closest_distance:
+                            best_swap_index = j
+                            closest_distance = abs(j - i)
+
+                # If a valid swap was found, perform it
+                if best_swap_index is not None:
+                    swap_team = formatted_df.at[best_swap_index, seed_col]
+                    formatted_df.at[i, seed_col] = swap_team
+                    formatted_df.at[best_swap_index, seed_col] = problem_team
+
     return formatted_df
 
 def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
