@@ -131,8 +131,6 @@ date_files = {extract_date(f): f for f in csv_files if extract_date(f) is not No
 if date_files:
     latest_date = max(date_files.keys())  # Get the most recent date
     latest_file = date_files[latest_date]
-    st.caption(latest_date)
-    st.caption(latest_file)
 
     # Read the selected CSV file
     file_path = os.path.join(folder_path, latest_file)
@@ -166,18 +164,15 @@ def find_spread(home_team, away_team, location = "Neutral"):
         return f"{away_team} {spread}"
     
 def find_spread_matchup(home_team, away_team, modeling_stats, location="Neutral"):
-    default_pr = modeling_stats['Rating'].mean() - 1.75 * modeling_stats['Rating'].std()
-    default_elo = 1200
-
     home_pr = modeling_stats.loc[modeling_stats['Team'] == home_team, 'Rating']
     away_pr = modeling_stats.loc[modeling_stats['Team'] == away_team, 'Rating']
     home_elo = modeling_stats.loc[modeling_stats['Team'] == home_team, 'ELO']
     away_elo = modeling_stats.loc[modeling_stats['Team'] == away_team, 'ELO']
 
-    home_pr = home_pr.iloc[0] if not home_pr.empty else default_pr
-    away_pr = away_pr.iloc[0] if not away_pr.empty else default_pr
-    home_elo = home_elo.iloc[0] if not home_elo.empty else default_elo
-    away_elo = away_elo.iloc[0] if not away_elo.empty else default_elo
+    home_pr = home_pr.iloc[0]
+    away_pr = away_pr.iloc[0]
+    home_elo = home_elo.iloc[0]
+    away_elo = away_elo.iloc[0]
 
     spread, elo_win_prob = calculate_spread_from_stats(home_pr, away_pr, home_elo, away_elo, location)
     rating_diff = home_pr - away_pr
