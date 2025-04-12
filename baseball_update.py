@@ -136,6 +136,7 @@ if table:
     elo_data = elo_data.astype({col: 'str' for col in elo_data.columns if col not in ['ELO', 'Rank']})
     elo_data['ELO'] = elo_data['ELO'].astype(float, errors='ignore')
     elo_data['Rank'] = elo_data['Rank'].astype(int, errors='ignore')
+    elo_data.rename(columns={'Rank': 'ELO_Rank'}, inplace=True)
 
 else:
     print("Table not found on the page.")
