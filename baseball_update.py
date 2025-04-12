@@ -93,35 +93,52 @@ live_rpi = scrape_warrennolan_table(
 )
 
 # --- ELO Ratings ---
-elo_url = 'https://www.warrennolan.com/baseball/2025/elo'
-elo_soup = get_soup(elo_url)
-elo_table = elo_soup.find('table', class_='normal-grid alternating-rows stats-table')
+url = 'https://www.warrennolan.com/baseball/2025/elo'
 
-if elo_table:
-    headers = [th.text.strip() for th in elo_table.find('thead').find_all('th')]
-    headers.insert(1, "Team Link")
+# Fetch the webpage content
+response = requests.get(url)
+soup = BeautifulSoup(response.text, 'html.parser')
+
+# Find the table with the specified class
+table = soup.find('table', class_='normal-grid alternating-rows stats-table')
+
+if table:
+    # Extract table headers
+    headers = [th.text.strip() for th in table.find('thead').find_all('th')]
+    headers.insert(1, "Team Link")  # Adding extra column for team link
+
+    # Extract table rows
     data = []
-    for row in elo_table.find('tbody').find_all('tr'):
+    for row in table.find('tbody').find_all('tr'):
         cells = row.find_all('td')
         row_data = []
         for i, cell in enumerate(cells):
+            # If it's the first cell, extract team name and link from 'name-subcontainer'
             if i == 0:
                 name_container = cell.find('div', class_='name-subcontainer')
-                team_name = name_container.text.strip() if name_container else cell.text.strip()
-                team_link = name_container.find('a')['href'] if name_container and name_container.find('a') else ''
-                row_data.extend([team_name, team_link])
+                if name_container:
+                    team_name = name_container.text.strip()
+                    team_link_tag = name_container.find('a')
+                    team_link = team_link_tag['href'] if team_link_tag else ''
+                else:
+                    team_name = cell.text.strip()
+                    team_link = ''
+                row_data.append(team_name)
+                row_data.append(team_link)  # Add team link separately
             else:
                 row_data.append(cell.text.strip())
         data.append(row_data)
 
-    elo_data = pd.DataFrame(data, columns=headers)
+
+    elo_data = pd.DataFrame(data, columns=[headers])
+    elo_data.columns = elo_data.columns.get_level_values(0)
     elo_data = elo_data.drop_duplicates(subset='Team', keep='first')
-    elo_data['ELO'] = pd.to_numeric(elo_data['ELO'], errors='coerce')
-    elo_data['Rank'] = pd.to_numeric(elo_data['Rank'], errors='coerce')
-    elo_data.rename(columns={'Rank': 'ELO_Rank'}, inplace=True)
+    elo_data = elo_data.astype({col: 'str' for col in elo_data.columns if col not in ['ELO', 'Rank']})
+    elo_data['ELO'] = elo_data['ELO'].astype(float, errors='ignore')
+    elo_data['Rank'] = elo_data['Rank'].astype(int, errors='ignore')
+
 else:
-    print("ELO table not found.")
-    elo_data = pd.DataFrame()
+    print("Table not found on the page.")
 
 # --- Team Name Replacements ---
 team_replacements = {
