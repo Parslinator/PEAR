@@ -130,6 +130,7 @@ date_files = {extract_date(f): f for f in csv_files if extract_date(f) is not No
 # Find the latest date
 if date_files:
     latest_date = max(date_files.keys())  # Get the most recent date
+    st.caption(latest_date)
     latest_file = date_files[latest_date]
 
     # Read the selected CSV file
