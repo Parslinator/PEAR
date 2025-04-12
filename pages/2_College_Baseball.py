@@ -173,6 +173,7 @@ def find_spread_matchup(home_team, away_team, modeling_stats, location="Neutral"
     away_pr = away_pr.iloc[0]
     home_elo = home_elo.iloc[0]
     away_elo = away_elo.iloc[0]
+    st.write(f"Home PR: {home_pr}, Away PR: {away_pr}, Home ELO: {home_elo}, Away ELO: {away_elo}")
 
     spread, elo_win_prob = calculate_spread_from_stats(home_pr, away_pr, home_elo, away_elo, location)
     rating_diff = home_pr - away_pr
