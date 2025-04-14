@@ -1532,9 +1532,11 @@ if now.hour < 13 and now.hour > 7:
     def get_conference(team, stats_df):
         return stats_df.loc[stats_df["Team"] == team, "Conference"].values[0]
 
-    def is_valid_regional(teams, stats_df):
+    from collections import Counter
+
+    def count_conflict_conferences(teams, stats_df):
         conferences = [get_conference(team, stats_df) for team in teams]
-        return len(set(conferences)) == len(conferences)
+        return sum(count - 1 for count in Counter(conferences).values() if count > 1)
 
     def resolve_conflicts(formatted_df, stats_df):
         seed_cols = ["2 Seed", "3 Seed", "4 Seed"]
@@ -1543,56 +1545,41 @@ if now.hour < 13 and now.hour > 7:
             num_regionals = len(formatted_df)
 
             for i in range(num_regionals):
-                current_row = formatted_df.loc[i]
-                current_regional = [
-                    current_row["1 Seed"],
-                    current_row["2 Seed"],
-                    current_row["3 Seed"],
-                    current_row["4 Seed"]
-                ]
+                row = formatted_df.loc[i]
+                teams_i = [row["1 Seed"], row["2 Seed"], row["3 Seed"], row["4 Seed"]]
+                conflict_i = count_conflict_conferences(teams_i, stats_df)
 
-                if not is_valid_regional(current_regional, stats_df):
-                    # Only consider the seed we're allowed to move
-                    problem_team = current_row[seed_col]
-                    problem_team_conf = get_conference(problem_team, stats_df)
+                if conflict_i == 0:
+                    continue  # No conflict to resolve in this regional
 
-                    # Try swapping with another team of same seed
-                    closest_distance = float("inf")
-                    best_swap_index = None
+                current_team = row[seed_col]
 
-                    for j in range(num_regionals):
-                        if i == j:
-                            continue
+                for j in range(num_regionals):
+                    if i == j:
+                        continue
 
-                        candidate_team = formatted_df.at[j, seed_col]
+                    alt_team = formatted_df.at[j, seed_col]
+                    if alt_team == current_team:
+                        continue
 
-                        # Try the swap
-                        temp_i_row = current_regional.copy()
-                        temp_j_row = [
-                            formatted_df.at[j, "1 Seed"],
-                            formatted_df.at[j, "2 Seed"],
-                            formatted_df.at[j, "3 Seed"],
-                            formatted_df.at[j, "4 Seed"]
-                        ]
+                    # Simulate swap
+                    row_j = formatted_df.loc[j]
+                    teams_j = [row_j["1 Seed"], row_j["2 Seed"], row_j["3 Seed"], row_j["4 Seed"]]
 
-                        # Swap in temp rows
-                        temp_i_row[seed_cols.index(seed_col)+1] = candidate_team
-                        temp_j_row[seed_cols.index(seed_col)+1] = problem_team
+                    # Apply the swap in test copies
+                    temp_i = teams_i.copy()
+                    temp_j = teams_j.copy()
+                    temp_i[seed_cols.index(seed_col) + 1] = alt_team
+                    temp_j[seed_cols.index(seed_col) + 1] = current_team
 
-                        if (
-                            is_valid_regional(temp_i_row, stats_df)
-                            and is_valid_regional(temp_j_row, stats_df)
-                        ):
-                            # Valid swap — prefer closer regionals
-                            if abs(j - i) < closest_distance:
-                                best_swap_index = j
-                                closest_distance = abs(j - i)
+                    new_conflict_i = count_conflict_conferences(temp_i, stats_df)
+                    new_conflict_j = count_conflict_conferences(temp_j, stats_df)
 
-                    # If a valid swap was found, perform it
-                    if best_swap_index is not None:
-                        swap_team = formatted_df.at[best_swap_index, seed_col]
-                        formatted_df.at[i, seed_col] = swap_team
-                        formatted_df.at[best_swap_index, seed_col] = problem_team
+                    # Only make swap if it reduces total conflicts
+                    if (new_conflict_i + new_conflict_j) < (conflict_i + count_conflict_conferences(teams_j, stats_df)):
+                        formatted_df.at[i, seed_col] = alt_team
+                        formatted_df.at[j, seed_col] = current_team
+                        break  # Exit swap loop once we reduce conflict
 
         return formatted_df
     
