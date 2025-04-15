@@ -175,7 +175,10 @@ def find_spread_matchup(home_team, away_team, modeling_stats, location="Neutral"
     away_elo = away_elo.iloc[0]
 
     spread, elo_win_prob = calculate_spread_from_stats(home_pr, away_pr, home_elo, away_elo, location)
-    rating_diff = home_pr - away_pr
+    if location != "Neutral":
+        rating_diff = home_pr + 0.5 - away_pr
+    else:
+        rating_diff = home_pr - away_pr
     win_prob = round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
 
     if spread >= 0:
