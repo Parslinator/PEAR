@@ -1326,8 +1326,9 @@ st.caption("Updated when page updates. Weekly rankings are taken Monday at 11 AM
 modeling_stats_copy = modeling_stats.copy()
 modeling_stats_copy.set_index("Team", inplace=True)
 modeling_stats_copy['TSR'] = modeling_stats_copy['PRR']
+modeling_stats_copy['ELO'] = modeling_stats_copy['ELO_Rank']
 with st.container(border=True, height=440):
-    st.dataframe(modeling_stats_copy[['NET', 'RPI', 'TSR', 'RQI', 'SOS', 'RemSOS', 'Q1', 'Q2', 'Q3', 'Q4', 'Conference']], use_container_width=True)
+    st.dataframe(modeling_stats_copy[['NET', 'RPI', 'ELO', 'TSR', 'RQI', 'SOS', 'RemSOS', 'Q1', 'Q2', 'Q3', 'Q4', 'Conference']], use_container_width=True)
 st.caption("NET - Mimicing the NCAA Evaluation Tool using TSR, RQI, SOS")
 st.caption("RPI - Warren Nolan's Live RPI, TSR - Team Strength Rank, RQI - Resume Quality Index, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
 
