@@ -566,11 +566,7 @@ modeling_stats['Rating'] = round(modeling_stats['Rating'] - modeling_stats['Rati
 modeling_stats['Rating'] = round(modeling_stats['Rating'], 2)
 
 ending_data = pd.merge(baseball_stats, modeling_stats[['Team', 'Rating']], on="Team", how="inner").sort_values('Rating', ascending=False).reset_index(drop=True)
-# ending_data = ending_data.drop(columns=['SOR', 'SOS'])
 ending_data.index = ending_data.index + 1
-# ending_data[['Wins', 'Losses']] = ending_data['Rec'].str.split('-', expand=True).astype(int)
-# ending_data['WIN%'] = round(ending_data['Wins'] / (ending_data['Wins'] + ending_data['Losses']), 3)
-# ending_data['Wins_Over_Pythag'] = ending_data['WIN%'] - ending_data['PYTHAG']
 
 import requests # type: ignore
 from bs4 import BeautifulSoup # type: ignore
