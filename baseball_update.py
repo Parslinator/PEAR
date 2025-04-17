@@ -480,75 +480,83 @@ rpi_2024 = pd.read_csv("./PEAR/PEAR Baseball/rpi_end_2024.csv")
 
 modeling_stats = baseball_stats[['Team', 'HPG',
                 'BBPG', 'ERA', 'PCT', 
-                'KP9', 'WP9', 'OPS', 
-                'WHIP', 'PYTHAG', 'fWAR', 'oWAR_z', 'pWAR_z', 'K/BB', 'wRC+', 'LOB%', 'BB%', 'ELO_Rank']]
+                'KP9', 'WP9', 'OPS', 'BB%',
+                'WHIP', 'PYTHAG', 'fWAR', 'oWAR_z', 'pWAR_z', 'K/BB', 'wRC+', 'LOB%', 'wOBA', 'ELO_Rank']]
 modeling_stats = pd.merge(modeling_stats, rpi_2024[['Team', 'Rank']], on = 'Team', how='left')
 modeling_stats["Rank"] = modeling_stats["Rank"].apply(pd.to_numeric, errors='coerce')
 modeling_stats["ELO_Rank"] = modeling_stats["ELO_Rank"].apply(pd.to_numeric, errors='coerce')
 modeling_stats['Rank_pct'] = 1 - (modeling_stats['Rank'] - 1) / (len(modeling_stats) - 1)
-higher_better = ["HPG", "BBPG", "BB%", "PCT", "KP9", "OPS", "Rank_pct", 'PYTHAG', 'fWAR', 'oWAR_z', 'pWAR_z', 'K/BB', 'wRC+', 'LOB%']
+higher_better = ["HPG", "BBPG", "BB%", "PCT", "KP9", "OPS", "Rank_pct", 'PYTHAG', 'fWAR', 'oWAR_z', 'pWAR_z', 'K/BB', 'wRC+', 'LOB%', 'wOBA']
 lower_better = ["ERA", "WP9", "WHIP"]
 scaler = MinMaxScaler(feature_range=(1, 100))
 modeling_stats[higher_better] = scaler.fit_transform(modeling_stats[higher_better])
 modeling_stats[lower_better] = scaler.fit_transform(-modeling_stats[lower_better])
-weights = {
-    'fWAR': .40, 'PYTHAG': .30, 'K/BB': .10, 'wRC+': .15, 'LOB%': .05
-}
-modeling_stats['in_house_pr'] = sum(modeling_stats[stat] * weight for stat, weight in weights.items())
-
-modeling_stats['in_house_pr'] = modeling_stats['in_house_pr'] - modeling_stats['in_house_pr'].mean()
-current_range = modeling_stats['in_house_pr'].max() - modeling_stats['in_house_pr'].min()
-desired_range = 100
-scaling_factor = desired_range / current_range
-modeling_stats['in_house_pr'] = round(modeling_stats['in_house_pr'] * scaling_factor, 4)
-modeling_stats['in_house_pr'] = modeling_stats['in_house_pr'] - modeling_stats['in_house_pr'].min()
-
-import pandas as pd
-import numpy as np
-import pandas as pd
-from scipy.optimize import minimize
 import numpy as np
 from scipy.optimize import differential_evolution
-from tqdm import tqdm
+from scipy.stats import spearmanr
 
-def objective_function(weights):
-    (w_owar, w_pwar, w_kbb, w_wrc, w_pythag, w_fwar, w_lob, w_bb, w_in_house_pr) = weights
+# Available features
+features_all = ["BB%", "PCT", "OPS", 'PYTHAG', 'fWAR', 'K/BB', 'wRC+', 'LOB%', "ERA", "WHIP", "wOBA", "Rank_pct"]
+
+# Target variable
+target = modeling_stats['ELO_Rank'].values
+
+# --- SPEARMAN OBJECTIVE FUNCTION ---
+def spearman_objective(weights_raw):
+    # First half: binary values for feature selection (0 or 1)
+    feature_selection = np.array(weights_raw[:len(features_all)])
+    # Second half: continuous values for weights
+    weights = np.array(weights_raw[len(features_all):])
     
-    modeling_stats['power_ranking'] = (
-        w_fwar * modeling_stats['fWAR'] +
-        w_owar * modeling_stats['oWAR_z'] +
-        w_pwar * modeling_stats['pWAR_z'] +
-        w_pythag * modeling_stats['PYTHAG'] + 
-        w_kbb * modeling_stats['K/BB'] +
-        w_wrc * modeling_stats['wRC+'] +
-        w_lob * modeling_stats['LOB%'] +
-        w_bb * modeling_stats['BB%'] +
-        w_in_house_pr * modeling_stats['in_house_pr'] +
-        0.025 * modeling_stats['Rank_pct']
+    # Ensure the weights sum to 1 for the selected features
+    selected_features = [features_all[i] for i in range(len(features_all)) if feature_selection[i] > 0.5]
+    
+    if len(selected_features) == 0:
+        return 1  # Return high value (bad result) if no features are selected
+    
+    weights /= np.sum(weights)  # Normalize weights to sum to 1
+    
+    # Compute weighted sum of the selected features
+    combined = sum(w * modeling_stats[feat] for w, feat in zip(weights, selected_features))
+    ranks = combined.rank(ascending=False)
+    
+    # Calculate Spearman correlation
+    corr, _ = spearmanr(ranks, target)
+    return -corr  # Negative because we are minimizing
+
+# --- RUNNING DIFFERENTIAL EVOLUTION ---
+def run_differential_evolution():
+    bounds = [(0, 1)] * len(features_all) + [(0, 1)] * len(features_all)  # binary for selection + continuous for weights
+    result = differential_evolution(
+        spearman_objective, 
+        bounds=bounds, 
+        strategy='best1bin', 
+        maxiter=1000, 
+        polish=True,
+        seed=42
     )
+    
+    # Extract the binary selections and weights
+    feature_selection = np.array(result.x[:len(features_all)]) > 0.5
+    weights = np.array(result.x[len(features_all):])
+    weights /= np.sum(weights)  # Normalize weights
+    
+    selected_features = [features_all[i] for i in range(len(features_all)) if feature_selection[i]]
+    return selected_features, weights, -result.fun
 
-    modeling_stats['calculated_rank'] = modeling_stats['power_ranking'].rank(ascending=False)
-    modeling_stats['combined_rank'] = (
-        modeling_stats['ELO_Rank']
-    )
-    spearman_corr = modeling_stats[['calculated_rank', 'combined_rank']].corr(method='spearman').iloc[0,1]
+# --- GETTING BEST FEATURES, WEIGHTS AND SPEARMAN ---
+selected_features, best_weights, best_spearman = run_differential_evolution()
 
-    return -spearman_corr
-
-bounds = [(0,1),
-          (0,1),
-          (0,1),
-          (0,1),
-          (0,1),
-          (0,1),
-          (0,1),
-          (0,1),
-          (0,1)]
-result = differential_evolution(objective_function, bounds, strategy='best1bin', maxiter=500, tol=1e-4, seed=42)
-optimized_weights = result.x
-modeling_stats = modeling_stats.sort_values('power_ranking', ascending=False).reset_index(drop=True)
-
-modeling_stats['Rating'] = modeling_stats['power_ranking'] - modeling_stats['power_ranking'].mean()
+# --- OUTPUT ---
+feature_weights_dict = dict(zip(selected_features, best_weights))
+sorted_features_weights = sorted(feature_weights_dict.items(), key=lambda item: item[1], reverse=True)
+print("Selected Features:")
+for feature, weight in sorted_features_weights:
+    print(f"{feature}: {weight}")
+modeling_stats['in_house_pr'] = sum(
+    modeling_stats[feat] * weight for feat, weight in zip(selected_features, best_weights)
+)
+modeling_stats['Rating'] = modeling_stats['in_house_pr'] - modeling_stats['in_house_pr'].mean()
 current_range = modeling_stats['Rating'].max() - modeling_stats['Rating'].min()
 desired_range = 15
 scaling_factor = desired_range / current_range
