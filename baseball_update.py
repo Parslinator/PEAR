@@ -1081,6 +1081,7 @@ print("------------------------")
 print(f"Rating: {optimized_weights[0]}")
 print(f"RQI: {1 - (optimized_weights[0] + optimized_weights[1])}")
 print(f"SOS: {optimized_weights[1]}")
+print(f"NET and RPI Correlation: {stats_and_metrics[['NET', 'RPI']].corr(method='spearman').iloc[0,1]}")
 adj_sos_weight = (optimized_weights[1]) / ((1 - (optimized_weights[0] + optimized_weights[1])) + (optimized_weights[1]))
 adj_rqi_weight = (1 - (optimized_weights[0] + optimized_weights[1])) / ((1 - (optimized_weights[0] + optimized_weights[1])) + (optimized_weights[1]))
 stats_and_metrics['Norm_Resume'] = adj_rqi_weight * stats_and_metrics['Norm_RQI'] + adj_sos_weight * stats_and_metrics['Norm_SOS']
@@ -1362,6 +1363,7 @@ now = datetime.datetime.now(central_time_zone)
 
 # Check if it's Monday and after 10:00 AM and before 3:00 PM
 if now.hour < 13 and now.hour > 7:
+    print("Starting Visuals")
     from bs4 import BeautifulSoup # type: ignore
     import pandas as pd # type: ignore
     import requests # type: ignore
@@ -1445,7 +1447,6 @@ if now.hour < 13 and now.hour > 7:
         sorted_df=stats_and_metrics.head(25),
         save_path=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/NET/net_{formatted_date}.png"
     )
-    print("NET Done")
 
     plot_top_25(
         title=f"Week {current_week} CBASE Resume Quality",
@@ -1453,7 +1454,6 @@ if now.hour < 13 and now.hour > 7:
         sorted_df=stats_and_metrics.sort_values('RQI'),
         save_path=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/RQI/rqi_{formatted_date}.png"
     )
-    print("RQI Done")
 
     plot_top_25(
         title=f"Week {current_week} CBASE Team Strength",
@@ -1461,7 +1461,6 @@ if now.hour < 13 and now.hour > 7:
         sorted_df=stats_and_metrics.sort_values('PRR'),
         save_path=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/PRR/prr_{formatted_date}.png"
     )
-    print("PRR Done")
 
     plot_top_25(
         title=f"Week {current_week} CBASE RPI",
@@ -1469,7 +1468,6 @@ if now.hour < 13 and now.hour > 7:
         sorted_df=stats_and_metrics.sort_values('RPI'),
         save_path=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/RPI/rpi_{formatted_date}.png"
     )
-    print("RPI Done")
 
     plot_top_25(
         title=f"Week {current_week} Mid-Major CBASE PEAR",
@@ -1477,7 +1475,6 @@ if now.hour < 13 and now.hour > 7:
         sorted_df=stats_and_metrics[~stats_and_metrics['Conference'].isin(major_conferences)],
         save_path=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Mid_Major/mid_major_{formatted_date}.png"
     )
-    print("Mid Major Done")
 
     # ---------------------------
     # Helper Functions
@@ -1651,7 +1648,6 @@ if now.hour < 13 and now.hour > 7:
     plt.grid(False)
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Ratings_vs_Resume/ratings_vs_resume_{formatted_date}.png", bbox_inches='tight')
     plt.close()
-    print("Ratings vs Resume Done")
 
     # ---------------------------
     # Bubble Distance Bar Plot
@@ -1665,7 +1661,6 @@ if now.hour < 13 and now.hour > 7:
         filename=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Team_In/last_team_in_{formatted_date}.png",
         reference_score=last_net_score
     )
-    print("Last Team In Done")
 
     # ---------------------------
     # Hosting Distance Bar Plot
@@ -1679,7 +1674,6 @@ if now.hour < 13 and now.hour > 7:
         filename=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Host/last_host_{formatted_date}.png",
         reference_score=last_host_score
     )
-    print("Last Host Seed Done")
 
     automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
     at_large = stats_and_metrics.drop(automatic_qualifiers.index)
@@ -1764,7 +1758,6 @@ if now.hour < 13 and now.hour > 7:
         plt.figtext(0.13, y_position, line, ha='left', fontsize=14)
         y_position += vertical_spacing
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Tournament/tournament_{formatted_date}.png", bbox_inches='tight')
-    print('Tournament Done')
 
     automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["Projected_NET"].idxmin()]
     at_large = stats_and_metrics.drop(automatic_qualifiers.index)
@@ -1849,7 +1842,6 @@ if now.hour < 13 and now.hour > 7:
         plt.figtext(0.13, y_position, line, ha='left', fontsize=14)
         y_position += vertical_spacing
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Projected_Tournament/proj_tournament_{formatted_date}.png", bbox_inches='tight')
-    print('Projected Tournament Done')
 
     from matplotlib.ticker import MaxNLocator
     def net_tracker(X, Y):
@@ -2388,3 +2380,4 @@ if now.hour < 13 and now.hour > 7:
             ha='center', fontsize=16)
     fig.text(0.5, 0.91, "@PEARatings", ha='center', fontweight='bold', fontsize=16)
     plt.savefig(f"./PEAR/PEAR Baseball/y2025/Visuals/Regional_Win_Prob/regional_win_prob_{formatted_date}.png", bbox_inches='tight')
+    print("Visuals Completed")
