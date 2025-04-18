@@ -2,7 +2,6 @@ import streamlit as st # type: ignore
 import pandas as pd # type: ignore
 import cfbd # type: ignore
 import numpy as np # type: ignore
-import altair as alt # type: ignore
 import statistics # type: ignore
 from sklearn.preprocessing import MinMaxScaler # type: ignore
 import datetime # type: ignore
