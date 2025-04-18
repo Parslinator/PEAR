@@ -14,8 +14,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout only needed files
         uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/
+            requirements.txt
+            baseball_update.py
+            PEAR/trebuc.ttf
+            PEAR/Trebuchet MS Bold.ttf
+            PEAR Baseball/
+          sparse-checkout-cone-mode: true
+          fetch-depth: 1
 
       - name: Set up Python
         uses: actions/setup-python@v4
