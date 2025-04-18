@@ -23,7 +23,7 @@ jobs:
             baseball_update.py
             PEAR/trebuc.ttf
             PEAR/Trebuchet MS Bold.ttf
-            PEAR Baseball/
+            PEAR/PEAR Baseball
           sparse-checkout-cone-mode: true
           fetch-depth: 1
 
