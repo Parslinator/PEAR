@@ -1,12 +1,7 @@
 cfbd==4.5.2
 openpyxl
-streamlit
-pandas
-numpy
-altair
 scikit-learn
 matplotlib==3.9.2
-requests
 IPython
 seaborn
 beautifulsoup4
