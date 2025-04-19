@@ -488,154 +488,105 @@ team_data['in_house_pr'] = round(team_data['in_house_pr'] - team_data['in_house_
 ###############################################################################
 ###############################################################################
 
-pbar = tqdm(total=300, desc="Optimization Progress")
-def progress_callback(xk, convergence):
-    """Callback to update the progress bar after each iteration."""
-    pbar.update(1)
-    if convergence < 1e-4:  # Close bar if convergence is achieved early
-        pbar.close()
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+from scipy.optimize import differential_evolution
 
-######################################## SCALING THE EXTRA STATS #################################################
+# --- SETUP COLUMN GROUPS ---
+offensive_columns = ['Offense_success_rate', 'Offense_explosiveness', 'Offense_ppa','Offense_points_per_opportunity']
+defensive_columns = ['Defense_success_rate', 'Defense_explosiveness', 'Defense_ppa','Defense_points_per_opportunity']
+features_all = offensive_columns + defensive_columns + ['avg_talent', 'thirdDownConversionRate', 'total_turnovers', 'in_house_pr']
 
-offensive_columns = [
-    'Offense_success_rate', 'Offense_explosiveness', 'Offense_ppa', 'Offense_points_per_opportunity', 'Offense_field_position_average_predicted_points', 'Offense_power_success', 'Offense_stuff_rate'
-]
-defensive_columns = [
-    'Defense_success_rate', 'Defense_explosiveness', 'Defense_ppa', 'Defense_points_per_opportunity', 'Defense_field_position_average_predicted_points', 'Defense_power_success', 'Defense_stuff_rate'
-]
-other_columns = [
-    'avg_talent', 'sp_conf_rating', 'thirdDownConversionRate', 'total_turnovers', 'puntReturnTDs', 'kickReturnTDs', 'Defense_havoc_total', 'qb_average_ppa', 'qb_total_ppa'
-]
-
-# Function to scale columns between 1 and 100
+# --- SCALING FUNCTION ---
 def scale_columns(df, columns, reverse=False):
     scaler = MinMaxScaler(feature_range=(1, 100))
-    if reverse:
-        # For defensive stats, the lower value is better, so we reverse the scaling
-        scaled = scaler.fit_transform(-df[columns])
-    else:
-        scaled = scaler.fit_transform(df[columns])
+    data = -df[columns] if reverse else df[columns]
+    scaled = scaler.fit_transform(data)
     return pd.DataFrame(scaled, columns=columns)
 
-team_data[offensive_columns] = scale_columns(team_data, offensive_columns)
-team_data[defensive_columns] = scale_columns(team_data, defensive_columns, reverse=True)
-team_data[['avg_talent', 'sp_conf_rating']] = scale_columns(team_data, ['avg_talent', 'sp_conf_rating'])
-team_data[['thirdDownConversionRate']] = scale_columns(team_data, ['thirdDownConversionRate'])
-team_data[['fourthDownConversionRate']] = scale_columns(team_data, ['fourthDownConversionRate'])
-team_data[['total_turnovers']] = scale_columns(team_data, ['total_turnovers'], reverse=True)  # Lower turnovers are better
-team_data[['puntReturnTDs', 'kickReturnTDs']] = scale_columns(team_data, ['puntReturnTDs', 'kickReturnTDs'])
-team_data[['Defense_havoc_total']] = scale_columns(team_data, ['Defense_havoc_total'])
+# --- APPLY SCALING ---
+scaling_config = {
+    'offense': (offensive_columns, False),
+    'defense': (defensive_columns, True),
+    'talent': (['avg_talent'], False),
+    'third_down': (['thirdDownConversionRate'], False),
+    'fourth_down': (['fourthDownConversionRate'], False),
+    'turnovers': (['total_turnovers'], True),
+    'returns': (['puntReturnTDs', 'kickReturnTDs'], False),
+    'havoc': (['Defense_havoc_total'], False),
+}
+for _, (cols, rev) in scaling_config.items():
+    team_data[cols] = scale_columns(team_data, cols, reverse=rev)
 
+# --- MERGE DATA ---
 merged_data = pd.merge(team_data, team_sp[['team', 'ranking']], on='team')
+X = merged_data[features_all].values  # Feature matrix
 
-######################################## HERDING TO SP+ AND FPI #################################################
-
-def objective_function(weights):
-    (w_offense_sr, w_offense_expl, w_offense_ppa, w_offense_ppo,
-    w_defense_sr, w_defense_expl, w_defense_ppa, w_defense_ppo,
-    w_avg_talent, w_third_down, w_turnovers,
-    w_special_punt, w_special_kick, w_havoc, w_in_house, 
-    w_avg_qb_ppa, w_total_qb_ppa, w_defense_fp_app, 
-    w_off_power, w_def_power, w_off_stuff, w_def_stuff,
-    rank_weight_fpi, rank_weight_other) = weights
+# --- OBJECTIVE FUNCTION ---
+def objective_spearman(weights_all):
+    feature_weights = np.array(weights_all[:-2])
+    rank_weights = np.array(weights_all[-2:])
     
-    merged_data['power_ranking'] = (
-        (w_offense_sr * merged_data['Offense_success_rate'] + 
-        w_offense_expl * merged_data['Offense_explosiveness'] + 
-        w_offense_ppa * merged_data['Offense_ppa'] + 
-        w_offense_ppo * merged_data['Offense_points_per_opportunity'] +
-        w_off_power * merged_data['Offense_power_success'] +
-        w_off_stuff * merged_data['Offense_stuff_rate'])
-        - (w_defense_sr * merged_data['Defense_success_rate'] + 
-        w_defense_expl * merged_data['Defense_explosiveness'] + 
-        w_defense_ppa * merged_data['Defense_ppa'] + 
-        w_defense_ppo * merged_data['Defense_points_per_opportunity'] +
-        w_defense_fp_app * merged_data['Defense_field_position_average_predicted_points'] +
-        w_def_power * merged_data['Defense_power_success'] +
-        w_def_stuff * merged_data['Defense_stuff_rate'])
-        + w_avg_talent * merged_data['avg_talent']
-        + (w_third_down * merged_data['thirdDownConversionRate']
-        + w_turnovers * merged_data['total_turnovers']
-        + w_special_punt * merged_data['puntReturnTDs'] 
-        + w_special_kick * merged_data['kickReturnTDs']
-        + w_havoc * merged_data['Defense_havoc_total'])
-        + w_in_house * merged_data['in_house_pr']
-        + w_avg_qb_ppa * merged_data['qb_average_ppa']
-        + w_total_qb_ppa * merged_data['qb_total_ppa']
-    )
+    if np.sum(feature_weights) == 0 or np.all(feature_weights < 0.01):
+        return 1
+    
+    feature_weights /= np.sum(feature_weights)
+    rank_weights /= np.sum(rank_weights)
 
-    # My ranking
+    power_ranking = X @ feature_weights
+    merged_data['power_ranking'] = power_ranking
     merged_data['calculated_rank'] = merged_data['power_ranking'].rank(ascending=False)
-    # SP+/FPI combined ranking
+
     merged_data['combined_rank'] = (
-        rank_weight_fpi * merged_data['fpi_rank'] +
-        rank_weight_other * merged_data['ranking']
+        merged_data['fpi_rank'] * rank_weights[0] +
+        merged_data['ranking'] * rank_weights[1]
     )
-    spearman_corr = merged_data[['calculated_rank', 'combined_rank']].corr(method='spearman').iloc[0, 1]
-    
-    return -spearman_corr
 
-# Define the bounds for each weight (allowing weights to vary more widely)
-bounds = [
-    (-1, 1),  # Offense Success Rate
-    (-1, 1),  # Offense Explosiveness
-    (-1, 1),  # Offense PPA
-    (-1, 1),  # Offense PPO
-    (-1, 1),  # Defense Success Rate
-    (-1, 1),  # Defense Explosiveness
-    (-1, 1),  # Defense PPA 
-    (-1, 1),  # Defense PPO
-    (0, 0.5), # Avg Talent: Bound between 0 and 0.5
-    (-1, 1),  # Third Down Conversion
-    (-1, 1),  # Turnovers
-    (-1, 1),  # Special Teams Punt
-    (-1, 1),  # Special Teams Kick
-    (-1, 1),  # Havoc
-    (0, 0.5), # In House PR
-    (-1, 1),  # Average QB PPA
-    (-1, 1),  # Total QB PPA
-    (-1, 1),  # Defense FP APP
-    (-1, 1),  # Offense Power Success
-    (-1, 1),  # Defense Power Success
-    (-1, 1),  # Offense Stuff Rate
-    (-1, 1),  # Defense Stuff Rate
-    (0, 1),   # FPI Weight
-    (0, 1)    # SP+ Weight
-]
+    corr = merged_data[['calculated_rank', 'combined_rank']].corr(method='spearman').iloc[0, 1]
+    return -corr
 
-result = differential_evolution(objective_function, bounds, strategy='best1bin', maxiter=300, tol=1e-4, seed=42, callback=progress_callback)
-optimized_weights = result.x
+# --- RUN DIFFERENTIAL EVOLUTION ---
+def run_differential_evolution():
+    bounds = [(0, 1)] * (len(features_all) + 2)
+    result = differential_evolution(
+        objective_spearman,
+        bounds=bounds,
+        strategy='best1bin',
+        maxiter=1000,
+        tol=1e-4,
+        polish=True,
+        seed=42
+    )
 
-######################################## USING OUTPUT FROM OPTIMIZATION TO CREATE POWER RANKING #################################################
+    all_weights = result.x
+    feature_weights = all_weights[:-2]
+    rank_weights = all_weights[-2:]
 
-# Recalculate the power ranking using the optimized weights
-merged_data['power_ranking'] = (
-    (optimized_weights[0] * merged_data['Offense_success_rate'] + 
-    optimized_weights[1] * merged_data['Offense_explosiveness'] + 
-    optimized_weights[2] * merged_data['Offense_ppa'] + 
-    optimized_weights[3] * merged_data['Offense_points_per_opportunity'] +
-    optimized_weights[18] * merged_data['Offense_power_success'] +
-    optimized_weights[20] * merged_data['Offense_stuff_rate'])
-    - (optimized_weights[4] * merged_data['Defense_success_rate'] + 
-    optimized_weights[5] * merged_data['Defense_explosiveness'] + 
-    optimized_weights[6] * merged_data['Defense_ppa'] + 
-    optimized_weights[7] * merged_data['Defense_points_per_opportunity'] +
-    optimized_weights[17] * merged_data['Defense_field_position_average_predicted_points'] +
-    optimized_weights[19] * merged_data['Defense_power_success'] +
-    optimized_weights[21] * merged_data['Defense_stuff_rate'])
-    + optimized_weights[8] * merged_data['avg_talent']
-    + (optimized_weights[9] * merged_data['thirdDownConversionRate']
-    + optimized_weights[10] * merged_data['total_turnovers']
-    + optimized_weights[11] * merged_data['puntReturnTDs'] 
-    + optimized_weights[12] * merged_data['kickReturnTDs']
-    + optimized_weights[13] * merged_data['Defense_havoc_total'])
-    + optimized_weights[14] * merged_data['in_house_pr']
-    + optimized_weights[15] * merged_data['qb_average_ppa']
-    + optimized_weights[16] * merged_data['qb_total_ppa']
+    feature_weights /= np.sum(feature_weights)
+    rank_weights /= np.sum(rank_weights)
+
+    selected_features = [feat for feat, w in zip(features_all, feature_weights) if w > 0.01]
+    selected_weights = [w for w in feature_weights if w > 0.01]
+
+    return selected_features, selected_weights, rank_weights, -result.fun
+
+# --- GET BEST FEATURES & WEIGHTS ---
+selected_features, best_weights, rank_weights, best_spearman = run_differential_evolution()
+
+feature_weights_dict = dict(zip(selected_features, best_weights))
+sorted_features_weights = sorted(feature_weights_dict.items(), key=lambda item: item[1], reverse=True)
+
+print("Selected Features:")
+for feature, weight in sorted_features_weights:
+    print(f"{feature}: {weight:.4f}")
+merged_data['combined_rank'] = merged_data['fpi_rank'] * rank_weights[0] + merged_data['ranking'] * rank_weights[1]
+
+# --- FINAL POWER RANKING COLUMN ---
+merged_data['power_ranking'] = sum(
+    merged_data[feat] * weight for feat, weight in zip(selected_features, best_weights)
 )
-
 output_model = merged_data.copy()
-
 team_data = output_model.copy()
 
 ######################################## TEAM STATS AND RANKINGS #################################################
