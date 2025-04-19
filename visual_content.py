@@ -448,188 +448,104 @@ def plot_bar_charts(ax, data, logos, metric, title, top_or_bottom):
         ax.spines[spine].set_visible(False)
 
 def simulate_game_known(home_team, away_team, home_win_prob):
-    """Simulates a single game between two teams based on home win probability."""
-    random_outcome = np.random.random() * 100  # Generates a number between 0 and 100
-    if random_outcome < home_win_prob:
-        return home_team, away_team  # Home team wins, Away team loses
-    else:
-        return away_team, home_team  # Away team wins, Home team loses
+    random_outcome = np.random.random() * 100
+    return (home_team, away_team) if random_outcome < home_win_prob else (away_team, home_team)
 
 def simulate_season_known(schedules, team_data):
-    """Simulates one season based on current power ratings and schedule."""
-    team_wins = {team: 0 for team in team_data['team'].unique()}  # Initialize win counts
-    team_losses = {team: 0 for team in team_data['team'].unique()}  # Initialize loss counts
+    teams = team_data['team'].unique()
+    team_wins = dict.fromkeys(teams, 0)
+    team_losses = dict.fromkeys(teams, 0)
 
     for _, game in schedules.iterrows():
-        home_team = game['home_team']
-        away_team = game['away_team']
-        home_win_prob = game['PEAR_win_prob']
+        winner, loser = simulate_game_known(game['home_team'], game['away_team'], game['PEAR_win_prob'])
+        team_wins[winner] += 1
+        team_losses[loser] += 1
 
-        # Simulate the game outcome
-        winner, loser = simulate_game_known(home_team, away_team, home_win_prob)
-        team_wins[winner] += 1  # Increment win count for the winner
-        team_losses[loser] += 1  # Increment loss count for the loser
-
-    return team_wins, team_losses  # Returns the win and loss counts for all teams at the end of the season
+    return team_wins, team_losses
 
 def monte_carlo_simulation_known(num_simulations, schedules, team_data):
-    """Runs a Monte Carlo simulation over multiple seasons."""
-    win_results = []
-    loss_results = []
-
-    for _ in range(num_simulations):
-        season_wins, season_losses = simulate_season_known(schedules, team_data)
-        win_results.append(season_wins)
-        loss_results.append(season_losses)
-    
-    return win_results, loss_results
+    return zip(*[simulate_season_known(schedules, team_data) for _ in range(num_simulations)])
 
 def analyze_simulation_known(win_results, loss_results, schedules, records):
-    """Aggregates the results of multiple simulated seasons and calculates win-loss records."""
-    # Convert list of results into DataFrames
     win_df = pd.DataFrame(win_results)
     loss_df = pd.DataFrame(loss_results)
-    
-    # Determine the number of games each team plays
-    game_counts = schedules.groupby('home_team').size() + schedules.groupby('away_team').size()
-    game_counts = game_counts.groupby(level=0).sum()  # Combine home and away counts
-
-    # Add 1 win for teams with only 11 games
-    for team in win_df.columns:
-        win_df[team] += records[records['team'] == team]['wins'].values[0]
-        loss_df[team] += records[records['team'] == team]['losses'].values[0]
 
     for team in win_df.columns:
-        team_games_played = records[records['team'] == team]['games_played'].values[0]
-        if (team_games_played == 12) | (team_games_played == 13) | (team == 'Liberty') | (team == 'App State'):
-            continue
-        else:
-            if (team_games_played+game_counts[team]) == 11:
-                win_df[team] += 1
-            if (team_games_played+game_counts[team]) == 10:
-                win_df[team] += 2
-        
-    # Calculate average win totals for each team
-    avg_wins = win_df.mean(axis=0)
-    
-    # Calculate average loss totals for each team
-    avg_losses = loss_df.mean(axis=0)
-    
-    # Calculate the mode (most frequent number of wins) for each team
-    most_common_wins = win_df.mode(axis=0).iloc[0]  # mode() returns a DataFrame, take the first row
-    
-    # Calculate the mode (most frequent number of losses) for each team
-    most_common_losses = loss_df.mode(axis=0).iloc[0]  # mode() returns a DataFrame, take the first row
-    
-    # Combine wins and losses into records
-    most_common_records = pd.DataFrame({
-        'Wins': most_common_wins,
-        'Losses': most_common_losses
+        rec = records[records['team'] == team].iloc[0]
+        win_df[team] += rec['wins']
+        loss_df[team] += rec['losses']
+        total_games = rec['games_played'] + schedules[(schedules['home_team'] == team) | (schedules['away_team'] == team)].shape[0]
+
+        if total_games == 11:
+            win_df[team] += 1
+        elif total_games == 10:
+            win_df[team] += 2
+
+    avg_wins = win_df.mean()
+    avg_losses = loss_df.mean()
+    most_common_wins = win_df.mode().iloc[0]
+    most_common_losses = loss_df.mode().iloc[0]
+
+    most_common_records = pd.DataFrame({'Wins': most_common_wins, 'Losses': most_common_losses})
+
+    win_thresholds = pd.DataFrame({
+        f'win_{w}': (win_df == w).mean() for w in range(13)
     })
-    
-    win_thresholds = {}
-    for wins in range(13):  # 0 to 12 wins
-        win_thresholds[f'win_{wins}'] = win_df.apply(lambda x: (x == wins).sum() / len(x), axis=0)
 
-    win_thresholds['WIN6%'] = win_df.apply(lambda x: (x >= 6).sum() / len(x), axis=0)
-    
-    # Create the win threshold DataFrame
-    win_thresholds_df = pd.DataFrame(win_thresholds)
-    win_thresholds_df.insert(0, 'team', win_df.columns)
-    win_thresholds_df = win_thresholds_df.reset_index(drop=True)
-    win_thresholds_df['expected_wins'] = list(avg_wins)
-    win_thresholds_df['expected_loss'] = list(avg_losses)
-    win_thresholds_df['projected_wins'] = list(most_common_records['Wins'])
-    win_thresholds_df['projected_losses'] = list(most_common_records['Losses'])
+    win_thresholds['WIN6%'] = (win_df >= 6).mean()
+    win_thresholds.insert(0, 'team', win_df.columns)
+    win_thresholds.reset_index(drop=True, inplace=True)
 
-    return win_thresholds_df
+    win_thresholds['expected_wins'] = avg_wins.values
+    win_thresholds['expected_loss'] = avg_losses.values
+    win_thresholds['projected_wins'] = most_common_records['Wins'].values
+    win_thresholds['projected_losses'] = most_common_records['Losses'].values
+
+    return win_thresholds
 
 def fetch_logo_image(logo_url):
     response = requests.get(logo_url)
     return Image.open(BytesIO(response.content))
 
 def average_team_distribution(num_simulations, schedules, average, team_name):
+    from collections import Counter
+    import statistics
 
     def simulate_game_average(win_prob):
-        random_outcome = np.random.random() * 100  # Generates a number between 0 and 100
-        if random_outcome < win_prob:
-            return "W"  # Home team wins, Away team loses
-        else:
-            return "L"  # Away team wins, Home team loses
-        
-    def simulate_season_average(schedules, team_name, average):
+        return "W" if np.random.random() * 100 < win_prob else "L"
+
+    def simulate_season_average():
         wins = 0
-        losses = 0
         for _, game in schedules.iterrows():
             if game['home_team'] == team_name:
-                opponent_team = game['away_team']
-                opponent_pr = game['away_pr']
-                win_prob = PEAR_Win_Prob(average, opponent_pr)
-
-                # opponent_elo = game['away_elo']
-                # win_prob = round((10**((average-opponent_elo) / 400)) / ((10**((average-opponent_elo) / 400)) + 1)*100, 2)
+                win_prob = PEAR_Win_Prob(average, game['away_pr'])
             else:
-                opponent_team = game['home_team']
-                opponent_pr = game['home_pr']
-                win_prob = 100 - PEAR_Win_Prob(opponent_pr, average)
+                win_prob = 100 - PEAR_Win_Prob(game['home_pr'], average)
+            wins += simulate_game_average(win_prob) == "W"
+        return wins, schedules.shape[0] - wins
 
-                # opponent_elo = game['home_elo']
-                # win_prob = 100 - round((10**((opponent_elo-average) / 400)) / ((10**((opponent_elo-average) / 400)) + 1)*100, 2)
-            
-            outcome = simulate_game_average(win_prob)
-            if outcome == "W":
-                wins += 1
-            else:
-                losses += 1
+    win_results, loss_results = zip(*[simulate_season_average() for _ in range(num_simulations)])
 
-        return wins, losses
-        
-    def monte_carlo_simulation_average(num_simulations, schedules, average, team_name):
-        """Runs a Monte Carlo simulation for an average team over multiple seasons."""
-        win_results = []
-        loss_results = []
+    games_played = schedules.shape[0]
+    adjustment = {11: 0.948, 10: 0.948 * 2}.get(games_played, 0)
+    win_results = [w + adjustment for w in win_results]
 
-        for _ in range(num_simulations):
-            wins, losses = simulate_season_average(schedules, team_name, average)
-            win_results.append(wins)
-            loss_results.append(losses)
-        
-        return win_results, loss_results
+    avg_wins = statistics.mean(win_results)
+    avg_loss = statistics.mean(loss_results)
+    most_common_win = statistics.mode(win_results)
+    most_common_loss = statistics.mode(loss_results)
 
-    import statistics
-    from collections import Counter
-    def analyze_simulation_average(win_results, loss_results, schedules):
-        games_played = len(schedules)
-        if games_played == 11:
-            win_results = [x + .948 for x in win_results]
-        elif games_played == 10:
-            win_results = [x + (2 * .948) for x in win_results]
-    
-        avg_wins = statistics.mean(win_results)
-        avg_loss = statistics.mean(loss_results)
-        most_common_win = statistics.mode(win_results)
-        most_common_loss = statistics.mode(loss_results)
+    win_counts = Counter(win_results)
+    total = len(win_results)
+    win_percentages = {f"win_{int(w)}": c / total for w, c in win_counts.items()}
 
+    win_thresholds = pd.DataFrame([win_percentages])
+    win_thresholds['WIN6%'] = sum(win_thresholds.get(f'win_{i}', 0) for i in range(6, 13))
+    win_thresholds['expected_wins'] = avg_wins
+    win_thresholds['expected_losses'] = avg_loss
+    win_thresholds['projected_wins'] = most_common_win
+    win_thresholds['projected_losses'] = most_common_loss
 
-        win_counts = Counter(win_results)    
-        total_simulations = len(win_results)
-        win_percentages = {f"win_{wins}": (win_counts[wins] / total_simulations) for wins in range(13)}
-        win_thresholds = pd.DataFrame([win_percentages])
-        
-        # win_thresholds = {}
-        # for wins in range(13):  # 0 to 12 wins
-        #     win_thresholds[f'win_{wins}'] = win_df.apply(lambda x: (x == wins).sum() / len(x), axis=0)
-
-        win_thresholds['WIN6%'] = win_thresholds.loc[:, 'win_6':'win_12'].sum(axis=1)
-        win_thresholds['expected_wins'] = avg_wins
-        win_thresholds['expected_losses'] = avg_loss
-        win_thresholds['projected_wins'] = most_common_win
-        win_thresholds['projected_losses'] = most_common_loss
-
-        return win_thresholds
-    
-    avg_win, avg_loss = monte_carlo_simulation_average(num_simulations, schedules, average, team_name)
-    win_thresholds = analyze_simulation_average(avg_win, avg_loss,schedules)
     return win_thresholds
 
 def finish_schedule(win_thresholds_in_season, team_data, logos, team):
@@ -682,96 +598,51 @@ def finish_schedule(win_thresholds_in_season, team_data, logos, team):
     plt.show()
 
 def simulate_game_conference(home_team, away_team, home_win_prob):
-    """Simulates a single game between two teams based on home win probability."""
-    random_outcome = np.random.random() * 100  # Generates a number between 0 and 100
-    if random_outcome < home_win_prob:
-        return home_team, away_team  # Home team wins, Away team loses
-    else:
-        return away_team, home_team  # Away team wins, Home team loses
+    return (home_team, away_team) if np.random.random() * 100 < home_win_prob else (away_team, home_team)
 
 def simulate_season_conference(schedules, team_data):
-    """Simulates one season based on current power ratings and schedule."""
-    team_wins = {team: 0 for team in team_data['team'].unique()}  # Initialize win counts
-    team_losses = {team: 0 for team in team_data['team'].unique()}  # Initialize loss counts
+    teams = team_data['team'].unique()
+    team_wins = dict.fromkeys(teams, 0)
+    team_losses = dict.fromkeys(teams, 0)
 
     for _, game in schedules.iterrows():
-        home_team = game['home_team']
-        away_team = game['away_team']
-        home_win_prob = game['PEAR_win_prob']
+        winner, loser = simulate_game_conference(game['home_team'], game['away_team'], game['PEAR_win_prob'])
+        team_wins[winner] += 1
+        team_losses[loser] += 1
 
-        # Simulate the game outcome
-        winner, loser = simulate_game_conference(home_team, away_team, home_win_prob)
-        team_wins[winner] += 1  # Increment win count for the winner
-        team_losses[loser] += 1  # Increment loss count for the loser
-
-    return team_wins, team_losses  # Returns the win and loss counts for all teams at the end of the season
+    return team_wins, team_losses
 
 def monte_carlo_simulation_conference(num_simulations, schedules, team_data):
-    """Runs a Monte Carlo simulation over multiple seasons."""
-    win_results = []
-    loss_results = []
-
-    for _ in range(num_simulations):
-        season_wins, season_losses = simulate_season_conference(schedules, team_data)
-        win_results.append(season_wins)
-        loss_results.append(season_losses)
-    
-    return win_results, loss_results
+    return zip(*[simulate_season_conference(schedules, team_data) for _ in range(num_simulations)])
 
 def analyze_simulation_conference(win_results, loss_results, schedules, records):
-    """Aggregates the results of multiple simulated seasons and calculates win-loss records."""
-    # Convert list of results into DataFrames
     win_df = pd.DataFrame(win_results)
     loss_df = pd.DataFrame(loss_results)
-    
-    # Determine the number of games each team plays
-    game_counts = schedules.groupby('home_team').size() + schedules.groupby('away_team').size()
-    game_counts = game_counts.groupby(level=0).sum()  # Combine home and away counts
 
-    # Add 1 win for teams with only 11 games
     for team in win_df.columns:
-        win_df[team] += records[records['team'] == team]['conference_wins'].values[0]
-        loss_df[team] += records[records['team'] == team]['conference_losses'].values[0]
+        rec = records[records['team'] == team].iloc[0]
+        win_df[team] += rec['conference_wins']
+        loss_df[team] += rec['conference_losses']
 
-    # for team in win_df.columns:
-    #     team_games_played = records[records['team'] == team]['games_played'].values[0]
-    #     if (team_games_played+game_counts[team]) == 11:
-    #         win_df[team] += 1
-    #     if (team_games_played+game_counts[team]) == 10:
-    #         win_df[team] += 2
-        
-    # Calculate average win totals for each team
-    avg_wins = win_df.mean(axis=0)
-    
-    # Calculate average loss totals for each team
-    avg_losses = loss_df.mean(axis=0)
-    
-    # Calculate the mode (most frequent number of wins) for each team
-    most_common_wins = win_df.mode(axis=0).iloc[0]  # mode() returns a DataFrame, take the first row
-    
-    # Calculate the mode (most frequent number of losses) for each team
-    most_common_losses = loss_df.mode(axis=0).iloc[0]  # mode() returns a DataFrame, take the first row
-    
-    # Combine wins and losses into records
-    most_common_records = pd.DataFrame({
-        'Wins': most_common_wins,
-        'Losses': most_common_losses
+    avg_wins = win_df.mean()
+    avg_losses = loss_df.mean()
+    most_common_wins = win_df.mode().iloc[0]
+    most_common_losses = loss_df.mode().iloc[0]
+
+    most_common_records = pd.DataFrame({'Wins': most_common_wins, 'Losses': most_common_losses})
+
+    win_thresholds = pd.DataFrame({
+        f'win_{w}': (win_df == w).mean() for w in range(10)
     })
-    
-    win_thresholds = {}
-    for wins in range(10):  # 0 to 12 wins
-        win_thresholds[f'win_{wins}'] = win_df.apply(lambda x: (x == wins).sum() / len(x), axis=0)
-    
-    # Create the win threshold DataFrame
-    win_thresholds_df = pd.DataFrame(win_thresholds)
-    win_thresholds_df.insert(0, 'team', win_df.columns)
-    win_thresholds_df = win_thresholds_df.reset_index(drop=True)
-    win_thresholds_df['expected_wins'] = list(avg_wins)
-    win_thresholds_df['expected_loss'] = list(avg_losses)
-    win_thresholds_df['projected_wins'] = list(most_common_records['Wins'])
-    win_thresholds_df['projected_losses'] = list(most_common_records['Losses'])
 
-    return win_thresholds_df
+    win_thresholds.insert(0, 'team', win_df.columns)
+    win_thresholds.reset_index(drop=True, inplace=True)
+    win_thresholds['expected_wins'] = avg_wins.values
+    win_thresholds['expected_loss'] = avg_losses.values
+    win_thresholds['projected_wins'] = most_common_records['Wins'].values
+    win_thresholds['projected_losses'] = most_common_records['Losses'].values
+
+    return win_thresholds
 
 def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_data, last_month_data, start_season_data, all_data, schedule_info, records, SOS, SOR, most_deserving, home_team, away_team, neutrality=False):
     sns.set(style='whitegrid')
@@ -1885,98 +1756,6 @@ def plot_win_probabilities(wins_df, all_conference_wins, logos_df, team_data, la
     plt.tight_layout()
     plt.show()
 
-def simulate_game_conference(home_team, away_team, home_win_prob):
-    """Simulates a single game between two teams based on home win probability."""
-    random_outcome = np.random.random() * 100  # Generates a number between 0 and 100
-    if random_outcome < home_win_prob:
-        return home_team, away_team  # Home team wins, Away team loses
-    else:
-        return away_team, home_team  # Away team wins, Home team loses
-
-def simulate_season_conference(schedules, team_data):
-    """Simulates one season based on current power ratings and schedule."""
-    team_wins = {team: 0 for team in team_data['team'].unique()}  # Initialize win counts
-    team_losses = {team: 0 for team in team_data['team'].unique()}  # Initialize loss counts
-
-    for _, game in schedules.iterrows():
-        home_team = game['home_team']
-        away_team = game['away_team']
-        home_win_prob = game['PEAR_win_prob']
-
-        # Simulate the game outcome
-        winner, loser = simulate_game_conference(home_team, away_team, home_win_prob)
-        team_wins[winner] += 1  # Increment win count for the winner
-        team_losses[loser] += 1  # Increment loss count for the loser
-
-    return team_wins, team_losses  # Returns the win and loss counts for all teams at the end of the season
-
-def monte_carlo_simulation_conference(num_simulations, schedules, team_data):
-    """Runs a Monte Carlo simulation over multiple seasons."""
-    win_results = []
-    loss_results = []
-
-    for _ in range(num_simulations):
-        season_wins, season_losses = simulate_season_conference(schedules, team_data)
-        win_results.append(season_wins)
-        loss_results.append(season_losses)
-    
-    return win_results, loss_results
-
-def analyze_simulation_conference(win_results, loss_results, schedules, records):
-    """Aggregates the results of multiple simulated seasons and calculates win-loss records."""
-    # Convert list of results into DataFrames
-    win_df = pd.DataFrame(win_results)
-    loss_df = pd.DataFrame(loss_results)
-    
-    # Determine the number of games each team plays
-    game_counts = schedules.groupby('home_team').size() + schedules.groupby('away_team').size()
-    game_counts = game_counts.groupby(level=0).sum()  # Combine home and away counts
-
-    # Add 1 win for teams with only 11 games
-    for team in win_df.columns:
-        win_df[team] += records[records['team'] == team]['conference_wins'].values[0]
-        loss_df[team] += records[records['team'] == team]['conference_losses'].values[0]
-
-    # for team in win_df.columns:
-    #     team_games_played = records[records['team'] == team]['games_played'].values[0]
-    #     if (team_games_played+game_counts[team]) == 11:
-    #         win_df[team] += 1
-    #     if (team_games_played+game_counts[team]) == 10:
-    #         win_df[team] += 2
-        
-    # Calculate average win totals for each team
-    avg_wins = win_df.mean(axis=0)
-    
-    # Calculate average loss totals for each team
-    avg_losses = loss_df.mean(axis=0)
-    
-    # Calculate the mode (most frequent number of wins) for each team
-    most_common_wins = win_df.mode(axis=0).iloc[0]  # mode() returns a DataFrame, take the first row
-    
-    # Calculate the mode (most frequent number of losses) for each team
-    most_common_losses = loss_df.mode(axis=0).iloc[0]  # mode() returns a DataFrame, take the first row
-    
-    # Combine wins and losses into records
-    most_common_records = pd.DataFrame({
-        'Wins': most_common_wins,
-        'Losses': most_common_losses
-    })
-    
-    win_thresholds = {}
-    for wins in range(10):  # 0 to 12 wins
-        win_thresholds[f'win_{wins}'] = win_df.apply(lambda x: (x == wins).sum() / len(x), axis=0)
-    
-    # Create the win threshold DataFrame
-    win_thresholds_df = pd.DataFrame(win_thresholds)
-    win_thresholds_df.insert(0, 'team', win_df.columns)
-    win_thresholds_df = win_thresholds_df.reset_index(drop=True)
-    win_thresholds_df['expected_wins'] = list(avg_wins)
-    win_thresholds_df['expected_loss'] = list(avg_losses)
-    win_thresholds_df['projected_wins'] = list(most_common_records['Wins'])
-    win_thresholds_df['projected_losses'] = list(most_common_records['Losses'])
-
-    return win_thresholds_df
-
 def team_stats_visual(all_data, records, schedule_info, logos, team):
 
     cmap = LinearSegmentedColormap.from_list('dark_gradient_orange', ['#660000', '#8B0000', '#808080', '#2C5E00', '#1D4D00'], N=100)
@@ -2333,238 +2112,213 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     plt.savefig(file_path, bbox_inches='tight', dpi = 300)
 
 try:
-    #######################################################################
-    #######################################################################
-    #######################################################################
-    start_week = 1 ## when new season starts, change this to "current_week"
-    #######################################################################
-    #######################################################################
-    #######################################################################
-    end_week = 17
-    games = []
-    for week in range(start_week,end_week):
-        response = games_api.get_games(year=current_year, week=week,division = 'fbs')
-        games = [*games, *response]
-    games = [dict(
-                id=g.id,
-                season=g.season,
-                week=g.week,
-                start_date=g.start_date,
-                home_team=g.home_team,
-                home_elo=g.home_pregame_elo,
-                away_team=g.away_team,
-                away_elo=g.away_pregame_elo,
-                home_points = g.home_points,
-                away_points = g.away_points
-                ) for g in games if g.home_pregame_elo is not None and g.away_pregame_elo is not None]
+    start_week, end_week = 1, 17 # change start_week to current_week for new season
+    games = [
+        game
+        for week in range(start_week, end_week)
+        for game in games_api.get_games(year=current_year, week=week, division='fbs')
+    ]
+    games = [
+        {
+            "id": g.id,
+            "season": g.season,
+            "week": g.week,
+            "start_date": g.start_date,
+            "home_team": g.home_team,
+            "home_elo": g.home_pregame_elo,
+            "away_team": g.away_team,
+            "away_elo": g.away_pregame_elo,
+            "home_points": g.home_points,
+            "away_points": g.away_points,
+        }
+        for g in games if g.home_pregame_elo and g.away_pregame_elo
+    ]
     games.sort(key=date_sort)
     schedule_info = pd.DataFrame(games)
 
-    schedule_info = schedule_info.merge(team_data[['team', 'power_rating']], 
-                                        left_on='home_team', 
-                                        right_on='team', 
-                                        how='left').rename(columns={'power_rating': 'home_pr'})
-    schedule_info = schedule_info.drop(columns=['team'])
-    schedule_info = schedule_info.merge(team_data[['team', 'power_rating']], 
-                                        left_on='away_team', 
-                                        right_on='team', 
-                                        how='left').rename(columns={'power_rating': 'away_pr'})
-    schedule_info = schedule_info.drop(columns=['team'])
-    # Apply the PEAR_Win_Prob function to the schedule_info DataFrame
-    schedule_info['PEAR_win_prob'] = schedule_info.apply(
-        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr']), axis=1
-    )
-    # Elo Win Probability
-    schedule_info['home_win_prob'] = round((10**((schedule_info['home_elo'] - schedule_info['away_elo']) / 400)) / ((10**((schedule_info['home_elo'] - schedule_info['away_elo']) / 400)) + 1)*100,2)
+    schedule_info = schedule_info.merge(team_data[['team', 'power_rating']], left_on='home_team', right_on='team', how='left') \
+                                 .rename(columns={'power_rating': 'home_pr'}).drop(columns='team')
+    schedule_info = schedule_info.merge(team_data[['team', 'power_rating']], left_on='away_team', right_on='team', how='left') \
+                                 .rename(columns={'power_rating': 'away_pr'}).drop(columns='team')
+
+    schedule_info['PEAR_win_prob'] = PEAR_Win_Prob(schedule_info['home_pr'], schedule_info['away_pr'])
+    schedule_info['home_win_prob'] = round((10 ** ((schedule_info['home_elo'] - schedule_info['away_elo']) / 400)) /
+                                           (1 + 10 ** ((schedule_info['home_elo'] - schedule_info['away_elo']) / 400)) * 100, 2)
+
 except Exception as e:
     print(f"Error in code chunk: Schedule Info. Error: {e}")
 
+
 try:
-    ####### year long schedule
-    start_week = 1
-    end_week = 17
-    games_list = []
-    for week in range(start_week,end_week):
-        response = games_api.get_games(year=current_year, week=week,division = 'fbs')
-        games_list = [*games_list, *response]
+    games_list = [
+        game
+        for week in range(1, 17)
+        for game in games_api.get_games(year=current_year, week=week, division='fbs')
+    ]
     if postseason:
-        response = games_api.get_games(year=current_year, division = 'fbs', season_type='postseason')
-        games_list = [*games_list, *response]
-    games = [dict(
-                id=g.id,
-                season=g.season,
-                week=g.week,
-                start_date=g.start_date,
-                home_team=g.home_team,
-                home_elo=g.home_pregame_elo,
-                away_team=g.away_team,
-                away_elo=g.away_pregame_elo,
-                home_points = g.home_points,
-                away_points = g.away_points,
-                neutral = g.neutral_site
-                ) for g in games_list if g.home_pregame_elo is not None and g.away_pregame_elo is not None]
+        games_list += games_api.get_games(year=current_year, division='fbs', season_type='postseason')
+
+    games = [
+        {
+            "id": g.id,
+            "season": g.season,
+            "week": g.week,
+            "start_date": g.start_date,
+            "home_team": g.home_team,
+            "home_elo": g.home_pregame_elo,
+            "away_team": g.away_team,
+            "away_elo": g.away_pregame_elo,
+            "home_points": g.home_points,
+            "away_points": g.away_points,
+            "neutral": g.neutral_site,
+        }
+        for g in games_list if g.home_pregame_elo and g.away_pregame_elo
+    ]
     games.sort(key=date_sort)
     year_long_schedule = pd.DataFrame(games)
-    year_long_schedule = year_long_schedule.merge(team_data[['team', 'power_rating']], 
-                                        left_on='home_team', 
-                                        right_on='team', 
-                                        how='left').rename(columns={'power_rating': 'home_pr'})
-    year_long_schedule = year_long_schedule.drop(columns=['team'])
-    year_long_schedule = year_long_schedule.merge(team_data[['team', 'power_rating']], 
-                                        left_on='away_team', 
-                                        right_on='team', 
-                                        how='left').rename(columns={'power_rating': 'away_pr'})
-    year_long_schedule = year_long_schedule.drop(columns=['team'])
-    year_long_schedule['PEAR_win_prob'] = year_long_schedule.apply(
-        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr']), axis=1
-    )
-    year_long_schedule['home_win_prob'] = round((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) / ((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) + 1)*100,2)
+
+    for side in ['home', 'away']:
+        year_long_schedule = year_long_schedule.merge(
+            team_data[['team', 'power_rating']], left_on=f'{side}_team', right_on='team', how='left'
+        ).rename(columns={'power_rating': f'{side}_pr'}).drop(columns='team')
+
+    year_long_schedule['PEAR_win_prob'] = PEAR_Win_Prob(year_long_schedule['home_pr'], year_long_schedule['away_pr'])
+    year_long_schedule['home_win_prob'] = round((10 ** ((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) /
+                                                (1 + 10 ** ((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) * 100, 2)
+
 except Exception as e:
     print(f"Error in code chunk: Year Long Schedule. Error: {e}")
 
+
 try:
-    ##### strength of schedule
-    average_elo = elo_ratings['elo'].mean()
     average_pr = round(team_data['power_rating'].mean(), 2)
-    good_team_pr = round(team_data['power_rating'].std() + team_data['power_rating'].mean(),2)
-    elite_team_pr = round(2*team_data['power_rating'].std() + team_data['power_rating'].mean(),2)
-    expected_wins_list = []
-    for team in team_data['team']:
-        schedule = year_long_schedule[(year_long_schedule['home_team'] == team) | (year_long_schedule['away_team'] == team)]
-        df = average_team_distribution(1000, schedule, elite_team_pr, team)
-        expected_wins = df['expected_wins'].values[0] / len(schedule)
-        expected_wins_list.append(expected_wins)
-    SOS = pd.DataFrame(zip(team_data['team'], expected_wins_list), columns=['team', 'avg_expected_wins'])
-    SOS = SOS.sort_values('avg_expected_wins').reset_index(drop = True)
+    elite_team_pr = round(team_data['power_rating'].mean() + 2 * team_data['power_rating'].std(), 2)
+
+    SOS = pd.DataFrame({
+        'team': team_data['team'],
+        'avg_expected_wins': [
+            average_team_distribution(1000, year_long_schedule[(year_long_schedule['home_team'] == team) | (year_long_schedule['away_team'] == team)],
+                                      elite_team_pr, team)['expected_wins'].values[0] /
+            len(year_long_schedule[(year_long_schedule['home_team'] == team) | (year_long_schedule['away_team'] == team)])
+            for team in team_data['team']
+        ]
+    })
+
+    SOS = SOS.sort_values('avg_expected_wins').reset_index(drop=True)
     SOS['SOS'] = SOS.index + 1
     print("SOS Prep Done!")
 except Exception as e:
     print(f"Error in code chunk: SOS Prep. Error: {e}")
 
-try:
-    ##### strength of record
-    completed_games = year_long_schedule[year_long_schedule['home_points'].notna()]
-    current_xWins_list = []
-    good_xWins_list = []
-    elite_xWins_list = []
-    for team in team_data['team']:
-        team_completed_games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
-        games_played = records[records['team'] == team]['games_played'].values[0]
-        wins = records[records['team'] == team]['wins'].values[0]
-        team_completed_games['avg_win_prob'] = np.where(team_completed_games['home_team'] == team,
-                                                        PEAR_Win_Prob(average_pr, team_completed_games['away_pr']),
-                                                        100 - PEAR_Win_Prob(team_completed_games['home_pr'], average_pr))
-        team_completed_games['good_win_prob'] = np.where(team_completed_games['home_team'] == team,
-                                                        PEAR_Win_Prob(good_team_pr, team_completed_games['away_pr']),
-                                                        100 - PEAR_Win_Prob(team_completed_games['home_pr'], good_team_pr))
-        team_completed_games['elite_win_prob']  = np.where(team_completed_games['home_team'] == team,
-                                                        PEAR_Win_Prob(elite_team_pr, team_completed_games['away_pr']),
-                                                        100 - PEAR_Win_Prob(team_completed_games['home_pr'], elite_team_pr))
 
-        # team_completed_games['avg_win_prob'] = np.where(team_completed_games['home_team'] == team, 
-        #                             round((10**((average_elo-team_completed_games['away_elo']) / 400)) / ((10**((average_elo-team_completed_games['away_elo']) / 400)) + 1)*100, 2), 
-        #                             100 - round((10**((team_completed_games['home_elo'] - average_elo) / 400)) / ((10**((team_completed_games['home_elo']- average_elo) / 400)) + 1)*100, 2))
-        current_xWins = round(sum(team_completed_games['avg_win_prob']) / 100, 2)
-        good_xWins = round(sum(team_completed_games['good_win_prob']) / 100, 2)
-        elite_xWins = round(sum(team_completed_games['elite_win_prob']) / 100, 2)
-        if games_played != len(team_completed_games):
-            current_xWins += 1
-            good_xWins += 1
-            elite_xWins += 1
-        relative_current_xWins = round(wins - current_xWins, 2)
-        relative_good_xWins = round(wins - good_xWins, 2)
-        relative_elite_xWins = round(wins - elite_xWins, 2)
-        current_xWins_list.append(relative_current_xWins)
-        good_xWins_list.append(relative_good_xWins)
-        elite_xWins_list.append(relative_elite_xWins)
-    SOR = pd.DataFrame(zip(team_data['team'], current_xWins_list, good_xWins_list, elite_xWins_list), columns=['team','wins_above_average','wins_above_good','wins_above_elite'])
-    SOR = SOR.sort_values('wins_above_average', ascending=False).reset_index(drop=True)
+try:
+    average_pr = team_data['power_rating'].mean()
+    good_pr = average_pr + team_data['power_rating'].std()
+    elite_pr = average_pr + 2 * team_data['power_rating'].std()
+
+    completed_games = year_long_schedule[year_long_schedule['home_points'].notna()]
+    current_xWins_list, good_xWins_list, elite_xWins_list = [], [], []
+
+    for team in team_data['team']:
+        team_games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
+        gp = records.loc[records['team'] == team, 'games_played'].values[0]
+        wins = records.loc[records['team'] == team, 'wins'].values[0]
+
+        for pr_label, pr_val, store in zip(
+            ['avg_win_prob', 'good_win_prob', 'elite_win_prob'],
+            [average_pr, good_pr, elite_pr],
+            [current_xWins_list, good_xWins_list, elite_xWins_list]
+        ):
+            team_games[pr_label] = np.where(
+                team_games['home_team'] == team,
+                PEAR_Win_Prob(pr_val, team_games['away_pr']),
+                100 - PEAR_Win_Prob(team_games['home_pr'], pr_val)
+            )
+
+        current_x = team_games['avg_win_prob'].sum() / 100
+        good_x = team_games['good_win_prob'].sum() / 100
+        elite_x = team_games['elite_win_prob'].sum() / 100
+
+        if gp != len(team_games):
+            current_x += 1
+            good_x += 1
+            elite_x += 1
+
+        current_xWins_list.append(round(wins - current_x, 2))
+        good_xWins_list.append(round(wins - good_x, 2))
+        elite_xWins_list.append(round(wins - elite_x, 2))
+
+    SOR = pd.DataFrame({
+        'team': team_data['team'],
+        'wins_above_average': current_xWins_list,
+        'wins_above_good': good_xWins_list,
+        'wins_above_elite': elite_xWins_list
+    }).sort_values('wins_above_average', ascending=False).reset_index(drop=True)
     SOR['SOR'] = SOR.index + 1
     print("SOR Prep Done!")
 except Exception as e:
     print(f"Error in code chunk: SOR Prep. Error: {e}")
 
+
 try:
-    ####### rtp
-    from scipy.stats import norm # type: ignore
-    num_12_pr = team_data['power_rating'][11]
-    num_12_elo = elo_ratings.sort_values('elo', ascending=False)[11:12]['elo'].values[0]
+    from scipy.stats import norm
+    num_12_pr = team_data['power_rating'].iloc[11]
     completed_games = year_long_schedule[year_long_schedule['home_points'].notna()]
     completed_games['margin_of_victory'] = completed_games['home_points'] - completed_games['away_points']
-    standard_deviation = abs(completed_games['margin_of_victory']).std()
+    std_dev = completed_games['margin_of_victory'].abs().std()
+
     team_probabilities = []
     for team in team_data['team']:
-        team_games = completed_games[
-            (completed_games['home_team'] == team) | (completed_games['away_team'] == team)
-        ]
-        total_probability = 0
-        for _, game in team_games.iterrows():
-            if game['home_team'] == team:
-                twelve_expected_margin = (
-                    4.6 + num_12_pr - team_data.loc[team_data['team'] == game['away_team'], 'power_rating'].values[0]
-                )
-                expected_margin = (
-                    4.6 + team_data.loc[team_data['team'] == game['home_team'], 'power_rating'].values[0] - team_data.loc[team_data['team'] == game['away_team'], 'power_rating'].values[0]
-                )
-                actual_margin = game['margin_of_victory']
+        games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
+        total_prob = 0
+
+        for _, g in games.iterrows():
+            home, away = g['home_team'], g['away_team']
+            mov = g['margin_of_victory']
+            home_pr = team_data.loc[team_data['team'] == home, 'power_rating'].values[0]
+            away_pr = team_data.loc[team_data['team'] == away, 'power_rating'].values[0]
+
+            if team == home:
+                expected = 4.6 + home_pr - away_pr
             else:
-                expected_margin = (
-                    team_data.loc[team_data['team'] == game['away_team'], 'power_rating'].values[0] - (team_data.loc[team_data['team'] == game['home_team'], 'power_rating'].values[0] + 4.6)
-                )
-                twelve_expected_margin = (
-                    num_12_pr - (team_data.loc[team_data['team'] == game['home_team'], 'power_rating'].values[0] + 4.6)
-                )
-                actual_margin = -game['margin_of_victory']  # Reverse for away games
-            z_score = (actual_margin - expected_margin) / standard_deviation
-            twelve_score = (actual_margin - twelve_expected_margin) / standard_deviation
-            probability = norm.cdf(z_score) - 0.5
-            twelve_probability = 1 - norm.cdf(twelve_score)
+                expected = away_pr - (home_pr + 4.6)
+                mov = -mov
 
-            # relative to your own expectation
-            total_probability += (probability)
+            z = (mov - expected) / std_dev
+            prob = norm.cdf(z) - 0.5
+            total_prob += prob
 
-            # relative to the number 12 team
-            # total_probability += (probability - twelve_probability)  
-        team_probabilities.append({'team': team, 'RTP': (total_probability/ len(team_games))})
-    RTP = pd.DataFrame(team_probabilities)
-    RTP = RTP.sort_values(by='RTP', ascending=False)
-    RTP['RTP'] = 10 + (10 * RTP['RTP'])
+        team_probabilities.append({'team': team, 'RTP': 10 + 10 * (total_prob / len(games))})
+
+    RTP = pd.DataFrame(team_probabilities).sort_values('RTP', ascending=False)
     print("RTP Prep Done!")
 except Exception as e:
     print(f"Error in code chunk: RTP Prep. Error: {e}")
 
+
 try:
-    ###### most deserving
-    num_12_pr = team_data['power_rating'][11]
-    # Ensure MOV is calculated in the completed_games DataFrame
+    num_12_pr = team_data['power_rating'].iloc[11]
     completed_games = year_long_schedule[year_long_schedule['home_points'].notna()]
     completed_games['margin_of_victory'] = completed_games['home_points'] - completed_games['away_points']
-    # Function to scale MOV
-    def f(mov):
-        return np.clip(np.log(abs(mov) + 1) * np.sign(mov), -10, 10)
-    current_xWins_list = []
+    f = lambda mov: np.clip(np.log1p(np.abs(mov)) * np.sign(mov), -10, 10)
+
+    relative_xWins = []
     for team in team_data['team']:
-        # Filter completed games for the current team
-        team_completed_games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]   
-        # Get the current team's record
-        games_played = records[records['team'] == team]['games_played'].values[0]
-        wins = records[records['team'] == team]['wins'].values[0] 
-        # Adjust win probability with MOV influence
-        team_completed_games['avg_win_prob'] = np.where(
-            team_completed_games['home_team'] == team,
-            PEAR_Win_Prob(num_12_pr, team_completed_games['away_pr']) + f(team_completed_games['margin_of_victory']),
-            100 - PEAR_Win_Prob(team_completed_games['home_pr'], num_12_pr) - f(-team_completed_games['margin_of_victory'])
+        games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
+        gp = records.loc[records['team'] == team, 'games_played'].values[0]
+        wins = records.loc[records['team'] == team, 'wins'].values[0]
+
+        games['avg_win_prob'] = np.where(
+            games['home_team'] == team,
+            PEAR_Win_Prob(num_12_pr, games['away_pr']) + f(games['margin_of_victory']),
+            100 - PEAR_Win_Prob(games['home_pr'], num_12_pr) - f(-games['margin_of_victory'])
         )
-        # Calculate expected wins (xWins)
-        current_xWins = round(sum(team_completed_games['avg_win_prob']) / 100, 3)
-        # Adjust for incomplete games
-        if games_played != len(team_completed_games):
-            current_xWins += 1
-        # Calculate relative xWins (wins vs. expected wins)
-        relative_current_xWins = round(wins - current_xWins, 3)
-        current_xWins_list.append(relative_current_xWins)
-    # Create the "most deserving" DataFrame
-    most_deserving = pd.DataFrame(zip(team_data['team'], current_xWins_list), columns=['team', 'wins_above_average'])
+
+        xWins = games['avg_win_prob'].sum() / 100
+        if gp != len(games): xWins += 1
+        relative_xWins.append(round(wins - xWins, 3))
+
+    most_deserving = pd.DataFrame({'team': team_data['team'], 'wins_above_average': relative_xWins})
     most_deserving = most_deserving.sort_values('wins_above_average', ascending=False).reset_index(drop=True)
     most_deserving['Performance'] = most_deserving.index + 1
     print("Most Deserving Prep Done!")
@@ -2574,40 +2328,31 @@ except Exception as e:
 print("Prep Work Done!")
 
 try:
-    top_25 = all_data[:25]
-    last_week_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week-1}.csv")
-
-    fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
+    top_25 = all_data.head(25).reset_index(drop=True)
+    fig, axs = plt.subplots(5, 5, figsize=(7, 7), dpi=125)
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Week {current_week} PEAR", fontsize=20, fontweight='bold', color='black')
-    fig.text(0.5, 0.93, "Power Rating (Position Change)", fontsize=8, ha='center', color='black')
+    plt.suptitle(f"Week {current_week} PEAR Top 25", fontsize=20, fontweight='bold', color='black')
     fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
 
     for i, ax in enumerate(axs.ravel()):
         team = top_25.loc[i, 'team']
-        logo_url = logos[logos['team'] == team]['logo'].values[0][0]
+        logo_url = logos.loc[logos['team'] == team, 'logo'].values[0][0]
         response = requests.get(logo_url)
         img = Image.open(BytesIO(response.content))
         ax.imshow(img)
         ax.set_facecolor('#f0f0f0')
-        power_rating = top_25.loc[i, 'power_rating']
-        last_week_index = last_week_data[last_week_data['team'] == team].index[0]
-        #  ({round(power_rating-last_week_pr, 1)}) <- shows change from last week. Currently irrelevant
-        ax.set_title(f"#{i+1} {team} \n{round(power_rating,1)} ({round(last_week_index - i, 1)})", fontsize=8)
+        ax.set_title(f"#{i+1} {team} \n{round(top_25.loc[i, 'power_rating'], 1)}", fontsize=8)
         ax.axis('off')
-    file_path = os.path.join(folder_path, "top25")
-    plt.savefig(file_path, bbox_inches = 'tight', dpi = 300)
+    plt.savefig(os.path.join(folder_path, "top25"), bbox_inches='tight', dpi=300)
     print("Top 25 Done!")
 except Exception as e:
     print(f"Error in code chunk: Top 25 Ratings. Error: {e}")
 
 try:
     group_of_5 = ['Conference USA', 'Mid-American', 'Sun Belt', 'American Athletic', 'Mountain West']
-    filtered_data = all_data[all_data['conference'].isin(group_of_5)]
-    top_25 = filtered_data.head(25).reset_index(drop=True)
-
-    fig, axs = plt.subplots(5, 5, figsize=(7, 7),dpi=125)
+    top_25 = all_data[all_data['conference'].isin(group_of_5)].head(25).reset_index(drop=True)
+    fig, axs = plt.subplots(5, 5, figsize=(7, 7), dpi=125)
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#CECEB2')
     plt.suptitle(f"Week {current_week} GO5 PEAR", fontsize=20, fontweight='bold', color='black')
@@ -2615,15 +2360,14 @@ try:
 
     for i, ax in enumerate(axs.ravel()):
         team = top_25.loc[i, 'team']
-        logo_url = logos[logos['team'] == team]['logo'].values[0][0]
+        logo_url = logos.loc[logos['team'] == team, 'logo'].values[0][0]
         response = requests.get(logo_url)
         img = Image.open(BytesIO(response.content))
         ax.imshow(img)
         ax.set_facecolor('#f0f0f0')
         ax.set_title(f"#{i+1} {team} \n{round(top_25.loc[i, 'power_rating'],1)}", fontsize=8)
         ax.axis('off')
-    file_path = os.path.join(folder_path, "go5_top25")
-    plt.savefig(file_path, bbox_inches = 'tight', dpi = 300)
+    plt.savefig(os.path.join(folder_path, "go5_top25"), bbox_inches='tight', dpi=300)
     print("GO5 Top 25 Done!")
 except Exception as e:
     print(f"Error in code chunk: GO5 Top 25 Ratings. Error: {e}")
@@ -2776,7 +2520,8 @@ except Exception as e:
     print(f"Error in code chunk: Projected Playoff. Error: {e}")
 
 try:
-    best_and_worst(all_data, logos, 'total_turnovers_scaled', "Turnover Margin Percentiles", "Percentile Based: 100 is best, 1 is worst", "turnovers")
+    best_and_worst(all_data, logos, 'total_turnovers_scaled', "Turnover Margin Percentiles", 
+                   "Percentile Based: 100 is best, 1 is worst", "turnovers")
     print("Turnovers Done!")
 except Exception as e:
     print(f"Error in code chunk: Turnovers. Error: {e}")
@@ -2784,7 +2529,8 @@ except Exception as e:
 try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
     all_data['offensive_total'] = scaler100.fit_transform(all_data[['offensive_total']])
-    best_and_worst(all_data, logos, 'offensive_total', "PEAR Raw Offenses: Best and Worst 25", "Percentile Based: 100 is best, 1 is worst", "offenses")
+    best_and_worst(all_data, logos, 'offensive_total', "PEAR Raw Offenses: Best and Worst 25", 
+                   "Percentile Based: 100 is best, 1 is worst", "offenses")
     print("Offenses Done!")
 except Exception as e:
     print(f"Error in code chunk: Offenses. Error: {e}")
@@ -2792,7 +2538,8 @@ except Exception as e:
 try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
     all_data['defensive_total'] = scaler100.fit_transform(all_data[['defensive_total']])
-    best_and_worst(all_data, logos, 'defensive_total', "PEAR Raw Defenses: Best and Worst 25", "100 is the best raw defense, 1 is the worst", "defenses")
+    best_and_worst(all_data, logos, 'defensive_total', "PEAR Raw Defenses: Best and Worst 25", 
+                   "100 is the best raw defense, 1 is the worst", "defenses")
     print("Defenses Done!")
 except Exception as e:
     print(f"Error in code chunk: Defenses. Error: {e}")
@@ -2837,7 +2584,8 @@ except Exception as e:
 try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
     all_data['STM_scaled'] = scaler100.fit_transform(all_data[['STM']])
-    best_and_worst(all_data, logos, 'STM_scaled', "PEAR Special Teams", "Percentile Based: 100 is best, 1 is worst", "special_teams")
+    best_and_worst(all_data, logos, 'STM_scaled', "PEAR Special Teams", 
+                   "Percentile Based: 100 is best, 1 is worst", "special_teams")
     print("Special Teams Done!")
 except Exception as e:
     print(f"Error in code chunk: Special Teams. Error: {e}")
@@ -2846,7 +2594,8 @@ try:
     pbr_min = all_data['PBR'].min()
     pbr_max = all_data['PBR'].max()
     all_data['PBR_scaled'] = 100 - (all_data['PBR'] - pbr_min) * (99 / (pbr_max - pbr_min))
-    best_and_worst(all_data, logos, 'PBR_scaled', "PEAR Penalty Burden Ratio", "How Penalties Impact Success - 100 is best, 1 is worst", "penalty_burden_ratio")
+    best_and_worst(all_data, logos, 'PBR_scaled', "PEAR Penalty Burden Ratio", 
+                   "How Penalties Impact Success - 100 is best, 1 is worst", "penalty_burden_ratio")
     print("PBR Done!")
 except Exception as e:
     print(f"Error in code chunk: PBR. Error: {e}")
@@ -2854,7 +2603,8 @@ except Exception as e:
 try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
     all_data['DCE_scaled'] = scaler100.fit_transform(all_data[['DCE']])
-    best_and_worst(all_data, logos, 'DCE_scaled', "PEAR Drive Control Efficiency", "How Well You Control the Ball - 100 is best, 1 is worst", "drive_control_efficiency")
+    best_and_worst(all_data, logos, 'DCE_scaled', "PEAR Drive Control Efficiency", 
+                   "How Well You Control the Ball - 100 is best, 1 is worst", "drive_control_efficiency")
     print("DCE Done!")
 except Exception as e:
     print(f"Error in code chunk: DCE. Error: {e}")
@@ -2862,7 +2612,8 @@ except Exception as e:
 try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
     all_data['DDE_scaled'] = scaler100.fit_transform(all_data[['DDE']])
-    best_and_worst(all_data, logos, 'DDE_scaled', "PEAR Drive Disruption Efficiency", "How Well You Disrupt the Offense - 100 is best, 1 is worst", "drive_disruption_efficiency")
+    best_and_worst(all_data, logos, 'DDE_scaled', "PEAR Drive Disruption Efficiency", 
+                   "How Well You Disrupt the Offense - 100 is best, 1 is worst", "drive_disruption_efficiency")
     print("DDE Done!")
 except Exception as e:
     print(f"Error in code chunk: DDE. Error: {e}")
@@ -2906,38 +2657,40 @@ except Exception as e:
 
 try:
     columns_to_average = ["offensive_rank", "defensive_rank", "STM_rank", "PBR_rank", "DCE_rank", "DDE_rank"]
-    all_data["average_metric_rank"] = round(all_data[columns_to_average].mean(axis=1),1)
-    best_and_worst(all_data, logos, 'average_metric_rank', "PEAR Average Metric Ranking", "Average OFF, DEF, ST, PBR, DCE, DDE Ranking - Lower is Better", "average_metric_rank")
+    all_data["average_metric_rank"] = round(all_data[columns_to_average].mean(axis=1), 1)
+    best_and_worst(all_data, logos, 'average_metric_rank', "PEAR Average Metric Ranking", 
+                   "Average OFF, DEF, ST, PBR, DCE, DDE Ranking - Lower is Better", "average_metric_rank")
     print("Average Metric Done!")
 except Exception as e:
     print(f"Error in code chunk: Average Metric. Error: {e}")
 
 try:
     performance_list = []
-    completed_games = year_long_schedule.dropna()
-    for team_name in team_data['team']:
-        wins = records[records['team'] == team_name]['wins'].values[0]
-        losses = records[records['team'] == team_name]['losses'].values[0]
+    completed_games = year_long_schedule.dropna(subset=["home_points", "away_points"])
+    for team in team_data['team']:
+        wins = records.loc[records['team'] == team, 'wins'].values[0]
+        losses = records.loc[records['team'] == team, 'losses'].values[0]
 
-        team_completed_games = completed_games[(completed_games['home_team'] == team_name) | (completed_games['away_team'] == team_name)]
-        team_completed_games['team_win_prob'] = np.where(team_completed_games['home_team'] == team_name, 
-                                        team_completed_games['PEAR_win_prob'], 
-                                        100 - team_completed_games['PEAR_win_prob'])
-        completed_expected_wins = round(sum(team_completed_games['team_win_prob']) / 100, 2)
-        completed_expected_losses = round(len(team_completed_games) - completed_expected_wins, 1)
-        games_played = wins + losses
-        if len(team_completed_games) != games_played:
-            completed_expected_wins = completed_expected_wins + 1
-        performance = wins - completed_expected_wins
-        performance_list.append(performance)
-    current_performance = pd.DataFrame(zip(team_data['team'], performance_list), columns = ['team', 'performance'])
-    best_and_worst2(current_performance, logos, 'performance', f'Week {current_week} PEAR Overperformers and Underperformers', "Wins ABOVE or BELOW Your Retroactive Win Expectation", "overperformer_and_underperformer")
+        team_games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)].copy()
+        team_games['team_win_prob'] = np.where(team_games['home_team'] == team,
+                                               team_games['PEAR_win_prob'],
+                                               100 - team_games['PEAR_win_prob'])
+        xwins = round(team_games['team_win_prob'].sum() / 100, 2)
+        if len(team_games) != (wins + losses):
+            xwins += 1
+        performance_list.append(wins - xwins)
+
+    current_performance = pd.DataFrame({'team': team_data['team'], 'performance': performance_list})
+    best_and_worst2(current_performance, logos, 'performance', 
+                    f'Week {current_week} PEAR Overperformers and Underperformers', 
+                    "Wins ABOVE or BELOW Your Retroactive Win Expectation", "overperformer_and_underperformer")
     print("Achieving vs. Expectation Done!")
 except Exception as e:
     print(f"Error in code chunk: Achieving vs. Expectation. Error: {e}")
 
 try:
-    best_and_worst2(most_deserving, logos, 'wins_above_average', f'Week {current_week} Most Deserving', "Performance Against Schedule Relative to the No. 12 Power Rated Team", "most_deserving")
+    best_and_worst2(most_deserving, logos, 'wins_above_average', f'Week {current_week} Most Deserving',
+                    "Performance Against Schedule Relative to the No. 12 Power Rated Team", "most_deserving")
     print("Most Deserving Done!")
 except Exception as e:
     print(f"Error in code chunk: Most Deserving. Error: {e}")
@@ -3060,13 +2813,15 @@ except Exception as e:
     print(f"Error in code chunk: Most Deserving Playoff. Error: {e}")
 
 try:
-    best_and_worst2(SOS, logos, 'avg_expected_wins', f'Week {current_week} PEAR SOS', "Efficiency of an Elite Team Against Your Opponents", "strength_of_schedule")
+    best_and_worst2(SOS, logos, 'avg_expected_wins', f'Week {current_week} PEAR SOS', 
+                    "Efficiency of an Elite Team Against Your Opponents", "strength_of_schedule")
     print("SOS Done!")
 except Exception as e:
     print(f"Error in code chunk: SOS. Error: {e}")
 
 try:
-    best_and_worst2(SOR, logos, 'wins_above_good', f'Week {current_week} PEAR SOR', "Wins Above or Below a Good Team", "strength_of_record")
+    best_and_worst2(SOR, logos, 'wins_above_good', f'Week {current_week} PEAR SOR', 
+                    "Wins Above or Below a Good Team", "strength_of_record")
     print("SOR Done!")
 except Exception as e:
     print(f"Error in code chunk: SOR. Error: {e}")
@@ -3075,10 +2830,12 @@ try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
     all_data['most_deserving_scaled'] = scaler100.fit_transform(all_data[['most_deserving_wins']])
     all_data['talent_performance'] = (all_data['most_deserving_scaled'] - all_data['avg_talent']) / math.sqrt(2)
-    best_and_worst(all_data, logos, 'talent_performance', "PEAR Talent Performance Gap", "Is Your Team Outperforming or Underperforming Its Roster?", "talent_performance")
+    best_and_worst(all_data, logos, 'talent_performance', "PEAR Talent Performance Gap", 
+                   "Is Your Team Outperforming or Underperforming Its Roster?", "talent_performance")
     print("Talent Performance Done!")
 except Exception as e:
     print(f"Error in code chunk: Talent Performance. Error: {e}")
+
 
 try:
     average_pr = round(team_data['power_rating'].mean(), 2)
