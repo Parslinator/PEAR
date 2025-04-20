@@ -1284,6 +1284,153 @@ def simulate_regional(team_a, team_b, team_c, team_d, stats_and_metrics):
     plt.text(0, 0.06, f"@PEARatings", fontsize=12, fontweight='bold', ha='center')
     return fig
 
+def calculate_conference_results(schedule_df, comparison_date, stats_and_metrics, num_simulations=100):
+    # Ensure "Date" is in datetime format
+    schedule_df["Date"] = pd.to_datetime(schedule_df["Date"])
+
+    # 1. Filter to include only intra-conference games (same conference) at the beginning
+    team_conferences = stats_and_metrics.set_index("Team")["Conference"].to_dict()
+    schedule_df["home_conf"] = schedule_df["home_team"].map(team_conferences)
+    schedule_df["away_conf"] = schedule_df["away_team"].map(team_conferences)
+
+    # Only keep intra-conference games (where home and away teams are in the same conference)
+    schedule_df = schedule_df[schedule_df["home_conf"] == schedule_df["away_conf"]].copy()
+
+    # 2. Filter to include only 3-game series between the same teams (home/away games)
+    schedule_df["matchup"] = schedule_df["home_team"] + " vs " + schedule_df["away_team"]
+    schedule_df["series_id"] = schedule_df.groupby("matchup").cumcount()
+
+    # Only keep teams that have 3 consecutive games (3-game series)
+    valid_matchups = schedule_df["matchup"].value_counts()
+    valid_matchups = valid_matchups[valid_matchups >= 3].index
+    schedule_df = schedule_df[schedule_df["matchup"].isin(valid_matchups)]
+
+    # 3. Filter out the games based on comparison date (completed vs remaining)
+    completed_schedule = schedule_df[
+        (schedule_df["Date"] <= comparison_date) & (schedule_df["home_score"] != schedule_df["away_score"])
+    ].reset_index(drop=True)
+
+    remaining_games = schedule_df[
+        (schedule_df["Date"] >= comparison_date) & 
+        (~schedule_df["Result"].str.startswith(("W", "L")))
+    ].reset_index(drop=True)
+
+    # 4. Filter completed games to ensure we only have wins/losses (not ties)
+    completed_schedule = completed_schedule[completed_schedule["Result"].str.startswith(("W", "L"))]
+
+    # 5. Calculate the current conference records from completed games
+    completed_schedule["home_conf"] = completed_schedule["home_team"].map(team_conferences)
+    completed_schedule["away_conf"] = completed_schedule["away_team"].map(team_conferences)
+
+    conf_games = completed_schedule[completed_schedule["home_conf"] == completed_schedule["away_conf"]].copy()
+    conf_games["Conference"] = conf_games["home_conf"]
+
+    # Determine winner and loser for completed games
+    conf_games["winner"] = np.where(conf_games["home_score"] > conf_games["away_score"], conf_games["home_team"], conf_games["away_team"])
+    conf_games["loser"] = np.where(conf_games["home_score"] > conf_games["away_score"], conf_games["away_team"], conf_games["home_team"])
+
+    win_counts = conf_games.groupby("winner").size().reset_index(name="Conf_Wins")
+    loss_counts = conf_games.groupby("loser").size().reset_index(name="Conf_Losses")
+
+    conference_records = pd.merge(win_counts, loss_counts, left_on="winner", right_on="loser", how="outer")
+    conference_records["Team"] = conference_records["winner"].combine_first(conference_records["loser"])
+    conference_records = conference_records[["Team", "Conf_Wins", "Conf_Losses"]].fillna(0)
+
+    # Divide by 2 to avoid double counting
+    conference_records["Conf_Wins"] = (conference_records["Conf_Wins"] / 2).astype(int)
+    conference_records["Conf_Losses"] = (conference_records["Conf_Losses"] / 2).astype(int)
+    conference_records["Conference"] = conference_records["Team"].map(team_conferences)
+
+    # 6. Simulate remaining games
+    projected_wins = []
+    games_remaining = remaining_games.groupby("Team").size()
+
+    for _ in range(num_simulations):
+        unique_games = remaining_games.drop_duplicates(subset=["Date", "home_team", "away_team"]).copy()
+        unique_games["random_val"] = np.random.rand(len(unique_games))
+        unique_games["home_wins"] = unique_games["random_val"] < unique_games["home_win_prob"]
+
+        results_map = unique_games.set_index(["Date", "home_team", "away_team"])["home_wins"].to_dict()
+        remaining_games["home_wins"] = remaining_games[["Date", "home_team", "away_team"]].apply(lambda x: results_map.get(tuple(x), None), axis=1)
+        remaining_games["winner"] = np.where(remaining_games["home_wins"], remaining_games["home_team"], remaining_games["away_team"])
+        remaining_games["loser"] = np.where(remaining_games["home_wins"], remaining_games["away_team"], remaining_games["home_team"])
+        remaining_games["win_flag"] = (remaining_games["winner"] == remaining_games["Team"]).astype(int)
+
+        wins_per_team = remaining_games.groupby("Team")["win_flag"].sum()
+        projected_wins.append(wins_per_team)
+
+    projected_wins_df = pd.DataFrame(projected_wins).mean().round().reset_index()
+    projected_wins_df.columns = ["Team", "Remaining_Wins"]
+
+    projected_wins_df["Remaining_Wins"] = (projected_wins_df["Remaining_Wins"]).astype(int)
+    projected_wins_df["Games_Remaining"] = projected_wins_df["Team"].map(games_remaining)
+
+    # Divide the Games Remaining by 2 to avoid double counting
+    projected_wins_df["Games_Remaining"] = (projected_wins_df["Games_Remaining"]).astype(int)
+
+    projected_wins_df["Remaining_Losses"] = projected_wins_df["Games_Remaining"] - projected_wins_df["Remaining_Wins"]
+    projected_wins_df["Conference"] = projected_wins_df["Team"].map(team_conferences)
+
+    # 7. Combine the current and projected records, dividing by 2
+    combined = pd.merge(
+        projected_wins_df,
+        conference_records,
+        on=["Team", "Conference"],
+        how="left"
+    )
+
+    # Final division to handle the projected conference wins/losses
+    combined[["Conf_Wins", "Conf_Losses", "Remaining_Wins", "Games_Remaining"]] = combined[["Conf_Wins", "Conf_Losses", "Remaining_Wins", "Games_Remaining"]].fillna(0).astype(int)
+    combined["Proj_Conf_Wins"] = (combined["Conf_Wins"] + combined["Remaining_Wins"])
+    combined["Proj_Conf_Losses"] = (combined["Conf_Losses"] + combined["Remaining_Losses"])
+
+    return combined, completed_schedule, remaining_games
+
+def conference_projected_standing(this_conference, projected_wins):
+    conf_df = projected_wins[projected_wins['Conference'] == this_conference].sort_values('Proj_Conf_Wins', ascending=False).reset_index(drop=True)
+    conf_df = conf_df[['Team', 'Projected_Conf_Record', 'Current_Conf_Record', 'Remaining_Conf_Record']]
+
+    # --- Build table ---
+    make_table = conf_df.set_index('Team')
+    fig, ax = plt.subplots(figsize=(12, len(make_table) * 0.7))
+    fig.patch.set_facecolor('#CECEB2')
+
+    column_definitions = [
+        ColumnDefinition(name='Team',
+                        title='Team',
+                        textprops={"ha": "left", "weight": "bold", "fontsize": 16},
+                        width=0.5),
+        ColumnDefinition(
+            name='Projected_Conf_Record',
+            title='Projected Record',
+            textprops={"ha": "center", "fontsize": 16},
+            width=0.5
+        ),
+        ColumnDefinition(
+            name='Current_Conf_Record',
+            title='Current Record',
+            textprops={"ha": "center", "fontsize": 16},
+            width=0.5
+        ),
+        ColumnDefinition(
+            name='Remaining_Conf_Record',
+            title='Remaining Record',
+            textprops={"ha": "center", "fontsize": 16},
+            width=0.5
+        ),
+    ]
+
+    tab = Table(make_table, column_definitions=column_definitions, footer_divider=True, row_divider_kw={"linewidth": 1})
+    tab.col_label_row.set_facecolor('#CECEB2')
+    tab.columns["Team"].set_facecolor('#CECEB2')
+    tab.columns['Projected_Conf_Record'].set_facecolor('#CECEB2')
+    tab.columns['Current_Conf_Record'].set_facecolor('#CECEB2')
+    tab.columns['Remaining_Conf_Record'].set_facecolor('#CECEB2')
+
+    plt.text(0.055, -1.65, f"{this_conference} Projected Standings", fontsize=24, fontweight='bold', ha='left')
+    plt.text(0.055, -1, f"@PEARatings", fontsize=16, ha='left')
+    return fig
+
 st.title(f"{current_season} CBASE PEAR")
 st.logo("./PEAR/pear_logo.jpg", size = 'large')
 st.caption(f"Ratings Updated {formatted_latest_date}")
@@ -1317,6 +1464,7 @@ st.sidebar.markdown("""
     <a class="nav-link" href="#team-percentiles">Team Percentiles</a>
     <a class="nav-link" href="#conference-team-sheets">Conference Team Sheets</a>
     <a class="nav-link" href="#simulate-regional">Simulate Regional</a>
+    <a class="nav-link" href="#projected-conference-standings">Projected Conference Standings</a>
 """, unsafe_allow_html=True)
 
 st.divider()
@@ -1450,6 +1598,33 @@ with st.form(key='simulate_regional'):
     if sim_region:
         fig = simulate_regional(team_a, team_b, team_c, team_d, modeling_stats)
         st.pyplot(fig)
+
+st.divider()
+
+# Run simulation + merge with current records
+projected_wins, clean_completed, clean_remain = calculate_conference_results(schedule_df, comparison_date, modeling_stats, num_simulations=100)
+
+projected_wins[["Conf_Wins", "Conf_Losses"]] = projected_wins[["Conf_Wins", "Conf_Losses"]].fillna(0).astype(int)
+projected_wins["Proj_Conf_Wins"] = projected_wins["Conf_Wins"] + projected_wins["Remaining_Wins"]
+projected_wins["Proj_Conf_Losses"] = projected_wins["Conf_Losses"] + projected_wins["Remaining_Losses"]
+projected_wins["Projected_Conf_Record"] = projected_wins.apply(
+    lambda x: f"{int(x['Proj_Conf_Wins'])}-{int(x['Proj_Conf_Losses'])}", axis=1
+)
+projected_wins["Current_Conf_Record"] = projected_wins.apply(
+    lambda x: f"{int(x['Conf_Wins'])}-{int(x['Conf_Losses'])}", axis=1
+)
+projected_wins["Remaining_Conf_Record"] = projected_wins.apply(
+    lambda x: f"{int(x['Remaining_Wins'])}-{int(x['Remaining_Losses'])}", axis=1
+)
+st.markdown(f'<h2 id="projected-conference-standings">Projected Conference Standings</h2>', unsafe_allow_html=True)
+with st.form(key='projected_conference_standings'):
+    conference = st.selectbox("Conference", ["Select Conference"] + list(sorted(modeling_stats['Conference'].unique())))
+    conference_standings = st.form_submit_button("Projected Standings")
+    if conference_standings:
+        fig = conference_projected_standing(conference, projected_wins)
+        st.pyplot(fig)
+
+st.divider()
 
 comparison_date = comparison_date.strftime("%B %d, %Y")
 st.subheader(f"{comparison_date} Games")
