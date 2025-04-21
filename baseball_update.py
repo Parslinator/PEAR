@@ -1083,7 +1083,7 @@ print("------------------------")
 print(f"Rating: {optimized_weights[0] * 100:.1f}%")
 print(f"RQI: {(1 - (optimized_weights[0] + optimized_weights[1])) * 100:.1f}%")
 print(f"SOS: {optimized_weights[1] * 100:.1f}%")
-print(f"NET and RPI Correlation: {stats_and_metrics[['NET', 'RPI']].corr(method='spearman').iloc[0,1]}")
+print(f"NET and RPI Correlation: {stats_and_metrics[['NET', 'RPI']].corr(method='spearman').iloc[0,1] * 100:.1f}%")
 adj_sos_weight = (optimized_weights[1]) / ((1 - (optimized_weights[0] + optimized_weights[1])) + (optimized_weights[1]))
 adj_rqi_weight = (1 - (optimized_weights[0] + optimized_weights[1])) / ((1 - (optimized_weights[0] + optimized_weights[1])) + (optimized_weights[1]))
 stats_and_metrics['Norm_Resume'] = adj_rqi_weight * stats_and_metrics['Norm_RQI'] + adj_sos_weight * stats_and_metrics['Norm_SOS']
