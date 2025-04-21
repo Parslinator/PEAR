@@ -1129,7 +1129,7 @@ def calculate_quadrant_records(completed_schedule, stats_and_metrics):
 
             # Determine quadrant
             thresholds = quadrant_thresholds[location]
-            quadrant = next(i + 1 for i, val in enumerate(thresholds) if opponent_net <= val)
+            quadrant = next((i + 1 for i, val in enumerate(thresholds) if opponent_net <= val), 4)
 
             # Increment win/loss count
             result_key = f'Q{quadrant}_win' if team_won else f'Q{quadrant}_loss'
