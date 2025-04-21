@@ -567,6 +567,10 @@ modeling_stats['Rating'] = modeling_stats['Rating'] - modeling_stats['Rating'].m
 modeling_stats['Rating'] = round(modeling_stats['Rating'] - modeling_stats['Rating'].mean(),2)
 modeling_stats['Rating'] = round(modeling_stats['Rating'], 2)
 
+rating_ranks = modeling_stats['Rating'].rank(ascending=False)
+spearman_corr, _ = spearmanr(rating_ranks, modeling_stats['ELO_Rank'])
+print(f"Rating and ELO Correlation: {spearman_corr * 100:.1f}%")
+
 ending_data = pd.merge(baseball_stats, modeling_stats[['Team', 'Rating']], on="Team", how="inner").sort_values('Rating', ascending=False).reset_index(drop=True)
 ending_data.index = ending_data.index + 1
 
