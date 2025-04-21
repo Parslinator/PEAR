@@ -1294,16 +1294,25 @@ def calculate_conference_results(schedule_df, comparison_date, stats_and_metrics
     schedule_df["away_conf"] = schedule_df["away_team"].map(team_conferences)
 
     # Only keep intra-conference games (where home and away teams are in the same conference)
-    schedule_df = schedule_df[schedule_df["home_conf"] == schedule_df["away_conf"]].copy()
+    schedule_df = schedule_df[schedule_df["home_conf"] == schedule_df["away_conf"]].reset_index(drop=True).copy()
 
     # 2. Filter to include only 3-game series between the same teams (home/away games)
     schedule_df["matchup"] = schedule_df["home_team"] + " vs " + schedule_df["away_team"]
-    schedule_df["series_id"] = schedule_df.groupby("matchup").cumcount()
+    # schedule_df = schedule_df.sort_values(["matchup", "Date"]).reset_index(drop=True)
 
-    # Only keep teams that have 3 consecutive games (3-game series)
-    valid_matchups = schedule_df["matchup"].value_counts()
-    valid_matchups = valid_matchups[valid_matchups >= 3].index
-    schedule_df = schedule_df[schedule_df["matchup"].isin(valid_matchups)]
+    # Identify valid 3-game series based on 3 consecutive rows of same matchup and same conference
+    valid_indices = set()
+    for i in range(len(schedule_df) - 2):
+        row1, row2, row3 = schedule_df.iloc[i], schedule_df.iloc[i+1], schedule_df.iloc[i+2]
+        if (
+            row1["matchup"] == row2["matchup"] == row3["matchup"] and
+            row1["home_conf"] == row1["away_conf"] and
+            row2["home_conf"] == row2["away_conf"] and
+            row3["home_conf"] == row3["away_conf"]
+        ):
+            valid_indices.update([i, i+1, i+2])
+
+    schedule_df = schedule_df.loc[sorted(valid_indices)].reset_index(drop=True)
 
     # 3. Filter out the games based on comparison date (completed vs remaining)
     completed_schedule = schedule_df[

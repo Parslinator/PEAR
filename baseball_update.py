@@ -550,9 +550,11 @@ selected_features, best_weights, best_spearman = run_differential_evolution()
 # --- OUTPUT ---
 feature_weights_dict = dict(zip(selected_features, best_weights))
 sorted_features_weights = sorted(feature_weights_dict.items(), key=lambda item: item[1], reverse=True)
+total_weight = sum(weight for _, weight in sorted_features_weights)
+normalized_weights = [(feature, weight / total_weight) for feature, weight in sorted_features_weights]
 print("Selected Features:")
-for feature, weight in sorted_features_weights:
-    print(f"{feature}: {weight}")
+for feature, weight in normalized_weights:
+    print(f"{feature}: {weight * 100:.1f}%")
 modeling_stats['in_house_pr'] = sum(
     modeling_stats[feat] * weight for feat, weight in zip(selected_features, best_weights)
 )
@@ -1078,9 +1080,9 @@ result = differential_evolution(calculate_net, bounds, strategy='best1bin', maxi
 optimized_weights = result.x
 print("NET Calculation Weights:")
 print("------------------------")
-print(f"Rating: {optimized_weights[0]}")
-print(f"RQI: {1 - (optimized_weights[0] + optimized_weights[1])}")
-print(f"SOS: {optimized_weights[1]}")
+print(f"Rating: {optimized_weights[0] * 100:.1f}%")
+print(f"RQI: {(1 - (optimized_weights[0] + optimized_weights[1])) * 100:.1f}%")
+print(f"SOS: {optimized_weights[1] * 100:.1f}%")
 print(f"NET and RPI Correlation: {stats_and_metrics[['NET', 'RPI']].corr(method='spearman').iloc[0,1]}")
 adj_sos_weight = (optimized_weights[1]) / ((1 - (optimized_weights[0] + optimized_weights[1])) + (optimized_weights[1]))
 adj_rqi_weight = (1 - (optimized_weights[0] + optimized_weights[1])) / ((1 - (optimized_weights[0] + optimized_weights[1])) + (optimized_weights[1]))
