@@ -1288,33 +1288,37 @@ def calculate_conference_results(schedule_df, comparison_date, stats_and_metrics
     # Ensure "Date" is in datetime format
     schedule_df["Date"] = pd.to_datetime(schedule_df["Date"])
 
-    # 1. Filter to include only intra-conference games (same conference) at the beginning
+    # --- Step 1: Filter for intra-conference games only ---
+
     team_conferences = stats_and_metrics.set_index("Team")["Conference"].to_dict()
     schedule_df["home_conf"] = schedule_df["home_team"].map(team_conferences)
     schedule_df["away_conf"] = schedule_df["away_team"].map(team_conferences)
-
-    # Only keep intra-conference games (where home and away teams are in the same conference)
     schedule_df = schedule_df[schedule_df["home_conf"] == schedule_df["away_conf"]].reset_index(drop=True).copy()
 
-    # 2. Filter to include only 3-game series between the same teams (home/away games)
+    # --- Step 2: Filter to valid 3-game intra-conference series ---
+
     schedule_df["matchup"] = schedule_df["home_team"] + " vs " + schedule_df["away_team"]
-    # schedule_df = schedule_df.sort_values(["matchup", "Date"]).reset_index(drop=True)
+    matchup = schedule_df["matchup"].values
+    home_conf = schedule_df["home_conf"].values
+    away_conf = schedule_df["away_conf"].values
 
-    # Identify valid 3-game series based on 3 consecutive rows of same matchup and same conference
-    valid_indices = set()
-    for i in range(len(schedule_df) - 2):
-        row1, row2, row3 = schedule_df.iloc[i], schedule_df.iloc[i+1], schedule_df.iloc[i+2]
-        if (
-            row1["matchup"] == row2["matchup"] == row3["matchup"] and
-            row1["home_conf"] == row1["away_conf"] and
-            row2["home_conf"] == row2["away_conf"] and
-            row3["home_conf"] == row3["away_conf"]
-        ):
-            valid_indices.update([i, i+1, i+2])
+    # Create 3-row rolling windows
+    match0 = matchup[:-2]
+    match1 = matchup[1:-1]
+    match2 = matchup[2:]
+    conf_check_0 = home_conf[:-2] == away_conf[:-2]
+    conf_check_1 = home_conf[1:-1] == away_conf[1:-1]
+    conf_check_2 = home_conf[2:] == away_conf[2:]
+    valid_series = (
+        (match0 == match1) & (match1 == match2) &
+        conf_check_0 & conf_check_1 & conf_check_2
+    )
+    base_indices = np.where(valid_series)[0]
+    valid_indices = np.unique(np.concatenate([base_indices, base_indices + 1, base_indices + 2]))
+    schedule_df = schedule_df.iloc[valid_indices].reset_index(drop=True)
 
-    schedule_df = schedule_df.loc[sorted(valid_indices)].reset_index(drop=True)
+    # --- Step 3: Split into completed and remaining games based on comparison_date ---
 
-    # 3. Filter out the games based on comparison date (completed vs remaining)
     completed_schedule = schedule_df[
         (schedule_df["Date"] <= comparison_date) & (schedule_df["home_score"] != schedule_df["away_score"])
     ].reset_index(drop=True)
@@ -1323,72 +1327,61 @@ def calculate_conference_results(schedule_df, comparison_date, stats_and_metrics
         (schedule_df["Date"] >= comparison_date) & 
         (~schedule_df["Result"].str.startswith(("W", "L")))
     ].reset_index(drop=True)
-
-    # 4. Filter completed games to ensure we only have wins/losses (not ties)
     completed_schedule = completed_schedule[completed_schedule["Result"].str.startswith(("W", "L"))]
 
-    # 5. Calculate the current conference records from completed games
+    # --- Step 4: Compute current conference records from completed games ---
+
     completed_schedule["home_conf"] = completed_schedule["home_team"].map(team_conferences)
     completed_schedule["away_conf"] = completed_schedule["away_team"].map(team_conferences)
-
     conf_games = completed_schedule[completed_schedule["home_conf"] == completed_schedule["away_conf"]].copy()
     conf_games["Conference"] = conf_games["home_conf"]
-
-    # Determine winner and loser for completed games
     conf_games["winner"] = np.where(conf_games["home_score"] > conf_games["away_score"], conf_games["home_team"], conf_games["away_team"])
     conf_games["loser"] = np.where(conf_games["home_score"] > conf_games["away_score"], conf_games["away_team"], conf_games["home_team"])
-
     win_counts = conf_games.groupby("winner").size().reset_index(name="Conf_Wins")
     loss_counts = conf_games.groupby("loser").size().reset_index(name="Conf_Losses")
-
     conference_records = pd.merge(win_counts, loss_counts, left_on="winner", right_on="loser", how="outer")
     conference_records["Team"] = conference_records["winner"].combine_first(conference_records["loser"])
     conference_records = conference_records[["Team", "Conf_Wins", "Conf_Losses"]].fillna(0)
-
-    # Divide by 2 to avoid double counting
     conference_records["Conf_Wins"] = (conference_records["Conf_Wins"] / 2).astype(int)
     conference_records["Conf_Losses"] = (conference_records["Conf_Losses"] / 2).astype(int)
     conference_records["Conference"] = conference_records["Team"].map(team_conferences)
 
-    # 6. Simulate remaining games
-    projected_wins = []
+    # --- Step 5: Simulate outcomes of remaining games ---
+
+    remaining_games = remaining_games.reset_index(drop=True).copy()
+    all_teams = remaining_games["Team"].unique()
+    team_idx_map = {team: idx for idx, team in enumerate(all_teams)}
+    team_win_matrix = np.zeros((num_simulations, len(all_teams)), dtype=int)
+    home_teams = remaining_games["home_team"].values
+    away_teams = remaining_games["away_team"].values
+    probs = remaining_games["home_win_prob"].values
+    teams_in_game = remaining_games["Team"].values
+
+    for sim in range(num_simulations):
+        random_vals = np.random.rand(len(remaining_games))
+        home_wins = random_vals < probs
+        winners = np.where(home_wins, home_teams, away_teams)
+        win_flags = (winners == teams_in_game).astype(int)
+        for team, wins in zip(teams_in_game, win_flags):
+            team_win_matrix[sim, team_idx_map[team]] += wins
+
+    avg_wins = team_win_matrix.mean(axis=0).round().astype(int)
+    projected_wins_df = pd.DataFrame({
+        "Team": list(team_idx_map.keys()),
+        "Remaining_Wins": avg_wins
+    })
     games_remaining = remaining_games.groupby("Team").size()
-
-    for _ in range(num_simulations):
-        unique_games = remaining_games.drop_duplicates(subset=["Date", "home_team", "away_team"]).copy()
-        unique_games["random_val"] = np.random.rand(len(unique_games))
-        unique_games["home_wins"] = unique_games["random_val"] < unique_games["home_win_prob"]
-
-        results_map = unique_games.set_index(["Date", "home_team", "away_team"])["home_wins"].to_dict()
-        remaining_games["home_wins"] = remaining_games[["Date", "home_team", "away_team"]].apply(lambda x: results_map.get(tuple(x), None), axis=1)
-        remaining_games["winner"] = np.where(remaining_games["home_wins"], remaining_games["home_team"], remaining_games["away_team"])
-        remaining_games["loser"] = np.where(remaining_games["home_wins"], remaining_games["away_team"], remaining_games["home_team"])
-        remaining_games["win_flag"] = (remaining_games["winner"] == remaining_games["Team"]).astype(int)
-
-        wins_per_team = remaining_games.groupby("Team")["win_flag"].sum()
-        projected_wins.append(wins_per_team)
-
-    projected_wins_df = pd.DataFrame(projected_wins).mean().round().reset_index()
-    projected_wins_df.columns = ["Team", "Remaining_Wins"]
-
-    projected_wins_df["Remaining_Wins"] = (projected_wins_df["Remaining_Wins"]).astype(int)
-    projected_wins_df["Games_Remaining"] = projected_wins_df["Team"].map(games_remaining)
-
-    # Divide the Games Remaining by 2 to avoid double counting
-    projected_wins_df["Games_Remaining"] = (projected_wins_df["Games_Remaining"]).astype(int)
-
+    projected_wins_df["Games_Remaining"] = projected_wins_df["Team"].map(games_remaining).fillna(0).astype(int)
     projected_wins_df["Remaining_Losses"] = projected_wins_df["Games_Remaining"] - projected_wins_df["Remaining_Wins"]
     projected_wins_df["Conference"] = projected_wins_df["Team"].map(team_conferences)
 
-    # 7. Combine the current and projected records, dividing by 2
+    # --- Step 6: Merge current and projected records into final standings ---
     combined = pd.merge(
         projected_wins_df,
         conference_records,
         on=["Team", "Conference"],
         how="left"
     )
-
-    # Final division to handle the projected conference wins/losses
     combined[["Conf_Wins", "Conf_Losses", "Remaining_Wins", "Games_Remaining"]] = combined[["Conf_Wins", "Conf_Losses", "Remaining_Wins", "Games_Remaining"]].fillna(0).astype(int)
     combined["Proj_Conf_Wins"] = (combined["Conf_Wins"] + combined["Remaining_Wins"])
     combined["Proj_Conf_Losses"] = (combined["Conf_Losses"] + combined["Remaining_Losses"])
