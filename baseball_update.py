@@ -1503,23 +1503,23 @@ if now.hour < 13 and now.hour > 7:
             img = team_images.get(todays_games.loc[i, 'home_team'])
             if img:
                 imagebox = OffsetImage(img, zoom=1)
-                ab = AnnotationBbox(imagebox, (0.12, 0.35), frameon=False)
+                ab = AnnotationBbox(imagebox, (0.02, 0.35), frameon=False)
                 ax.add_artist(ab)
             img = team_images.get(todays_games.loc[i, 'away_team'])
             if img:
                 imagebox = OffsetImage(img, zoom=1)
-                ab = AnnotationBbox(imagebox, (0.88, 0.35), frameon=False)
+                ab = AnnotationBbox(imagebox, (0.98, 0.35), frameon=False)
                 ax.add_artist(ab)
             ax.text(0.5, 0.5, f"{todays_games.loc[i, 'PEAR']}", fontsize=24, ha='center', va='center', fontweight='bold')
             ax.text(0.5, 0.2, f"{todays_games.loc[i, 'GQI']}", fontsize=24, ha='center', va='center', fontweight='bold')
-            ax.text(0.3, 0.2, f"{todays_games.loc[i, 'home_win_prob'] * 100:.1f}%", fontsize=24, ha='left', va='center')
-            ax.text(0.7, 0.2, f"{(1 - todays_games.loc[i, 'home_win_prob']) * 100:.1f}%", fontsize=24, ha='right', va='center')
+            ax.text(0.2, 0.2, f"{todays_games.loc[i, 'home_win_prob'] * 100:.1f}%", fontsize=24, ha='left', va='center')
+            ax.text(0.8, 0.2, f"{(1 - todays_games.loc[i, 'home_win_prob']) * 100:.1f}%", fontsize=24, ha='right', va='center')
             ax.axis('off')
         for j in range(num_games, len(axes)):
             axes[j].axis('off')
-        fig.text(0.5, 1.04, "PEAR's Best Games of the Day", fontsize=32, ha='center', fontweight='bold')
-        fig.text(0.5, 0.98, "@PEARatings", fontsize=24, ha='center', fontweight='bold')
-        plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Best_Games/best_games_{formatted_date}.png", bbox_inches='tight')
+        fig.text(0.5, 0.93, f"PEAR's {today.strftime('%m/%d')} Best Games", fontsize=32, ha='center', fontweight='bold')
+        fig.text(0.5, 0.88, "@PEARatings", fontsize=24, ha='center', fontweight='bold')
+        plt.savefig(f"./PEAR/PEAR Baseball/y2025/Visuals/Best_Games/best_games_{formatted_date}.png", bbox_inches='tight')
     except Exception as e:
         print(f"Error generating today's games plot: {e}")
 
