@@ -1355,6 +1355,12 @@ stats_and_metrics['pFIP'] = ((1 - stats_and_metrics['FIP'].rank(pct=True)) * 98 
 stats_and_metrics['pLOB%'] = (stats_and_metrics['LOB%'].rank(pct=True) * 98 + 1).round().astype(int)
 stats_and_metrics['pK/BB'] = (stats_and_metrics['K/BB'].rank(pct=True) * 98 + 1).round().astype(int)
 
+todays_games = schedule_df[schedule_df["Date"] == comparison_date].dropna().sort_values('GQI', ascending=False).reset_index(drop=True)
+if len(todays_games) > 20:
+    todays_games = todays_games[['home_team', 'away_team', 'GQI', 'PEAR', 'home_win_prob', 'home_net', 'away_net']].drop_duplicates().reset_index(drop=True)[0:10]
+else:
+    todays_games = todays_games[['home_team', 'away_team', 'GQI', 'PEAR', 'home_win_prob', 'home_net', 'away_net']].drop_duplicates().reset_index(drop=True)
+
 file_path = os.path.join(folder_path, f"Data/baseball_{formatted_date}.csv")
 stats_and_metrics.to_csv(file_path)
 
@@ -1383,6 +1389,8 @@ if now.hour < 13 and now.hour > 7:
     from datetime import datetime, timedelta
     from concurrent.futures import ThreadPoolExecutor
     from datetime import datetime
+    from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+    import math
 
     # --- Config & Setup ---
     BASE_URL = "https://www.warrennolan.com"
@@ -1416,7 +1424,9 @@ if now.hour < 13 and now.hour > 7:
         | set(stats_and_metrics.sort_values('RQI').head(25)['Team']) \
         | set(stats_and_metrics.sort_values('PRR').head(25)['Team']) \
         | set(stats_and_metrics.sort_values('RPI').head(25)['Team']) \
-        | set(stats_and_metrics[~stats_and_metrics['Conference'].isin(major_conferences)].head(25)['Team'])
+        | set(stats_and_metrics[~stats_and_metrics['Conference'].isin(major_conferences)].head(25)['Team']) \
+        | set(todays_games['home_team']) \
+        | set(todays_games['away_team'])
 
     with ThreadPoolExecutor(max_workers=20) as executor:
         results = list(executor.map(fetch_team_logo, all_top_teams))
@@ -1481,6 +1491,37 @@ if now.hour < 13 and now.hour > 7:
         sorted_df=stats_and_metrics[~stats_and_metrics['Conference'].isin(major_conferences)],
         save_path=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Mid_Major/mid_major_{formatted_date}.png"
     )
+
+    try:
+        num_games = len(todays_games)
+        num_rows = math.ceil(num_games / 2) if num_games > 0 else 1  # At least one row for layout
+        fig, axes = plt.subplots(nrows=num_rows, ncols=2, figsize=(16, 1.8 * num_rows))
+        fig.patch.set_facecolor('#CECEB2')
+        axes = axes.flatten()
+        for i in range(num_games):
+            ax = axes[i]
+            img = team_images.get(todays_games.loc[i, 'home_team'])
+            if img:
+                imagebox = OffsetImage(img, zoom=1)
+                ab = AnnotationBbox(imagebox, (0.12, 0.35), frameon=False)
+                ax.add_artist(ab)
+            img = team_images.get(todays_games.loc[i, 'away_team'])
+            if img:
+                imagebox = OffsetImage(img, zoom=1)
+                ab = AnnotationBbox(imagebox, (0.88, 0.35), frameon=False)
+                ax.add_artist(ab)
+            ax.text(0.5, 0.5, f"{todays_games.loc[i, 'PEAR']}", fontsize=24, ha='center', va='center', fontweight='bold')
+            ax.text(0.5, 0.2, f"{todays_games.loc[i, 'GQI']}", fontsize=24, ha='center', va='center', fontweight='bold')
+            ax.text(0.3, 0.2, f"{todays_games.loc[i, 'home_win_prob'] * 100:.1f}%", fontsize=24, ha='left', va='center')
+            ax.text(0.7, 0.2, f"{(1 - todays_games.loc[i, 'home_win_prob']) * 100:.1f}%", fontsize=24, ha='right', va='center')
+            ax.axis('off')
+        for j in range(num_games, len(axes)):
+            axes[j].axis('off')
+        fig.text(0.5, 1.04, "PEAR's Best Games of the Day", fontsize=32, ha='center', fontweight='bold')
+        fig.text(0.5, 0.98, "@PEARatings", fontsize=24, ha='center', fontweight='bold')
+        plt.save_fig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Best_Games/best_games_{formatted_date}.png", bbox_inches='tight')
+    except Exception as e:
+        print(f"Error generating today's games plot: {e}")
 
     # ---------------------------
     # Helper Functions
