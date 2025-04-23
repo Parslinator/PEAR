@@ -1519,7 +1519,7 @@ if now.hour < 13 and now.hour > 7:
             axes[j].axis('off')
         fig.text(0.5, 1.04, "PEAR's Best Games of the Day", fontsize=32, ha='center', fontweight='bold')
         fig.text(0.5, 0.98, "@PEARatings", fontsize=24, ha='center', fontweight='bold')
-        plt.save_fig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Best_Games/best_games_{formatted_date}.png", bbox_inches='tight')
+        plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Best_Games/best_games_{formatted_date}.png", bbox_inches='tight')
     except Exception as e:
         print(f"Error generating today's games plot: {e}")
 
