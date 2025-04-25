@@ -627,6 +627,34 @@ else:
     print("Table not found on the page.")
 print("Elo Load Done")
 
+file_paths = [
+    "PEAR/PEAR Baseball/schedule_2021.csv",
+    "PEAR/PEAR Baseball/schedule_2022.csv",
+    "PEAR/PEAR Baseball/schedule_2023.csv",
+    "PEAR/PEAR Baseball/schedule_2024.csv",
+    "PEAR/PEAR Baseball/y2025/schedule_2025.csv",
+]
+dataframes = []
+for path in file_paths:
+    df = pd.read_csv(path)
+    year = int(path.split("schedule_")[1].split(".csv")[0])
+    df["year"] = year
+    dataframes.append(df)
+games = pd.concat(dataframes, ignore_index=True)[['Team', 'Date', 'home_team', 'away_team', 'home_score', 'away_score', 'Result', 'Location']]
+games = games[games["home_score"] != games["away_score"]].copy()
+games = games[games['Location'] != 'Neutral'].copy()
+games["total_runs"] = games["home_score"] + games["away_score"]
+home_runs = games.groupby("home_team")["total_runs"].mean().rename("home_runs_per_game")
+away_games = games[["home_team", "away_team", "home_score", "away_score", "total_runs"]].copy()
+away_games = away_games.rename(columns={"home_team": "opponent", "away_team": "team"})
+away_runs = away_games.groupby("team")["total_runs"].mean().rename("away_runs_per_game")
+park_factors = pd.concat([home_runs, away_runs], axis=1)
+park_factors["park_factor"] = park_factors["home_runs_per_game"] / park_factors["away_runs_per_game"]
+park_factors = park_factors.sort_values("park_factor", ascending=False)
+park_factors = park_factors.reset_index(names='Team')
+park_factors = park_factors[~park_factors['Team'].str.contains('Non Div', na=False)].reset_index(drop=True)
+pf_lookup = dict(zip(park_factors['Team'], park_factors['park_factor']))
+
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -639,6 +667,11 @@ BASE_URL = "https://www.warrennolan.com"
 
 session = requests.Session()
 session.headers.update({"User-Agent": "Mozilla/5.0"})
+
+def get_park_factor(row):
+    if row['Location'] == 'Neutral':
+        return 1
+    return pf_lookup.get(row['home_team'], 1)
 
 def extract_schedule_data(team_name, team_url, session):
     schedule_url = BASE_URL + team_url
@@ -740,6 +773,7 @@ schedule_df = schedule_df.merge(elo_data[['Team', 'ELO']], left_on='away_team', 
 schedule_df.rename(columns={'ELO': 'away_elo'}, inplace=True)
 schedule_df.drop(columns=['Team', 'Team_y'], inplace=True)
 schedule_df.rename(columns={'Team_x':'Team'}, inplace=True)
+schedule_df['park_factor'] = schedule_df.apply(get_park_factor, axis=1)
 
 # Apply replacements and standardize 'State' to 'St.'
 columns_to_replace = ['Team', 'home_team', 'away_team', 'Opponent']
