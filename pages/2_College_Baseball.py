@@ -1473,7 +1473,6 @@ st.sidebar.markdown("""
 st.divider()
 
 col1, col2 = st.columns(2)
-
 with col1:
     st.markdown(f'<h2 id="live-cbase-ratings-and-resume">Live CBASE Ratings and Resume</h2>', unsafe_allow_html=True)
     st.caption("Updated when page updates. Weekly rankings are taken Monday at 11 AM CST")
@@ -1485,8 +1484,8 @@ with col1:
         st.dataframe(modeling_stats_copy[['NET', 'RPI', 'ELO', 'TSR', 'RQI', 'SOS', 'RemSOS', 'Q1', 'Q2', 'Q3', 'Q4', 'Conference']], use_container_width=True)
     st.caption("NET - Mimicing the NCAA Evaluation Tool using TSR, RQI, SOS")
     st.caption("RPI - Warren Nolan's Live RPI, TSR - Team Strength Rank, RQI - Resume Quality Index, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
-
 with col2:
+    st.caption("Updated when page updates and when NCAA Baseball Stats are updated")
     modeling_stats_copy['WAR'] = modeling_stats_copy['fWAR'].rank(ascending=False).astype(int)
     modeling_stats_copy['oWAR'] = modeling_stats_copy['oWAR_z'].rank(ascending=False).astype(int)
     modeling_stats_copy['pWAR'] = modeling_stats_copy['pWAR_z'].rank(ascending=False).astype(int)
@@ -1503,7 +1502,6 @@ with col2:
 st.divider()
 
 col1, col2 = st.columns(2)
-
 with col1:
     automatic_qualifiers = modeling_stats.loc[modeling_stats.groupby("Conference")["NET"].idxmin()]
     at_large = modeling_stats.drop(automatic_qualifiers.index)
@@ -1526,14 +1524,12 @@ with col1:
     formatted_df.index = formatted_df.index + 1
     st.markdown(f'<h2 id="tournament-outlook">Tournament Outlook</h2>', unsafe_allow_html=True)
     st.caption("Updated when page updates. Weekly projected tournament is taken Monday at 11 AM CST")
-    st.caption("No consideration for conferences or regional proximity - just a straight seeding.")
     with st.container(border=True, height=440):
         st.dataframe(formatted_df[['Host', '2 Seed', '3 Seed', '4 Seed']], use_container_width=True)
     st.caption(f"Last 4 In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}")
     st.caption(f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}")
     st.caption(f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}")
     st.caption(" | ".join([f"{conference}: {count}" for conference, count in multibid.items()]))
-
 with col2:
     st.markdown(f'<h2 id="simulate-regional">Simulate Regional</h2>', unsafe_allow_html=True)
     with st.form(key='simulate_regional'):
@@ -1548,98 +1544,94 @@ with col2:
 
 st.divider()
 
-st.markdown(f'<h2 id="matchup-cards">Matchup Cards</h2>', unsafe_allow_html=True)
-with st.form(key='calculate_spread'):
-    away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
-    home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
-    neutrality = st.radio(
-        "Game Location",
-        ["On Campus", "Neutral"]
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown(f'<h2 id="matchup-cards">Matchup Cards</h2>', unsafe_allow_html=True)
+    with st.form(key='calculate_spread'):
+        away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+        home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+        neutrality = st.radio(
+            "Game Location",
+            ["On Campus", "Neutral"]
+        )
+        spread_button = st.form_submit_button("Calculate Spread")
+        if spread_button:
+            fig = matchup_percentiles(away_team, home_team, modeling_stats, neutrality)
+            st.pyplot(fig)
+with col2:
+    st.markdown(f'<h2 id="team-schedule">Team Schedule</h2>', unsafe_allow_html=True)
+    with st.form(key='team_schedule'):
+        team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+        team_schedule = st.form_submit_button("Team Schedule")
+        if team_schedule:
+            rank, best, worst, schedule, completed, last_ten = grab_team_schedule(team_name, modeling_stats)
+            wins, losses = sum(completed['Result'].str.contains('W')), sum(completed['Result'].str.contains('L'))
+            record = str(wins) + "-" + str(losses)
+            projected_record = modeling_stats[modeling_stats['Team'] == team_name]['Projected_Record'].values[0]
+            projected_net = modeling_stats[modeling_stats['Team'] == team_name]['Projected_NET'].values[0]
+            schedule.index = schedule.index + 1
+            fig = create_quadrant_table(completed)
+            # st.write(f"Record: {record}")
+            # st.write(f"Projected Record: {projected_record}")
+            st.write(f"NET Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
+            st.write(f"Record: {record}, Last Ten: {last_ten}")
+            st.write(f"Projected NET: {projected_net}")
+            st.write(f"Projected Record: {projected_record}")
+            st.pyplot(fig)
+            st.write("Upcoming Games")
+            st.dataframe(schedule[['Opponent', 'NET', 'Quad', 'GQI', 'PEAR', 'Date']], use_container_width=True)
+            st.caption('PEAR - Negative Value Indicates Favorites, Positive Value Indicates Underdog')
+
+st.divider()
+
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown(f'<h2 id="conference-team-sheets">Conference Team Sheets</h2>', unsafe_allow_html=True)
+    with st.form(key='conference_team_sheets'):
+        conference = st.selectbox("Conference", ["Select Conference"] + list(sorted(modeling_stats['Conference'].unique())))
+        conference_team = st.form_submit_button("Team Sheets")
+        if conference_team:
+            fig = conference_team_sheets(conference, modeling_stats)
+            st.pyplot(fig)
+with col2:
+    projected_wins, clean_completed, clean_remain = calculate_conference_results(schedule_df, comparison_date, modeling_stats, num_simulations=100)
+    projected_wins[["Conf_Wins", "Conf_Losses"]] = projected_wins[["Conf_Wins", "Conf_Losses"]].fillna(0).astype(int)
+    projected_wins["Proj_Conf_Wins"] = projected_wins["Conf_Wins"] + projected_wins["Remaining_Wins"]
+    projected_wins["Proj_Conf_Losses"] = projected_wins["Conf_Losses"] + projected_wins["Remaining_Losses"]
+    projected_wins["Projected_Conf_Record"] = projected_wins.apply(
+        lambda x: f"{int(x['Proj_Conf_Wins'])}-{int(x['Proj_Conf_Losses'])}", axis=1
     )
-    spread_button = st.form_submit_button("Calculate Spread")
-    if spread_button:
-        fig = matchup_percentiles(away_team, home_team, modeling_stats, neutrality)
-        st.pyplot(fig)
+    projected_wins["Current_Conf_Record"] = projected_wins.apply(
+        lambda x: f"{int(x['Conf_Wins'])}-{int(x['Conf_Losses'])}", axis=1
+    )
+    projected_wins["Remaining_Conf_Record"] = projected_wins.apply(
+        lambda x: f"{int(x['Remaining_Wins'])}-{int(x['Remaining_Losses'])}", axis=1
+    )
+    st.markdown(f'<h2 id="projected-conference-standings">Projected Conference Standings</h2>', unsafe_allow_html=True)
+    with st.form(key='projected_conference_standings'):
+        conference = st.selectbox("Conference", ["Select Conference"] + list(sorted(modeling_stats['Conference'].unique())))
+        conference_standings = st.form_submit_button("Projected Standings")
+        if conference_standings:
+            fig = conference_projected_standing(conference, projected_wins)
+            st.pyplot(fig)
 
 st.divider()
 
-st.markdown(f'<h2 id="team-schedule">Team Schedule</h2>', unsafe_allow_html=True)
-with st.form(key='team_schedule'):
-    team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
-    team_schedule = st.form_submit_button("Team Schedule")
-    if team_schedule:
-        rank, best, worst, schedule, completed, last_ten = grab_team_schedule(team_name, modeling_stats)
-        wins, losses = sum(completed['Result'].str.contains('W')), sum(completed['Result'].str.contains('L'))
-        record = str(wins) + "-" + str(losses)
-        projected_record = modeling_stats[modeling_stats['Team'] == team_name]['Projected_Record'].values[0]
-        projected_net = modeling_stats[modeling_stats['Team'] == team_name]['Projected_NET'].values[0]
-        schedule.index = schedule.index + 1
-        fig = create_quadrant_table(completed)
-        # st.write(f"Record: {record}")
-        # st.write(f"Projected Record: {projected_record}")
-        st.write(f"NET Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
-        st.write(f"Record: {record}, Last Ten: {last_ten}")
-        st.write(f"Projected NET: {projected_net}")
-        st.write(f"Projected Record: {projected_record}")
-        st.pyplot(fig)
-        st.write("Upcoming Games")
-        st.dataframe(schedule[['Opponent', 'NET', 'Quad', 'GQI', 'PEAR', 'Date']], use_container_width=True)
-        st.caption('PEAR - Negative Value Indicates Favorites, Positive Value Indicates Underdog')
-
-st.divider()
-
-st.markdown(f'<h2 id="team-percentiles">Team Percentiles</h2>', unsafe_allow_html=True)
-with st.form(key='team_percentile'):
-    team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
-    team_percentile = st.form_submit_button("Team Percentiles")
-    if team_percentile:
-        fig = team_percentiles_chart(team_name, modeling_stats)
-        st.pyplot(fig)
-
-st.divider()
-
-st.markdown(f'<h2 id="conference-team-sheets">Conference Team Sheets</h2>', unsafe_allow_html=True)
-with st.form(key='conference_team_sheets'):
-    conference = st.selectbox("Conference", ["Select Conference"] + list(sorted(modeling_stats['Conference'].unique())))
-    conference_team = st.form_submit_button("Team Sheets")
-    if conference_team:
-        fig = conference_team_sheets(conference, modeling_stats)
-        st.pyplot(fig)
-
-st.divider()
-
-
-
-# Run simulation + merge with current records
-projected_wins, clean_completed, clean_remain = calculate_conference_results(schedule_df, comparison_date, modeling_stats, num_simulations=100)
-
-projected_wins[["Conf_Wins", "Conf_Losses"]] = projected_wins[["Conf_Wins", "Conf_Losses"]].fillna(0).astype(int)
-projected_wins["Proj_Conf_Wins"] = projected_wins["Conf_Wins"] + projected_wins["Remaining_Wins"]
-projected_wins["Proj_Conf_Losses"] = projected_wins["Conf_Losses"] + projected_wins["Remaining_Losses"]
-projected_wins["Projected_Conf_Record"] = projected_wins.apply(
-    lambda x: f"{int(x['Proj_Conf_Wins'])}-{int(x['Proj_Conf_Losses'])}", axis=1
-)
-projected_wins["Current_Conf_Record"] = projected_wins.apply(
-    lambda x: f"{int(x['Conf_Wins'])}-{int(x['Conf_Losses'])}", axis=1
-)
-projected_wins["Remaining_Conf_Record"] = projected_wins.apply(
-    lambda x: f"{int(x['Remaining_Wins'])}-{int(x['Remaining_Losses'])}", axis=1
-)
-st.markdown(f'<h2 id="projected-conference-standings">Projected Conference Standings</h2>', unsafe_allow_html=True)
-with st.form(key='projected_conference_standings'):
-    conference = st.selectbox("Conference", ["Select Conference"] + list(sorted(modeling_stats['Conference'].unique())))
-    conference_standings = st.form_submit_button("Projected Standings")
-    if conference_standings:
-        fig = conference_projected_standing(conference, projected_wins)
-        st.pyplot(fig)
-
-st.divider()
-
-comparison_date = comparison_date.strftime("%B %d, %Y")
-st.subheader(f"{comparison_date} Games")
-subset_games['Home'] = subset_games['home_team']
-subset_games['Away'] = subset_games['away_team']
-with st.container(border=True, height=440):
-    st.dataframe(subset_games[['Home', 'Away', 'GQI', 'PEAR', 'Result']], use_container_width=True)
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown(f'<h2 id="team-percentiles">Team Percentiles</h2>', unsafe_allow_html=True)
+    with st.form(key='team_percentile'):
+        team_name = st.selectbox("Team", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+        team_percentile = st.form_submit_button("Team Percentiles")
+        if team_percentile:
+            fig = team_percentiles_chart(team_name, modeling_stats)
+            st.pyplot(fig)
+with col2:
+    comparison_date = comparison_date.strftime("%B %d, %Y")
+    st.subheader(f"{comparison_date} Games")
+    subset_games['Home'] = subset_games['home_team']
+    subset_games['Away'] = subset_games['away_team']
+    with st.container(border=True, height=440):
+        st.dataframe(subset_games[['Home', 'Away', 'GQI', 'PEAR', 'Result']], use_container_width=True)
 
 st.divider()
