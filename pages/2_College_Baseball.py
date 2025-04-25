@@ -1472,62 +1472,79 @@ st.sidebar.markdown("""
 
 st.divider()
 
-st.markdown(f'<h2 id="live-cbase-ratings-and-resume">Live CBASE Ratings and Resume</h2>', unsafe_allow_html=True)
-st.caption("Updated when page updates. Weekly rankings are taken Monday at 11 AM CST")
-modeling_stats_copy = modeling_stats.copy()
-modeling_stats_copy.set_index("Team", inplace=True)
-modeling_stats_copy['TSR'] = modeling_stats_copy['PRR']
-modeling_stats_copy['ELO'] = modeling_stats_copy['ELO_Rank']
-with st.container(border=True, height=440):
-    st.dataframe(modeling_stats_copy[['NET', 'RPI', 'ELO', 'TSR', 'RQI', 'SOS', 'RemSOS', 'Q1', 'Q2', 'Q3', 'Q4', 'Conference']], use_container_width=True)
-st.caption("NET - Mimicing the NCAA Evaluation Tool using TSR, RQI, SOS")
-st.caption("RPI - Warren Nolan's Live RPI, TSR - Team Strength Rank, RQI - Resume Quality Index, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown(f'<h2 id="live-cbase-ratings-and-resume">Live CBASE Ratings and Resume</h2>', unsafe_allow_html=True)
+    st.caption("Updated when page updates. Weekly rankings are taken Monday at 11 AM CST")
+    modeling_stats_copy = modeling_stats.copy()
+    modeling_stats_copy.set_index("Team", inplace=True)
+    modeling_stats_copy['TSR'] = modeling_stats_copy['PRR']
+    modeling_stats_copy['ELO'] = modeling_stats_copy['ELO_Rank']
+    with st.container(border=True, height=440):
+        st.dataframe(modeling_stats_copy[['NET', 'RPI', 'ELO', 'TSR', 'RQI', 'SOS', 'RemSOS', 'Q1', 'Q2', 'Q3', 'Q4', 'Conference']], use_container_width=True)
+    st.caption("NET - Mimicing the NCAA Evaluation Tool using TSR, RQI, SOS")
+    st.caption("RPI - Warren Nolan's Live RPI, TSR - Team Strength Rank, RQI - Resume Quality Index, SOS - Strength of Schedule, RemSOS - Remaining Strength of Schedule")
+
+with col2:
+    modeling_stats_copy['WAR'] = modeling_stats_copy['fWAR'].rank(ascending=False).astype(int)
+    modeling_stats_copy['oWAR'] = modeling_stats_copy['oWAR_z'].rank(ascending=False).astype(int)
+    modeling_stats_copy['pWAR'] = modeling_stats_copy['pWAR_z'].rank(ascending=False).astype(int)
+    columns_to_rank = ['PYTHAG', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS']
+    modeling_stats_copy[columns_to_rank] = modeling_stats_copy[columns_to_rank].rank(ascending=False, method='min').astype(int)
+    modeling_stats_copy['ERA'] = modeling_stats_copy['ERA'].rank(ascending=True, method='min').astype(int)
+    modeling_stats_copy['WHIP'] = modeling_stats_copy['WHIP'].rank(ascending=True, method='min').astype(int)
+
+    st.markdown(f'<h2 id="live-cbase-stats">Live CBASE Stats</h2>', unsafe_allow_html=True)
+    with st.container(border=True, height=440):
+        st.dataframe(modeling_stats_copy[['WAR', 'Luck', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
+    st.caption("WAR - Team WAR Rank, PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
 
 st.divider()
 
-modeling_stats_copy['WAR'] = modeling_stats_copy['fWAR'].rank(ascending=False).astype(int)
-modeling_stats_copy['oWAR'] = modeling_stats_copy['oWAR_z'].rank(ascending=False).astype(int)
-modeling_stats_copy['pWAR'] = modeling_stats_copy['pWAR_z'].rank(ascending=False).astype(int)
-columns_to_rank = ['PYTHAG', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS']
-modeling_stats_copy[columns_to_rank] = modeling_stats_copy[columns_to_rank].rank(ascending=False, method='min').astype(int)
-modeling_stats_copy['ERA'] = modeling_stats_copy['ERA'].rank(ascending=True, method='min').astype(int)
-modeling_stats_copy['WHIP'] = modeling_stats_copy['WHIP'].rank(ascending=True, method='min').astype(int)
+col1, col2 = st.columns(2)
 
-st.markdown(f'<h2 id="live-cbase-stats">Live CBASE Stats</h2>', unsafe_allow_html=True)
-with st.container(border=True, height=440):
-    st.dataframe(modeling_stats_copy[['WAR', 'Luck', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
-st.caption("WAR - Team WAR Rank, PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
+with col1:
+    automatic_qualifiers = modeling_stats.loc[modeling_stats.groupby("Conference")["NET"].idxmin()]
+    at_large = modeling_stats.drop(automatic_qualifiers.index)
+    at_large = at_large.nsmallest(34, "NET")
+    last_four_in = at_large[-4:].reset_index()
+    next_8_teams = modeling_stats.drop(automatic_qualifiers.index).nsmallest(42, "NET").iloc[34:].reset_index(drop=True)
+    tournament = pd.concat([at_large, automatic_qualifiers])
+    tournament = tournament.sort_values(by="NET").reset_index(drop=True)
+    tournament["Seed"] = (tournament.index // 16) + 1
+    pod_order = list(range(1, 17)) + list(range(16, 0, -1)) + list(range(1, 17)) + list(range(16, 0, -1))
+    tournament["Host"] = pod_order
+    conference_counts = tournament['Conference'].value_counts()
+    multibid = conference_counts[conference_counts > 1]
+    formatted_df = tournament.pivot_table(index="Host", columns="Seed", values="Team", aggfunc=lambda x: ' '.join(x))
+    formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
+    formatted_df = formatted_df.reset_index()
+    formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
+    formatted_df = resolve_conflicts(formatted_df, modeling_stats)
+    formatted_df.set_index('Host')
+    formatted_df.index = formatted_df.index + 1
+    st.markdown(f'<h2 id="tournament-outlook">Tournament Outlook</h2>', unsafe_allow_html=True)
+    st.caption("Updated when page updates. Weekly projected tournament is taken Monday at 11 AM CST")
+    st.caption("No consideration for conferences or regional proximity - just a straight seeding.")
+    with st.container(border=True, height=440):
+        st.dataframe(formatted_df[['Host', '2 Seed', '3 Seed', '4 Seed']], use_container_width=True)
+    st.caption(f"Last 4 In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}")
+    st.caption(f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}")
+    st.caption(f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}")
+    st.caption(" | ".join([f"{conference}: {count}" for conference, count in multibid.items()]))
 
-st.divider()
-
-automatic_qualifiers = modeling_stats.loc[modeling_stats.groupby("Conference")["NET"].idxmin()]
-at_large = modeling_stats.drop(automatic_qualifiers.index)
-at_large = at_large.nsmallest(34, "NET")
-last_four_in = at_large[-4:].reset_index()
-next_8_teams = modeling_stats.drop(automatic_qualifiers.index).nsmallest(42, "NET").iloc[34:].reset_index(drop=True)
-tournament = pd.concat([at_large, automatic_qualifiers])
-tournament = tournament.sort_values(by="NET").reset_index(drop=True)
-tournament["Seed"] = (tournament.index // 16) + 1
-pod_order = list(range(1, 17)) + list(range(16, 0, -1)) + list(range(1, 17)) + list(range(16, 0, -1))
-tournament["Host"] = pod_order
-conference_counts = tournament['Conference'].value_counts()
-multibid = conference_counts[conference_counts > 1]
-formatted_df = tournament.pivot_table(index="Host", columns="Seed", values="Team", aggfunc=lambda x: ' '.join(x))
-formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
-formatted_df = formatted_df.reset_index()
-formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
-formatted_df = resolve_conflicts(formatted_df, modeling_stats)
-formatted_df.set_index('Host')
-formatted_df.index = formatted_df.index + 1
-st.markdown(f'<h2 id="tournament-outlook">Tournament Outlook</h2>', unsafe_allow_html=True)
-st.caption("Updated when page updates. Weekly projected tournament is taken Monday at 11 AM CST")
-st.caption("No consideration for conferences or regional proximity - just a straight seeding.")
-with st.container(border=True, height=440):
-    st.dataframe(formatted_df[['Host', '2 Seed', '3 Seed', '4 Seed']], use_container_width=True)
-st.caption(f"Last 4 In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}")
-st.caption(f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}")
-st.caption(f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}")
-st.caption(" | ".join([f"{conference}: {count}" for conference, count in multibid.items()]))
+with col2:
+    st.markdown(f'<h2 id="simulate-regional">Simulate Regional</h2>', unsafe_allow_html=True)
+    with st.form(key='simulate_regional'):
+        team_a = st.selectbox("1 Seed", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+        team_b = st.selectbox("2 Seed", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+        team_c = st.selectbox("3 Seed", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+        team_d = st.selectbox("4 Seed", ["Select Team"] + list(sorted(modeling_stats['Team'])))
+        sim_region = st.form_submit_button("Simulate Regional")
+        if sim_region:
+            fig = simulate_regional(team_a, team_b, team_c, team_d, modeling_stats)
+            st.pyplot(fig)
 
 st.divider()
 
@@ -1591,18 +1608,7 @@ with st.form(key='conference_team_sheets'):
 
 st.divider()
 
-st.markdown(f'<h2 id="simulate-regional">Simulate Regional</h2>', unsafe_allow_html=True)
-with st.form(key='simulate_regional'):
-    team_a = st.selectbox("1 Seed", ["Select Team"] + list(sorted(modeling_stats['Team'])))
-    team_b = st.selectbox("2 Seed", ["Select Team"] + list(sorted(modeling_stats['Team'])))
-    team_c = st.selectbox("3 Seed", ["Select Team"] + list(sorted(modeling_stats['Team'])))
-    team_d = st.selectbox("4 Seed", ["Select Team"] + list(sorted(modeling_stats['Team'])))
-    sim_region = st.form_submit_button("Simulate Regional")
-    if sim_region:
-        fig = simulate_regional(team_a, team_b, team_c, team_d, modeling_stats)
-        st.pyplot(fig)
 
-st.divider()
 
 # Run simulation + merge with current records
 projected_wins, clean_completed, clean_remain = calculate_conference_results(schedule_df, comparison_date, modeling_stats, num_simulations=100)
