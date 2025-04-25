@@ -23,9 +23,9 @@ os.makedirs(folder_path, exist_ok=True)
 # --- PEAR Win Probability ---
 def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
     if location != "Neutral":
-        home_pr += 0.5
+        home_pr += 0.8
     rating_diff = home_pr - away_pr
-    return round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
+    return round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
 
 # --- Helper Functions ---
 def get_soup(url):
@@ -831,11 +831,11 @@ schedule_df['home_win_prob'] = schedule_df.apply(
 remaining_games = schedule_df[schedule_df["Date"] > comparison_date].reset_index(drop=True)
 
 def adjust_home_pr(home_win_prob):
-    return ((home_win_prob - 50) / 50) * 1.5
+    return ((home_win_prob - 50) / 50) * 0.9
 
 def calculate_spread_from_stats(home_pr, away_pr, home_elo, away_elo, location):
     if location != "Neutral":
-        home_pr += 0.5
+        home_pr += 0.3
     elo_win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1) * 100, 2)
     spread = round(adjust_home_pr(elo_win_prob) + home_pr - away_pr, 2)
     return spread, elo_win_prob
@@ -1302,9 +1302,9 @@ previous.to_csv(f"./PEAR/PEAR Baseball/y{current_season}/straight_up.csv")
 
 def PEAR_Win_Prob(home_pr, away_pr, location = "Neutral"):
     if location != "Neutral":
-        home_pr += 0.5
+        home_pr += 0.8
     rating_diff = home_pr - away_pr
-    return round(1 / (1 + 10 ** (-rating_diff / 7.5)), 4)  # More precision, rounded later in output
+    return round(1 / (1 + 10 ** (-rating_diff / 7)), 4)  # More precision, rounded later in output
 
 def remaining_games_rq(row, one_seed_rating):
     """Calculate resume quality for a single game."""
@@ -2006,7 +2006,7 @@ if now.hour < 13 and now.hour > 7:
 
     def PEAR_Win_Prob(home_pr, away_pr):
         rating_diff = home_pr - away_pr
-        return round(1 / (1 + 10 ** (-rating_diff / 7.5)), 4)  # More precision, rounded later in output
+        return round(1 / (1 + 10 ** (-rating_diff / 7)), 4)  # More precision, rounded later in output
 
     def simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics):
         teams = [team_a, team_b, team_c, team_d]
@@ -2342,9 +2342,9 @@ if now.hour < 13 and now.hour > 7:
 
     def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
         if location != "Neutral":
-            home_pr += 0.5
+            home_pr += 0.8
         rating_diff = home_pr - away_pr
-        return round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
+        return round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
 
     def normalize_array(values):
         values = np.array(values)

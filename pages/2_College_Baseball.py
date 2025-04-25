@@ -115,11 +115,11 @@ def extract_date(filename):
         return None
     
 def adjust_home_pr(home_win_prob):
-    return ((home_win_prob - 50) / 50) * 1.5
+    return ((home_win_prob - 50) / 50) * 0.9
 
 def calculate_spread_from_stats(home_pr, away_pr, home_elo, away_elo, location):
     if location != "Neutral":
-        home_pr += 0.5
+        home_pr += 0.3
     elo_win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1) * 100, 2)
     spread = round(adjust_home_pr(elo_win_prob) + home_pr - away_pr, 2)
     return spread, elo_win_prob
@@ -529,7 +529,7 @@ def grab_team_schedule(team_name, stats_df):
 
     def PEAR_Win_Prob(home_pr, away_pr):
         rating_diff = home_pr - away_pr
-        win_prob = round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
+        win_prob = round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
         return win_prob
 
     def clean_spread(row):
@@ -1183,9 +1183,9 @@ def resolve_conflicts(formatted_df, stats_df):
 
 def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
     if location != "Neutral":
-        home_pr += 0.5
+        home_pr += 0.8
     rating_diff = home_pr - away_pr
-    return round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
+    return round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
 
 def simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics):
     teams = [team_a, team_b, team_c, team_d]
