@@ -1459,8 +1459,8 @@ st.sidebar.markdown("""
             background-color: #3a3b46;  /* Slightly lighter grey on hover */
         }
     </style>
-    <a class="nav-link" href="#live-cbase-ratings-and-resume">Ratings and Resume</a>
-    <a class="nav-link" href="#live-cbase-stats">Team Stats</a>
+    <a class="nav-link" href="#ratings-and-resume">Ratings and Resume</a>
+    <a class="nav-link" href="#team-stats">Team Stats</a>
     <a class="nav-link" href="#tournament-outlook">Tournament Outlook</a>
     <a class="nav-link" href="#matchup-cards">Matchup Cards</a>
     <a class="nav-link" href="#team-schedule">Team Schedule</a>
@@ -1474,7 +1474,7 @@ st.divider()
 
 col1, col2 = st.columns(2)
 with col1:
-    st.markdown(f'<h2 id="live-cbase-ratings-and-resume">Live CBASE Ratings and Resume</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h2 id="ratings-and-resume">Ratings and Resume</h2>', unsafe_allow_html=True)
     modeling_stats_copy = modeling_stats.copy()
     modeling_stats_copy.set_index("Team", inplace=True)
     modeling_stats_copy['TSR'] = modeling_stats_copy['PRR']
@@ -1492,7 +1492,7 @@ with col2:
     modeling_stats_copy['ERA'] = modeling_stats_copy['ERA'].rank(ascending=True, method='min').astype(int)
     modeling_stats_copy['WHIP'] = modeling_stats_copy['WHIP'].rank(ascending=True, method='min').astype(int)
 
-    st.markdown(f'<h2 id="live-cbase-stats">Live CBASE Stats</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h2 id="team-stats">Team Stats</h2>', unsafe_allow_html=True)
     with st.container(border=True, height=440):
         st.dataframe(modeling_stats_copy[['WAR', 'Luck', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
     st.caption("WAR - Team WAR Rank, PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
