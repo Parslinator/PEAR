@@ -1475,7 +1475,6 @@ st.divider()
 col1, col2 = st.columns(2)
 with col1:
     st.markdown(f'<h2 id="live-cbase-ratings-and-resume">Live CBASE Ratings and Resume</h2>', unsafe_allow_html=True)
-    st.caption("Updated when page updates. Weekly rankings are taken Monday at 11 AM CST")
     modeling_stats_copy = modeling_stats.copy()
     modeling_stats_copy.set_index("Team", inplace=True)
     modeling_stats_copy['TSR'] = modeling_stats_copy['PRR']
@@ -1494,7 +1493,6 @@ with col2:
     modeling_stats_copy['WHIP'] = modeling_stats_copy['WHIP'].rank(ascending=True, method='min').astype(int)
 
     st.markdown(f'<h2 id="live-cbase-stats">Live CBASE Stats</h2>', unsafe_allow_html=True)
-    st.caption("Updated when page updates and when NCAA Baseball Stats are updated")
     with st.container(border=True, height=440):
         st.dataframe(modeling_stats_copy[['WAR', 'Luck', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
     st.caption("WAR - Team WAR Rank, PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
@@ -1523,7 +1521,6 @@ with col1:
     formatted_df.set_index('Host')
     formatted_df.index = formatted_df.index + 1
     st.markdown(f'<h2 id="tournament-outlook">Tournament Outlook</h2>', unsafe_allow_html=True)
-    st.caption("Updated when page updates. Weekly projected tournament is taken Monday at 11 AM CST")
     with st.container(border=True, height=440):
         st.dataframe(formatted_df[['Host', '2 Seed', '3 Seed', '4 Seed']], use_container_width=True)
     st.caption(f"Last 4 In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}")
