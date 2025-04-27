@@ -476,7 +476,7 @@ baseball_stats = pd.merge(baseball_stats, wOBA[['Team', 'wOBA', 'wRAA', 'oWAR_z'
 
 ####################### Rating Calculation #######################
 
-rpi_2024 = pd.read_csv("./PEAR/PEAR Baseball/rpi_end_2024.csv")
+rpi_2024 = pd.read_csv("./PEAR/PEAR Baseball/y2024/rpi_end_2024.csv")
 
 modeling_stats = baseball_stats[['Team', 'HPG',
                 'BBPG', 'ERA', 'PCT', 
@@ -628,10 +628,10 @@ else:
 print("Elo Load Done")
 
 file_paths = [
-    "PEAR/PEAR Baseball/schedule_2021.csv",
-    "PEAR/PEAR Baseball/schedule_2022.csv",
-    "PEAR/PEAR Baseball/schedule_2023.csv",
-    "PEAR/PEAR Baseball/schedule_2024.csv",
+    "PEAR/PEAR Baseball/y2021/schedule_2021.csv",
+    "PEAR/PEAR Baseball/y2022/schedule_2022.csv",
+    "PEAR/PEAR Baseball/y2023/schedule_2023.csv",
+    "PEAR/PEAR Baseball/y2024/schedule_2024.csv",
     "PEAR/PEAR Baseball/y2025/schedule_2025.csv",
 ]
 dataframes = []
