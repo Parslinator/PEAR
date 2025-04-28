@@ -774,6 +774,7 @@ schedule_df.rename(columns={'ELO': 'away_elo'}, inplace=True)
 schedule_df.drop(columns=['Team', 'Team_y'], inplace=True)
 schedule_df.rename(columns={'Team_x':'Team'}, inplace=True)
 schedule_df['park_factor'] = schedule_df.apply(get_park_factor, axis=1)
+schedule_df = schedule_df[~(schedule_df['Result'] == 'Canceled')].reset_index(drop=True)
 
 # Apply replacements and standardize 'State' to 'St.'
 columns_to_replace = ['Team', 'home_team', 'away_team', 'Opponent']
