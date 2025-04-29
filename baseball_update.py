@@ -1555,8 +1555,9 @@ if now.hour < 13 and now.hour > 7:
             ax.axis('off')
         for j in range(num_games, len(axes)):
             axes[j].axis('off')
-        plt.text(-0.11, num_rows+0.8, f"PEAR's {comparison_date.strftime('%m/%d')} Game Previews", fontsize=32, ha='center', fontweight='bold')
-        plt.text(-0.11, num_rows+0.5, "@PEARatings", fontsize=24, ha='center', fontweight='bold')
+        base_offset = 0.2 + (num_rows - 3) * 0.2
+        plt.text(-0.11, num_rows + base_offset + 0.3, f"PEAR's {comparison_date.strftime('%m/%d')} Best Games", fontsize=32, ha='center', fontweight='bold')
+        plt.text(-0.11, num_rows + base_offset, "@PEARatings", fontsize=24, ha='center', fontweight='bold')
         plt.savefig(f"./PEAR/PEAR Baseball/y2025/Visuals/Best_Games/best_games_{formatted_date}.png", bbox_inches='tight')
     except Exception as e:
         print(f"Error generating today's games plot: {e}")
