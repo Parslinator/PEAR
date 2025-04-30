@@ -70,6 +70,12 @@ def process_result(row):
 
     return result  # In case it's not W or L
 
+def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
+    if location != "Neutral":
+        home_pr += 0.8
+    rating_diff = home_pr - away_pr
+    return round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
+
 subset_games['Result'] = subset_games['Result'].astype(str)
 subset_games = subset_games.sort_values(by="Result", key=lambda x: x.map(game_sort_key))
 subset_games["Result"] = subset_games["Result"].astype(str)  # Convert to string to avoid errors
@@ -885,6 +891,12 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics, location="Neutral"):
     percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
     custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'WAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
 
+    def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
+        if location != "Neutral":
+            home_pr += 0.8
+        rating_diff = home_pr - away_pr
+        return round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
+
     team1_data = stats_and_metrics[stats_and_metrics['Team'] == team_1]
     team1_record = get_total_record(team1_data.iloc[0])
     team1_proj_record = team1_data['Projected_Record'].values[0]
@@ -1201,12 +1213,6 @@ def resolve_conflicts(formatted_df, stats_df):
                     break  # Exit swap loop once we reduce conflict
 
     return formatted_df
-
-def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
-    if location != "Neutral":
-        home_pr += 0.8
-    rating_diff = home_pr - away_pr
-    return round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
 
 def simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics):
     teams = [team_a, team_b, team_c, team_d]
