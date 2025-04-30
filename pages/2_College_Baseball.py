@@ -881,12 +881,16 @@ def calculate_series_probabilities(win_prob):
 
 def matchup_percentiles(team_1, team_2, stats_and_metrics, location="Neutral"):
     BASE_URL = "https://www.warrennolan.com"
+    bubble = stats_and_metrics.sort_values('Resume').reset_index(drop=True)
+    bubble_team_rating = bubble.loc[31, 'Rating']
     percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
     custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'WAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
+
     team1_data = stats_and_metrics[stats_and_metrics['Team'] == team_1]
     team1_record = get_total_record(team1_data.iloc[0])
     team1_proj_record = team1_data['Projected_Record'].values[0]
     team1_proj_net = team1_data['Projected_NET'].values[0]
+    team1_rating = team1_data['Rating'].values[0]
     team1_Q1 = team1_data['Q1'].values[0]
     team1_Q2 = team1_data['Q2'].values[0]
     team1_Q3 = team1_data['Q3'].values[0]
@@ -906,6 +910,7 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics, location="Neutral"):
     team2_record = get_total_record(team2_data.iloc[0])
     team2_proj_record = team2_data['Projected_Record'].values[0]
     team2_proj_net = team2_data['Projected_NET'].values[0]
+    team2_rating = team2_data['Rating'].values[0]
     team2_Q1 = team2_data['Q1'].values[0]
     team2_Q2 = team2_data['Q2'].values[0]
     team2_Q3 = team2_data['Q3'].values[0]
@@ -921,7 +926,18 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics, location="Neutral"):
     response = requests.get(image_url)
     img2 = Image.open(BytesIO(response.content))
 
-    spread, team_2_win_prob = find_spread_matchup(team_2, team_1, stats_and_metrics, location)
+    if location == 'Away':
+        team2_quality = 1 - PEAR_Win_Prob(team1_rating, bubble_team_rating, location) / 100
+    else:
+        team2_quality = PEAR_Win_Prob(bubble_team_rating, team1_rating, location) / 100
+    team2_win_quality, team2_loss_quality = (1 - team2_quality), -team2_quality
+
+    if location == 'Home':
+        team1_quality = 1 - PEAR_Win_Prob(team2_rating, bubble_team_rating, location) / 100
+    else:
+        team1_quality = PEAR_Win_Prob(bubble_team_rating, team2_rating, location) / 100
+    team1_win_quality, team1_loss_quality = (1 - team1_quality), -team1_quality
+    spread, team_2_win_prob = find_spread(team_2, team_1, stats_and_metrics)
 
     max_net = 299
     w_tq = 0.70   # NET AVG
@@ -1013,39 +1029,45 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics, location="Neutral"):
 
     plt.text(-135, 0.5, f"{team_2}", ha='center', fontsize=16, fontweight='bold')
     plt.text(-135, 1.0, f"{team2_record}", ha='center', fontsize=16)
-    plt.text(-135, 2.2, "Single Game", ha='center', fontsize=16, fontweight='bold')
-    plt.text(-135, 2.7, f"{round(team_2_win_prob*100)}%", ha='center', fontsize=16)
-    plt.text(-135, 3.9, "Series", ha='center', fontsize=16, fontweight='bold')
-    plt.text(-135, 4.4, f"Win 1: {round(team_2_one_win*100)}%", ha='center', fontsize=16)
-    plt.text(-135, 4.9, f"Win 2: {round(team_2_two_win*100)}%", ha='center', fontsize=16)
-    plt.text(-135, 5.4, f"Win 3: {round(team_2_three_win*100)}%", ha='center', fontsize=16)
-    plt.text(-135, 6.6, "NET Quads", ha='center', fontsize=16, fontweight='bold')
-    plt.text(-148, 7.1, f"Q1: {team2_Q1}", ha='left', fontsize=16)
-    plt.text(-148, 7.6, f"Q2: {team2_Q2}", ha='left', fontsize=16)
-    plt.text(-148, 8.1, f"Q3: {team2_Q3}", ha='left', fontsize=16)
-    plt.text(-148, 8.6, f"Q4: {team2_Q4}", ha='left', fontsize=16)
-    plt.text(-135, 9.8, "Proj. NET", ha='center', fontsize=16, fontweight='bold')
-    plt.text(-135, 10.3, f"#{team2_proj_net}", ha='center', fontsize=16)
-    plt.text(-135, 11.5, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
-    plt.text(-135, 12.0, f"{team2_proj_record}", ha='center', fontsize=16)
+    plt.text(-135, 2.0, "Single Game", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-135, 2.5, f"{round(team_2_win_prob*100)}%", ha='center', fontsize=16)
+    plt.text(-135, 3.5, "Series", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-135, 4.0, f"Win 1: {round(team_2_one_win*100)}%", ha='center', fontsize=16)
+    plt.text(-135, 4.5, f"Win 2: {round(team_2_two_win*100)}%", ha='center', fontsize=16)
+    plt.text(-135, 5.0, f"Win 3: {round(team_2_three_win*100)}%", ha='center', fontsize=16)
+    plt.text(-135, 6.0, "NET Quads", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-148, 6.5, f"Q1: {team2_Q1}", ha='left', fontsize=16)
+    plt.text(-148, 7.0, f"Q2: {team2_Q2}", ha='left', fontsize=16)
+    plt.text(-148, 7.5, f"Q3: {team2_Q3}", ha='left', fontsize=16)
+    plt.text(-148, 8.0, f"Q4: {team2_Q4}", ha='left', fontsize=16)
+    plt.text(-135, 9.0, "Proj. NET", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-135, 9.5, f"#{team2_proj_net}", ha='center', fontsize=16)
+    plt.text(-135, 10.5, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-135, 11.0, f"{team2_proj_record}", ha='center', fontsize=16)
+    plt.text(-135, 12.0, "Win Quality", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-155, 12.5, f"{team2_win_quality:.2f}", ha='left', fontsize=16, color='green', fontweight='bold')
+    plt.text(-115, 12.5, f"{team2_loss_quality:.2f}", ha='right', fontsize=16, color='red', fontweight='bold')
 
     plt.text(135, 0.5, f"{team_1}", ha='center', fontsize=16, fontweight='bold')
     plt.text(135, 1.0, f"{team1_record}", ha='center', fontsize=16)
-    plt.text(135, 2.2, "Single Game", ha='center', fontsize=16, fontweight='bold')
-    plt.text(135, 2.7, f"{round(team_1_win_prob*100)}%", ha='center', fontsize=16)
-    plt.text(135, 3.9, "Series", ha='center', fontsize=16, fontweight='bold')
-    plt.text(135, 4.4, f"Win 1: {round(team_1_one_win*100)}%", ha='center', fontsize=16)
-    plt.text(135, 4.9, f"Win 2: {round(team_1_two_win*100)}%", ha='center', fontsize=16)
-    plt.text(135, 5.4, f"Win 3: {round(team_1_three_win*100)}%", ha='center', fontsize=16)
-    plt.text(135, 6.6, "NET Quads", ha='center', fontsize=16, fontweight='bold')
-    plt.text(122, 7.1, f"Q1: {team1_Q1}", ha='left', fontsize=16)
-    plt.text(122, 7.6, f"Q2: {team1_Q2}", ha='left', fontsize=16)
-    plt.text(122, 8.1, f"Q3: {team1_Q3}", ha='left', fontsize=16)
-    plt.text(122, 8.6, f"Q4: {team1_Q4}", ha='left', fontsize=16)
-    plt.text(135, 9.8, "Proj. NET", ha='center', fontsize=16, fontweight='bold')
-    plt.text(135, 10.3, f"#{team1_proj_net}", ha='center', fontsize=16)
-    plt.text(135, 11.5, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
-    plt.text(135, 12.0, f"{team1_proj_record}", ha='center', fontsize=16)
+    plt.text(135, 2.0, "Single Game", ha='center', fontsize=16, fontweight='bold')
+    plt.text(135, 2.5, f"{round(team_1_win_prob*100)}%", ha='center', fontsize=16)
+    plt.text(135, 3.5, "Series", ha='center', fontsize=16, fontweight='bold')
+    plt.text(135, 4.0, f"Win 1: {round(team_1_one_win*100)}%", ha='center', fontsize=16)
+    plt.text(135, 4.5, f"Win 2: {round(team_1_two_win*100)}%", ha='center', fontsize=16)
+    plt.text(135, 5.0, f"Win 3: {round(team_1_three_win*100)}%", ha='center', fontsize=16)
+    plt.text(135, 6.0, "NET Quads", ha='center', fontsize=16, fontweight='bold')
+    plt.text(122, 6.5, f"Q1: {team1_Q1}", ha='left', fontsize=16)
+    plt.text(122, 7.0, f"Q2: {team1_Q2}", ha='left', fontsize=16)
+    plt.text(122, 7.5, f"Q3: {team1_Q3}", ha='left', fontsize=16)
+    plt.text(122, 8.0, f"Q4: {team1_Q4}", ha='left', fontsize=16)
+    plt.text(135, 9.0, "Proj. NET", ha='center', fontsize=16, fontweight='bold')
+    plt.text(135, 9.5, f"#{team1_proj_net}", ha='center', fontsize=16)
+    plt.text(135, 10.5, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
+    plt.text(135, 11.0, f"{team1_proj_record}", ha='center', fontsize=16)
+    plt.text(135, 12.0, "Win Quality", ha='center', fontsize=16, fontweight='bold')
+    plt.text(115, 12.5, f"{team1_win_quality:.2f}", ha='left', fontsize=16, color='green', fontweight='bold')
+    plt.text(155, 12.5, f"{team1_loss_quality:.2f}", ha='right', fontsize=16, color='red', fontweight='bold')
 
     plt.text(-150, 13.2, "Middle Bubble is Difference Between Team Percentiles", ha='left', fontsize = 12)
     plt.text(150, 13.2, "Series Percentages are the Chance to Win __ Games", ha='right', fontsize = 12)
