@@ -937,7 +937,7 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics, location="Neutral"):
     else:
         team1_quality = PEAR_Win_Prob(bubble_team_rating, team2_rating, location) / 100
     team1_win_quality, team1_loss_quality = (1 - team1_quality), -team1_quality
-    spread, team_2_win_prob = find_spread(team_2, team_1, stats_and_metrics)
+    spread, team_2_win_prob = find_spread_matchup(team_2, team_1, stats_and_metrics)
 
     max_net = 299
     w_tq = 0.70   # NET AVG
