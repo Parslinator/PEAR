@@ -881,8 +881,7 @@ def calculate_series_probabilities(win_prob):
 
 def matchup_percentiles(team_1, team_2, stats_and_metrics, location="Neutral"):
     BASE_URL = "https://www.warrennolan.com"
-    bubble = stats_and_metrics.sort_values('Resume').reset_index(drop=True)
-    bubble_team_rating = bubble.loc[31, 'Rating']
+    bubble_team_rating = stats_and_metrics['Rating'].quantile(0.90)
     percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
     custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'WAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
 

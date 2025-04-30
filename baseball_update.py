@@ -1084,7 +1084,7 @@ stats_and_metrics = stats_and_metrics.sort_values('Resume').reset_index(drop=Tru
 
 ####################### RQI #######################
 
-bubble_team_rating = stats_and_metrics.loc[31, 'Rating']
+bubble_team_rating = stats_and_metrics['Rating'].quantile(0.90)
 resume_quality = completed_schedule.groupby('Team').apply(calculate_resume_quality, bubble_team_rating).reset_index(drop=True)
 resume_quality['RQI'] = resume_quality['resume_quality'].rank(method='min', ascending=False).astype(int)
 resume_quality = resume_quality.sort_values('RQI').reset_index(drop=True)
