@@ -772,7 +772,7 @@ def team_net_tracker(team):
 import math
 def team_schedule_quality(team, schedule_df, stats_and_metrics):
     team_schedule = schedule_df[schedule_df['Team'] == team].reset_index(drop=True)
-    total_quality = stats_and_metrics[stats_and_metrics['Team'] == team]['resume_quality'].values[0]
+    SOS = stats_and_metrics[stats_and_metrics['Team'] == team]['SOS'].values[0]
     RQI = stats_and_metrics[stats_and_metrics['Team'] == team]['RQI'].values[0]
     Q1 = stats_and_metrics[stats_and_metrics['Team'] == team]['Q1'].values[0]
     Q2 = stats_and_metrics[stats_and_metrics['Team'] == team]['Q2'].values[0]
@@ -873,7 +873,7 @@ def team_schedule_quality(team, schedule_df, stats_and_metrics):
     fig.text(0.27, 1.02, f"Q2: {Q2}", ha='right', va='center', fontsize=40, color='black')
     fig.text(0.4, 1.02, f"RQI: {RQI}", ha='right', va='center', fontsize=40, color='black')
     fig.text(0.5, 1.02, f"{Record}", ha='center', va='center', fontsize=40, color='black')
-    fig.text(0.6, 1.02, f"SQ: {total_quality:.2f}", ha='left', va='center', fontsize=40, color='black')
+    fig.text(0.6, 1.02, f"SOS: {SOS}", ha='left', va='center', fontsize=40, color='black')
     fig.text(0.73, 1.02, f"Q3: {Q3}", ha='left', va='center', fontsize=40, color='black')
     fig.text(0.86, 1.02, f"Q4: {Q4}", ha='left', va='center', fontsize=40, color='black')
     plt.tight_layout()
