@@ -937,16 +937,10 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics, location="Neutral"):
     response = requests.get(image_url)
     img2 = Image.open(BytesIO(response.content))
 
-    if location == 'Away':
-        team2_quality = 1 - PEAR_Win_Prob(team1_rating, bubble_team_rating, location) / 100
-    else:
-        team2_quality = PEAR_Win_Prob(bubble_team_rating, team1_rating, location) / 100
+    team2_quality = PEAR_Win_Prob(bubble_team_rating, team1_rating, location) / 100
     team2_win_quality, team2_loss_quality = (1 - team2_quality), -team2_quality
 
-    if location == 'Home':
-        team1_quality = 1 - PEAR_Win_Prob(team2_rating, bubble_team_rating, location) / 100
-    else:
-        team1_quality = PEAR_Win_Prob(bubble_team_rating, team2_rating, location) / 100
+    team1_quality = 1 - PEAR_Win_Prob(team2_rating, bubble_team_rating, location) / 100
     team1_win_quality, team1_loss_quality = (1 - team1_quality), -team1_quality
     spread, team_2_win_prob = find_spread_matchup(team_2, team_1, stats_and_metrics)
 
