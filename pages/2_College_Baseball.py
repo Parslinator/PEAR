@@ -769,6 +769,116 @@ def team_net_tracker(team):
     plt.tight_layout()
     return fig
 
+import math
+def team_schedule_quality(team, schedule_df, stats_and_metrics):
+    team_schedule = schedule_df[schedule_df['Team'] == team].reset_index(drop=True)
+    total_quality = stats_and_metrics[stats_and_metrics['Team'] == team]['resume_quality'].values[0]
+    RQI = stats_and_metrics[stats_and_metrics['Team'] == team]['RQI'].values[0]
+    Q1 = stats_and_metrics[stats_and_metrics['Team'] == team]['Q1'].values[0]
+    Q2 = stats_and_metrics[stats_and_metrics['Team'] == team]['Q2'].values[0]
+    Q3 = stats_and_metrics[stats_and_metrics['Team'] == team]['Q3'].values[0]
+    Q4 = stats_and_metrics[stats_and_metrics['Team'] == team]['Q4'].values[0]
+    Record = stats_and_metrics[stats_and_metrics['Team'] == team]['Record'].values[0]
+
+    def get_opponent_net(row, team):
+        if row['home_team'] == team:
+            return row['away_net']
+        elif row['away_team'] == team:
+            return row['home_net']
+        else:
+            return np.nan
+
+    team_schedule['opponent_net'] = team_schedule.apply(lambda row: get_opponent_net(row, team), axis=1)
+
+    conditions = [
+        ((team_schedule["Location"] == "Home") & (team_schedule["opponent_net"] <= 25)) |
+        ((team_schedule["Location"] == "Neutral") & (team_schedule["opponent_net"] <= 40)) |
+        ((team_schedule["Location"] == "Away") & (team_schedule["home_net"] <= 60)),
+
+        ((team_schedule["Location"] == "Home") & (team_schedule["opponent_net"] <= 50)) |
+        ((team_schedule["Location"] == "Neutral") & (team_schedule["opponent_net"] <= 80)) |
+        ((team_schedule["Location"] == "Away") & (team_schedule["opponent_net"] <= 120)),
+
+        ((team_schedule["Location"] == "Home") & (team_schedule["opponent_net"] <= 100)) |
+        ((team_schedule["Location"] == "Neutral") & (team_schedule["opponent_net"] <= 160)) |
+        ((team_schedule["Location"] == "Away") & (team_schedule["opponent_net"] <= 240))
+    ]
+
+    # Define corresponding quadrant labels
+    quadrants = ["Q1", "Q2", "Q3"]
+
+    # Assign Quadrant values
+    team_schedule["Quad"] = np.select(conditions, quadrants, default="Q4")
+    num_items = len(team_schedule)
+    rows = 15
+    cols = math.ceil(num_items / rows)
+
+    fig, axes = plt.subplots(rows, cols, figsize=(cols * 6, rows*1.3))  # Adjust size as needed
+    fig.patch.set_facecolor('#CECEB2')
+
+    # Ensure axes is always 2D
+    if cols == 1:
+        axes = axes[:, None]
+    elif rows == 1:
+        axes = axes[None, :]
+    # Fill subplots column-first
+    for idx, (_, row) in enumerate(team_schedule.iterrows()):
+        r = idx % rows
+        c = idx // rows
+        ax = axes[r, c]
+        if row['home_team'] == team:
+            opponent = row['away_team']
+            net = row['away_net']
+        else:
+            opponent = row['home_team']
+            net = row['home_net']
+        if "Non Div I" in opponent:
+            opponent = "Non Div I"
+        if pd.notna(net):
+            net = int(net)
+        if row['resume_quality'] < 0:
+            color = '#8B0000' #red
+        else:
+            color = '#2C5E00' #green
+        # ax.text(0.5, 0.8, opponent, ha='center', va='center', fontsize=40, fontweight='bold', color=color)
+        # ax.text(0.1, 0.3, f'#{net}', ha='left', va='center', fontsize=32)
+        # ax.text(0.5, 0.5, row['Quad'], ha='right', va='center', fontsize=32, fontweight='bold')
+        result_first_letter = row['Result'][0].upper() if row['Result'][0].upper() in ['W', 'L'] else ''
+
+        if result_first_letter:
+            ax.text(0.5, 0.8, opponent, ha='center', va='center', fontsize=40, fontweight='bold', color=color)
+            ax.text(0.5, 0.3, f'{row["Quad"]} {row["resume_quality"]:.2f}', ha='center', va='center', fontsize=32, fontweight='bold', color=color)
+        else:
+            ax.text(0.5, 0.8, opponent, ha='center', va='center', fontsize=40, fontweight='bold', color='#555555')
+            ax.text(0.5, 0.3, f'{row["Quad"]} {1 - abs(row["resume_quality"]):.2f}', ha='center', va='center', fontsize=32, fontweight='bold', color='#555555')
+        ax.set_facecolor('#CECEB2')
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_frame_on(False)
+
+    # Hide any unused axes
+    total_plots = rows * cols
+    for idx in range(num_items, total_plots):
+        r = idx % rows
+        c = idx // rows
+        axes[r, c].axis('off')
+
+    for c in range(1, cols):
+        x = c / cols
+        fig.lines.append(plt.Line2D([x, x], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
+
+    fig.text(0.5, 1.10,f"{team} Schedule Quality", ha='center', va='center', fontsize=48, fontweight='bold', color='black')
+    fig.text(0.5, 1.06, f"@PEARatings", ha='center', va='center', fontsize=40, color='black', fontweight='bold')
+    fig.text(0.14, 1.02, f"Q1: {Q1}", ha='right', va='center', fontsize=40, color='black')
+    fig.text(0.27, 1.02, f"Q2: {Q2}", ha='right', va='center', fontsize=40, color='black')
+    fig.text(0.4, 1.02, f"RQI: {RQI}", ha='right', va='center', fontsize=40, color='black')
+    fig.text(0.5, 1.02, f"{Record}", ha='center', va='center', fontsize=40, color='black')
+    fig.text(0.6, 1.02, f"SQ: {total_quality:.2f}", ha='left', va='center', fontsize=40, color='black')
+    fig.text(0.73, 1.02, f"Q3: {Q3}", ha='left', va='center', fontsize=40, color='black')
+    fig.text(0.86, 1.02, f"Q4: {Q4}", ha='left', va='center', fontsize=40, color='black')
+    plt.tight_layout()
+    return fig
+
 import matplotlib.patheffects as pe
 import matplotlib.colors as mcolors
 
@@ -1588,7 +1698,7 @@ with col2:
             projected_record = modeling_stats[modeling_stats['Team'] == team_name]['Projected_Record'].values[0]
             projected_net = modeling_stats[modeling_stats['Team'] == team_name]['Projected_NET'].values[0]
             schedule.index = schedule.index + 1
-            fig = create_quadrant_table(completed)
+            fig = team_schedule_quality(team_name, schedule_df, modeling_stats)
             # st.write(f"Record: {record}")
             # st.write(f"Projected Record: {projected_record}")
             st.write(f"NET Rank: {rank}, Best Win - {best}, Worst Loss - {worst}")
