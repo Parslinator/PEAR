@@ -1577,7 +1577,7 @@ st.sidebar.markdown("""
             display: block;
             padding: 12px;
             margin: 4px 0;
-            background-color: #14B8A6;  /* Dark grey background */
+            background-color: #262730;  /* Dark grey background */
             color: white;
             text-align: left;
             border-radius: 4px;
@@ -1587,7 +1587,7 @@ st.sidebar.markdown("""
             transition: background-color 0.3s ease-in-out;
         }
         .nav-link:hover {
-            background-color: #0D9488;  /* Slightly lighter grey on hover */
+            background-color: #3a3b46;  /* Slightly lighter grey on hover */
         }
     </style>
     <a class="nav-link" href="#ratings-and-resume">Ratings and Resume</a>
