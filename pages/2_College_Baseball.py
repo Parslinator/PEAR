@@ -1776,7 +1776,7 @@ with col1:
                 location = 'Neutral'
             else:
                 location = 'Home'
-            print(location)
+            st.write(location)
             fig = matchup_percentiles(away_team, home_team, modeling_stats, location)
             st.pyplot(fig)
 with col2:
