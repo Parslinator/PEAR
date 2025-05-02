@@ -151,7 +151,7 @@ def find_spread(home_team, away_team, location = "Neutral"):
 
     home_pr = modeling_stats.loc[modeling_stats['Team'] == home_team, 'Rating']
     if location != "Neutral":
-        home_pr += 0.5
+        home_pr += 0.3
     away_pr = modeling_stats.loc[modeling_stats['Team'] == away_team, 'Rating']
     home_elo = modeling_stats.loc[modeling_stats['Team'] == home_team, 'ELO']
     away_elo = modeling_stats.loc[modeling_stats['Team'] == away_team, 'ELO']
@@ -1772,6 +1772,8 @@ with col1:
         )
         spread_button = st.form_submit_button("Calculate Spread")
         if spread_button:
+            if neutrality == "On Campus":
+                neutrality = "Home"
             fig = matchup_percentiles(away_team, home_team, modeling_stats, neutrality)
             st.pyplot(fig)
 with col2:
