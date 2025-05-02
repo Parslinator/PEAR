@@ -146,7 +146,7 @@ else:
     modeling_stats = None  # No valid files found
 formatted_latest_date = latest_date.strftime("%B %d, %Y")
 
-def find_spread(home_team, away_team, location = "Neutral"):
+def find_spread(home_team, away_team, location):
     default_pr = modeling_stats['Rating'].mean() - 1.75 * modeling_stats['Rating'].std()
     default_elo = 1200
 
@@ -170,7 +170,7 @@ def find_spread(home_team, away_team, location = "Neutral"):
     else:
         return f"{away_team} {spread}"
     
-def find_spread_matchup(home_team, away_team, modeling_stats, location="Neutral"):
+def find_spread_matchup(home_team, away_team, modeling_stats, location):
     st.write(f'Spread Location: {location}')
     home_pr = modeling_stats.loc[modeling_stats['Team'] == home_team, 'Rating']
     away_pr = modeling_stats.loc[modeling_stats['Team'] == away_team, 'Rating']
