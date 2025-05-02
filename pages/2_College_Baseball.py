@@ -124,6 +124,7 @@ def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 0.9
 
 def calculate_spread_from_stats(home_pr, away_pr, home_elo, away_elo, location):
+    st.write(f'Spread From Stats: {location}')
     if location != "Neutral":
         home_pr += 0.3
     elo_win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1) * 100, 2)
@@ -170,6 +171,7 @@ def find_spread(home_team, away_team, location = "Neutral"):
         return f"{away_team} {spread}"
     
 def find_spread_matchup(home_team, away_team, modeling_stats, location="Neutral"):
+    st.write(f'Spread Location: {location}')
     home_pr = modeling_stats.loc[modeling_stats['Team'] == home_team, 'Rating']
     away_pr = modeling_stats.loc[modeling_stats['Team'] == away_team, 'Rating']
     home_elo = modeling_stats.loc[modeling_stats['Team'] == home_team, 'ELO']
@@ -1084,6 +1086,7 @@ def calculate_series_probabilities(win_prob):
     return [P_A_at_least_1,P_A_at_least_2,P_A_3], [P_B_at_least_1,P_B_at_least_2,P_B_3]
 
 def matchup_percentiles(team_1, team_2, stats_and_metrics, location):
+    st.write(f'First Location: {location}')
     BASE_URL = "https://www.warrennolan.com"
     bubble_team_rating = stats_and_metrics['Rating'].quantile(0.90)
     percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
@@ -1776,7 +1779,6 @@ with col1:
                 location = 'Neutral'
             else:
                 location = 'Home'
-            st.write(location)
             fig = matchup_percentiles(away_team, home_team, modeling_stats, location)
             st.pyplot(fig)
 with col2:
