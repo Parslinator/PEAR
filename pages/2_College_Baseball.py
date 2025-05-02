@@ -146,7 +146,7 @@ else:
     modeling_stats = None  # No valid files found
 formatted_latest_date = latest_date.strftime("%B %d, %Y")
 
-def find_spread(home_team, away_team, location):
+def find_spread(home_team, away_team, location = 'Neutral'):
     default_pr = modeling_stats['Rating'].mean() - 1.75 * modeling_stats['Rating'].std()
     default_elo = 1200
 
@@ -170,7 +170,7 @@ def find_spread(home_team, away_team, location):
     else:
         return f"{away_team} {spread}"
     
-def find_spread_matchup(home_team, away_team, modeling_stats, location):
+def find_spread_matchup(home_team, away_team, modeling_stats, location = 'Neutral'):
     st.write(f'Spread Location: {location}')
     home_pr = modeling_stats.loc[modeling_stats['Team'] == home_team, 'Rating']
     away_pr = modeling_stats.loc[modeling_stats['Team'] == away_team, 'Rating']
@@ -1143,7 +1143,7 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics, location):
 
     team1_quality = 1 - PEAR_Win_Prob(team2_rating, bubble_team_rating, location) / 100
     team1_win_quality, team1_loss_quality = (1 - team1_quality), -team1_quality
-    spread, team_2_win_prob = find_spread_matchup(team_2, team_1, stats_and_metrics)
+    spread, team_2_win_prob = find_spread_matchup(team_2, team_1, stats_and_metrics, location)
 
     max_net = 299
     w_tq = 0.70   # NET AVG
