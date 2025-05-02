@@ -774,14 +774,27 @@ def get_conference_record(team, schedule_df, stats_and_metrics):
     # Map team to conference
     team_to_conf = stats_and_metrics.set_index('Team')['Conference'].to_dict()
     team_conf = team_to_conf.get(team)
+    schedule_df['home_conf'] = schedule_df['home_team'].map(team_to_conf)
+    schedule_df['away_conf'] = schedule_df['away_team'].map(team_to_conf)
+    schedule_df["matchup"] = schedule_df["home_team"] + " vs " + schedule_df["away_team"]
+    matchup = schedule_df["matchup"].values
+    home_conf = schedule_df["home_conf"].values
+    away_conf = schedule_df["away_conf"].values
 
-    # Add conference info
-    df = schedule_df.copy()
-    df['home_conf'] = df['home_team'].map(team_to_conf)
-    df['away_conf'] = df['away_team'].map(team_to_conf)
-
-    # Filter for team games
-    df = df[(df['home_team'] == team) | (df['away_team'] == team)]
+    # Create 3-row rolling windows
+    match0 = matchup[:-2]
+    match1 = matchup[1:-1]
+    match2 = matchup[2:]
+    conf_check_0 = home_conf[:-2] == away_conf[:-2]
+    conf_check_1 = home_conf[1:-1] == away_conf[1:-1]
+    conf_check_2 = home_conf[2:] == away_conf[2:]
+    valid_series = (
+        (match0 == match1) & (match1 == match2) &
+        conf_check_0 & conf_check_1 & conf_check_2
+    )
+    base_indices = np.where(valid_series)[0]
+    valid_indices = np.unique(np.concatenate([base_indices, base_indices + 1, base_indices + 2]))
+    df = schedule_df.iloc[valid_indices].reset_index(drop=True)
 
     # Filter for conference games
     conf_games = df[
@@ -789,10 +802,7 @@ def get_conference_record(team, schedule_df, stats_and_metrics):
         (df['away_conf'] == team_conf) &
         (df['Result'].str.startswith(('W', 'L')))
     ]
-
-    # Determine wins
     wins = conf_games['Result'].str.startswith('W')
-
     wins_count = int(wins.sum())
     games_count = int(len(conf_games))
     
@@ -947,7 +957,7 @@ def team_schedule_quality(team, schedule_df, stats_and_metrics):
     fig.text(0.195, 1.02, f"Q2: {Q2}", ha='left', va='center', fontsize=40, color='black')
     fig.text(0.32, 1.06, f"N: {neutral_record}", ha='left', va='center', fontsize=40, color='black')
     fig.text(0.32, 1.02, f"RQI: {RQI}", ha='left', va='center', fontsize=40, color='black')
-    fig.text(0.5, 1.02, f"{Record}", ha='center', va='center', fontsize=40, color='black', fontweight='bold')
+    fig.text(0.5, 1.02, f"{Record} ({Conf_Record})", ha='center', va='center', fontsize=40, color='black', fontweight='bold')
     fig.text(0.6, 1.06, f"RPI: {RPI}", ha='left', va='center', fontsize=40, color='black')
     fig.text(0.6, 1.02, f"SOS: {SOS:}", ha='left', va='center', fontsize=40, color='black')
     fig.text(0.73, 1.06, f"ELO: {ELO}", ha='left', va='center', fontsize=40, color='black')
