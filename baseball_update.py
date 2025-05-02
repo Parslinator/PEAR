@@ -2,12 +2,31 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 import warnings
 import os
 import textwrap
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import numpy as np
+from scipy.optimize import differential_evolution
+from scipy.stats import spearmanr
+from PIL import Image # type: ignore
+from io import BytesIO # type: ignore
+import matplotlib.pyplot as plt # type: ignore
+import seaborn as sns # type: ignore
+import matplotlib.offsetbox as offsetbox # type: ignore
+import matplotlib.font_manager as fm # type: ignore
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+import math
+from collections import Counter, defaultdict
+from plottable import Table # type: ignore
+from plottable.plots import image, circled_image # type: ignore
+from plottable import ColumnDefinition # type: ignore
+from matplotlib.ticker import MaxNLocator
+from matplotlib.colors import LinearSegmentedColormap
+import random
 
 warnings.filterwarnings("ignore")
 
@@ -214,11 +233,6 @@ team_replacements = {
 elo_data = clean_team_names(elo_data)
 projected_rpi = clean_team_names(projected_rpi)
 live_rpi = clean_team_names(live_rpi)
-
-import requests
-from bs4 import BeautifulSoup
-import pandas as pd
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 ####################### CONFIG #######################
 
@@ -491,9 +505,6 @@ lower_better = ["ERA", "WP9", "WHIP"]
 scaler = MinMaxScaler(feature_range=(1, 100))
 modeling_stats[higher_better] = scaler.fit_transform(modeling_stats[higher_better])
 modeling_stats[lower_better] = scaler.fit_transform(-modeling_stats[lower_better])
-import numpy as np
-from scipy.optimize import differential_evolution
-from scipy.stats import spearmanr
 
 # Available features
 features_all = ["BB%", "PCT", "OPS", 'PYTHAG', 'fWAR', 'K/BB', 'wRC+', 'LOB%', "ERA", "WHIP", "wOBA", "Rank_pct"]
@@ -574,10 +585,6 @@ print(f"Rating and ELO Correlation: {spearman_corr * 100:.1f}%")
 ending_data = pd.merge(baseball_stats, modeling_stats[['Team', 'Rating']], on="Team", how="inner").sort_values('Rating', ascending=False).reset_index(drop=True)
 ending_data.index = ending_data.index + 1
 
-import requests # type: ignore
-from bs4 import BeautifulSoup # type: ignore
-import pandas as pd # type: ignore
-
 # URL of the page to scrape
 url = 'https://www.warrennolan.com/baseball/2025/elo'
 
@@ -654,12 +661,6 @@ park_factors = park_factors.sort_values("park_factor", ascending=False)
 park_factors = park_factors.reset_index(names='Team')
 park_factors = park_factors[~park_factors['Team'].str.contains('Non Div', na=False)].reset_index(drop=True)
 pf_lookup = dict(zip(park_factors['Team'], park_factors['park_factor']))
-
-import requests
-from bs4 import BeautifulSoup
-import pandas as pd
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from tqdm import tqdm
 
 ####################### Schedule Load #######################
 
@@ -1202,9 +1203,6 @@ schedule_df.rename(columns={'NET': 'away_net'}, inplace=True)
 schedule_df.drop(columns=['Team', 'Team_y'], inplace=True)
 schedule_df.rename(columns={'Team_x':'Team'}, inplace=True)
 
-import numpy as np # type: ignore
-import pandas as pd # type: ignore
-
 ####################### Game Quality #######################
 
 max_net = len(stats_and_metrics)
@@ -1403,30 +1401,14 @@ stats_and_metrics.to_csv(file_path)
 file_path = os.path.join(folder_path, f"schedule_{current_season}.csv")
 schedule_df.to_csv(file_path)
 
-import datetime
 central_time_zone = pytz.timezone('US/Central')
-now = datetime.datetime.now(central_time_zone)
+now = datetime.now(central_time_zone)
 
 ####################### Visuals #######################
 
 # Check if it's Monday and after 10:00 AM and before 3:00 PM
 if now.hour < 13 and now.hour > 7:
     print("Starting Visuals")
-    from bs4 import BeautifulSoup # type: ignore
-    import pandas as pd # type: ignore
-    import requests # type: ignore
-    from bs4 import BeautifulSoup # type: ignore
-    from PIL import Image # type: ignore
-    from io import BytesIO # type: ignore
-    import matplotlib.pyplot as plt # type: ignore
-    import seaborn as sns # type: ignore
-    import matplotlib.offsetbox as offsetbox # type: ignore
-    import matplotlib.font_manager as fm # type: ignore
-    from datetime import datetime, timedelta
-    from concurrent.futures import ThreadPoolExecutor
-    from datetime import datetime
-    from matplotlib.offsetbox import OffsetImage, AnnotationBbox
-    import math
 
     # --- Config & Setup ---
     BASE_URL = "https://www.warrennolan.com"
@@ -1619,8 +1601,6 @@ if now.hour < 13 and now.hour > 7:
     def get_conference(team, stats_df):
         return stats_df.loc[stats_df["Team"] == team, "Conference"].values[0]
 
-    from collections import Counter
-
     def count_conflict_conferences(teams, stats_df):
         conferences = [get_conference(team, stats_df) for team in teams]
         return sum(count - 1 for count in Counter(conferences).values() if count > 1)
@@ -1779,9 +1759,6 @@ if now.hour < 13 and now.hour > 7:
     formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
     formatted_df = resolve_conflicts(formatted_df, stats_and_metrics)
     formatted_df.index = formatted_df.index + 1
-    from plottable import Table # type: ignore
-    from plottable.plots import image, circled_image # type: ignore
-    from plottable import ColumnDefinition # type: ignore
     # Create a set of automatic qualifier teams for faster lookup
     automatic_teams = set(automatic_qualifiers["Team"])
 
@@ -1863,9 +1840,6 @@ if now.hour < 13 and now.hour > 7:
     formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
     formatted_df = resolve_conflicts(formatted_df, stats_and_metrics)
     formatted_df.index = formatted_df.index + 1
-    from plottable import Table # type: ignore
-    from plottable.plots import image, circled_image # type: ignore
-    from plottable import ColumnDefinition # type: ignore
     # Create a set of automatic qualifier teams for faster lookup
     automatic_teams = set(automatic_qualifiers["Team"])
 
@@ -1929,7 +1903,6 @@ if now.hour < 13 and now.hour > 7:
         y_position += vertical_spacing
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Projected_Tournament/proj_tournament_{formatted_date}.png", bbox_inches='tight')
 
-    from matplotlib.ticker import MaxNLocator
     def net_tracker(X, Y):
         folder_path = f"./PEAR/PEAR Baseball/y{current_season}/Data"
         csv_files = [f for f in os.listdir(folder_path) if f.startswith("baseball_") and f.endswith(".csv")]
@@ -1962,7 +1935,6 @@ if now.hour < 13 and now.hour > 7:
         pivoted_table = pivoted_table[sorted(pivoted_table.columns)]
         pivoted_table = pivoted_table.reset_index()
         pivoted_table = pivoted_table.sort_values(by=pivoted_table.columns[-1], ascending=True)
-        import math
         num_rows = math.ceil(math.sqrt(Y))
         num_cols = math.ceil(math.sqrt(Y))
         fig, axes = plt.subplots(num_rows, num_cols, figsize=(15, 12))
@@ -1998,14 +1970,6 @@ if now.hour < 13 and now.hour > 7:
         plt.tight_layout()
         plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Over_Time/over_time_{formatted_date}.png", bbox_inches='tight')
     net_tracker(14,16)
-
-    import matplotlib.pyplot as plt
-    import numpy as np
-    import pandas as pd
-    from matplotlib.colors import LinearSegmentedColormap
-    import numpy as np
-    import random
-    from collections import defaultdict
 
     def PEAR_Win_Prob(home_pr, away_pr):
         rating_diff = home_pr - away_pr
