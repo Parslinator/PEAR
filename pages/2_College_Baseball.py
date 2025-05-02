@@ -929,13 +929,13 @@ def team_schedule_quality(team, schedule_df, stats_and_metrics):
 
         if result_first_letter:
             if row['home_team'] == team:
-                ax.text(0.5, 0.8, f'{opponent}', ha='center', va='center', fontsize=38, fontweight='bold', color=color)
+                ax.text(0.48, 0.8, f'{opponent}', ha='center', va='center', fontsize=38, fontweight='bold', color=color)
             else:
-                ax.text(0.5, 0.8, f'{symbol} {opponent}', ha='center', va='center', fontsize=38, fontweight='bold', color=color)
-            ax.text(0.5, 0.3, f'{row["Quad"]} {row["resume_quality"]:.2f}', ha='center', va='center', fontsize=32, fontweight='bold', color=color)
+                ax.text(0.48, 0.8, f'{symbol} {opponent}', ha='center', va='center', fontsize=38, fontweight='bold', color=color)
+            ax.text(0.48, 0.3, f'{row["Quad"]} {row["resume_quality"]:.2f}', ha='center', va='center', fontsize=32, fontweight='bold', color=color)
         else:
-            ax.text(0.5, 0.8, f'{symbol} {opponent}', ha='center', va='center', fontsize=38, fontweight='bold', color='#555555')
-            ax.text(0.5, 0.3, f'{row["Quad"]} {1 - abs(row["resume_quality"]):.2f}', ha='center', va='center', fontsize=32, fontweight='bold', color='#555555')
+            ax.text(0.48, 0.8, f'{symbol} {opponent}', ha='center', va='center', fontsize=38, fontweight='bold', color='#555555')
+            ax.text(0.48, 0.3, f'{row["Quad"]} {1 - abs(row["resume_quality"]):.2f}', ha='center', va='center', fontsize=32, fontweight='bold', color='#555555')
         ax.set_facecolor('#CECEB2')
         ax.set_xticks([])
         ax.set_yticks([])
