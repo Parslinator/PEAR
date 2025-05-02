@@ -770,6 +770,65 @@ def team_net_tracker(team):
     return fig
 
 import math
+def get_conference_record(team, schedule_df, stats_and_metrics):
+    # Map team to conference
+    team_to_conf = stats_and_metrics.set_index('Team')['Conference'].to_dict()
+    team_conf = team_to_conf.get(team)
+
+    # Add conference info
+    df = schedule_df.copy()
+    df['home_conf'] = df['home_team'].map(team_to_conf)
+    df['away_conf'] = df['away_team'].map(team_to_conf)
+
+    # Filter for team games
+    df = df[(df['home_team'] == team) | (df['away_team'] == team)]
+
+    # Filter for conference games
+    conf_games = df[
+        (df['home_conf'] == team_conf) &
+        (df['away_conf'] == team_conf) &
+        (df['Result'].str.startswith(('W', 'L')))
+    ]
+
+    # Determine wins
+    wins = conf_games['Result'].str.startswith('W')
+
+    wins_count = int(wins.sum())
+    games_count = int(len(conf_games))
+    
+    return f"{wins_count}-{games_count - wins_count}"
+
+def get_location_records(team, schedule_df):
+    # Filter games involving the team with a valid result
+    df = schedule_df[
+        ((schedule_df['home_team'] == team) | (schedule_df['away_team'] == team)) &
+        (schedule_df['Result'].str.startswith(('W', 'L')))
+    ].copy()
+
+    # Determine location type
+    def get_loc(row):
+        if row['Location'] == 'Neutral':
+            return 'Neutral'
+        elif row['home_team'] == team:
+            return 'Home'
+        else:
+            return 'Away'
+
+    df['loc'] = df.apply(get_loc, axis=1)
+
+    # Determine win/loss from Result
+    df['is_win'] = df['Result'].str.startswith('W')
+
+    # Group by location
+    records = {}
+    for loc in ['Home', 'Away', 'Neutral']:
+        group = df[df['loc'] == loc]
+        wins = group['is_win'].sum()
+        losses = len(group) - wins
+        records[loc] = f"{int(wins)}-{int(losses)}"
+
+    return records
+
 def team_schedule_quality(team, schedule_df, stats_and_metrics):
     team_schedule = schedule_df[schedule_df['Team'] == team].reset_index(drop=True)
     SOS = stats_and_metrics[stats_and_metrics['Team'] == team]['SOS'].values[0]
@@ -778,7 +837,16 @@ def team_schedule_quality(team, schedule_df, stats_and_metrics):
     Q2 = stats_and_metrics[stats_and_metrics['Team'] == team]['Q2'].values[0]
     Q3 = stats_and_metrics[stats_and_metrics['Team'] == team]['Q3'].values[0]
     Q4 = stats_and_metrics[stats_and_metrics['Team'] == team]['Q4'].values[0]
+    NET = stats_and_metrics[stats_and_metrics['Team'] == team]['NET'].values[0]
+    RPI = stats_and_metrics[stats_and_metrics['Team'] == team]['RPI'].values[0]
+    ELO = stats_and_metrics[stats_and_metrics['Team'] == team]['ELO_Rank'].values[0]
+    PRR = stats_and_metrics[stats_and_metrics['Team'] == team]['PRR'].values[0]
     Record = stats_and_metrics[stats_and_metrics['Team'] == team]['Record'].values[0]
+    Conf_Record = get_conference_record(team, team_schedule, stats_and_metrics)
+    record = get_location_records(team, team_schedule)
+    home_record = record['Home']
+    away_record = record['Away']
+    neutral_record = record['Neutral']
 
     def get_opponent_net(row, team):
         if row['home_team'] == team:
@@ -829,9 +897,13 @@ def team_schedule_quality(team, schedule_df, stats_and_metrics):
         if row['home_team'] == team:
             opponent = row['away_team']
             net = row['away_net']
+            symbol = ""
         else:
             opponent = row['home_team']
             net = row['home_net']
+            symbol = "@"
+        if row['Location'] == "Neutral":
+            symbol = "vs"
         if "Non Div I" in opponent:
             opponent = "Non Div I"
         if pd.notna(net):
@@ -846,10 +918,10 @@ def team_schedule_quality(team, schedule_df, stats_and_metrics):
         result_first_letter = row['Result'][0].upper() if row['Result'][0].upper() in ['W', 'L'] else ''
 
         if result_first_letter:
-            ax.text(0.5, 0.8, opponent, ha='center', va='center', fontsize=40, fontweight='bold', color=color)
+            ax.text(0.5, 0.8, f'{symbol} {opponent}', ha='center', va='center', fontsize=40, fontweight='bold', color=color)
             ax.text(0.5, 0.3, f'{row["Quad"]} {row["resume_quality"]:.2f}', ha='center', va='center', fontsize=32, fontweight='bold', color=color)
         else:
-            ax.text(0.5, 0.8, opponent, ha='center', va='center', fontsize=40, fontweight='bold', color='#555555')
+            ax.text(0.5, 0.8, f'{symbol} {opponent}', ha='center', va='center', fontsize=40, fontweight='bold', color='#555555')
             ax.text(0.5, 0.3, f'{row["Quad"]} {1 - abs(row["resume_quality"]):.2f}', ha='center', va='center', fontsize=32, fontweight='bold', color='#555555')
         ax.set_facecolor('#CECEB2')
         ax.set_xticks([])
@@ -867,14 +939,20 @@ def team_schedule_quality(team, schedule_df, stats_and_metrics):
         x = c / cols
         fig.lines.append(plt.Line2D([x, x], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
 
-    fig.text(0.5, 1.10,f"{team} Schedule Quality", ha='center', va='center', fontsize=48, fontweight='bold', color='black')
+    fig.text(0.5, 1.10,f"#{NET} {team} Schedule Quality", ha='center', va='center', fontsize=48, fontweight='bold', color='black')
     fig.text(0.5, 1.06, f"@PEARatings", ha='center', va='center', fontsize=40, color='black', fontweight='bold')
-    fig.text(0.14, 1.02, f"Q1: {Q1}", ha='right', va='center', fontsize=40, color='black')
-    fig.text(0.27, 1.02, f"Q2: {Q2}", ha='right', va='center', fontsize=40, color='black')
-    fig.text(0.4, 1.02, f"RQI: {RQI}", ha='right', va='center', fontsize=40, color='black')
-    fig.text(0.5, 1.02, f"{Record}", ha='center', va='center', fontsize=40, color='black')
-    fig.text(0.6, 1.02, f"SOS: {SOS}", ha='left', va='center', fontsize=40, color='black')
+    fig.text(0.06, 1.06, f"H: {home_record}", ha='left', va='center', fontsize=40, color='black')
+    fig.text(0.06, 1.02, f"Q1: {Q1}", ha='left', va='center', fontsize=40, color='black')
+    fig.text(0.195, 1.06, f"A: {away_record}", ha='left', va='center', fontsize=40, color='black')
+    fig.text(0.195, 1.02, f"Q2: {Q2}", ha='left', va='center', fontsize=40, color='black')
+    fig.text(0.32, 1.06, f"N: {neutral_record}", ha='left', va='center', fontsize=40, color='black')
+    fig.text(0.32, 1.02, f"RQI: {RQI}", ha='left', va='center', fontsize=40, color='black')
+    fig.text(0.5, 1.02, f"{Record}", ha='center', va='center', fontsize=40, color='black', fontweight='bold')
+    fig.text(0.6, 1.06, f"RPI: {RPI}", ha='left', va='center', fontsize=40, color='black')
+    fig.text(0.6, 1.02, f"SOS: {SOS:}", ha='left', va='center', fontsize=40, color='black')
+    fig.text(0.73, 1.06, f"ELO: {ELO}", ha='left', va='center', fontsize=40, color='black')
     fig.text(0.73, 1.02, f"Q3: {Q3}", ha='left', va='center', fontsize=40, color='black')
+    fig.text(0.86, 1.06, f"TSR: {PRR}", ha='left', va='center', fontsize=40, color='black')
     fig.text(0.86, 1.02, f"Q4: {Q4}", ha='left', va='center', fontsize=40, color='black')
     plt.tight_layout()
     return fig
