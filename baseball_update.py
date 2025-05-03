@@ -497,7 +497,6 @@ modeling_stats = baseball_stats[['Team', 'HPG',
                 'KP9', 'WP9', 'OPS', 'BB%',
                 'WHIP', 'PYTHAG', 'fWAR', 'oWAR_z', 'pWAR_z', 'K/BB', 'wRC+', 'LOB%', 'wOBA', 'ELO_Rank']]
 modeling_stats = pd.merge(modeling_stats, net_2024[['Team', 'NET_Score']], on = 'Team', how='left')
-modeling_stats["Rank"] = modeling_stats["Rank"].apply(pd.to_numeric, errors='coerce')
 modeling_stats["ELO_Rank"] = modeling_stats["ELO_Rank"].apply(pd.to_numeric, errors='coerce')
 
 higher_better = ["HPG", "BBPG", "BB%", "PCT", "KP9", "OPS", 'PYTHAG', 'fWAR', 'oWAR_z', 'pWAR_z', 'K/BB', 'wRC+', 'LOB%', 'wOBA', 'NET_Score']
