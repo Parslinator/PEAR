@@ -1033,6 +1033,7 @@ stats_and_metrics['SOR'].fillna(max_SOR + 1, inplace=True)
 stats_and_metrics['SOR'] = stats_and_metrics['SOR'].astype(int)
 stats_and_metrics = stats_and_metrics.sort_values('SOR').reset_index(drop=True)
 
+stats_and_metrics['rem_avg_expected_wins'] = stats_and_metrics['rem_avg_expected_wins'].fillna(float(-10.0))
 stats_and_metrics['RemSOS'] = stats_and_metrics['rem_avg_expected_wins'].rank(method='min', ascending=True).astype(int)
 max_remSOS = stats_and_metrics['RemSOS'].max()
 stats_and_metrics['RemSOS'].fillna(max_remSOS + 1, inplace=True)
@@ -1349,6 +1350,8 @@ def simulate_games(df, num_simulations=100):
 
 projected_wins_df = simulate_games(remaining_games)
 stats_and_metrics = pd.merge(stats_and_metrics, projected_wins_df, how='left', on='Team')
+stats_and_metrics['Remaining_Wins'] = stats_and_metrics['Remaining_Wins'].fillna(0)
+stats_and_metrics['Remaining_Losses'] = stats_and_metrics['Remaining_Losses'].fillna(0)
 stats_and_metrics['Projected_Wins'] = stats_and_metrics['Remaining_Wins'] + stats_and_metrics['Wins']
 stats_and_metrics['Projected_Losses'] = stats_and_metrics['Remaining_Losses'] + stats_and_metrics['Losses']
 stats_and_metrics["Projected_Record"] = stats_and_metrics.apply(
@@ -1361,6 +1364,7 @@ stats_and_metrics['Projected_NET_Score'] = (
     (optimized_weights[0] + optimized_weights[1]) * stats_and_metrics['Projected_Norm_RQI'] +
     optimized_weights[1] * stats_and_metrics['Norm_SOS']
 )
+stats_and_metrics['Projected_NET_Score'] = stats_and_metrics['Projected_NET_Score'].fillna(stats_and_metrics['NET_Score'])
 stats_and_metrics['Projected_NET'] = stats_and_metrics['Projected_NET_Score'].rank(ascending=False).astype(int)
 
 ####################### Percentile Calculations #######################
