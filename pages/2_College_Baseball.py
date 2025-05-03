@@ -518,6 +518,11 @@ def grab_team_schedule(team_name, stats_df):
     ].reset_index(drop=True)
     remaining_games = schedule_df[schedule_df["Comparison_Date"] > comparison_date].reset_index(drop=True)
     if len(remaining_games) > 0:
+        def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
+            if location != "Neutral":
+                home_pr += 0.8
+            rating_diff = home_pr - away_pr
+            return round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
         remaining_games['PEAR'] = remaining_games.apply(
             lambda row: find_spread(
                 row['Opponent'], row['Team'], row['Location']
@@ -539,7 +544,7 @@ def grab_team_schedule(team_name, stats_df):
 
         remaining_games["PEAR"] = remaining_games.apply(clean_spread, axis=1)
         remaining_games['home_win_prob'] = remaining_games.apply(
-            lambda row: PEAR_Win_Prob(team_rating, row['Rating']) / 100, axis=1
+            lambda row: PEAR_Win_Prob(team_rating, row['Rating'], row['Location']) / 100, axis=1
         )
         max_net = len(stats_df)
         max_spread = 16.5
