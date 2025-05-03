@@ -517,14 +517,47 @@ def grab_team_schedule(team_name, stats_df):
         (schedule_df["Result"].str.contains("W|L"))  # Check if "Result" contains "W" or "L"
     ].reset_index(drop=True)
     remaining_games = schedule_df[schedule_df["Comparison_Date"] > comparison_date].reset_index(drop=True)
-    remaining_games['PEAR'] = remaining_games.apply(
-        lambda row: find_spread(
-            row['Opponent'], row['Team'], row['Location']
-        ) if row['Location'] == 'Away' else find_spread(
-            row['Team'], row['Opponent'], row['Location']
-        ),
-        axis=1
-    )
+    if len(remaining_games) > 0:
+        remaining_games['PEAR'] = remaining_games.apply(
+            lambda row: find_spread(
+                row['Opponent'], row['Team'], row['Location']
+            ) if row['Location'] == 'Away' else find_spread(
+                row['Team'], row['Opponent'], row['Location']
+            ),
+            axis=1
+        )
+        def clean_spread(row):
+            team_name = row["Team"]
+            spread = row["PEAR"]
+            spread_value_str = spread.split()[-1]
+            spread_value_str = spread_value_str.lstrip("-") if spread_value_str.startswith("--") else spread_value_str
+            try:
+                spread_value = float(spread_value_str)
+            except ValueError:
+                spread_value = 0.0  # Default to 0 if there's a parsing issue
+            return spread_value if team_name in spread else abs(spread_value)
+
+        remaining_games["PEAR"] = remaining_games.apply(clean_spread, axis=1)
+        remaining_games['home_win_prob'] = remaining_games.apply(
+            lambda row: PEAR_Win_Prob(team_rating, row['Rating']) / 100, axis=1
+        )
+        max_net = len(stats_df)
+        max_spread = 16.5
+
+        w_tq = 0.7
+        w_wp = 0.2
+        w_ned = 0.1
+
+        remaining_games['avg_net'] = (team_rank + remaining_games['NET']) / 2
+        remaining_games['TQ'] = (max_net - remaining_games['avg_net']) / (max_net - 1)
+        remaining_games['WP'] = 1 - 2 * np.abs(remaining_games['home_win_prob'] - 0.5)
+        remaining_games['NED'] = 1 - (np.abs(team_rank - remaining_games['NET']) / (max_net - 1))
+
+        remaining_games['GQI'] = round(10 * (
+            w_tq * remaining_games['TQ'] +
+            w_wp * remaining_games['WP'] +
+            w_ned * remaining_games['NED']
+        ),1)   
 
     team_completed = completed_schedule[completed_schedule['Team'] == team_name].reset_index(drop=True)
     num_rows = len(team_completed)
@@ -538,38 +571,6 @@ def grab_team_schedule(team_name, stats_df):
         win_prob = round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
         return win_prob
 
-    def clean_spread(row):
-        team_name = row["Team"]
-        spread = row["PEAR"]
-        spread_value_str = spread.split()[-1]
-        spread_value_str = spread_value_str.lstrip("-") if spread_value_str.startswith("--") else spread_value_str
-        try:
-            spread_value = float(spread_value_str)
-        except ValueError:
-            spread_value = 0.0  # Default to 0 if there's a parsing issue
-        return spread_value if team_name in spread else abs(spread_value)
-
-    remaining_games["PEAR"] = remaining_games.apply(clean_spread, axis=1)
-    remaining_games['home_win_prob'] = remaining_games.apply(
-        lambda row: PEAR_Win_Prob(team_rating, row['Rating']) / 100, axis=1
-    )
-    max_net = len(stats_df)
-    max_spread = 16.5
-
-    w_tq = 0.7
-    w_wp = 0.2
-    w_ned = 0.1
-
-    remaining_games['avg_net'] = (team_rank + remaining_games['NET']) / 2
-    remaining_games['TQ'] = (max_net - remaining_games['avg_net']) / (max_net - 1)
-    remaining_games['WP'] = 1 - 2 * np.abs(remaining_games['home_win_prob'] - 0.5)
-    remaining_games['NED'] = 1 - (np.abs(team_rank - remaining_games['NET']) / (max_net - 1))
-
-    remaining_games['GQI'] = round(10 * (
-        w_tq * remaining_games['TQ'] +
-        w_wp * remaining_games['WP'] +
-        w_ned * remaining_games['NED']
-    ),1)   
 
     win_rating = 500
     best_win_opponent = ""
@@ -1795,7 +1796,6 @@ with col2:
             record = str(wins) + "-" + str(losses)
             projected_record = modeling_stats[modeling_stats['Team'] == team_name]['Projected_Record'].values[0]
             projected_net = modeling_stats[modeling_stats['Team'] == team_name]['Projected_NET'].values[0]
-            schedule.index = schedule.index + 1
             fig = team_schedule_quality(team_name, schedule_df, modeling_stats)
             # st.write(f"Record: {record}")
             # st.write(f"Projected Record: {projected_record}")
@@ -1805,8 +1805,10 @@ with col2:
             st.write(f"Projected Record: {projected_record}")
             st.pyplot(fig)
             st.write("Upcoming Games")
-            st.dataframe(schedule[['Opponent', 'NET', 'Quad', 'GQI', 'PEAR', 'Date']], use_container_width=True)
-            st.caption('PEAR - Negative Value Indicates Favorites, Positive Value Indicates Underdog')
+            if len(schedule) > 0:
+                schedule.index = schedule.index + 1
+                st.dataframe(schedule[['Opponent', 'NET', 'Quad', 'GQI', 'PEAR', 'Date']], use_container_width=True)
+                st.caption('PEAR - Negative Value Indicates Favorites, Positive Value Indicates Underdog')
 
 st.divider()
 
