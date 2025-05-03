@@ -1264,8 +1264,8 @@ win_percentage_df = (
     ).reset_index()
 )
 stats_and_metrics = pd.merge(stats_and_metrics, win_percentage_df, how='left', on='Team')
-stats_and_metrics['luck_pct'] = stats_and_metrics['win_percentage'] - (stats_and_metrics['expected_wins'] / stats_and_metrics['completed_games'])
-stats_and_metrics["Luck"] = stats_and_metrics["luck_pct"].rank(ascending=False)
+stats_and_metrics['wpoe_pct'] = stats_and_metrics['win_percentage'] - (stats_and_metrics['expected_wins'] / stats_and_metrics['completed_games'])
+stats_and_metrics["WPOE"] = stats_and_metrics["wpoe_pct"].rank(ascending=False)
 
 ####################### Straight Up Tracking #######################
 
