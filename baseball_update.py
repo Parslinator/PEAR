@@ -490,24 +490,25 @@ baseball_stats = pd.merge(baseball_stats, wOBA[['Team', 'wOBA', 'wRAA', 'oWAR_z'
 
 ####################### Rating Calculation #######################
 
-rpi_2024 = pd.read_csv("./PEAR/PEAR Baseball/y2024/rpi_end_2024.csv")
+net_2024 = pd.read_csv("./PEAR/PEAR Baseball/y2024/Data/baseball_06_25_2024.csv")[['Team', 'NET_Score']]
 
 modeling_stats = baseball_stats[['Team', 'HPG',
                 'BBPG', 'ERA', 'PCT', 
                 'KP9', 'WP9', 'OPS', 'BB%',
                 'WHIP', 'PYTHAG', 'fWAR', 'oWAR_z', 'pWAR_z', 'K/BB', 'wRC+', 'LOB%', 'wOBA', 'ELO_Rank']]
-modeling_stats = pd.merge(modeling_stats, rpi_2024[['Team', 'Rank']], on = 'Team', how='left')
+modeling_stats = pd.merge(modeling_stats, net_2024[['Team', 'NET_Score']], on = 'Team', how='left')
 modeling_stats["Rank"] = modeling_stats["Rank"].apply(pd.to_numeric, errors='coerce')
 modeling_stats["ELO_Rank"] = modeling_stats["ELO_Rank"].apply(pd.to_numeric, errors='coerce')
-modeling_stats['Rank_pct'] = 1 - (modeling_stats['Rank'] - 1) / (len(modeling_stats) - 1)
-higher_better = ["HPG", "BBPG", "BB%", "PCT", "KP9", "OPS", "Rank_pct", 'PYTHAG', 'fWAR', 'oWAR_z', 'pWAR_z', 'K/BB', 'wRC+', 'LOB%', 'wOBA']
+
+higher_better = ["HPG", "BBPG", "BB%", "PCT", "KP9", "OPS", 'PYTHAG', 'fWAR', 'oWAR_z', 'pWAR_z', 'K/BB', 'wRC+', 'LOB%', 'wOBA', 'NET_Score']
 lower_better = ["ERA", "WP9", "WHIP"]
+
 scaler = MinMaxScaler(feature_range=(1, 100))
 modeling_stats[higher_better] = scaler.fit_transform(modeling_stats[higher_better])
 modeling_stats[lower_better] = scaler.fit_transform(-modeling_stats[lower_better])
 
 # Available features
-features_all = ["BB%", "PCT", "OPS", 'PYTHAG', 'fWAR', 'K/BB', 'wRC+', 'LOB%', "ERA", "WHIP", "wOBA", "Rank_pct"]
+features_all = ["BB%", "PCT", "OPS", 'PYTHAG', 'fWAR', 'K/BB', 'wRC+', 'LOB%', "WHIP", "wOBA", "NET_Score"]
 
 # Target variable
 target = modeling_stats['ELO_Rank'].values
