@@ -1033,7 +1033,7 @@ stats_and_metrics['SOR'].fillna(max_SOR + 1, inplace=True)
 stats_and_metrics['SOR'] = stats_and_metrics['SOR'].astype(int)
 stats_and_metrics = stats_and_metrics.sort_values('SOR').reset_index(drop=True)
 
-stats_and_metrics['rem_avg_expected_wins'] = stats_and_metrics['rem_avg_expected_wins'].fillna(float(-10.0))
+stats_and_metrics['rem_avg_expected_wins'] = stats_and_metrics['rem_avg_expected_wins'].fillna(float(10.0))
 stats_and_metrics['RemSOS'] = stats_and_metrics['rem_avg_expected_wins'].rank(method='min', ascending=True).astype(int)
 max_remSOS = stats_and_metrics['RemSOS'].max()
 stats_and_metrics['RemSOS'].fillna(max_remSOS + 1, inplace=True)
