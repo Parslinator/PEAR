@@ -935,16 +935,16 @@ def team_schedule_quality(team, schedule_df, stats_and_metrics):
 
         if result_first_letter:
             if (row['home_team'] == team) & (row['Location'] == "Home"):
-                ax.text(0.44, 0.8, f'{opponent}', ha='center', va='center', fontsize=38, fontweight='bold', color=color)
+                ax.text(0.5, 0.8, f'{opponent}', ha='center', va='center', fontsize=35, fontweight='bold', color=color)
             else:
-                ax.text(0.44, 0.8, f'{symbol} {opponent}', ha='center', va='center', fontsize=38, fontweight='bold', color=color)
-            ax.text(0.44, 0.3, f'{row["Quad"]} {row["resume_quality"]:.2f}', ha='center', va='center', fontsize=32, fontweight='bold', color=color)
+                ax.text(0.5, 0.8, f'{symbol} {opponent}', ha='center', va='center', fontsize=35, fontweight='bold', color=color)
+            ax.text(0.5, 0.3, f'{row["Quad"]} {row["resume_quality"]:.2f}', ha='center', va='center', fontsize=32, fontweight='bold', color=color)
         else:
             if (row['home_team'] == team) & (row['Location'] == "Home"):
-                ax.text(0.44, 0.8, f'{opponent}', ha='center', va='center', fontsize=38, fontweight='bold', color='#555555')
+                ax.text(0.5, 0.8, f'{opponent}', ha='center', va='center', fontsize=35, fontweight='bold', color='#555555')
             else:
-                ax.text(0.44, 0.8, f'{symbol} {opponent}', ha='center', va='center', fontsize=38, fontweight='bold', color='#555555')
-            ax.text(0.44, 0.3, f'{row["Quad"]} {1 - abs(row["resume_quality"]):.2f}', ha='center', va='center', fontsize=32, fontweight='bold', color='#555555')
+                ax.text(0.5, 0.8, f'{symbol} {opponent}', ha='center', va='center', fontsize=35, fontweight='bold', color='#555555')
+            ax.text(0.5, 0.3, f'{row["Quad"]} {1 - abs(row["resume_quality"]):.2f}', ha='center', va='center', fontsize=32, fontweight='bold', color='#555555')
         ax.set_facecolor('#CECEB2')
         ax.set_xticks([])
         ax.set_yticks([])
@@ -957,9 +957,9 @@ def team_schedule_quality(team, schedule_df, stats_and_metrics):
         c = idx // rows
         axes[r, c].axis('off')
 
-    for c in range(1, cols):
-        x = c / cols
-        fig.lines.append(plt.Line2D([x, x], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
+    fig.lines.append(plt.Line2D([0.25, 0.25], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
+    fig.lines.append(plt.Line2D([0.5, 0.5], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
+    fig.lines.append(plt.Line2D([0.75, 0.75], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
 
     fig.text(0.5, 1.10,f"#{NET} {team} Schedule Quality", ha='center', va='center', fontsize=48, fontweight='bold', color='black')
     fig.text(0.5, 1.06, f"@PEARatings", ha='center', va='center', fontsize=40, color='black', fontweight='bold')
