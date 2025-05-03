@@ -1604,12 +1604,12 @@ def calculate_conference_results(schedule_df, comparison_date, stats_and_metrics
 
     # --- Step 6: Merge current and projected records into final standings ---
     combined = pd.merge(
-        projected_wins_df,
         conference_records,
+        projected_wins_df,
         on=["Team", "Conference"],
         how="left"
     )
-    combined[["Conf_Wins", "Conf_Losses", "Remaining_Wins", "Games_Remaining"]] = combined[["Conf_Wins", "Conf_Losses", "Remaining_Wins", "Games_Remaining"]].fillna(0).astype(int)
+    combined[["Conf_Wins", "Conf_Losses", "Remaining_Wins", "Games_Remaining", "Remaining_Losses"]] = combined[["Conf_Wins", "Conf_Losses", "Remaining_Wins", "Games_Remaining", "Remaining_Losses"]].fillna(0).astype(int)
     combined["Proj_Conf_Wins"] = (combined["Conf_Wins"] + combined["Remaining_Wins"])
     combined["Proj_Conf_Losses"] = (combined["Conf_Losses"] + combined["Remaining_Losses"])
 

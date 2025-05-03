@@ -1364,7 +1364,7 @@ stats_and_metrics['Projected_NET_Score'] = (
     (optimized_weights[0] + optimized_weights[1]) * stats_and_metrics['Projected_Norm_RQI'] +
     optimized_weights[1] * stats_and_metrics['Norm_SOS']
 )
-stats_and_metrics['Projected_NET_Score'] = stats_and_metrics['Projected_NET_Score'].fillna(stats_and_metrics['NET_Score'])
+stats_and_metrics['Projected_NET_Score'] = stats_and_metrics['Projected_NET_Score'].fillna((optimized_weights[0] * stats_and_metrics['Norm_Rating'] + (optimized_weights[0] + optimized_weights[1]) * stats_and_metrics['Norm_RQI'] + optimized_weights[1] * stats_and_metrics['Norm_SOS']))
 stats_and_metrics['Projected_NET'] = stats_and_metrics['Projected_NET_Score'].rank(ascending=False).astype(int)
 
 ####################### Percentile Calculations #######################
