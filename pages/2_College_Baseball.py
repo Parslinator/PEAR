@@ -957,25 +957,31 @@ def team_schedule_quality(team, schedule_df, stats_and_metrics):
         c = idx // rows
         axes[r, c].axis('off')
 
-    fig.lines.append(plt.Line2D([0.25, 0.25], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
-    fig.lines.append(plt.Line2D([0.5, 0.5], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
-    fig.lines.append(plt.Line2D([0.75, 0.75], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
+    if cols == 4:
+        fig.lines.append(plt.Line2D([0.25, 0.25], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
+        fig.lines.append(plt.Line2D([0.5, 0.5], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
+        fig.lines.append(plt.Line2D([0.75, 0.75], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
+        fontsize = 40
+    elif cols == 3:
+        fig.lines.append(plt.Line2D([0.33, 0.33], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
+        fig.lines.append(plt.Line2D([0.66, 0.66], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
+        fontsize = 32
 
     fig.text(0.5, 1.10,f"#{NET} {team} Schedule Quality", ha='center', va='center', fontsize=48, fontweight='bold', color='black')
-    fig.text(0.5, 1.06, f"@PEARatings", ha='center', va='center', fontsize=40, color='black', fontweight='bold')
-    fig.text(0.06, 1.06, f"H: {home_record}", ha='left', va='center', fontsize=40, color='black')
-    fig.text(0.06, 1.02, f"Q1: {Q1}", ha='left', va='center', fontsize=40, color='black')
-    fig.text(0.195, 1.06, f"A: {away_record}", ha='left', va='center', fontsize=40, color='black')
-    fig.text(0.195, 1.02, f"Q2: {Q2}", ha='left', va='center', fontsize=40, color='black')
-    fig.text(0.32, 1.06, f"N: {neutral_record}", ha='left', va='center', fontsize=40, color='black')
-    fig.text(0.32, 1.02, f"RQI: {RQI}", ha='left', va='center', fontsize=40, color='black')
-    fig.text(0.5, 1.02, f"{Record} ({Conf_Record})", ha='center', va='center', fontsize=40, color='black', fontweight='bold')
-    fig.text(0.6, 1.06, f"RPI: {RPI}", ha='left', va='center', fontsize=40, color='black')
-    fig.text(0.6, 1.02, f"SOS: {SOS:}", ha='left', va='center', fontsize=40, color='black')
-    fig.text(0.73, 1.06, f"ELO: {ELO}", ha='left', va='center', fontsize=40, color='black')
-    fig.text(0.73, 1.02, f"Q3: {Q3}", ha='left', va='center', fontsize=40, color='black')
-    fig.text(0.86, 1.06, f"TSR: {PRR}", ha='left', va='center', fontsize=40, color='black')
-    fig.text(0.86, 1.02, f"Q4: {Q4}", ha='left', va='center', fontsize=40, color='black')
+    fig.text(0.5, 1.06, f"@PEARatings", ha='center', va='center', fontsize=fontsize, color='black', fontweight='bold')
+    fig.text(0.06, 1.06, f"H: {home_record}", ha='left', va='center', fontsize=fontsize, color='black')
+    fig.text(0.06, 1.02, f"Q1: {Q1}", ha='left', va='center', fontsize=fontsize, color='black')
+    fig.text(0.195, 1.06, f"A: {away_record}", ha='left', va='center', fontsize=fontsize, color='black')
+    fig.text(0.195, 1.02, f"Q2: {Q2}", ha='left', va='center', fontsize=fontsize, color='black')
+    fig.text(0.32, 1.06, f"N: {neutral_record}", ha='left', va='center', fontsize=fontsize, color='black')
+    fig.text(0.32, 1.02, f"RQI: {RQI}", ha='left', va='center', fontsize=fontsize, color='black')
+    fig.text(0.5, 1.02, f"{Record} ({Conf_Record})", ha='center', va='center', fontsize=fontsize, color='black', fontweight='bold')
+    fig.text(0.6, 1.06, f"RPI: {RPI}", ha='left', va='center', fontsize=fontsize, color='black')
+    fig.text(0.6, 1.02, f"SOS: {SOS:}", ha='left', va='center', fontsize=fontsize, color='black')
+    fig.text(0.73, 1.06, f"ELO: {ELO}", ha='left', va='center', fontsize=fontsize, color='black')
+    fig.text(0.73, 1.02, f"Q3: {Q3}", ha='left', va='center', fontsize=fontsize, color='black')
+    fig.text(0.86, 1.06, f"TSR: {PRR}", ha='left', va='center', fontsize=fontsize, color='black')
+    fig.text(0.86, 1.02, f"Q4: {Q4}", ha='left', va='center', fontsize=fontsize, color='black')
     plt.tight_layout()
     return fig
 
