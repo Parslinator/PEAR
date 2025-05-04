@@ -1669,7 +1669,7 @@ st.title(f"{current_season} CBASE PEAR")
 st.logo("./PEAR/pear_logo.jpg", size = 'large')
 st.caption(f"Ratings Updated {formatted_latest_date}")
 st.caption(f"Stats Through Games {last_date}")
-st.caption(f"Page Updated @ 7 AM, 11 AM, 3 PM, 7 PM, 11 PM CST")
+st.caption(f"If you get an error, notice a bug, have a suggestion, or a question to ask, reach out to me!")
 
 st.sidebar.markdown("""
     <style>
