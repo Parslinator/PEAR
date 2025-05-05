@@ -1827,7 +1827,7 @@ with col1:
             fig = conference_team_sheets(conference, modeling_stats)
             st.pyplot(fig)
 with col2:
-    projected_wins, clean_completed, clean_remain = calculate_conference_results(schedule_df, comparison_date, modeling_stats, num_simulations=2000)
+    projected_wins, clean_completed, clean_remain = calculate_conference_results(schedule_df, comparison_date, modeling_stats, num_simulations=500)
     projected_wins[["Conf_Wins", "Conf_Losses"]] = projected_wins[["Conf_Wins", "Conf_Losses"]].fillna(0).astype(int)
     projected_wins["Proj_Conf_Wins"] = projected_wins["Conf_Wins"] + projected_wins["Remaining_Wins"]
     projected_wins["Proj_Conf_Losses"] = projected_wins["Conf_Losses"] + projected_wins["Remaining_Losses"]
