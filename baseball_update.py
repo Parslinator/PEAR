@@ -1117,7 +1117,7 @@ def calculate_net(weights):
     spearman_corr = stats_and_metrics[['NET', 'combined_rank']].corr(method='spearman').iloc[0,1]
 
     return -spearman_corr
-bounds = [(0,0.15), (0,0.15)]  
+bounds = [(0,0.1), (0,0.15)]  
 result = differential_evolution(calculate_net, bounds, strategy='best1bin', maxiter=500, tol=1e-4, seed=42)
 optimized_weights = result.x
 print("NET Calculation Weights:")
