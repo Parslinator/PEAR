@@ -759,11 +759,11 @@ def run_hybrid_tournament(teams, stats_and_metrics, num_simulations=1000):
         win_tourney = tournament_wins[team] / num_simulations
         data.append({
             "Team": team,
-            "Make Double Elim": round(reach_double * 100, 1),
+            "Double Elim": round(reach_double * 100, 1),
             "Win Tournament": round(win_tourney * 100, 1)
         })
 
-    return pd.DataFrame(data).sort_values(by="Win Tournament", ascending=False).reset_index(drop=True)
+    return pd.DataFrame(data)
 
 def simulate_8_team_double_elim(teams, stats_and_metrics):
     r = {team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].iloc[0] for team in teams}
@@ -820,7 +820,7 @@ def run_8_team_double_elim(teams, stats_and_metrics, num_simulations=1000):
         for team in teams
     ])
 
-    return df.sort_values(by="Win Tournament", ascending=False).reset_index(drop=True)
+    return df
 
 def single_elimination_16_teams(seed_order, stats_and_metrics, num_simulations=1000):
     rounds = ["Round 1", "Round 2", "Quarterfinals", "Semifinals", "Final", "Champion"]
@@ -1315,7 +1315,7 @@ def simulate_mvc_tournament(seed_order, stats_and_metrics, num_simulations=1000)
         "Win Tournament": [round(100 * win_stats[t] / num_simulations, 1) for t in seed_order]
     })
 
-    return result.sort_values(by="Win Tournament", ascending=False).reset_index(drop=True)
+    return result
 
 def simulate_two_playin_rounds_to_double_elim(seed_order, stats_and_metrics, num_simulations=1000):
     teams = seed_order
@@ -1516,7 +1516,6 @@ def simulate_two_playin_to_two_double_elim(seed_order, stats_and_metrics, num_si
 
     # Final formatting
     final_df = pd.DataFrame.from_dict(results, orient="index").reset_index().rename(columns={"index": "Team"})
-    final_df = final_df.sort_values("Win Tournament", ascending=False).reset_index(drop=True)
     for col in ["Double Elim", "Make Finals", "Win Tournament"]:
         final_df[col] = final_df[col].apply(lambda x: round(100 * x / num_simulations, 1))
 
@@ -1577,7 +1576,7 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
     elif conference == "Big 12":
         seed_order = [team for team, _ in team_win_pcts[:14]]
         result_df = single_elimination_14_teams(seed_order, stats_and_metrics, 1000)
-        fig = plot_tournament_odds_table(result_df, 0.6, conference, 0.081, 0.075, 0.1)
+        fig = plot_tournament_odds_table(result_df, 0.6, conference, 0.091, 0.085, 0.1)
     elif conference in ["Conference USA", "American Athletic", "Southland", "SWAC"]:
         seed_order = [team for team, _ in team_win_pcts[:8]]
         output = run_simulation(seed_order[0], seed_order[3], seed_order[4], seed_order[7], stats_and_metrics)
@@ -1593,10 +1592,10 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
         championship_df = pd.DataFrame(list(championship_results.items()), columns=["Team", "Win Tournament"])
         regional_results = pd.concat([bracket_one.set_index("Team"), bracket_two.set_index("Team")], axis=0)
         final_df = pd.merge(regional_results.reset_index(), championship_df, on="Team", how="outer")
-        final_df = final_df[['Team', 'Win Regional', 'Win Tournament']].sort_values(by='Win Tournament', ascending=False).reset_index(drop=True)
+        final_df = final_df[['Team', 'Win Regional', 'Win Tournament']]
         final_df = final_df.rename(columns={'Win Regional': 'Win Group'})
         final_df[['Win Group', 'Win Tournament']] = final_df[['Win Group', 'Win Tournament']] * 100
-        final_df = final_df[['Team', 'Win Group', 'Win Tournament']].sort_values(by='Win Tournament', ascending=False).reset_index(drop=True)
+        final_df = final_df[['Team', 'Win Group', 'Win Tournament']]
         fig = plot_tournament_odds_table(final_df, 1, conference, 0.057, 0.052, 0.1)
     elif conference in ['America East', 'Mountain West', 'West Coast']:
         seed_order = [team for team, _ in team_win_pcts[:6]]
