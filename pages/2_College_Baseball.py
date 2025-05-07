@@ -1648,6 +1648,7 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
         seed_order = [team for team, _ in team_win_pcts[:10]]
         final_df = simulate_two_playin_to_two_double_elim(seed_order, stats_and_metrics, 500)
         fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.104, 0.095, 0.15)
+    return fig
 
 import matplotlib.pyplot as plt # type: ignore
 def create_quadrant_table(completed):
