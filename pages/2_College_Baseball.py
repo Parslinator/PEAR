@@ -619,7 +619,6 @@ def plot_tournament_odds_table(final_df, row_height_multiplier, conference, titl
 
     min_value = final_df.iloc[:, 1:].replace(0, np.nan).min().min()
     max_value = final_df.iloc[:, 1:].max().max()
-    # final_df.insert(0, "Seed", range(1, len(final_df) + 1))
     final_df.iloc[:, 0] = [f"#{i+1} {team}" for i, team in enumerate(final_df.iloc[:, 0])]
     cmap = LinearSegmentedColormap.from_list('custom_green', ['#d5f5e3', '#006400'])
 
@@ -643,7 +642,7 @@ def plot_tournament_odds_table(final_df, row_height_multiplier, conference, titl
         if i == 0:  # Header row
             cell.set_facecolor('#CECEB2')
             cell.set_text_props(fontsize=16, weight='bold', color='black')
-        elif (j == 0) | (j == 1):  # Team names column
+        elif (j == 0):  # Team names column
             cell.set_facecolor('#CECEB2')
             cell.set_text_props(fontsize=16, weight='bold', color='black')
         else:
