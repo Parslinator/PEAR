@@ -659,7 +659,7 @@ def plot_tournament_odds_table(final_df, row_height_multiplier, conference, titl
 
     plt.text(0, title_y, f'Odds to Win {conference} Tournament', fontsize=24, fontweight='bold', ha='center')
     plt.text(0, subtitle_y, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
-    plt.show()
+    return fig
 
 def simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics):
     teams = [team_a, team_b, team_c, team_d]
@@ -1573,11 +1573,11 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
     if conference in ['SEC', 'ACC']:
         seed_order = [team for team, _ in team_win_pcts[:16]]
         final_df = single_elimination_16_teams(seed_order, stats_and_metrics, num_simulations=1000)
-        plot_tournament_odds_table(final_df, 0.3, conference, 0.106, 0.098, 0.1)
+        fig = plot_tournament_odds_table(final_df, 0.3, conference, 0.106, 0.098, 0.1)
     elif conference == "Big 12":
         seed_order = [team for team, _ in team_win_pcts[:14]]
         result_df = single_elimination_14_teams(seed_order, stats_and_metrics, 1000)
-        plot_tournament_odds_table(result_df, 0.6, conference, 0.081, 0.075, 0.1)
+        fig = plot_tournament_odds_table(result_df, 0.6, conference, 0.081, 0.075, 0.1)
     elif conference in ["Conference USA", "American Athletic", "Southland", "SWAC"]:
         seed_order = [team for team, _ in team_win_pcts[:8]]
         output = run_simulation(seed_order[0], seed_order[3], seed_order[4], seed_order[7], stats_and_metrics)
@@ -1597,57 +1597,57 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
         final_df = final_df.rename(columns={'Win Regional': 'Win Group'})
         final_df[['Win Group', 'Win Tournament']] = final_df[['Win Group', 'Win Tournament']] * 100
         final_df = final_df[['Team', 'Win Group', 'Win Tournament']].sort_values(by='Win Tournament', ascending=False).reset_index(drop=True)
-        plot_tournament_odds_table(final_df, 1, conference, 0.057, 0.052, 0.1)
+        fig = plot_tournament_odds_table(final_df, 1, conference, 0.057, 0.052, 0.1)
     elif conference in ['America East', 'Mountain West', 'West Coast']:
         seed_order = [team for team, _ in team_win_pcts[:6]]
         final_df = run_hybrid_tournament(seed_order, stats_and_metrics, num_simulations=1000)
-        plot_tournament_odds_table(final_df, 0.5, conference, 0.134, 0.122, 0.3)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.134, 0.122, 0.3)
     elif conference == 'ASUN':
         seed_order = [team for team, _ in team_win_pcts[:8]]
         final_df = run_8_team_double_elim(seed_order, stats_and_metrics)
-        plot_tournament_odds_table(final_df, 0.5, conference, 0.115, 0.105, 0.2)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.115, 0.105, 0.2)
     elif conference == "Atlantic 10":
         seed_order = [team for team, _ in team_win_pcts[:7]]
         final_df = double_elimination_7_teams(seed_order, stats_and_metrics, num_simulations=1000)
-        plot_tournament_odds_table(final_df, 0.5, conference, 0.105, 0.093, 0.2)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.105, 0.093, 0.2)
     elif conference in ['Big East', 'Ivy League', 'Northeast', 'The Summit League']:
         seed_order = [team for team, _ in team_win_pcts[:4]]
         output = run_simulation(seed_order[0], seed_order[1], seed_order[2], seed_order[3], stats_and_metrics)
         final_df = pd.DataFrame(list(output.items()), columns=["Team", "Win Tournament"])
         final_df["Win Tournament"] = final_df["Win Tournament"] * 100
-        plot_tournament_odds_table(final_df, 0.5, conference, 0.143, 0.12, 0.4)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.143, 0.12, 0.4)
     elif conference in ['Big South', 'Coastal Athletic', 'Horizon League', 'Mid-American']:
         seed_order = [team for team, _ in team_win_pcts[:6]]
         final_df = double_elimination_6_teams(seed_order, stats_and_metrics, num_simulations=1000)
-        plot_tournament_odds_table(final_df, 0.5, conference, 0.117, 0.103, 0.25)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.117, 0.103, 0.25)
     elif conference == 'Big Ten':
         seed_order = [team for team, _ in team_win_pcts[:12]]
         final_df = simulate_pool_play_tournament(seed_order, stats_and_metrics, num_simulations=500)
-        plot_tournament_odds_table(final_df, 0.5, conference, 0.082, 0.075, 0.1)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.082, 0.075, 0.1)
     elif conference == 'Big West':
         seed_order = [team for team, _ in team_win_pcts[:5]]
         final_df = simulate_playin_double_elim(seed_order, stats_and_metrics)
-        plot_tournament_odds_table(final_df, 0.5, conference, 0.16, 0.14, 0.4)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.16, 0.14, 0.4)
     elif conference in ['MAAC', 'Southern', 'Western Atheltic']:
         seed_order = [team for team, _ in team_win_pcts[:8]]
         final_df = simulate_playins_to_6team_double_elim(seed_order, stats_and_metrics, 1000)
-        plot_tournament_odds_table(final_df, 0.5, conference, 0.113, 0.103, 0.2)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.113, 0.103, 0.2)
     elif conference == 'Missouri Valley':
         seed_order = [team for team, _ in team_win_pcts[:8]]
         final_df = simulate_mvc_tournament(seed_order, stats_and_metrics, 1000)
-        plot_tournament_odds_table(final_df, 0.5, conference, 0.113, 0.103, 0.2)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.113, 0.103, 0.2)
     elif conference == 'Ohio Valley':
         seed_order = [team for team, _ in team_win_pcts[:8]]
         final_df = simulate_two_playin_rounds_to_double_elim(seed_order, stats_and_metrics, 1000)
-        plot_tournament_odds_table(final_df, 0.5, conference, 0.113, 0.103, 0.2)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.113, 0.103, 0.2)
     elif conference == 'Patriot League':
         seed_order = [team for team, _ in team_win_pcts[:4]]
         final_df = simulate_best_of_three_tournament(seed_order, stats_and_metrics, 1000)
-        plot_tournament_odds_table(final_df, 0.5, conference, 0.17, 0.15, 0.5)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.17, 0.15, 0.5)
     elif conference == 'Sun Belt':
         seed_order = [team for team, _ in team_win_pcts[:10]]
         final_df = simulate_two_playin_to_two_double_elim(seed_order, stats_and_metrics, 500)
-        plot_tournament_odds_table(final_df, 0.5, conference, 0.104, 0.095, 0.15)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.104, 0.095, 0.15)
 
 import matplotlib.pyplot as plt # type: ignore
 def create_quadrant_table(completed):
