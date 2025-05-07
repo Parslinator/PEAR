@@ -1596,6 +1596,10 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
         final_df = final_df.rename(columns={'Win Regional': 'Win Group'})
         final_df[['Win Group', 'Win Tournament']] = final_df[['Win Group', 'Win Tournament']] * 100
         final_df = final_df[['Team', 'Win Group', 'Win Tournament']]
+        seed_df = pd.DataFrame({'Team': seed_order})
+        seed_df['Seed_Order'] = range(len(seed_order))
+        final_df = pd.merge(seed_df, final_df, on='Team', how='left')
+        final_df = final_df.sort_values('Seed_Order').drop(columns='Seed_Order').reset_index(drop=True)
         fig = plot_tournament_odds_table(final_df, 1, conference, 0.057, 0.052, 0.1)
     elif conference in ['America East', 'Mountain West', 'West Coast']:
         seed_order = [team for team, _ in team_win_pcts[:6]]
