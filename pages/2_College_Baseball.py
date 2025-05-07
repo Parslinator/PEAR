@@ -1575,7 +1575,7 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
     elif conference == "Big 12":
         seed_order = [team for team, _ in team_win_pcts[:14]]
         result_df = single_elimination_14_teams(seed_order, stats_and_metrics, 1000)
-        fig = plot_tournament_odds_table(result_df, 0.6, conference, 0.091, 0.085, 0.1)
+        fig = plot_tournament_odds_table(result_df, 0.6, conference, 0.091, 0.085, 0.07)
     elif conference in ["Conference USA", "American Athletic", "Southland", "SWAC"]:
         seed_order = [team for team, _ in team_win_pcts[:8]]
         output = run_simulation(seed_order[0], seed_order[3], seed_order[4], seed_order[7], stats_and_metrics)
