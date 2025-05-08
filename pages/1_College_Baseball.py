@@ -2042,7 +2042,6 @@ def get_total_record(row):
     losses = sum(int(str(row[col]).split("-")[1]) for col in ["Q1", "Q2", "Q3", "Q4"])
     return f"{wins}-{losses}"
 
-
 def team_percentiles_chart(team_name, stats_and_metrics):
     BASE_URL = "https://www.warrennolan.com"
     team_data = stats_and_metrics[stats_and_metrics['Team'] == team_name]
@@ -2105,10 +2104,10 @@ def team_percentiles_chart(team_name, stats_and_metrics):
     plt.text(111, 3.2, f"Q2: {team_Q2}", ha='left', fontsize=16)
     plt.text(111, 3.7, f"Q3: {team_Q3}", ha='left', fontsize=16)
     plt.text(111, 4.2, f"Q4: {team_Q4}", ha='left', fontsize=16)
-    plt.text(117, 5.4, "Proj. NET", ha='center', fontsize=16, fontweight='bold')
-    plt.text(117, 5.9, f"#{team_proj_net}", ha='center', fontsize=16)
-    plt.text(117, 7.1, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
-    plt.text(117, 7.6, f"{team_proj_record}", ha='center', fontsize=16)
+    # plt.text(117, 5.4, "Proj. NET", ha='center', fontsize=16, fontweight='bold')
+    # plt.text(117, 5.9, f"#{team_proj_net}", ha='center', fontsize=16)
+    plt.text(117, 5.4, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
+    plt.text(117, 5.9, f"{team_proj_record}", ha='center', fontsize=16)
 
 
     ax.set_xlim(0, 102)
@@ -2304,13 +2303,13 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics, location):
     plt.text(-148, 7.0, f"Q2: {team2_Q2}", ha='left', fontsize=16)
     plt.text(-148, 7.5, f"Q3: {team2_Q3}", ha='left', fontsize=16)
     plt.text(-148, 8.0, f"Q4: {team2_Q4}", ha='left', fontsize=16)
-    plt.text(-135, 9.0, "Proj. NET", ha='center', fontsize=16, fontweight='bold')
-    plt.text(-135, 9.5, f"#{team2_proj_net}", ha='center', fontsize=16)
-    plt.text(-135, 10.5, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
-    plt.text(-135, 11.0, f"{team2_proj_record}", ha='center', fontsize=16)
-    plt.text(-135, 12.0, "Win Quality", ha='center', fontsize=16, fontweight='bold')
-    plt.text(-155, 12.5, f"{team2_win_quality:.2f}", ha='left', fontsize=16, color='green', fontweight='bold')
-    plt.text(-115, 12.5, f"{team2_loss_quality:.2f}", ha='right', fontsize=16, color='red', fontweight='bold')
+    # plt.text(-135, 9.0, "Proj. NET", ha='center', fontsize=16, fontweight='bold')
+    # plt.text(-135, 9.5, f"#{team2_proj_net}", ha='center', fontsize=16)
+    plt.text(-135, 9.0, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-135, 9.5, f"{team2_proj_record}", ha='center', fontsize=16)
+    plt.text(-135, 10.5, "Win Quality", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-155, 11.0, f"{team2_win_quality:.2f}", ha='left', fontsize=16, color='green', fontweight='bold')
+    plt.text(-115, 11.0, f"{team2_loss_quality:.2f}", ha='right', fontsize=16, color='red', fontweight='bold')
 
     plt.text(135, 0.5, f"{team_1}", ha='center', fontsize=16, fontweight='bold')
     plt.text(135, 1.0, f"{team1_record}", ha='center', fontsize=16)
@@ -2325,13 +2324,13 @@ def matchup_percentiles(team_1, team_2, stats_and_metrics, location):
     plt.text(122, 7.0, f"Q2: {team1_Q2}", ha='left', fontsize=16)
     plt.text(122, 7.5, f"Q3: {team1_Q3}", ha='left', fontsize=16)
     plt.text(122, 8.0, f"Q4: {team1_Q4}", ha='left', fontsize=16)
-    plt.text(135, 9.0, "Proj. NET", ha='center', fontsize=16, fontweight='bold')
-    plt.text(135, 9.5, f"#{team1_proj_net}", ha='center', fontsize=16)
-    plt.text(135, 10.5, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
-    plt.text(135, 11.0, f"{team1_proj_record}", ha='center', fontsize=16)
-    plt.text(135, 12.0, "Win Quality", ha='center', fontsize=16, fontweight='bold')
-    plt.text(115, 12.5, f"{team1_win_quality:.2f}", ha='left', fontsize=16, color='green', fontweight='bold')
-    plt.text(155, 12.5, f"{team1_loss_quality:.2f}", ha='right', fontsize=16, color='red', fontweight='bold')
+    # plt.text(135, 9.0, "Proj. NET", ha='center', fontsize=16, fontweight='bold')
+    # plt.text(135, 9.5, f"#{team1_proj_net}", ha='center', fontsize=16)
+    plt.text(135, 9.0, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
+    plt.text(135, 9.5, f"{team1_proj_record}", ha='center', fontsize=16)
+    plt.text(135, 10.5, "Win Quality", ha='center', fontsize=16, fontweight='bold')
+    plt.text(115, 11.0, f"{team1_win_quality:.2f}", ha='left', fontsize=16, color='green', fontweight='bold')
+    plt.text(155, 11.0, f"{team1_loss_quality:.2f}", ha='right', fontsize=16, color='red', fontweight='bold')
 
     plt.text(-150, 13.2, "Middle Bubble is Difference Between Team Percentiles", ha='left', fontsize = 12)
     plt.text(150, 13.2, "Series Percentages are the Chance to Win __ Games", ha='right', fontsize = 12)
