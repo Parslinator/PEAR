@@ -38,59 +38,61 @@ st.set_page_config(layout="wide")
 
 week_list = [9,10,11,12,13,14,15,16]
 
-configuration = cfbd.Configuration()
-configuration.api_key['Authorization'] = "7vGedNNOrnl0NGcSvt92FcVahY602p7IroVBlCA1Tt+WI/dCwtT7Gj5VzmaHrrxS"
-configuration.api_key_prefix['Authorization'] = 'Bearer'
-api_client = cfbd.ApiClient(configuration)
-games_api = cfbd.GamesApi(api_client)
-betting_api = cfbd.BettingApi(api_client)
-ratings_api = cfbd.RatingsApi(api_client)
-teams_api = cfbd.TeamsApi(api_client)
-metrics_api = cfbd.MetricsApi(api_client)
-players_api = cfbd.PlayersApi(api_client)
-recruiting_api = cfbd.RecruitingApi(api_client)
+# configuration = cfbd.Configuration()
+# configuration.api_key['Authorization'] = "7vGedNNOrnl0NGcSvt92FcVahY602p7IroVBlCA1Tt+WI/dCwtT7Gj5VzmaHrrxS"
+# configuration.api_key_prefix['Authorization'] = 'Bearer'
+# api_client = cfbd.ApiClient(configuration)
+# games_api = cfbd.GamesApi(api_client)
+# betting_api = cfbd.BettingApi(api_client)
+# ratings_api = cfbd.RatingsApi(api_client)
+# teams_api = cfbd.TeamsApi(api_client)
+# metrics_api = cfbd.MetricsApi(api_client)
+# players_api = cfbd.PlayersApi(api_client)
+# recruiting_api = cfbd.RecruitingApi(api_client)
 
-current_time = datetime.datetime.now(pytz.UTC)
-if current_time.month < 6:
-    calendar_year = current_time.year - 1
-else:
-    calendar_year = current_time.year
-week_start_list = [*games_api.get_calendar(year = calendar_year)]
-calendar_dict = [dict(
-    first_game_start = c.first_game_start,
-    last_game_start = c.last_game_start,
-    season = c.season,
-    season_type = c.season_type,
-    week = c.week
-) for c in week_start_list]
-calendar = pd.DataFrame(calendar_dict)
-calendar['first_game_start'] = pd.to_datetime(calendar['first_game_start'])
-calendar['last_game_start'] = pd.to_datetime(calendar['last_game_start'])
-current_year = int(calendar.loc[0, 'season'])
-first_game_start = calendar['first_game_start'].iloc[0]
-last_game_start = calendar['last_game_start'].iloc[-1]
-current_week = None
-if current_time < first_game_start:
-    current_week = 1
-    postseason = False
-elif current_time > last_game_start:
-    current_week = calendar.iloc[-2, -1] + 1
-    postseason = True
-else:
-    condition_1 = (calendar['first_game_start'] <= current_time) & (calendar['last_game_start'] >= current_time)
-    condition_2 = (calendar['last_game_start'].shift(1) < current_time) & (calendar['first_game_start'] > current_time)
+# current_time = datetime.datetime.now(pytz.UTC)
+# if current_time.month < 6:
+#     calendar_year = current_time.year - 1
+# else:
+#     calendar_year = current_time.year
+# week_start_list = [*games_api.get_calendar(year = calendar_year)]
+# calendar_dict = [dict(
+#     first_game_start = c.first_game_start,
+#     last_game_start = c.last_game_start,
+#     season = c.season,
+#     season_type = c.season_type,
+#     week = c.week
+# ) for c in week_start_list]
+# calendar = pd.DataFrame(calendar_dict)
+# calendar['first_game_start'] = pd.to_datetime(calendar['first_game_start'])
+# calendar['last_game_start'] = pd.to_datetime(calendar['last_game_start'])
+# current_year = int(calendar.loc[0, 'season'])
+# first_game_start = calendar['first_game_start'].iloc[0]
+# last_game_start = calendar['last_game_start'].iloc[-1]
+# current_week = None
+# if current_time < first_game_start:
+#     current_week = 1
+#     postseason = False
+# elif current_time > last_game_start:
+#     current_week = calendar.iloc[-2, -1] + 1
+#     postseason = True
+# else:
+#     condition_1 = (calendar['first_game_start'] <= current_time) & (calendar['last_game_start'] >= current_time)
+#     condition_2 = (calendar['last_game_start'].shift(1) < current_time) & (calendar['first_game_start'] > current_time)
 
-    # Combine conditions
-    result = calendar[condition_1 | condition_2].reset_index(drop=True)
-    if result['season_type'][0] == 'regular':
-        current_week = result['week'][0]
-        postseason = False
-    else:
-        current_week = calendar.iloc[-2, -1] + 1
-        postseason = True
-current_week = int(current_week)
-current_year = int(current_year)
-
+#     # Combine conditions
+#     result = calendar[condition_1 | condition_2].reset_index(drop=True)
+#     if result['season_type'][0] == 'regular':
+#         current_week = result['week'][0]
+#         postseason = False
+#     else:
+#         current_week = calendar.iloc[-2, -1] + 1
+#         postseason = True
+# current_week = int(current_week)
+# current_year = int(current_year)
+postseason = True
+current_year = 2024
+current_week = 17
 team_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv").drop(columns=['Unnamed: 0'])
 all_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}.csv")
 
@@ -106,16 +108,16 @@ def PEAR_Win_Prob(home_pr, away_pr):
     win_prob = round(1 / (1 + 10 ** (-rating_diff / 20)) * 100, 2)
     return win_prob
 
-@st.cache_data()
-def get_elo():
-    elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week)]
-    elo_ratings_dict = [dict(
-        team = e.team,
-        elo = e.elo
-    ) for e in elo_ratings_list]
-    elo_ratings = pd.DataFrame(elo_ratings_dict)
-    return elo_ratings
-elo_ratings = get_elo()
+# @st.cache_data()
+# def get_elo():
+#     elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week)]
+#     elo_ratings_dict = [dict(
+#         team = e.team,
+#         elo = e.elo
+#     ) for e in elo_ratings_list]
+#     elo_ratings = pd.DataFrame(elo_ratings_dict)
+#     return elo_ratings
+# elo_ratings = get_elo()
 
 @st.cache_data()
 def fetch_logo_image(logo_url):
@@ -137,45 +139,45 @@ def round_to_nearest_half(x):
 def grab_team_rating(team):
     return team_data[team_data['team'] == team]['power_rating'].values[0]
 
-@st.cache_data()
-def grab_team_elo(team):
-    if postseason == True:
-        elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, team=team)]
-        elo_ratings_dict = [dict(
-            team=e.team,
-            elo=e.elo
-        ) for e in elo_ratings_list]
-        elo_ratings = pd.DataFrame(elo_ratings_dict)
-    else:
-        elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week, team=team)]
-        elo_ratings_dict = [dict(
-            team=e.team,
-            elo=e.elo
-        ) for e in elo_ratings_list]
-        elo_ratings = pd.DataFrame(elo_ratings_dict)        
-    return elo_ratings['elo'].values[0]
+# @st.cache_data()
+# def grab_team_elo(team):
+#     if postseason == True:
+#         elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, team=team)]
+#         elo_ratings_dict = [dict(
+#             team=e.team,
+#             elo=e.elo
+#         ) for e in elo_ratings_list]
+#         elo_ratings = pd.DataFrame(elo_ratings_dict)
+#     else:
+#         elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week, team=team)]
+#         elo_ratings_dict = [dict(
+#             team=e.team,
+#             elo=e.elo
+#         ) for e in elo_ratings_list]
+#         elo_ratings = pd.DataFrame(elo_ratings_dict)        
+#     return elo_ratings['elo'].values[0]
 
-@st.cache_data()
-def find_spread(home_team, away_team, neutral=False):
-    home_elo = grab_team_elo(home_team)
-    away_elo = grab_team_elo(away_team)
-    home_pr = grab_team_rating(home_team)
-    away_pr = grab_team_rating(away_team)
-    home_win_prob = round((10 ** ((home_elo - away_elo) / 400)) / ((10 ** ((home_elo - away_elo) / 400)) + 1) * 100, 2)
-    HFA = 4.6
-    adjustment = adjust_home_pr(home_win_prob)
-    raw_spread = HFA + home_pr + adjustment - away_pr
-    if neutral:
-        raw_spread -= HFA
+# @st.cache_data()
+# def find_spread(home_team, away_team, neutral=False):
+#     home_elo = grab_team_elo(home_team)
+#     away_elo = grab_team_elo(away_team)
+#     home_pr = grab_team_rating(home_team)
+#     away_pr = grab_team_rating(away_team)
+#     home_win_prob = round((10 ** ((home_elo - away_elo) / 400)) / ((10 ** ((home_elo - away_elo) / 400)) + 1) * 100, 2)
+#     HFA = 4.6
+#     adjustment = adjust_home_pr(home_win_prob)
+#     raw_spread = HFA + home_pr + adjustment - away_pr
+#     if neutral:
+#         raw_spread -= HFA
 
-    spread = round(raw_spread,1)
-    PEAR_win_prob = PEAR_Win_Prob(home_pr, away_pr)
-    game_quality = round(((home_pr + away_pr) / 2) - (abs(spread + 0.01) * 0.5), 1)
+#     spread = round(raw_spread,1)
+#     PEAR_win_prob = PEAR_Win_Prob(home_pr, away_pr)
+#     game_quality = round(((home_pr + away_pr) / 2) - (abs(spread + 0.01) * 0.5), 1)
 
-    if spread >= 0:
-        return f"{home_team} -{spread}"
-    else:
-        return f"{away_team} {spread}"
+#     if spread >= 0:
+#         return f"{home_team} -{spread}"
+#     else:
+#         return f"{away_team} {spread}"
 
 # team_data.index = team_data.index + 1
 def get_week_spreads(team_data):
@@ -445,25 +447,25 @@ st.logo("./PEAR/pear_logo.jpg", size = 'large')
 #     # print(f"AE < {X}: {round(count/len(completed)*100,2)}%")
 # st.caption(f"Deviation is defined as the absolute difference from the DraftKings spread at the time of the data load. The current average deviation is {round(week_spreads['Deviation'].mean(),2)} points. The total deviation is {round(week_spreads['Deviation'].sum(),1)} points.")
 
-st.divider()
+# st.divider()
 
-st.sidebar.markdown(f"[Calculate {current_year} Spread](#calculate-spread-between-any-two-teams)", unsafe_allow_html=True)
-st.sidebar.markdown(f"[{current_year} Power Ratings](#fbs-power-ratings)", unsafe_allow_html=True)
-st.markdown(f'<h2 id="calculate-spread-between-any-two-teams">Calculate Spread Between Any Two Teams</h2>', unsafe_allow_html=True)
-with st.form(key='calculate_spread'):
-    away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'])))
-    home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(team_data['team'])))
-    neutrality = st.radio(
-        "Game Location",
-        ["Neutral Field", "On Campus"]
-    )
-    spread_button = st.form_submit_button("Calculate Spread")
-    if spread_button:
-        if neutrality == 'Neutral Field':
-            neutrality = True
-        else:
-            neutrality = False
-        st.write(find_spread(home_team, away_team, neutrality))
+# st.sidebar.markdown(f"[Calculate {current_year} Spread](#calculate-spread-between-any-two-teams)", unsafe_allow_html=True)
+# st.sidebar.markdown(f"[{current_year} Power Ratings](#fbs-power-ratings)", unsafe_allow_html=True)
+# st.markdown(f'<h2 id="calculate-spread-between-any-two-teams">Calculate Spread Between Any Two Teams</h2>', unsafe_allow_html=True)
+# with st.form(key='calculate_spread'):
+#     away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'])))
+#     home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(team_data['team'])))
+#     neutrality = st.radio(
+#         "Game Location",
+#         ["Neutral Field", "On Campus"]
+#     )
+#     spread_button = st.form_submit_button("Calculate Spread")
+#     if spread_button:
+#         if neutrality == 'Neutral Field':
+#             neutrality = True
+#         else:
+#             neutrality = False
+#         st.write(find_spread(home_team, away_team, neutrality))
 
 st.divider()
 
@@ -492,35 +494,35 @@ team_data = pd.read_csv("./PEAR/PEAR Football/normalized_power_rating_across_yea
 def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 5
 
-def grab_team_elo_across_years(team, season):
-    season = int(season)
-    elo_ratings_list = [*ratings_api.get_elo_ratings(year=season, team=team)]
-    elo_ratings_dict = [dict(
-        team=e.team,
-        elo=e.elo
-    ) for e in elo_ratings_list]
-    elo_ratings = pd.DataFrame(elo_ratings_dict)       
-    return elo_ratings['elo'].values[0]
+# def grab_team_elo_across_years(team, season):
+#     season = int(season)
+#     elo_ratings_list = [*ratings_api.get_elo_ratings(year=season, team=team)]
+#     elo_ratings_dict = [dict(
+#         team=e.team,
+#         elo=e.elo
+#     ) for e in elo_ratings_list]
+#     elo_ratings = pd.DataFrame(elo_ratings_dict)       
+#     return elo_ratings['elo'].values[0]
 
-def spreads_across_years(team1, team1_season, team2, team2_season, data, neutrality=False):
-    team1_season = int(team1_season)
-    team2_season = int(team2_season)
-    home_elo = grab_team_elo_across_years(team1, team1_season)
-    away_elo = grab_team_elo_across_years(team2, team2_season)
-    home_pr = data.loc[(data['team'] == team1) & (data['season'] == team1_season), 'norm_pr'].values[0]
-    away_pr = data.loc[(data['team'] == team2) & (data['season'] == team2_season), 'norm_pr'].values[0]
-    home_win_prob = round((10 ** ((home_elo - away_elo) / 400)) / ((10 ** ((home_elo - away_elo) / 400)) + 1) * 100, 2)
-    adjustment = adjust_home_pr(home_win_prob)
-    if neutrality:
-        spread = home_pr + adjustment - away_pr
-    else:
-        spread = 4.6 + home_pr + adjustment - away_pr
-    spread = round(spread,1)
+# def spreads_across_years(team1, team1_season, team2, team2_season, data, neutrality=False):
+#     team1_season = int(team1_season)
+#     team2_season = int(team2_season)
+#     home_elo = grab_team_elo_across_years(team1, team1_season)
+#     away_elo = grab_team_elo_across_years(team2, team2_season)
+#     home_pr = data.loc[(data['team'] == team1) & (data['season'] == team1_season), 'norm_pr'].values[0]
+#     away_pr = data.loc[(data['team'] == team2) & (data['season'] == team2_season), 'norm_pr'].values[0]
+#     home_win_prob = round((10 ** ((home_elo - away_elo) / 400)) / ((10 ** ((home_elo - away_elo) / 400)) + 1) * 100, 2)
+#     adjustment = adjust_home_pr(home_win_prob)
+#     if neutrality:
+#         spread = home_pr + adjustment - away_pr
+#     else:
+#         spread = 4.6 + home_pr + adjustment - away_pr
+#     spread = round(spread,1)
 
-    if spread >= 0:
-        return f"{team1_season} {team1} -{spread}"
-    else:
-        return f"{team2_season} {team2} {spread}"
+#     if spread >= 0:
+#         return f"{team1_season} {team1} -{spread}"
+#     else:
+#         return f"{team2_season} {team2} {spread}"
     
 def teams_yearly_stats(team, data):
     team_df = data[data['team'] == team]
@@ -539,7 +541,7 @@ def teams_yearly_stats(team, data):
 
 st.sidebar.markdown(f"[Year Normalized Ratings](#year-normalized-ratings)", unsafe_allow_html=True)
 st.sidebar.markdown(f"[Team Specific Stats](#view-a-specific-teams-stats)", unsafe_allow_html=True)
-st.sidebar.markdown(f"[Spread Between Years](#calculate-spread-between-two-teams-from-different-years)", unsafe_allow_html=True)
+# st.sidebar.markdown(f"[Spread Between Years](#calculate-spread-between-two-teams-from-different-years)", unsafe_allow_html=True)
 
 
 years = [2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]
@@ -564,25 +566,25 @@ with st.form(key='filter_team'):
     if filter_button:
         st.dataframe(teams_yearly_stats(team, team_data), use_container_width=True)
 
-st.divider()
+# st.divider()
 
-st.markdown(f'<h2 id="calculate-spread-between-two-teams-from-different-years">Calculate Spread Between Two Teams From Different Years</h2>', unsafe_allow_html=True)
-with st.form(key='calculate_spread_two_teams'):
-    away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'].unique())))
-    away_season = st.selectbox("Away Season", ["Select Season"] + list(sorted(team_data['season'].unique())))
-    home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(team_data['team'].unique())))
-    home_season = st.selectbox("Home Season", ["Select Season"] + list(sorted(team_data['season'].unique())))
-    neutrality = st.radio(
-        "Game Location",
-        ["Neutral Field", "On Campus"]
-    )
-    spread_button_two_teams = st.form_submit_button("Calculate Spread Two Teams")
-    if spread_button_two_teams:
-        if neutrality == 'Neutral Field':
-            neutrality = True
-        else:
-            neutrality = False
-        st.write(spreads_across_years(home_team, home_season, away_team, away_season, team_data, neutrality))
+# st.markdown(f'<h2 id="calculate-spread-between-two-teams-from-different-years">Calculate Spread Between Two Teams From Different Years</h2>', unsafe_allow_html=True)
+# with st.form(key='calculate_spread_two_teams'):
+#     away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'].unique())))
+#     away_season = st.selectbox("Away Season", ["Select Season"] + list(sorted(team_data['season'].unique())))
+#     home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(team_data['team'].unique())))
+#     home_season = st.selectbox("Home Season", ["Select Season"] + list(sorted(team_data['season'].unique())))
+#     neutrality = st.radio(
+#         "Game Location",
+#         ["Neutral Field", "On Campus"]
+#     )
+#     spread_button_two_teams = st.form_submit_button("Calculate Spread Two Teams")
+#     if spread_button_two_teams:
+#         if neutrality == 'Neutral Field':
+#             neutrality = True
+#         else:
+#             neutrality = False
+#         st.write(spreads_across_years(home_team, home_season, away_team, away_season, team_data, neutrality))
 
 st.divider()
 
