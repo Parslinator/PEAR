@@ -1630,7 +1630,7 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
         seed_order = [team for team, _ in team_win_pcts[:5]]
         final_df = simulate_playin_double_elim(seed_order, stats_and_metrics)
         fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.16, 0.14, 0.4)
-    elif conference in ['MAAC', 'Southern', 'Western Atheltic']:
+    elif conference in ['MAAC', 'Southern', 'Western Athletic']:
         seed_order = [team for team, _ in team_win_pcts[:8]]
         final_df = simulate_playins_to_6team_double_elim(seed_order, stats_and_metrics, 1000)
         fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.113, 0.103, 0.2)
