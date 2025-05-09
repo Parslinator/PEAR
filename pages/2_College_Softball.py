@@ -97,7 +97,7 @@ stat_links = {
     option.text.strip(): base_url + option["value"]
     for option in options if option.get("value")
 }
-url = stat_links['Base on Balls']
+url = stat_links['WHIP']
 response = requests.get(url)
 
 # Parse with BeautifulSoup
