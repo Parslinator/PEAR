@@ -111,12 +111,12 @@ last_date = match.group(1)
 
 folder_path = f"./PEAR/PEAR Softball/y{current_season}/Data"
 
-csv_files = [f for f in os.listdir(folder_path) if f.startswith("baseball_") and f.endswith(".csv")]
+csv_files = [f for f in os.listdir(folder_path) if f.startswith("softball_") and f.endswith(".csv")]
 
 # Extract dates from filenames and find the closest one
 def extract_date(filename):
     try:
-        return datetime.strptime(filename.replace("baseball_", "").replace(".csv", ""), "%m_%d_%Y")
+        return datetime.strptime(filename.replace("softball_", "").replace(".csv", ""), "%m_%d_%Y")
     except ValueError:
         return None
     
@@ -1751,10 +1751,10 @@ def create_quadrant_table(completed):
 
 def team_net_tracker(team):
     X = 14
-    csv_files = [f for f in os.listdir(folder_path) if f.startswith("baseball_") and f.endswith(".csv")]
+    csv_files = [f for f in os.listdir(folder_path) if f.startswith("softball_") and f.endswith(".csv")]
     def extract_date(filename):
         try:
-            return datetime.strptime(filename.replace("baseball_", "").replace(".csv", ""), "%m_%d_%Y")
+            return datetime.strptime(filename.replace("softball_", "").replace(".csv", ""), "%m_%d_%Y")
         except ValueError:
             return None
         
