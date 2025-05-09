@@ -1944,7 +1944,7 @@ if now.hour < 24 and now.hour > 7:
         return results
 
     def select_team(region):
-        """Selects a team probabilistically based on their make_omaha probabilities."""
+        """Selects a team probabilistically based on their make_okc probabilities."""
         teams, weights = zip(*region.items())
         return random.choices(teams, weights=weights, k=1)[0]
 
@@ -1984,24 +1984,24 @@ if now.hour < 24 and now.hour > 7:
             return winners_final_winner
         return simulate_game(winners_final_winner, losers_final_winner, stats_and_metrics)
 
-    def run_college_world_series(make_omaha, stats_and_metrics, num_simulations=1000):
+    def run_college_world_series(make_okc, stats_and_metrics, num_simulations=1000):
         """Runs two separate double-elimination tournaments and returns results in the same format as input."""
         results = [defaultdict(int), defaultdict(int)]
 
         for _ in range(num_simulations):
             # Tournament 1
-            team1 = select_team(make_omaha[0])
-            team2 = select_team(make_omaha[7])
-            team3 = select_team(make_omaha[3])
-            team4 = select_team(make_omaha[4])
+            team1 = select_team(make_okc[0])
+            team2 = select_team(make_okc[7])
+            team3 = select_team(make_okc[3])
+            team4 = select_team(make_okc[4])
             winner1 = simulate_double_elimination([team1, team2, team3, team4], stats_and_metrics)
             results[0][winner1] += 1
 
             # Tournament 2
-            team5 = select_team(make_omaha[1])
-            team6 = select_team(make_omaha[6])
-            team7 = select_team(make_omaha[2])
-            team8 = select_team(make_omaha[5])
+            team5 = select_team(make_okc[1])
+            team6 = select_team(make_okc[6])
+            team7 = select_team(make_okc[2])
+            team8 = select_team(make_okc[5])
             winner2 = simulate_double_elimination([team5, team6, team7, team8], stats_and_metrics)
             results[1][winner2] += 1
 
@@ -2049,16 +2049,16 @@ if now.hour < 24 and now.hour > 7:
         
         return results_dict
 
-    def generate_simulation_dataframe(regionals_results, make_omaha, make_finals, win_finals):
+    def generate_simulation_dataframe(regionals_results, make_okc, make_finals, win_finals):
         teams = set()  # To store all unique teams from all simulation results
 
         # Collect teams from regional results (Super Regional probabilities)
         for regional in regionals_results:
             teams.update(regional.keys())
 
-        # Collect teams from Make Omaha (Omaha probabilities)
-        for omaha in make_omaha:
-            teams.update(omaha.keys())
+        # Collect teams from Make okc (okc probabilities)
+        for okc in make_okc:
+            teams.update(okc.keys())
 
         # Collect teams from Make Finals (Finals probabilities)
         for finals in make_finals:
@@ -2068,16 +2068,16 @@ if now.hour < 24 and now.hour > 7:
         teams.update(win_finals.keys())
 
         # Initialize a dictionary to hold the probabilities for each team
-        data = {team: {"Supers": 0, "Omaha": 0, "Finals": 0, "Win NC": 0} for team in teams}
+        data = {team: {"Supers": 0, "okc": 0, "Finals": 0, "Win NC": 0} for team in teams}
 
         # Assign the probabilities directly from the simulation results
         for regional in regionals_results:
             for team, prob in regional.items():
                 data[team]["Supers"] = prob  # Assign the probability for reaching Super Regionals
 
-        for omaha in make_omaha:
-            for team, prob in omaha.items():
-                data[team]["Omaha"] = prob  # Assign the probability for reaching Omaha
+        for okc in make_okc:
+            for team, prob in okc.items():
+                data[team]["okc"] = prob  # Assign the probability for reaching okc
 
         for finals in make_finals:
             for team, prob in finals.items():
@@ -2095,10 +2095,10 @@ if now.hour < 24 and now.hour > 7:
         regionals_results = []
         for i in range(len(formatted_df)):
             regionals_results.append(run_simulation(formatted_df.iloc[i,1], formatted_df.iloc[i,2], formatted_df.iloc[i,3], formatted_df.iloc[i,4], stats_and_metrics, iter))
-        make_omaha = run_super_regionals(regionals_results, stats_and_metrics, iter)
-        make_finals = run_college_world_series(make_omaha, stats_and_metrics, iter)
+        make_okc = run_super_regionals(regionals_results, stats_and_metrics, iter)
+        make_finals = run_college_world_series(make_okc, stats_and_metrics, iter)
         win_finals = run_finals_simulation(make_finals, stats_and_metrics, iter)
-        simulation_df = generate_simulation_dataframe(regionals_results, make_omaha, make_finals, win_finals)
+        simulation_df = generate_simulation_dataframe(regionals_results, make_okc, make_finals, win_finals)
         simulation_df = simulation_df.sort_values('Win NC', ascending=False).reset_index()
         simulation_df.rename(columns={'index': 'Team'}, inplace=True)
         return simulation_df
