@@ -1358,7 +1358,7 @@ if now.hour < 24 and now.hour > 7:
     custom_font = fm.FontProperties(fname="./PEAR/trebuc.ttf")
     plt.rcParams['font.family'] = custom_font.get_name()
     current_season = datetime.now().year
-    week_1_start = datetime(current_season, 2, 10)
+    week_1_start = datetime(current_season, 2, 5)
     today = datetime.today()
     days_since_start = (today - week_1_start).days
     current_week = (days_since_start // 7) + 1
