@@ -1419,35 +1419,35 @@ if now.hour < 24 and now.hour > 7:
 
     # --- Generate Plots ---
     plot_top_25(
-        title=f"Week {current_week} CBASE PEAR",
+        title=f"Week {current_week} Softball PEAR",
         subtitle="NET Ranking Incorporating Team Strength and Resume",
         sorted_df=stats_and_metrics.head(25),
         save_path=f"./PEAR/PEAR Softball/y{current_season}/Visuals/NET/net_{formatted_date}.png"
     )
 
     plot_top_25(
-        title=f"Week {current_week} CBASE Resume Quality",
+        title=f"Week {current_week} Softball Resume Quality",
         subtitle="Team Performance Relative to Strength of Schedule",
         sorted_df=stats_and_metrics.sort_values('RQI'),
         save_path=f"./PEAR/PEAR Softball/y{current_season}/Visuals/RQI/rqi_{formatted_date}.png"
     )
 
     plot_top_25(
-        title=f"Week {current_week} CBASE Team Strength",
+        title=f"Week {current_week} Softball Team Strength",
         subtitle="Team Rating Based on Team Stats",
         sorted_df=stats_and_metrics.sort_values('PRR'),
         save_path=f"./PEAR/PEAR Softball/y{current_season}/Visuals/PRR/prr_{formatted_date}.png"
     )
 
     plot_top_25(
-        title=f"Week {current_week} CBASE RPI",
+        title=f"Week {current_week} Softball RPI",
         subtitle="PEAR's RPI Rankings",
         sorted_df=stats_and_metrics.sort_values('RPI'),
         save_path=f"./PEAR/PEAR Softball/y{current_season}/Visuals/RPI/rpi_{formatted_date}.png"
     )
 
     plot_top_25(
-        title=f"Week {current_week} Mid-Major CBASE PEAR",
+        title=f"Week {current_week} Mid-Major Softball PEAR",
         subtitle="NET Ranking Incorporating Team Strength and Resume",
         sorted_df=stats_and_metrics[~stats_and_metrics['Conference'].isin(major_conferences)],
         save_path=f"./PEAR/PEAR Softball/y{current_season}/Visuals/Mid_Major/mid_major_{formatted_date}.png"
@@ -1481,7 +1481,7 @@ if now.hour < 24 and now.hour > 7:
         for j in range(num_games, len(axes)):
             axes[j].axis('off')
         base_offset = 0.2 + (num_rows - 3) * 0.2
-        plt.text(-0.11, num_rows + base_offset + 0.3, f"PEAR's {comparison_date.strftime('%m/%d')} Best Games", fontsize=32, ha='center', fontweight='bold')
+        plt.text(-0.11, num_rows + base_offset + 0.3, f"PEAR's {comparison_date.strftime('%m/%d')} Best Softball Games", fontsize=32, ha='center', fontweight='bold')
         plt.text(-0.11, num_rows + base_offset, "@PEARatings", fontsize=24, ha='center', fontweight='bold')
         plt.savefig(f"./PEAR/PEAR Softball/y2025/Visuals/Best_Games/best_games_{formatted_date}.png", bbox_inches='tight')
     except Exception as e:
@@ -1747,7 +1747,7 @@ if now.hour < 24 and now.hour > 7:
     tab.col_label_row.set_facecolor('#CECEB2')
     tab.columns["Host"].set_facecolor('#CECEB2')
     # plt.figtext(0.89, 0.09, "* Indicates an automatic qualifier", ha="right", fontsize=14, fontstyle='italic')
-    plt.figtext(0.13, 0.975, f"PEAR {today.strftime('%m/%d')} Tournament Outlook", ha='left', fontsize=32, fontweight='bold')
+    plt.figtext(0.13, 0.975, f"PEAR {today.strftime('%m/%d')} Softball Tournament Outlook", ha='left', fontsize=32, fontweight='bold')
     plt.figtext(0.13, 0.945, f"No Considerations For Regional Proximity - Through {(today - timedelta(days=1)).strftime('%m/%d')}", ha='left', fontsize=16, fontweight='bold')
     plt.figtext(0.13, 0.915, f"Regionals If Season Ended Today Based on PEAR NET Ranking", ha='left', fontsize=16)
     plt.figtext(0.13, 0.885, "@PEARatings", ha='left', fontsize=16, fontweight='bold')
@@ -1828,7 +1828,7 @@ if now.hour < 24 and now.hour > 7:
     tab.col_label_row.set_facecolor('#CECEB2')
     tab.columns["Host"].set_facecolor('#CECEB2')
     # plt.figtext(0.89, 0.09, "* Indicates an automatic qualifier", ha="right", fontsize=14, fontstyle='italic')
-    plt.figtext(0.13, 0.975, f"PEAR {today.strftime('%m/%d')} Projected Tournament", ha='left', fontsize=32, fontweight='bold')
+    plt.figtext(0.13, 0.975, f"PEAR {today.strftime('%m/%d')} Softball Projected Tournament", ha='left', fontsize=32, fontweight='bold')
     plt.figtext(0.13, 0.945, f"No Considerations For Regional Proximity - Through {(today - timedelta(days=1)).strftime('%m/%d')}", ha='left', fontsize=16, fontweight='bold')
     plt.figtext(0.13, 0.915, f"Based on PEAR's Projected NET", ha='left', fontsize=16)
     plt.figtext(0.13, 0.885, "@PEARatings", ha='left', fontsize=16, fontweight='bold')
@@ -2175,7 +2175,7 @@ if now.hour < 24 and now.hour > 7:
         cell.set_height(0.05)
 
     # Show the plot
-    plt.text(0, 0.086, 'Odds to Win Championship', fontsize=24, fontweight='bold', ha='center')
+    plt.text(0, 0.086, 'Odds to Win Softball Championship', fontsize=24, fontweight='bold', ha='center')
     plt.text(0, 0.08, f"Based on Projected NET Tournament {today.strftime('%m/%d')}", fontsize=16, ha='center')
     plt.text(0, 0.074, f"@PEARatings", fontsize=16, fontweight='bold', ha='center')
     plt.savefig(f"./PEAR/PEAR Softball/y{current_season}/Visuals/Tournament_Odds/tournament_odds_{formatted_date}.png", bbox_inches='tight')
@@ -2300,7 +2300,7 @@ if now.hour < 24 and now.hour > 7:
         ax.text(0.5, 1.05, f'#{idx + 1} {teams[0]} Regional',
                 fontsize=10, fontweight='bold', ha='center', transform=ax.transAxes)
 
-    fig.text(0.5, 0.95, "PEAR's Regional Winner Projections", ha='center', fontweight='bold', fontsize=24)
+    fig.text(0.5, 0.95, "PEAR's Softball Regional Winner Projections", ha='center', fontweight='bold', fontsize=24)
     fig.text(0.5, 0.93, "Based on PEAR's Tournament - No Consideration for Regional Proximity", 
             ha='center', fontsize=16)
     fig.text(0.5, 0.91, "@PEARatings", ha='center', fontweight='bold', fontsize=16)
