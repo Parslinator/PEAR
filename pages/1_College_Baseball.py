@@ -1644,6 +1644,7 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
         fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.113, 0.103, 0.2)
     elif conference == 'Patriot League':
         seed_order = [team for team, _ in team_win_pcts[:4]]
+        seed_order = ["Holy Cross", "Navy", "Army West Point", "Lehigh"]
         final_df = simulate_best_of_three_tournament(seed_order, stats_and_metrics, 1000)
         fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.17, 0.15, 0.5)
     elif conference == 'Sun Belt':
