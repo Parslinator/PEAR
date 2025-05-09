@@ -2783,15 +2783,15 @@ with col2:
     modeling_stats_copy['WAR'] = modeling_stats_copy['fWAR'].rank(ascending=False).astype(int)
     modeling_stats_copy['oWAR'] = modeling_stats_copy['oWAR_z'].rank(ascending=False).astype(int)
     modeling_stats_copy['pWAR'] = modeling_stats_copy['pWAR_z'].rank(ascending=False).astype(int)
-    columns_to_rank = ['PYTHAG', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS']
+    columns_to_rank = ['PYTHAG', 'RPG', 'BA', 'OBP', 'SLG', 'OPS']
     modeling_stats_copy[columns_to_rank] = modeling_stats_copy[columns_to_rank].rank(ascending=False, method='min').astype(int)
     modeling_stats_copy['ERA'] = modeling_stats_copy['ERA'].rank(ascending=True, method='min').astype(int)
     modeling_stats_copy['WHIP'] = modeling_stats_copy['WHIP'].rank(ascending=True, method='min').astype(int)
 
     st.markdown(f'<h2 id="team-stats">Team Stats</h2>', unsafe_allow_html=True)
     with st.container(border=True, height=440):
-        st.dataframe(modeling_stats_copy[['WAR', 'WPOE', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
-    st.caption("WAR - Team WAR Rank, WPOE - Win Percentage Over Expectation (Luck), PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
+        st.dataframe(modeling_stats_copy[['WAR', 'WPOE', 'PYTHAG', 'ERA', 'WHIP', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
+    st.caption("WAR - Team WAR Rank, WPOE - Win Percentage Over Expectation (Luck), PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
 
 st.divider()
 
