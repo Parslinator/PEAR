@@ -858,8 +858,14 @@ average_team = ending_data['Rating'].mean()
 avg_team_expected_wins = completed_schedule.groupby('Team').apply(calculate_average_expected_wins, average_team).reset_index(drop=True)
 
 rem_avg_expected_wins = remaining_games.groupby('Team').apply(calculate_average_expected_wins, average_team).reset_index(drop=True)
-rem_avg_expected_wins.rename(columns={"avg_expected_wins": "rem_avg_expected_wins", "total_expected_wins":"rem_total_expected_wins"}, inplace=True)
-
+if rem_avg_expected_wins.empty:
+    rem_avg_expected_wins = pd.DataFrame(columns=["Team", "rem_avg_expected_wins", "rem_total_expected_wins"])
+else:
+    rem_avg_expected_wins.rename(columns={
+        "avg_expected_wins": "rem_avg_expected_wins",
+        "total_expected_wins": "rem_total_expected_wins"
+    }, inplace=True)
+    
 ####################### KPI #######################
 
 def calculate_kpi(completed_schedule, ending_data):
