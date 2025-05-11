@@ -1616,6 +1616,8 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
         fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.105, 0.093, 0.2)
     elif conference in ['Big East', 'Ivy League', 'Northeast', 'The Summit League']:
         seed_order = [team for team, _ in team_win_pcts[:4]]
+        if conference == 'Ivy League':
+            seed_order = ['Yale', 'Columbia', 'Penn', 'Harvard']
         output = run_simulation(seed_order[0], seed_order[1], seed_order[2], seed_order[3], stats_and_metrics)
         final_df = pd.DataFrame(list(output.items()), columns=["Team", "Win Tournament"])
         final_df["Win Tournament"] = final_df["Win Tournament"] * 100
