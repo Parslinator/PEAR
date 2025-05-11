@@ -1578,6 +1578,8 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
         fig = plot_tournament_odds_table(result_df, 0.6, conference, 0.066, 0.06, 0.08)
     elif conference in ["Conference USA", "American Athletic", "Southland", "SWAC"]:
         seed_order = [team for team, _ in team_win_pcts[:8]]
+        if conference == 'Southland':
+            seed_order = ['Southeastern La.', 'UTRGV', 'Lamar University', 'Northwestern St.', 'McNeese', 'Houston Christian', 'A&M-Corpus Christi', 'New Orleans']
         output = run_simulation(seed_order[0], seed_order[3], seed_order[4], seed_order[7], stats_and_metrics)
         bracket_one = pd.DataFrame(list(output.items()), columns=["Team", "Win Regional"])
         output = run_simulation(seed_order[1], seed_order[2], seed_order[5], seed_order[6], stats_and_metrics)
