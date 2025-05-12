@@ -2517,6 +2517,9 @@ def simulate_regional(team_a, team_b, team_c, team_d, stats_and_metrics):
     }
     regional_prob["Team"] = regional_prob["Team"].map(seed_map)
     regional_prob['Win Regional'] = regional_prob['Win Regional'] * 100
+    seed_order = [seed_map[team_a], seed_map[team_b], seed_map[team_c], seed_map[team_d]]
+    regional_prob["SeedOrder"] = regional_prob["Team"].apply(lambda x: seed_order.index(x))
+    regional_prob = regional_prob.sort_values("SeedOrder").drop(columns="SeedOrder")
 
     # Normalize values for color gradient (excluding 0 values)
     min_value = regional_prob.iloc[:, 1:].replace(0, np.nan).min().min()  # Min of all probabilities
