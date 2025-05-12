@@ -76,13 +76,14 @@ def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
     rating_diff = home_pr - away_pr
     return round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
 
-subset_games['Result'] = subset_games['Result'].astype(str)
-subset_games = subset_games.sort_values(by="Result", key=lambda x: x.map(game_sort_key))
-subset_games["Result"] = subset_games["Result"].astype(str)  # Convert to string to avoid errors
-subset_games["Result"] = subset_games["Result"].apply(lambda x: x if x.startswith(("W", "L")) else "")
-subset_games["Result"] = subset_games.apply(process_result, axis=1)
-subset_games = subset_games.reset_index(drop=True)
-subset_games.index = subset_games.index + 1
+if len(subset_games) > 0:
+    subset_games['Result'] = subset_games['Result'].astype(str)
+    subset_games = subset_games.sort_values(by="Result", key=lambda x: x.map(game_sort_key))
+    subset_games["Result"] = subset_games["Result"].astype(str)  # Convert to string to avoid errors
+    subset_games["Result"] = subset_games["Result"].apply(lambda x: x if x.startswith(("W", "L")) else "")
+    subset_games["Result"] = subset_games.apply(process_result, axis=1)
+    subset_games = subset_games.reset_index(drop=True)
+    subset_games.index = subset_games.index + 1
 
 base_url = "https://www.ncaa.com"
 stats_page = f"{base_url}/stats/baseball/d1"
@@ -2932,11 +2933,12 @@ with col1:
             fig = team_percentiles_chart(team_name, modeling_stats)
             st.pyplot(fig)
 with col2:
-    comparison_date = comparison_date.strftime("%B %d, %Y")
-    st.subheader(f"{comparison_date} Games")
-    subset_games['Home'] = subset_games['home_team']
-    subset_games['Away'] = subset_games['away_team']
-    with st.container(border=True, height=440):
-        st.dataframe(subset_games[['Home', 'Away', 'GQI', 'PEAR', 'Result']], use_container_width=True)
+    if len(subset_games) > 0:
+        comparison_date = comparison_date.strftime("%B %d, %Y")
+        st.subheader(f"{comparison_date} Games")
+        subset_games['Home'] = subset_games['home_team']
+        subset_games['Away'] = subset_games['away_team']
+        with st.container(border=True, height=440):
+            st.dataframe(subset_games[['Home', 'Away', 'GQI', 'PEAR', 'Result']], use_container_width=True)
 
 st.divider()
