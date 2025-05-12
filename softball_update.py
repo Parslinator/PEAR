@@ -548,7 +548,7 @@ modeling_stats['in_house_pr'] = sum(
 )
 modeling_stats['Rating'] = modeling_stats['in_house_pr'] - modeling_stats['in_house_pr'].mean()
 current_range = modeling_stats['Rating'].max() - modeling_stats['Rating'].min()
-desired_range = 20
+desired_range = 15
 scaling_factor = desired_range / current_range
 modeling_stats['Rating'] = round(modeling_stats['Rating'] * scaling_factor, 4)
 modeling_stats['Rating'] = modeling_stats['Rating'] - modeling_stats['Rating'].min()
@@ -2188,9 +2188,11 @@ if now.hour < 24 and now.hour > 7:
 
     # --- Utility Functions ---
 
-    def PEAR_Win_Prob(home_pr, away_pr):
+    def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
+        if location != "Neutral":
+            home_pr += 0.8
         rating_diff = home_pr - away_pr
-        return round(1 / (1 + 10 ** (-rating_diff / 7)), 4)
+        return round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
 
     def normalize_array(values):
         values = np.array(values)
@@ -2201,20 +2203,15 @@ if now.hour < 24 and now.hour > 7:
     # --- Simulation Functions ---
 
     def simulate_tournament(teams, ratings):
-        import random
-
         team_a, team_b, team_c, team_d = teams
         r = ratings
 
-        def adjusted(team):
-            return r[team] + 0.8 if team == team_a else r[team]
-
-        w1, l1 = (team_a, team_d) if random.random() < PEAR_Win_Prob(adjusted(team_a), adjusted(team_d)) else (team_d, team_a)
-        w2, l2 = (team_b, team_c) if random.random() < PEAR_Win_Prob(adjusted(team_b), adjusted(team_c)) else (team_c, team_b)
-        w3 = l2 if random.random() < PEAR_Win_Prob(adjusted(l2), adjusted(l1)) else l1
-        w4, l4 = (w1, w2) if random.random() < PEAR_Win_Prob(adjusted(w1), adjusted(w2)) else (w2, w1)
-        w5 = l4 if random.random() < PEAR_Win_Prob(adjusted(l4), adjusted(w3)) else w3
-        game6_prob = PEAR_Win_Prob(adjusted(w4), adjusted(w5))
+        w1, l1 = (team_a, team_d) if random.random() < PEAR_Win_Prob(r[team_a], r[team_d]) / 100 else (team_d, team_a)
+        w2, l2 = (team_b, team_c) if random.random() < PEAR_Win_Prob(r[team_b], r[team_c]) / 100 else (team_c, team_b)
+        w3 = l2 if random.random() < PEAR_Win_Prob(r[l2], r[l1]) / 100 else l1
+        w4, l4 = (w1, w2) if random.random() < PEAR_Win_Prob(r[w1], r[w2]) / 100 else (w2, w1)
+        w5 = l4 if random.random() < PEAR_Win_Prob(r[l4], r[w3]) / 100 else w3
+        game6_prob = PEAR_Win_Prob(r[w4], r[w5]) / 100
         w6 = w4 if random.random() < game6_prob else w5
 
         return w6 if w6 == w4 else (w4 if random.random() < game6_prob else w5)
