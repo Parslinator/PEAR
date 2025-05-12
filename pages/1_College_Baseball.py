@@ -2493,20 +2493,17 @@ def simulate_tournament(teams, ratings):
 
     return w6 if w6 == w4 else (w4 if random.random() < game6_prob else w5)
 
-def run_simulation(team_a, team_b, team_c, team_d, stats_and_metrics, num_simulations=1000):
+def run_simulation(team_a, team_b, team_c, team_d, stats_and_metrics, num_simulations=5000):
+    teams = [team_a, team_b, team_c, team_d]
+    ratings = {team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].iloc[0] for team in teams}
     results = defaultdict(int)
 
     for _ in range(num_simulations):
-        winner = simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics)
+        winner = simulate_tournament(teams, ratings)
         results[winner] += 1
 
-    # Sort and format results
-    sorted_results = sorted(results.items(), key=lambda x: x[1], reverse=True)
-    
-    # Return a defaultdict to maintain the same structure
-    formatted_results = defaultdict(float, {team: round(wins / num_simulations, 3) for team, wins in sorted_results})
-    
-    return formatted_results
+    total = num_simulations
+    return defaultdict(float, {team: round(count / total, 3) for team, count in results.items()})
 
 def simulate_regional(team_a, team_b, team_c, team_d, stats_and_metrics):
 
