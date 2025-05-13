@@ -661,9 +661,11 @@ def plot_tournament_odds_table(final_df, row_height_multiplier, conference, titl
     plt.text(0, subtitle_y, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
     return fig
 
-def simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics):
+def simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics, home_regional = False):
     teams = [team_a, team_b, team_c, team_d]
     r = {team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].iloc[0] for team in teams}
+    if home_regional:
+        r[team_a] = r[team_a] + 0.8
 
     w1, l1 = (team_a, team_d) if random.random() < PEAR_Win_Prob(r[team_a], r[team_d]) / 100 else (team_d, team_a)
     w2, l2 = (team_b, team_c) if random.random() < PEAR_Win_Prob(r[team_b], r[team_c]) / 100 else (team_c, team_b)
@@ -675,11 +677,11 @@ def simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics):
 
     return w6 if w6 == w4 else (w4 if random.random() < game6_prob else w5)
 
-def run_simulation(team_a, team_b, team_c, team_d, stats_and_metrics, num_simulations=1000):
+def run_simulation(team_a, team_b, team_c, team_d, stats_and_metrics, num_simulations=1000, home_regional = False):
     results = defaultdict(int)
 
     for _ in range(num_simulations):
-        winner = simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics)
+        winner = simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics, home_regional)
         results[winner] += 1
 
     # Sort and format results
@@ -1581,10 +1583,15 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
         seed_order = [team for team, _ in team_win_pcts[:8]]
         if conference == 'Southland':
             seed_order = ['Southeastern La.', 'UTRGV', 'Lamar University', 'Northwestern St.', 'McNeese', 'Houston Christian', 'A&M-Corpus Christi', 'New Orleans']
-        output = run_simulation(seed_order[0], seed_order[3], seed_order[4], seed_order[7], stats_and_metrics)
-        bracket_one = pd.DataFrame(list(output.items()), columns=["Team", "Win Regional"])
-        output = run_simulation(seed_order[1], seed_order[2], seed_order[5], seed_order[6], stats_and_metrics)
-        bracket_two = pd.DataFrame(list(output.items()), columns=["Team", "Win Regional"])
+            output = run_simulation(seed_order[0], seed_order[3], seed_order[4], seed_order[7], stats_and_metrics, num_simulations, True)
+            bracket_one = pd.DataFrame(list(output.items()), columns=["Team", "Win Regional"])
+            output = run_simulation(seed_order[1], seed_order[2], seed_order[5], seed_order[6], stats_and_metrics, num_simulations, True)
+            bracket_two = pd.DataFrame(list(output.items()), columns=["Team", "Win Regional"])
+        else:
+            output = run_simulation(seed_order[0], seed_order[3], seed_order[4], seed_order[7], stats_and_metrics, num_simulations)
+            bracket_one = pd.DataFrame(list(output.items()), columns=["Team", "Win Regional"])
+            output = run_simulation(seed_order[1], seed_order[2], seed_order[5], seed_order[6], stats_and_metrics, num_simulations)
+            bracket_two = pd.DataFrame(list(output.items()), columns=["Team", "Win Regional"])
         championship_results = simulate_overall_tournament(
             bracket_one.set_index("Team")["Win Regional"].to_dict(),
             bracket_two.set_index("Team")["Win Regional"].to_dict(),
@@ -2472,7 +2479,7 @@ def resolve_conflicts(formatted_df, stats_df):
 
     return formatted_df
 
-def simulate_tournament(teams, ratings):
+def simulate_tournament_home_field(teams, ratings):
     import random
     def PEAR_Win_Prob(home_pr, away_pr):
         rating_diff = home_pr - away_pr
@@ -2494,13 +2501,13 @@ def simulate_tournament(teams, ratings):
 
     return w6 if w6 == w4 else (w4 if random.random() < game6_prob else w5)
 
-def run_simulation(team_a, team_b, team_c, team_d, stats_and_metrics, num_simulations=5000):
+def run_simulation_home_field(team_a, team_b, team_c, team_d, stats_and_metrics, num_simulations=5000):
     teams = [team_a, team_b, team_c, team_d]
     ratings = {team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].iloc[0] for team in teams}
     results = defaultdict(int)
 
     for _ in range(num_simulations):
-        winner = simulate_tournament(teams, ratings)
+        winner = simulate_tournament_home_field(teams, ratings)
         results[winner] += 1
 
     total = num_simulations
@@ -2508,7 +2515,7 @@ def run_simulation(team_a, team_b, team_c, team_d, stats_and_metrics, num_simula
 
 def simulate_regional(team_a, team_b, team_c, team_d, stats_and_metrics):
 
-    output = run_simulation(team_a, team_b, team_c, team_d, stats_and_metrics)
+    output = run_simulation_home_field(team_a, team_b, team_c, team_d, stats_and_metrics)
     regional_prob = pd.DataFrame(list(output.items()), columns=["Team", "Win Regional"])
     seed_map = {
         team_a: "#1 " + team_a,
