@@ -548,7 +548,7 @@ modeling_stats['in_house_pr'] = sum(
 )
 modeling_stats['Rating'] = modeling_stats['in_house_pr'] - modeling_stats['in_house_pr'].mean()
 current_range = modeling_stats['Rating'].max() - modeling_stats['Rating'].min()
-desired_range = 15
+desired_range = 20
 scaling_factor = desired_range / current_range
 modeling_stats['Rating'] = round(modeling_stats['Rating'] * scaling_factor, 4)
 modeling_stats['Rating'] = modeling_stats['Rating'] - modeling_stats['Rating'].min()
