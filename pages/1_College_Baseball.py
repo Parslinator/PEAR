@@ -611,6 +611,37 @@ from matplotlib.colors import LinearSegmentedColormap
 from collections import defaultdict
 import random
 
+def get_rating(team, stats_df):
+    RATING_ADJUSTMENTS = {
+        "Liberty": 0.8, "Xavier": 0.8, "Southeastern La.": 0.8, "UTRGV": 0.8,
+        "Yale": 0.8, "Omaha": 0.8, "Stetson": 0.8, "Duke": 0.8,
+        "Georgetown": 0.8, "High Point": 0.8, "Col. of Charleston": 0.8,
+        "Illinois St.": 0.8, "Cal St. Fullerton": 0.8
+    }
+    base_rating = stats_df.loc[stats_df["Team"] == team, "Rating"].values[0]
+    return base_rating + RATING_ADJUSTMENTS.get(team, 0)
+
+def simulate_game(team_a, team_b, ratings, location="Neutral"):
+    prob = PEAR_Win_Prob(ratings[team_a], ratings[team_b], location=location) / 100
+    return team_a if random.random() < prob else team_b
+
+def simulate_best_of_three_series(team_a, team_b, ratings, location):
+    """
+    Simulate a best-of-three series with team_a as the home team.
+    Returns the winner.
+    """
+    wins = {team_a: 0, team_b: 0}
+    while wins[team_a] < 2 and wins[team_b] < 2:
+        winner = simulate_game(team_a, team_b, ratings, location=location)
+        wins[winner] += 1
+    return team_a if wins[team_a] == 2 else team_b
+
+def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
+    if location != "Neutral":
+        home_pr += 0.8
+    rating_diff = home_pr - away_pr
+    return round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
+
 def plot_tournament_odds_table(final_df, row_height_multiplier, conference, title_y, subtitle_y, cell_height):
     def normalize(value, min_val, max_val):
         """Normalize values between 0 and 1 for colormap."""
@@ -620,6 +651,7 @@ def plot_tournament_odds_table(final_df, row_height_multiplier, conference, titl
 
     min_value = final_df.iloc[:, 1:].replace(0, np.nan).min().min()
     max_value = final_df.iloc[:, 1:].max().max()
+    
     cmap = LinearSegmentedColormap.from_list('custom_green', ['#d5f5e3', '#006400'])
 
     fig, ax = plt.subplots(figsize=(8, len(final_df) * row_height_multiplier), dpi=125)
@@ -642,7 +674,7 @@ def plot_tournament_odds_table(final_df, row_height_multiplier, conference, titl
         if i == 0:  # Header row
             cell.set_facecolor('#CECEB2')
             cell.set_text_props(fontsize=16, weight='bold', color='black')
-        elif (j == 0):  # Team names column
+        elif j == 0:  # Team names column
             cell.set_facecolor('#CECEB2')
             cell.set_text_props(fontsize=16, weight='bold', color='black')
         else:
@@ -661,178 +693,153 @@ def plot_tournament_odds_table(final_df, row_height_multiplier, conference, titl
     plt.text(0, subtitle_y, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
     return fig
 
-def simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics):
-    teams = [team_a, team_b, team_c, team_d]
-    r = {team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].iloc[0] for team in teams}
-
-    for team in [team_a, team_b, team_c, team_d]:
-        if team in ["Liberty", "Xavier", "Southeastern La.", "UTRGV", "Yale", "Omaha"]:
-            r[team] += 0.8
-
-    w1, l1 = (team_a, team_d) if random.random() < PEAR_Win_Prob(r[team_a], r[team_d]) / 100 else (team_d, team_a)
-    w2, l2 = (team_b, team_c) if random.random() < PEAR_Win_Prob(r[team_b], r[team_c]) / 100 else (team_c, team_b)
-    w3 = l2 if random.random() < PEAR_Win_Prob(r[l2], r[l1]) / 100 else l1
-    w4, l4 = (w1, w2) if random.random() < PEAR_Win_Prob(r[w1], r[w2]) / 100 else (w2, w1)
-    w5 = l4 if random.random() < PEAR_Win_Prob(r[l4], r[w3]) / 100 else w3
-    game6_prob = PEAR_Win_Prob(r[w4], r[w5]) / 100
-    w6 = w4 if random.random() < game6_prob else w5
-
-    return w6 if w6 == w4 else (w4 if random.random() < game6_prob else w5)
-
-def run_simulation(team_a, team_b, team_c, team_d, stats_and_metrics, num_simulations=1000):
+def double_elimination_bracket(teams, stats_and_metrics, num_simulations=1000):
+    """
+    Simulate a 4-team double elimination bracket and return win probabilities.
+    Teams must be provided in seeding order: [seed1, seed2, seed3, seed4]
+    """
     results = defaultdict(int)
+    r = {team: get_rating(team, stats_and_metrics) for team in teams}
 
     for _ in range(num_simulations):
-        winner = simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics)
-        results[winner] += 1
+        t1, t2, t3, t4 = teams
+        w1 = simulate_game(t1, t4, r)
+        l1 = t4 if w1 == t1 else t1
+        w2 = simulate_game(t2, t3, r)
+        l2 = t3 if w2 == t2 else t2
+        w3 = simulate_game(l2, l1, r)
+        w4 = simulate_game(w1, w2, r)
+        l4 = w2 if w4 == w1 else w1
+        w5 = simulate_game(l4, w3, r)
+        final_prob = PEAR_Win_Prob(r[w4], r[w5]) / 100
+        w6 = w4 if random.random() < final_prob else w5
 
-    # Sort and format results
-    sorted_results = sorted(results.items(), key=lambda x: x[1], reverse=True)
-    
-    # Return a defaultdict to maintain the same structure
-    formatted_results = defaultdict(float, {team: round(wins / num_simulations, 3) for team, wins in sorted_results})
-    
-    return formatted_results
+        # Double-elim logic: if w4 loses once, play again
+        champion = w6 if w6 == w4 else (w4 if random.random() < final_prob else w5)
+        results[champion] += 1
+
+    return defaultdict(float, {team: round(results[team] / num_simulations, 3) for team in teams})
 
 def simulate_overall_tournament(bracket_one_probs, bracket_two_probs, stats_and_metrics, num_simulations=1000):
+    """
+    Simulate a final between two bracket winners using weighted probabilities.
+    Returns a defaultdict with tournament win percentages.
+    """
     final_results = defaultdict(int)
 
     bracket_one_teams = list(bracket_one_probs.keys())
     bracket_two_teams = list(bracket_two_probs.keys())
+    ratings = {team: get_rating(team, stats_and_metrics) for team in bracket_one_teams + bracket_two_teams}
 
     for _ in range(num_simulations):
-        # Randomly pick winner from bracket one and two using probabilities
+        # Draw winners from each bracket based on their win probabilities
         winner_one = random.choices(bracket_one_teams, weights=[bracket_one_probs[t] for t in bracket_one_teams])[0]
         winner_two = random.choices(bracket_two_teams, weights=[bracket_two_probs[t] for t in bracket_two_teams])[0]
 
-        # Get ratings
-        r1 = stats_and_metrics.loc[stats_and_metrics["Team"] == winner_one, "Rating"].iloc[0]
-        r2 = stats_and_metrics.loc[stats_and_metrics["Team"] == winner_two, "Rating"].iloc[0]
-
-        # Simulate the championship game
-        prob = PEAR_Win_Prob(r1, r2) / 100
-        champ = winner_one if random.random() < prob else winner_two
-
+        # Simulate the final
+        champ = simulate_best_of_three_series(winner_one, winner_two, ratings, "Neutral")
         final_results[champ] += 1
 
-    formatted_results = defaultdict(float, {team: round(wins / num_simulations, 3) for team, wins in final_results.items()})
-    return formatted_results
+    return defaultdict(float, {team: round(wins / num_simulations, 3) for team, wins in final_results.items()})
 
-def simulate_playin_to_double_elim(teams, stats_and_metrics):
-    # Map seeds to teams
-    seeds = {i+1: teams[i] for i in range(6)}
-    r = {
-        team: (
-            stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].iloc[0] + 0.8
-            if team == "Maine"
-            else stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].iloc[0]
-        )
-        for team in teams
-    }
-
-    # Play-in round
-    gA_winner = seeds[3] if random.random() < PEAR_Win_Prob(r[seeds[3]], r[seeds[6]]) / 100 else seeds[6]
-    gB_winner = seeds[4] if random.random() < PEAR_Win_Prob(r[seeds[4]], r[seeds[5]]) / 100 else seeds[5]
-
-    # Determine who makes it to double elimination
-    double_elim_teams = {seeds[1], seeds[2], gA_winner, gB_winner}
-
-    # Reseed play-in winners
-    playin_winners = [(s, t) for s, t in seeds.items() if t in [gA_winner, gB_winner]]
-    sorted_winners = sorted(playin_winners, key=lambda x: x[0])
-    lowest_seed_team = sorted_winners[0][1]
-    higher_seed_team = sorted_winners[1][1]
-
-    # Double elimination setup
-    team_a = seeds[1]
-    team_b = seeds[2]
-    team_c = lowest_seed_team
-    team_d = higher_seed_team
-
-    # Simulate double elimination
-    champion = simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics)
-
-    return double_elim_teams, champion
-
-def run_hybrid_tournament(teams, stats_and_metrics, num_simulations=1000):
+def two_playin_games_to_four_team_double_elimination(teams, stats_and_metrics, num_simulations=1000):
+    """
+    Simulates a 6-team hybrid tournament:
+    - Seeds 3-6 play two play-in games.
+    - Two winners join seeds 1-2 in a 4-team double elimination bracket.
+    Returns a DataFrame with each team's odds of reaching double elimination and winning the tournament.
+    """
     made_double_elim = defaultdict(int)
     tournament_wins = defaultdict(int)
+    r = {team: get_rating(team, stats_and_metrics) for team in teams}
+
+    seeds = {i + 1: teams[i] for i in range(6)}
 
     for _ in range(num_simulations):
-        double_elim_teams, winner = simulate_playin_to_double_elim(teams, stats_and_metrics)
+        # Play-in round
+        gA_winner = simulate_game(seeds[3], seeds[6], r)
+        gB_winner = simulate_game(seeds[4], seeds[5], r)
+
+        double_elim_teams = {seeds[1], seeds[2], gA_winner, gB_winner}
+
+        # Track double elim appearances
         for team in double_elim_teams:
             made_double_elim[team] += 1
+
+        # Reseed play-in winners
+        playin_winners = [(s, t) for s, t in seeds.items() if t in [gA_winner, gB_winner]]
+        sorted_winners = sorted(playin_winners, key=lambda x: x[0])
+        lowest_seed_team = sorted_winners[0][1]
+        higher_seed_team = sorted_winners[1][1]
+
+        # Simulate bracket
+        bracket_result = double_elimination_bracket(
+            [seeds[1], seeds[2], lowest_seed_team, higher_seed_team],
+            stats_and_metrics,
+            num_simulations=1
+        )
+        winner = max(bracket_result.items(), key=lambda x: x[1])[0]
         tournament_wins[winner] += 1
 
-    data = []
+    # Final result formatting
+    results = []
     for team in teams:
         reach_double = 1.0 if team in teams[:2] else made_double_elim[team] / num_simulations
         win_tourney = tournament_wins[team] / num_simulations
-        data.append({
+        results.append({
             "Team": team,
-            "Double Elim": round(reach_double * 100, 1),
+            "Make Double Elim": round(reach_double * 100, 1),
             "Win Tournament": round(win_tourney * 100, 1)
         })
 
-    return pd.DataFrame(data)
+    return pd.DataFrame(results)
 
-def simulate_8_team_double_elim(teams, stats_and_metrics):
-    r = {
-        team: (
-            stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].iloc[0] + 0.8
-            if team == "Stetson"
-            else stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].iloc[0]
-        )
-        for team in teams
-    }
-
-    # Round 1 matchups (seed-style: 1v8, 2v7, etc.)
-    matchups = [(teams[0], teams[7]), (teams[3], teams[4]), (teams[2], teams[5]), (teams[1], teams[6])]
-
-    # Round 1 (WB)
-    wb_round1_winners = []
-    lb_round1_losers = []
-    for t1, t2 in matchups:
-        winner = t1 if random.random() < PEAR_Win_Prob(r[t1], r[t2]) / 100 else t2
-        loser = t2 if winner == t1 else t1
-        wb_round1_winners.append(winner)
-        lb_round1_losers.append(loser)
-
-    # Round 2A (WB)
-    wb_sf1 = wb_round1_winners[0] if random.random() < PEAR_Win_Prob(r[wb_round1_winners[0]], r[wb_round1_winners[1]]) / 100 else wb_round1_winners[1]
-    wb_sf2 = wb_round1_winners[2] if random.random() < PEAR_Win_Prob(r[wb_round1_winners[2]], r[wb_round1_winners[3]]) / 100 else wb_round1_winners[3]
-    wb_losers = [t for t in wb_round1_winners if t != wb_sf1 and t != wb_sf2]
-
-    # LB Round 1 (elimination)
-    lb_r1_1 = lb_round1_losers[0] if random.random() < PEAR_Win_Prob(r[lb_round1_losers[0]], r[lb_round1_losers[1]]) / 100 else lb_round1_losers[1]
-    lb_r1_2 = lb_round1_losers[2] if random.random() < PEAR_Win_Prob(r[lb_round1_losers[2]], r[lb_round1_losers[3]]) / 100 else lb_round1_losers[3]
-
-    # LB Round 2
-    lb_r2_1 = lb_r1_1 if random.random() < PEAR_Win_Prob(r[lb_r1_1], r[wb_losers[0]]) / 100 else wb_losers[0]
-    lb_r2_2 = lb_r1_2 if random.random() < PEAR_Win_Prob(r[lb_r1_2], r[wb_losers[1]]) / 100 else wb_losers[1]
-
-    # LB Semifinal
-    lb_sf = lb_r2_1 if random.random() < PEAR_Win_Prob(r[lb_r2_1], r[lb_r2_2]) / 100 else lb_r2_2
-
-    # WB Final
-    wb_final = wb_sf1 if random.random() < PEAR_Win_Prob(r[wb_sf1], r[wb_sf2]) / 100 else wb_sf2
-    wb_final_loser = wb_sf2 if wb_final == wb_sf1 else wb_sf1
-
-    # LB Final
-    lb_final = lb_sf if random.random() < PEAR_Win_Prob(r[lb_sf], r[wb_final_loser]) / 100 else wb_final_loser
-
-    # Championship
-    champ = wb_final if random.random() < PEAR_Win_Prob(r[wb_final], r[lb_final]) / 100 else lb_final
-
-    return champ
-
-def run_8_team_double_elim(teams, stats_and_metrics, num_simulations=1000):
+def simulate_and_run_8_team_double_elim(teams, stats_and_metrics, num_simulations=1000): 
     results = defaultdict(int)
+    ratings = {team: get_rating(team, stats_and_metrics) for team in teams}
 
     for _ in range(num_simulations):
-        winner = simulate_8_team_double_elim(teams, stats_and_metrics)
-        results[winner] += 1
+        # Round 1 matchups (seed-style: 1v8, 2v7, etc.)
+        matchups = [(teams[0], teams[7]), (teams[3], teams[4]), (teams[2], teams[5]), (teams[1], teams[6])]
 
+        # Round 1 (WB)
+        wb_round1_winners = []
+        lb_round1_losers = []
+        for t1, t2 in matchups:
+            winner = simulate_game(t1, t2, ratings, location="Neutral")
+            loser = t2 if winner == t1 else t1
+            wb_round1_winners.append(winner)
+            lb_round1_losers.append(loser)
+
+        # Round 2A (WB)
+        wb_sf1 = simulate_game(wb_round1_winners[0], wb_round1_winners[1], ratings, location="Neutral")
+        wb_sf2 = simulate_game(wb_round1_winners[2], wb_round1_winners[3], ratings, location="Neutral")
+        wb_losers = [t for t in wb_round1_winners if t != wb_sf1 and t != wb_sf2]
+
+        # LB Round 1 (elimination)
+        lb_r1_1 = simulate_game(lb_round1_losers[0], lb_round1_losers[1], ratings, location="Neutral")
+        lb_r1_2 = simulate_game(lb_round1_losers[2], lb_round1_losers[3], ratings, location="Neutral")
+
+        # LB Round 2
+        lb_r2_1 = simulate_game(lb_r1_1, wb_losers[0], ratings, location="Neutral")
+        lb_r2_2 = simulate_game(lb_r1_2, wb_losers[1], ratings, location="Neutral")
+
+        # LB Semifinal
+        lb_sf = simulate_game(lb_r2_1, lb_r2_2, ratings, location="Neutral")
+
+        # WB Final
+        wb_final = simulate_game(wb_sf1, wb_sf2, ratings, location="Neutral")
+        wb_final_loser = wb_sf2 if wb_final == wb_sf1 else wb_sf1
+
+        # LB Final
+        lb_final = simulate_game(lb_sf, wb_final_loser, ratings, location="Neutral")
+
+        # Championship
+        champ = simulate_game(wb_final, lb_final, ratings, location="Neutral")
+
+        results[champ] += 1
+
+    # Return the results in a DataFrame
     df = pd.DataFrame([
         {"Team": team, "Win Tournament": round(results[team] / num_simulations * 100, 1)}
         for team in teams
@@ -844,80 +851,43 @@ def single_elimination_16_teams(seed_order, stats_and_metrics, num_simulations=1
     rounds = ["Round 1", "Round 2", "Quarterfinals", "Semifinals", "Final", "Champion"]
     team_stats = {team: {r: 0 for r in rounds} for team in seed_order}
     
-    ratings = {
-        team: (
-            stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].values[0] + 0.8
-            if team == "Duke"
-            else stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].values[0]
-        )
-        for team in seed_order
-    }
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
 
     for _ in range(num_simulations):
         progress = {team: None for team in seed_order}
 
         # Round 1 (Play-in)
         play_in_pairs = [(8, 15), (9, 14), (10, 13), (11, 12)]
-        round1_winners = []
-        for a, b in play_in_pairs:
-            team_a, team_b = seed_order[a], seed_order[b]
-            prob_a = PEAR_Win_Prob(ratings[team_a], ratings[team_b]) / 100
-            winner = team_a if np.random.rand() < prob_a else team_b
-            round1_winners.append(winner)
-            progress[team_a] = "Round 1"
-            progress[team_b] = "Round 1"
+        round1_winners = [simulate_game(seed_order[a], seed_order[b], ratings, location="Neutral") for a, b in play_in_pairs]
+        for winner, (a, b) in zip(round1_winners, play_in_pairs):
+            progress[seed_order[a]] = progress[seed_order[b]] = "Round 1"
             progress[winner] = "Round 2"
 
         # Round 2
-        r2_seeds = [4, 5, 6, 7]
-        round2_winners = []
-        for i, seed in enumerate(r2_seeds):
-            team_a = seed_order[seed]
-            team_b = round1_winners[i]
-            prob_a = PEAR_Win_Prob(ratings[team_a], ratings[team_b]) / 100
-            winner = team_a if np.random.rand() < prob_a else team_b
-            round2_winners.append(winner)
-            progress[team_a] = "Round 2"
-            progress[team_b] = "Round 2"
+        round2_winners = [simulate_game(seed_order[seed], round1_winners[i], ratings, location="Neutral") for i, seed in enumerate([4, 5, 6, 7])]
+        for winner, seed in zip(round2_winners, [4, 5, 6, 7]):
+            progress[seed_order[seed]] = progress[round1_winners[seed-4]] = "Round 2"
             progress[winner] = "Quarterfinals"
 
         # Quarterfinals
-        r3_seeds = [0, 1, 2, 3]
-        qf_winners = []
-        for i, seed in enumerate(r3_seeds):
-            team_a = seed_order[seed]
-            team_b = round2_winners[i]
-            prob_a = PEAR_Win_Prob(ratings[team_a], ratings[team_b]) / 100
-            winner = team_a if np.random.rand() < prob_a else team_b
-            qf_winners.append(winner)
-            progress[team_a] = "Quarterfinals"
-            progress[team_b] = "Quarterfinals"
+        qf_winners = [simulate_game(seed_order[seed], round2_winners[i], ratings, location="Neutral") for i, seed in enumerate([0, 1, 2, 3])]
+        for winner, seed in zip(qf_winners, [0, 1, 2, 3]):
+            progress[seed_order[seed]] = progress[round2_winners[seed]] = "Quarterfinals"
             progress[winner] = "Semifinals"
 
         # Semifinals
-        sf_pairs = [(qf_winners[0], qf_winners[1]), (qf_winners[2], qf_winners[3])]
-        sf_winners = []
-        for team_a, team_b in sf_pairs:
-            prob_a = PEAR_Win_Prob(ratings[team_a], ratings[team_b]) / 100
-            winner = team_a if np.random.rand() < prob_a else team_b
-            sf_winners.append(winner)
-            progress[team_a] = "Semifinals"
-            progress[team_b] = "Semifinals"
+        sf_winners = [simulate_game(qf_winners[i], qf_winners[i+1], ratings, location="Neutral") for i in [0, 2]]
+        for winner in sf_winners:
             progress[winner] = "Final"
 
         # Final
-        team_a, team_b = sf_winners
-        prob_a = PEAR_Win_Prob(ratings[team_a], ratings[team_b]) / 100
-        winner = team_a if np.random.rand() < prob_a else team_b
-        progress[team_a] = "Final"
-        progress[team_b] = "Final"
+        winner = simulate_game(sf_winners[0], sf_winners[1], ratings, location="Neutral")
         progress[winner] = "Champion"
 
         # Record outcomes
         for team, reached in progress.items():
             if reached:
-                reached_idx = rounds.index(reached)
-                for i in range(reached_idx + 1):
+                for i in range(rounds.index(reached) + 1):
                     team_stats[team][rounds[i]] += 1
 
     # Convert counts to percentages
@@ -931,58 +901,37 @@ def single_elimination_14_teams(seed_order, stats_and_metrics, num_simulations=1
     rounds = ["Round 1", "Quarterfinals", "Semifinals", "Final", "Champion"]
     team_stats = {team: {r: 0 for r in rounds} for team in seed_order}
     
-    # Extract ratings
-    ratings = {
-        team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].values[0]
-        for team in seed_order
-    }
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
 
     for _ in range(num_simulations):
         progress = {team: None for team in seed_order}
 
-        # Round 1: Seeds 5–12 play in
+        # Round 1: Seeds 5–12 play-in
         play_in_pairs = [(4, 11), (5, 10), (6, 9), (7, 8)]
-        round1_winners = []
-        for a, b in play_in_pairs:
-            team_a, team_b = seed_order[a], seed_order[b]
-            prob_a = PEAR_Win_Prob(ratings[team_a], ratings[team_b]) / 100
-            winner = team_a if np.random.rand() < prob_a else team_b
-            round1_winners.append(winner)
+        round1_winners = [simulate_game(seed_order[a], seed_order[b], ratings, location="Neutral") for a, b in play_in_pairs]
+        for winner, (a, b) in zip(round1_winners, play_in_pairs):
+            progress[seed_order[a]] = progress[seed_order[b]] = "Round 1"
             progress[winner] = "Quarterfinals"
 
         # Quarterfinals: Seeds 1–4 vs Round 1 winners
-        qf_winners = []
-        for i, seed in enumerate([0, 1, 2, 3]):
-            team_a = seed_order[seed]
-            team_b = round1_winners[i]
-            prob_a = PEAR_Win_Prob(ratings[team_a], ratings[team_b]) / 100
-            winner = team_a if np.random.rand() < prob_a else team_b
-            qf_winners.append(winner)
-            progress[team_a] = "Quarterfinals"
-            progress[team_b] = "Quarterfinals"
+        qf_winners = [simulate_game(seed_order[seed], round1_winners[i], ratings, location="Neutral") for i, seed in enumerate([0, 1, 2, 3])]
+        for winner, seed in zip(qf_winners, [0, 1, 2, 3]):
+            progress[seed_order[seed]] = progress[round1_winners[seed-4]] = "Quarterfinals"
             progress[winner] = "Semifinals"
 
         # Semifinals
-        sf_pairs = [(qf_winners[0], qf_winners[1]), (qf_winners[2], qf_winners[3])]
-        sf_winners = []
-        for team_a, team_b in sf_pairs:
-            prob_a = PEAR_Win_Prob(ratings[team_a], ratings[team_b]) / 100
-            winner = team_a if np.random.rand() < prob_a else team_b
-            sf_winners.append(winner)
+        sf_winners = [simulate_game(qf_winners[i], qf_winners[i+1], ratings, location="Neutral") for i in [0, 2]]
+        for winner in sf_winners:
             progress[winner] = "Final"
 
         # Final
-        team_a, team_b = sf_winners
-        prob_a = PEAR_Win_Prob(ratings[team_a], ratings[team_b]) / 100
-        winner = team_a if np.random.rand() < prob_a else team_b
+        winner = simulate_game(sf_winners[0], sf_winners[1], ratings, location="Neutral")
         progress[winner] = "Champion"
 
         # Record outcomes
-        for team in seed_order:
-            reached = progress.get(team)
-            if reached is not None:
-                reached_idx = rounds.index(reached)
-                for i in range(reached_idx + 1):
+        for team, reached in progress.items():
+            if reached:
+                for i in range(rounds.index(reached) + 1):
                     team_stats[team][rounds[i]] += 1
 
     # Format result as DataFrame
@@ -995,126 +944,94 @@ def single_elimination_14_teams(seed_order, stats_and_metrics, num_simulations=1
 def double_elimination_7_teams(seed_order, stats_and_metrics, num_simulations=1000):
     rounds = ["Double Elim", "Win Tournament"]
     team_stats = {team: {r: 0 for r in rounds} for team in seed_order}
-    ratings = {
-        team: (
-            stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].values[0] + 0.8
-            if team == "Georgetown"
-            else stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].values[0]
-        )
-        for team in seed_order
-    }
-
-    def game(team_a, team_b):
-        prob = PEAR_Win_Prob(ratings[team_a], ratings[team_b]) / 100
-        return team_a if np.random.rand() < prob else team_b
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
 
     for _ in range(num_simulations):
-        wins = defaultdict(int)
-        losses = defaultdict(int)
-
-        # Round 1: Seeds 2 vs 7, 3 vs 6, 4 vs 5
-        g1 = game(seed_order[1], seed_order[6])
-        g2 = game(seed_order[2], seed_order[5])
-        g3 = game(seed_order[3], seed_order[4])
-        winners_r1 = [g1, g2, g3]
+        progress = defaultdict(lambda: {"Double Elim": 0, "Win Tournament": 0})
+        winners_r1 = [simulate_game(seed_order[1], seed_order[6], ratings, location="Neutral"),
+                      simulate_game(seed_order[2], seed_order[5], ratings, location="Neutral"),
+                      simulate_game(seed_order[3], seed_order[4], ratings, location="Neutral")]
         losers_r1 = [team for team in [seed_order[1], seed_order[6], seed_order[2], seed_order[5], seed_order[3], seed_order[4]] if team not in winners_r1]
 
+        # Round 1 - Mark all teams
         for t in winners_r1 + losers_r1 + [seed_order[0]]:
-            team_stats[t]["Double Elim"] += 1
+            progress[t]["Double Elim"] += 1
 
-        # Round 2 winners bracket
-        wb2_g1 = game(seed_order[0], g1)
-        wb2_g2 = game(g2, g3)
-        wb2_winners = [wb2_g1, wb2_g2]
-        wb2_losers = [team for team in [seed_order[0], g1, g2, g3] if team not in wb2_winners]
+        # Round 2 (Winners Bracket)
+        wb2_winners = [simulate_game(seed_order[0], winners_r1[0], ratings, location="Neutral"),
+                       simulate_game(winners_r1[1], winners_r1[2], ratings, location="Neutral")]
 
-        # Elimination games
-        lb1 = game(losers_r1[0], losers_r1[1])
-        lb2 = game(losers_r1[2], wb2_losers[0])
-        lb3 = game(wb2_losers[1], lb1)
+        # Loser's bracket games
+        lb1 = simulate_game(losers_r1[0], losers_r1[1], ratings, location="Neutral")
+        lb2 = simulate_game(losers_r1[2], wb2_winners[0], ratings, location="Neutral")
+        lb3 = simulate_game(wb2_winners[1], lb1, ratings, location="Neutral")
 
-        # Loser's bracket final
-        lb_final = game(lb2, lb3)
+        # Loser's Bracket Final
+        lb_final = simulate_game(lb2, lb3, ratings, location="Neutral")
 
-        # Winner's bracket final
-        wb_final = game(wb2_winners[0], wb2_winners[1])
+        # Winner's Bracket Final
+        wb_final = simulate_game(wb2_winners[0], wb2_winners[1], ratings, location="Neutral")
 
         # Championship
-        if lb_final == wb_final:
-            champ = wb_final
-        else:
-            champ_game = game(wb_final, lb_final)
-            if champ_game == wb_final:
-                champ = wb_final
-            else:
-                champ = game(wb_final, lb_final)
+        champ = simulate_game(wb_final, lb_final, ratings, location="Neutral") if wb_final != lb_final else wb_final
 
-        team_stats[champ]["Win Tournament"] += 1
+        progress[champ]["Win Tournament"] += 1
 
+        # Record outcomes
+        for team in progress:
+            for r in rounds:
+                team_stats[team][r] += progress[team][r]
+
+    # Format result as DataFrame
     df = pd.DataFrame.from_dict(team_stats, orient="index")
-    df = df.applymap(lambda x: round(100 * x / num_simulations, 1)).reset_index().rename(columns={"index": "Team"}).drop(columns=["Double Elim"]).sort_values('Win Tournament', ascending=False).reset_index(drop=True)
+    df = df.applymap(lambda x: round(100 * x / num_simulations, 1)).reset_index().rename(columns={"index": "Team"}).drop(columns=["Double Elim"])
     return df
 
 def double_elimination_6_teams(seed_order, stats_and_metrics, num_simulations=1000):
     rounds = ["Double Elim", "Win Tournament"]
     team_stats = {team: {r: 0 for r in rounds} for team in seed_order}
-    ratings = {
-        team: (
-            stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].values[0] + 0.8
-            if team in ["High Point", "Col. of Charleston"]
-            else stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].values[0]
-        )
-        for team in seed_order
-    }
-
-    def game(team_a, team_b):
-        prob = PEAR_Win_Prob(ratings[team_a], ratings[team_b]) / 100
-        return team_a if np.random.rand() < prob else team_b
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
 
     for _ in range(num_simulations):
-        wins = defaultdict(int)
-        losses = defaultdict(int)
+        progress = defaultdict(lambda: {"Double Elim": 0, "Win Tournament": 0})
 
         # Round 1: #3 vs #6, #4 vs #5
-        g1 = game(seed_order[2], seed_order[5])
-        g2 = game(seed_order[3], seed_order[4])
-        winners_r1 = [g1, g2]
+        winners_r1 = [simulate_game(seed_order[2], seed_order[5], ratings, location="Neutral"),
+                      simulate_game(seed_order[3], seed_order[4], ratings, location="Neutral")]
         losers_r1 = [team for team in [seed_order[2], seed_order[5], seed_order[3], seed_order[4]] if team not in winners_r1]
 
+        # Mark all teams in Round 1
         for t in winners_r1 + losers_r1 + [seed_order[0], seed_order[1]]:
-            team_stats[t]["Double Elim"] += 1
+            progress[t]["Double Elim"] += 1
 
-        # Round 2 winners bracket: #1 vs g1, #2 vs g2
-        wb2_g1 = game(seed_order[0], g1)
-        wb2_g2 = game(seed_order[1], g2)
-        wb2_winners = [wb2_g1, wb2_g2]
-        wb2_losers = [team for team in [seed_order[0], g1, seed_order[1], g2] if team not in wb2_winners]
+        # Round 2: Winners Bracket
+        wb2_winners = [simulate_game(seed_order[0], winners_r1[0], ratings, location="Neutral"),
+                       simulate_game(seed_order[1], winners_r1[1], ratings, location="Neutral")]
 
         # Elimination games
-        lb1 = game(losers_r1[0], losers_r1[1])
-        lb2 = game(wb2_losers[0], lb1)
-        lb3 = game(wb2_losers[1], lb2)
+        lb1 = simulate_game(losers_r1[0], losers_r1[1], ratings, location="Neutral")
+        lb2 = simulate_game(wb2_winners[0], lb1, ratings, location="Neutral")
+        lb3 = simulate_game(wb2_winners[1], lb2, ratings, location="Neutral")
 
-        # Loser's bracket final
+        # Loser's Bracket Final
         lb_final = lb3
 
-        # Winner's bracket final
-        wb_final = game(wb2_winners[0], wb2_winners[1])
+        # Winner's Bracket Final
+        wb_final = simulate_game(wb2_winners[0], wb2_winners[1], ratings, location="Neutral")
 
         # Championship
-        if lb_final == wb_final:
-            champ = wb_final
-        else:
-            champ_game = game(wb_final, lb_final)
-            if champ_game == wb_final:
-                champ = wb_final
-            else:
-                champ = game(wb_final, lb_final)
+        champ = simulate_game(wb_final, lb_final, ratings, location="Neutral") if wb_final != lb_final else wb_final
 
-        team_stats[champ]["Win Tournament"] += 1
+        progress[champ]["Win Tournament"] += 1
 
+        # Record outcomes
+        for team in progress:
+            for r in rounds:
+                team_stats[team][r] += progress[team][r]
+
+    # Format result as DataFrame
     df = pd.DataFrame.from_dict(team_stats, orient="index")
-    df = df.applymap(lambda x: round(100 * x / num_simulations, 1)).reset_index().rename(columns={"index": "Team"}).drop(columns=['Double Elim']).sort_values('Win Tournament', ascending=False).reset_index(drop=True)
+    df = df.applymap(lambda x: round(100 * x / num_simulations, 1)).reset_index().rename(columns={"index": "Team"}).drop(columns=['Double Elim'])
     return df
 
 def simulate_pool_play_tournament(seed_order, stats_and_metrics, num_simulations=1000):
@@ -1126,11 +1043,7 @@ def simulate_pool_play_tournament(seed_order, stats_and_metrics, num_simulations
     }
     rounds = ["Win Pool", "Make Final", "Win Tournament"]
     team_stats = {team: {r: 0 for r in rounds} for team in seed_order}
-    ratings = {team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].values[0] for team in seed_order}
-
-    def game(team_a, team_b):
-        prob = PEAR_Win_Prob(ratings[team_a], ratings[team_b]) / 100
-        return team_a if np.random.rand() < prob else team_b
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
 
     for _ in range(num_simulations):
         pool_winners = {}
@@ -1140,28 +1053,21 @@ def simulate_pool_play_tournament(seed_order, stats_and_metrics, num_simulations
             wins = {team: 0 for team in teams}
             matchups = [(teams[0], teams[1]), (teams[0], teams[2]), (teams[1], teams[2])]
             for team_a, team_b in matchups:
-                winner = game(team_a, team_b)
+                winner = simulate_game(team_a, team_b, ratings, location="Neutral")
                 wins[winner] += 1
 
-            max_wins = max(wins.values())
-            contenders = [team for team, w in wins.items() if w == max_wins]
-            if len(contenders) == 1:
-                pool_winner = contenders[0]
-            else:
-                pool_winner = min(contenders, key=lambda team: seed_order.index(team))  # higher seed wins tiebreaker
+            pool_winner = max(wins, key=lambda team: (wins[team], -seed_order.index(team)))
             pool_winners[pool_name] = pool_winner
             team_stats[pool_winner]["Win Pool"] += 1
 
         # Semifinals: A vs D, B vs C
-        sf_matchups = [(pool_winners["A"], pool_winners["D"]), (pool_winners["B"], pool_winners["C"])]
-        finalists = []
-        for team_a, team_b in sf_matchups:
-            winner = game(team_a, team_b)
-            finalists.append(winner)
+        finalists = [simulate_game(pool_winners["A"], pool_winners["D"], ratings, location="Neutral"),
+                    simulate_game(pool_winners["B"], pool_winners["C"], ratings, location="Neutral")]
+        for winner in finalists:
             team_stats[winner]["Make Final"] += 1
 
         # Final
-        final_winner = game(finalists[0], finalists[1])
+        final_winner = simulate_game(finalists[0], finalists[1], ratings, location="Neutral")
         team_stats[final_winner]["Win Tournament"] += 1
 
     df = pd.DataFrame.from_dict(team_stats, orient="index")
@@ -1170,38 +1076,17 @@ def simulate_pool_play_tournament(seed_order, stats_and_metrics, num_simulations
 
 def simulate_playin_double_elim(seed_order, stats_and_metrics, num_simulations=1000):
     team_stats = {team: {"Double Elim": 0, "Win Tournament": 0} for team in seed_order}
-    ratings = {
-        team: (
-            stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].values[0] + 0.8
-            if team in ["Cal St. Fullerton"]
-            else stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].values[0]
-        )
-        for team in seed_order
-    }
-
-    def win_prob(team_a, team_b):
-        return PEAR_Win_Prob(ratings[team_a], ratings[team_b]) / 100
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
 
     for _ in range(num_simulations):
         # Play-in between #4 and #5
-        team_4, team_5 = seed_order[3], seed_order[4]
-        prob_4 = win_prob(team_4, team_5)
-        playin_winner = team_4 if np.random.rand() < prob_4 else team_5
+        playin_winner = simulate_game(seed_order[3], seed_order[4], ratings, location="Neutral")
         team_stats[playin_winner]["Double Elim"] += 1
 
-        # Set up 4-team double elimination bracket
-        teams = [seed_order[0], seed_order[1], seed_order[2], playin_winner]
-        r = ratings
-
-        w1, l1 = (teams[0], teams[3]) if np.random.rand() < win_prob(teams[0], teams[3]) else (teams[3], teams[0])
-        w2, l2 = (teams[1], teams[2]) if np.random.rand() < win_prob(teams[1], teams[2]) else (teams[2], teams[1])
-        w3 = l2 if np.random.rand() < win_prob(l2, l1) else l1
-        w4, l4 = (w1, w2) if np.random.rand() < win_prob(w1, w2) else (w2, w1)
-        w5 = l4 if np.random.rand() < win_prob(l4, w3) else w3
-        game6_prob = win_prob(w4, w5)
-        w6 = w4 if np.random.rand() < game6_prob else w5
-
-        champion = w6 if w6 == w4 else (w4 if np.random.rand() < game6_prob else w5)
+        # 4-team double elimination bracket
+        bracket_teams = [seed_order[0], seed_order[1], seed_order[2], playin_winner]
+        bracket_result = double_elimination_bracket(bracket_teams, stats_and_metrics, num_simulations=1)
+        champion = max(bracket_result.items(), key=lambda x: x[1])[0]
         team_stats[champion]["Win Tournament"] += 1
 
     # Format results
@@ -1214,143 +1099,145 @@ def simulate_playin_double_elim(seed_order, stats_and_metrics, num_simulations=1
 
 def simulate_playins_to_6team_double_elim(seed_order, stats_and_metrics, num_simulations=1000):
     team_stats = {team: {"Double Elim": 0, "Win Tournament": 0} for team in seed_order}
-    ratings = {
-        team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].values[0]
-        for team in seed_order
-    }
-
-    def win_prob(team_a, team_b):
-        return PEAR_Win_Prob(ratings[team_a], ratings[team_b]) / 100
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
 
     for _ in range(num_simulations):
-        # Play-in games
-        team_5, team_8 = seed_order[4], seed_order[7]
-        team_6, team_7 = seed_order[5], seed_order[6]
+        # Simulate play-in games
+        winner_5_8 = simulate_game(seed_order[4], seed_order[7], ratings, location="Neutral")
+        winner_6_7 = simulate_game(seed_order[5], seed_order[6], ratings, location="Neutral")
 
-        winner_5_8 = team_5 if np.random.rand() < win_prob(team_5, team_8) else team_8
-        winner_6_7 = team_6 if np.random.rand() < win_prob(team_6, team_7) else team_7
-
+        # Build 6-team bracket
         advancing_teams = seed_order[:4] + [winner_5_8, winner_6_7]
         for team in advancing_teams:
             team_stats[team]["Double Elim"] += 1
 
-        # Now simulate the 6-team double elimination bracket
-        # Seeds 1 and 2 get byes
-        t1, t2, t3, t4, t5, t6 = advancing_teams
-
-        # Game 1: 3 vs 6
-        w1, l1 = (t3, t6) if np.random.rand() < win_prob(t3, t6) else (t6, t3)
-        # Game 2: 4 vs 5
-        w2, l2 = (t4, t5) if np.random.rand() < win_prob(t4, t5) else (t5, t4)
-
-        # Game 3: 1 vs W2
-        w3, l3 = (t1, w2) if np.random.rand() < win_prob(t1, w2) else (w2, t1)
-        # Game 4: 2 vs W1
-        w4, l4 = (t2, w1) if np.random.rand() < win_prob(t2, w1) else (w1, t2)
-
-        # Elimination games
-        # Game 5: L1 vs L2
-        w5 = l1 if np.random.rand() < win_prob(l1, l2) else l2
-        # Game 6: L3 vs W5
-        w6 = l3 if np.random.rand() < win_prob(l3, w5) else w5
-        # Game 7: L4 vs W6
-        w7 = l4 if np.random.rand() < win_prob(l4, w6) else w6
-
-        # Winners bracket final
-        w8, l8 = (w3, w4) if np.random.rand() < win_prob(w3, w4) else (w4, w3)
-
-        # Losers bracket final
-        w9 = l8 if np.random.rand() < win_prob(l8, w7) else w7
-
-        # Championship
-        champ = w8 if np.random.rand() < win_prob(w8, w9) else w9
-        if champ != w8:
-            champ = w8 if np.random.rand() < win_prob(w8, w9) else w9
-
+        # Run one sim of 6-team double elimination
+        result_df = double_elimination_6_teams(advancing_teams, stats_and_metrics, num_simulations=1)
+        result_df["Win Tournament"] = result_df["Win Tournament"] / 100  # Undo percentage scaling
+        champ = result_df.loc[result_df["Win Tournament"] == 1.0, "Team"].values[0]
         team_stats[champ]["Win Tournament"] += 1
 
     # Final formatting
     df = pd.DataFrame.from_dict(team_stats, orient="index").reset_index().rename(columns={"index": "Team"})
     df["Double Elim"] = df["Double Elim"].apply(lambda x: round(100 * x / num_simulations, 1))
     df["Win Tournament"] = df["Win Tournament"].apply(lambda x: round(100 * x / num_simulations, 1))
-
     return df
 
 def simulate_mvc_tournament(seed_order, stats_and_metrics, num_simulations=1000):
     assert len(seed_order) == 8, "Seed order must have exactly 8 teams."
 
-    def PEAR_Win_Prob(home_pr, away_pr):
-        rating_diff = home_pr - away_pr
-        return 1 / (1 + 10 ** (-rating_diff / 7))
+    def remove_team_with_two_losses(losses):
+        for team, loss_count in list(losses.items()):
+            if loss_count >= 2:
+                del losses[team]
 
-    ratings = {
-        team: (
-            stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].values[0] + 0.8
-            if team == "Illinois St."
-            else stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].values[0]
-        )
-        for team in seed_order
-    }
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
     
     make_de_stats = defaultdict(int)
     win_stats = defaultdict(int)
 
     for _ in range(num_simulations):
-        # Play-in games
+        # Day 1 - Single elimination: 5 vs 8 and 6 vs 7
         team5, team6, team7, team8 = seed_order[4], seed_order[5], seed_order[6], seed_order[7]
 
-        # Game 1: 5 vs 8
-        prob_5v8 = PEAR_Win_Prob(ratings[team5], ratings[team8])
-        winner_5v8 = team5 if np.random.rand() < prob_5v8 else team8
+        winner_5v8 = simulate_game(team5, team8, ratings, location="Neutral")
+        winner_6v7 = simulate_game(team6, team7, ratings, location="Neutral")
+        if winner_5v8 == team5:
+            playin_winners = [winner_5v8, winner_6v7]
+        else:
+            playin_winners = [winner_6v7, winner_5v8]
 
-        # Game 2: 6 vs 7
-        prob_6v7 = PEAR_Win_Prob(ratings[team6], ratings[team7])
-        winner_6v7 = team6 if np.random.rand() < prob_6v7 else team7
-
-        playin_winners = [winner_5v8, winner_6v7]
         for team in playin_winners:
             make_de_stats[team] += 1
 
         for team in seed_order[:4]:
             make_de_stats[team] += 1  # Top 4 seeds always make DE
 
-        # Begin double elimination with 6 teams:
-        # Seeds 1-4 and the two play-in winners
+        # Day 2 - Start double elimination (6 teams)
         de_teams = seed_order[:4] + playin_winners
         r = {team: ratings[team] for team in de_teams}
+        losses = {team: 0 for team in de_teams}
 
-        # Round 1: 3 vs playin_winner1, 4 vs playin_winner2
-        w1 = de_teams[2] if np.random.rand() < PEAR_Win_Prob(r[de_teams[2]], r[de_teams[4]]) else de_teams[4]
-        l1 = de_teams[4] if w1 == de_teams[2] else de_teams[2]
-        w2 = de_teams[3] if np.random.rand() < PEAR_Win_Prob(r[de_teams[3]], r[de_teams[5]]) else de_teams[5]
-        l2 = de_teams[5] if w2 == de_teams[3] else de_teams[3]
+        w3 = simulate_game(de_teams[2], de_teams[3], r)
+        w4 = simulate_game(de_teams[0], de_teams[5], r)
+        w5 = simulate_game(de_teams[1], de_teams[4], r)
+        l3 = de_teams[3] if w3 == de_teams[2] else de_teams[2]
+        l4 = de_teams[5] if w4 == de_teams[0] else de_teams[0]
+        l5 = de_teams[4] if w5 == de_teams[1] else de_teams[1]
+        losses[l3] += 1
+        losses[l4] += 1
+        losses[l5] += 1
+        remove_team_with_two_losses(losses)
 
-        # Round 2 Winners: 1 vs w1, 2 vs w2
-        w3 = de_teams[0] if np.random.rand() < PEAR_Win_Prob(r[de_teams[0]], r[w1]) else w1
-        l3 = w1 if w3 == de_teams[0] else de_teams[0]
-        w4 = de_teams[1] if np.random.rand() < PEAR_Win_Prob(r[de_teams[1]], r[w2]) else w2
-        l4 = w2 if w4 == de_teams[1] else de_teams[1]
+        w6 = simulate_game(l5, l4, r)
+        w7 = simulate_game(l3, w4, r)
+        w8 = simulate_game(w3, w5, r)
+        l6 = l5 if w6 == l4 else l4
+        l7 = l3 if w7 == w4 else w4
+        l8 = w3 if w8 == w5 else w5
+        losses[l6] += 1
+        losses[l7] += 1
+        losses[l8] += 1
+        remove_team_with_two_losses(losses)
 
-        # Losers Bracket
-        w5 = l2 if np.random.rand() < PEAR_Win_Prob(r[l2], r[l3]) else l3
-        w6 = l1 if np.random.rand() < PEAR_Win_Prob(r[l1], r[l4]) else l4
+        if len(losses) == 4:
+            w9 = simulate_game(w6, l8, r)
+            l9 = w6 if w9 == l8 else l8
+            losses[l9] += 1
+            remove_team_with_two_losses(losses)
 
-        # Elimination matchups
-        w7 = w5 if np.random.rand() < PEAR_Win_Prob(r[w5], r[w6]) else w6
+            w10 = simulate_game(w7, w8, r)
+            l10 = w7 if w10 == w8 else w8
+            losses[l10] += 1
+            remove_team_with_two_losses(losses)
 
-        # Semifinal
-        w8 = w3 if np.random.rand() < PEAR_Win_Prob(r[w3], r[w4]) else w4
-        l8 = w4 if w8 == w3 else w3
+            w11 = simulate_game(w9, l10, r)
+            l11 = w9 if w11 == l10 else l10
+            losses[l11] += 1
+            remove_team_with_two_losses(losses)
 
-        w9 = w7 if np.random.rand() < PEAR_Win_Prob(r[w7], r[l8]) else l8
+            w12 = simulate_game(w11, w10, r)
+            l12 = w11 if w12 == w10 else w10
+            losses[l12] += 1
+            remove_team_with_two_losses(losses)
 
-        # Final(s)
-        prob_final = PEAR_Win_Prob(r[w8], r[w9])
-        champion = w8 if np.random.rand() < prob_final else w9
-        if champion != w8:
-            # If first loss for w8, play again
-            prob_final2 = PEAR_Win_Prob(r[champion], r[w8])
-            champion = champion if np.random.rand() < prob_final2 else w8
+            if len(losses) == 1:
+                champion = w12
+            else:
+                champion = simulate_game(w12, l12, r)
+        else:
+            w9 = simulate_game(l7, l8, r)
+            l9 = l7 if w9 == l8 else l8
+            losses[l9] += 1
+            remove_team_with_two_losses(losses)
+
+            w10 = simulate_game(w6, w7, r)
+            l10 = w6 if w10 == w7 else w7
+            losses[l10] += 1
+            remove_team_with_two_losses(losses)
+
+            w11 = simulate_game(w9, w8, r)
+            l11 = w9 if w11 == w8 else w8
+            losses[l11] += 1
+            remove_team_with_two_losses(losses)
+
+            if len(losses) == 2:
+                w12 = simulate_game(w11, w10, r)
+                l12 = w11 if w12 == w10 else w10
+                losses[l12] += 1
+                remove_team_with_two_losses(losses)
+
+                if len(losses) == 1:
+                    champion = w12
+                else:
+                    champion = simulate_game(w12, l12, r)  
+            else:
+                w12 = simulate_game(l11, w10, r)
+                l12 = l11 if w12 == w10 else w10
+                losses[l12] += 1
+                remove_team_with_two_losses(losses)
+
+                champion = simulate_game(w12, w11, r)
 
         win_stats[champion] += 1
 
@@ -1363,64 +1250,28 @@ def simulate_mvc_tournament(seed_order, stats_and_metrics, num_simulations=1000)
     return result
 
 def simulate_two_playin_rounds_to_double_elim(seed_order, stats_and_metrics, num_simulations=1000):
-    teams = seed_order
-    ratings = {
-        team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].values[0]
-        for team in teams
-    }
-    
-    tracker = {
-        team: {"Round 2": 0, "Make Double Elim": 0, "Win Tournament": 0}
-        for team in teams
-    }
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
+    tracker = {team: {"Round 2": 0, "Make Double Elim": 0, "Win Tournament": 0} for team in seed_order}
 
     for _ in range(num_simulations):
-        # Round 1 Play-in: #5 vs #8 and #6 vs #7
-        play_in1_a, play_in1_b = seed_order[4], seed_order[7]
-        prob_a = PEAR_Win_Prob(ratings[play_in1_a], ratings[play_in1_b]) / 100
-        win_5v8 = play_in1_a if np.random.rand() < prob_a else play_in1_b
-
-        play_in2_a, play_in2_b = seed_order[5], seed_order[6]
-        prob_b = PEAR_Win_Prob(ratings[play_in2_a], ratings[play_in2_b]) / 100
-        win_6v7 = play_in2_a if np.random.rand() < prob_b else play_in2_b
+        # Round 1 Play-ins
+        win_5v8 = simulate_game(seed_order[4], seed_order[7], ratings, location="Neutral")
+        win_6v7 = simulate_game(seed_order[5], seed_order[6], ratings, location="Neutral")
 
         tracker[win_5v8]["Round 2"] += 1
         tracker[win_6v7]["Round 2"] += 1
 
-        # Round 2: #4 vs winner of 5/8, #3 vs winner of 6/7
-        r2_a, r2_b = seed_order[3], win_5v8
-        prob_r2a = PEAR_Win_Prob(ratings[r2_a], ratings[r2_b]) / 100
-        win_4 = r2_a if np.random.rand() < prob_r2a else r2_b
+        # Round 2
+        win_4 = simulate_game(seed_order[3], win_5v8, ratings, location="Neutral")
+        win_3 = simulate_game(seed_order[2], win_6v7, ratings, location="Neutral")
 
-        r2_c, r2_d = seed_order[2], win_6v7
-        prob_r2c = PEAR_Win_Prob(ratings[r2_c], ratings[r2_d]) / 100
-        win_3 = r2_c if np.random.rand() < prob_r2c else r2_d
-
-        tracker[win_4]["Make Double Elim"] += 1
-        tracker[win_3]["Make Double Elim"] += 1
-
-        # Double elimination teams: [#1, #2, win_4, win_3]
-        de_teams = [seed_order[0], seed_order[1], win_4, win_3]
-        for team in [seed_order[0], seed_order[1]]:
+        for team in [win_3, win_4, seed_order[0], seed_order[1]]:
             tracker[team]["Make Double Elim"] += 1
 
-        # Simulate double elimination bracket
-        def simulate_de(teams, ratings):
-            t = teams.copy()
-            r = ratings
-            w1 = t[0] if np.random.rand() < PEAR_Win_Prob(r[t[0]], r[t[3]]) / 100 else t[3]
-            w2 = t[1] if np.random.rand() < PEAR_Win_Prob(r[t[1]], r[t[2]]) / 100 else t[2]
-            l1 = t[3] if w1 == t[0] else t[0]
-            l2 = t[2] if w2 == t[1] else t[1]
-            w3 = l1 if np.random.rand() < PEAR_Win_Prob(r[l1], r[l2]) / 100 else l2
-            w4 = w1 if np.random.rand() < PEAR_Win_Prob(r[w1], r[w2]) / 100 else w2
-            l3 = w2 if w4 == w1 else w1
-            w5 = w3 if np.random.rand() < PEAR_Win_Prob(r[w3], r[l3]) / 100 else l3
-            prob_f = PEAR_Win_Prob(r[w4], r[w5]) / 100
-            w6 = w4 if np.random.rand() < prob_f else w5
-            return w6 if w6 == w4 else (w4 if np.random.rand() < prob_f else w5)
-        
-        winner = simulate_de(de_teams, ratings)
+        # Double elimination bracket
+        de_teams = [seed_order[0], seed_order[1], win_4, win_3]
+        bracket_result = double_elimination_bracket(de_teams, stats_and_metrics, num_simulations=1)
+        winner = max(bracket_result.items(), key=lambda x: x[1])[0]
         tracker[winner]["Win Tournament"] += 1
 
     df = pd.DataFrame.from_dict(tracker, orient="index").reset_index().rename(columns={"index": "Team"})
@@ -1428,143 +1279,73 @@ def simulate_two_playin_rounds_to_double_elim(seed_order, stats_and_metrics, num
     df["Make Double Elim"] = df["Make Double Elim"].astype(float) * 100 / num_simulations
     df["Win Tournament"] = df["Win Tournament"].astype(float) * 100 / num_simulations
 
-    for team in [seed_order[0], seed_order[1], seed_order[2], seed_order[3]]:
+    for team in seed_order[:4]:
         df.loc[df["Team"] == team, "Round 2"] = 100.0
-    for team in [seed_order[0], seed_order[1]]:
+    for team in seed_order[:2]:
         df.loc[df["Team"] == team, "Make Double Elim"] = 100.0
 
     return df
 
-def simulate_best_of_three_series(team_a, team_b, ratings):
-    """Simulate a best-of-three series with team_a as the home team."""
-    wins_a, wins_b = 0, 0
-    while wins_a < 2 and wins_b < 2:
-        prob_a = PEAR_Win_Prob(ratings[team_a], ratings[team_b], location="Home") / 100
-        if random.random() < prob_a:
-            wins_a += 1
-        else:
-            wins_b += 1
-    return team_a if wins_a == 2 else team_b
-
 def simulate_best_of_three_tournament(seed_order, stats_and_metrics, num_simulations=1000):
     assert len(seed_order) == 4, "This format requires exactly 4 teams"
 
-    rounds = ["Semifinal", "Make Final", "Win Tournament"]
-    team_stats = {team: {r: 0 for r in rounds} for team in seed_order}
-    ratings = {
-        team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].values[0]
-        for team in seed_order
-    }
+    rounds = ["Make Final", "Win Tournament"]
+    stats = {team: {r: 0 for r in rounds} for team in seed_order}
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
 
     for _ in range(num_simulations):
-        progress = {}
+        semi1 = simulate_best_of_three_series(seed_order[0], seed_order[3], ratings, "Home")
+        semi2 = simulate_best_of_three_series(seed_order[1], seed_order[2], ratings, "Home")
+        stats[semi1]["Make Final"] += 1
+        stats[semi2]["Make Final"] += 1
 
-        # Semifinal 1: #1 (home) vs #4
-        semi1_winner = simulate_best_of_three_series(seed_order[0], seed_order[3], ratings)
-        progress[seed_order[0]] = "Semifinal"
-        progress[seed_order[3]] = "Semifinal"
-        progress[semi1_winner] = "Make Final"
+        home_finalist, away_finalist = (
+            (semi1, semi2) if seed_order.index(semi1) < seed_order.index(semi2)
+            else (semi2, semi1)
+        )
+        champ = simulate_best_of_three_series(home_finalist, away_finalist, ratings, "Home")
+        stats[champ]["Win Tournament"] += 1
 
-        # Semifinal 2: #2 (home) vs #3
-        semi2_winner = simulate_best_of_three_series(seed_order[1], seed_order[2], ratings)
-        progress[seed_order[1]] = "Semifinal"
-        progress[seed_order[2]] = "Semifinal"
-        progress[semi2_winner] = "Make Final"
-
-        # Final: Higher seed is home
-        finalist_1_seed = seed_order.index(semi1_winner)
-        finalist_2_seed = seed_order.index(semi2_winner)
-        if finalist_1_seed < finalist_2_seed:
-            final_winner = simulate_best_of_three_series(semi1_winner, semi2_winner, ratings)
-        else:
-            final_winner = simulate_best_of_three_series(semi2_winner, semi1_winner, ratings)
-
-        progress[final_winner] = "Win Tournament"
-
-        # Record results
-        for team, round_reached in progress.items():
-            reached_idx = rounds.index(round_reached)
-            for i in range(reached_idx + 1):
-                team_stats[team][rounds[i]] += 1
-
-    result_df = pd.DataFrame.from_dict(team_stats, orient="index")
-    result_df = result_df.applymap(lambda x: round(100 * x / num_simulations, 1)).reset_index().rename(columns={"index": "Team"})
-    result_df = result_df.drop(columns=['Semifinal'])
-    return result_df
+    df = pd.DataFrame.from_dict(stats, orient="index").reset_index().rename(columns={"index": "Team"})
+    df.loc[:, rounds] = df[rounds].applymap(lambda x: round(100 * x / num_simulations, 1))
+    return df
 
 def simulate_two_playin_to_two_double_elim(seed_order, stats_and_metrics, num_simulations=1000):
-    def get_rating(team):
-        return stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].values[0]
-
-    def PEAR_Win_Prob(home_rating, away_rating, location="Neutral"):
-        if location == "Home":
-            home_rating += 0.8
-        rating_diff = home_rating - away_rating
-        return 1 / (1 + 10 ** (-rating_diff / 7))
-
     results = {team: {"Double Elim": 0, "Make Finals": 0, "Win Tournament": 0} for team in seed_order}
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
 
     for _ in range(num_simulations):
-        ratings = {team: get_rating(team) for team in seed_order}
 
-        # Play-in games
-        playin_7_10 = seed_order[6], seed_order[9]
-        playin_8_9 = seed_order[7], seed_order[8]
+        # Play-ins: 7 vs 10 and 8 vs 9
+        win_7v10 = simulate_game(seed_order[6], seed_order[9], ratings)
+        win_8v9 = simulate_game(seed_order[7], seed_order[8], ratings)
 
-        winner_7_10 = playin_7_10[0] if np.random.rand() < PEAR_Win_Prob(ratings[playin_7_10[0]], ratings[playin_7_10[1]]) else playin_7_10[1]
-        winner_8_9 = playin_8_9[0] if np.random.rand() < PEAR_Win_Prob(ratings[playin_8_9[0]], ratings[playin_8_9[1]]) else playin_8_9[1]
+        # Higher seed is the one earlier in seed_order
+        high_seed, low_seed = sorted([win_7v10, win_8v9], key=seed_order.index)
 
-        # Determine which play-in winner is higher seed
-        playin_winners = sorted([winner_7_10, winner_8_9], key=lambda x: seed_order.index(x))
-        high_seed, low_seed = playin_winners
+        # Assign brackets
+        bracket1 = [seed_order[0], seed_order[3], seed_order[4], high_seed]
+        bracket2 = [seed_order[1], seed_order[2], seed_order[5], low_seed]
 
-        # Assign to brackets
-        bracket1_teams = [seed_order[0], seed_order[3], seed_order[4], high_seed]
-        bracket2_teams = [seed_order[1], seed_order[2], seed_order[5], low_seed]
-
-        for t in bracket1_teams:
-            results[t]["Double Elim"] += 1
-        for t in bracket2_teams:
+        for t in bracket1 + bracket2:
             results[t]["Double Elim"] += 1
 
-        def simulate_double_elim(t1, t2, t3, t4):
-            teams = [t1, t2, t3, t4]
-            r = {team: ratings[team] for team in teams}
-
-            # Game 1: t1 vs t4
-            w1, l1 = (t1, t4) if np.random.rand() < PEAR_Win_Prob(r[t1], r[t4]) else (t4, t1)
-            # Game 2: t2 vs t3
-            w2, l2 = (t2, t3) if np.random.rand() < PEAR_Win_Prob(r[t2], r[t3]) else (t3, t2)
-            # Loser bracket: l1 vs l2
-            w3 = l1 if np.random.rand() < PEAR_Win_Prob(r[l1], r[l2]) else l2
-            # Winner's bracket: w1 vs w2
-            w4, l4 = (w1, w2) if np.random.rand() < PEAR_Win_Prob(r[w1], r[w2]) else (w2, w1)
-            # Loser bracket: w3 vs l4
-            w5 = w3 if np.random.rand() < PEAR_Win_Prob(r[w3], r[l4]) else l4
-            # Final: w4 vs w5
-            final_game_prob = PEAR_Win_Prob(r[w4], r[w5])
-            winner = w4 if np.random.rand() < final_game_prob else w5
-            if winner != w4:
-                winner = w4 if np.random.rand() < final_game_prob else w5
-            return winner
-
-        finalist_1 = simulate_double_elim(*bracket1_teams)
-        finalist_2 = simulate_double_elim(*bracket2_teams)
+        # Simulate each double elim bracket
+        bracket1 = double_elimination_bracket(bracket1, stats_and_metrics, 1)
+        bracket2 = double_elimination_bracket(bracket2, stats_and_metrics, 1)
+        finalist_1 = max(bracket1.items(), key=lambda x: x[1])[0]
+        finalist_2 = max(bracket2.items(), key=lambda x: x[1])[0]
 
         results[finalist_1]["Make Finals"] += 1
         results[finalist_2]["Make Finals"] += 1
 
-        # Championship Game (1-game final)
-        prob_final = PEAR_Win_Prob(ratings[finalist_1], ratings[finalist_2])
-        champ = finalist_1 if np.random.rand() < prob_final else finalist_2
+        champ = simulate_game(finalist_1, finalist_2, ratings)
         results[champ]["Win Tournament"] += 1
 
-    # Final formatting
-    final_df = pd.DataFrame.from_dict(results, orient="index").reset_index().rename(columns={"index": "Team"})
-    for col in ["Double Elim", "Make Finals", "Win Tournament"]:
-        final_df[col] = final_df[col].apply(lambda x: round(100 * x / num_simulations, 1))
-
-    return final_df
+    df = pd.DataFrame.from_dict(results, orient="index").reset_index().rename(columns={"index": "Team"})
+    for col in df.columns[1:]:
+        df[col] = df[col].apply(lambda x: round(100 * x / num_simulations, 1))
+    return df
 
 def get_conference_win_percentage(team, schedule_df, stats_and_metrics):
     # Map team to conference
@@ -1626,15 +1407,15 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
         seed_order = [team for team, _ in team_win_pcts[:8]]
         if conference == 'Southland':
             seed_order = ['Southeastern La.', 'UTRGV', 'Lamar University', 'Northwestern St.', 'McNeese', 'Houston Christian', 'A&M-Corpus Christi', 'New Orleans']
-        output = run_simulation(seed_order[0], seed_order[3], seed_order[4], seed_order[7], stats_and_metrics, num_simulations)
+        output = double_elimination_bracket([seed_order[0], seed_order[3], seed_order[4], seed_order[7]], stats_and_metrics, num_simulations)
         bracket_one = pd.DataFrame(list(output.items()), columns=["Team", "Win Regional"])
-        output = run_simulation(seed_order[1], seed_order[2], seed_order[5], seed_order[6], stats_and_metrics, num_simulations)
+        output = double_elimination_bracket([seed_order[1], seed_order[2], seed_order[5], seed_order[6]], stats_and_metrics, num_simulations)
         bracket_two = pd.DataFrame(list(output.items()), columns=["Team", "Win Regional"])
         championship_results = simulate_overall_tournament(
             bracket_one.set_index("Team")["Win Regional"].to_dict(),
             bracket_two.set_index("Team")["Win Regional"].to_dict(),
             stats_and_metrics,
-            num_simulations=1000
+            num_simulations=num_simulations
         )
         championship_df = pd.DataFrame(list(championship_results.items()), columns=["Team", "Win Tournament"])
         regional_results = pd.concat([bracket_one.set_index("Team"), bracket_two.set_index("Team")], axis=0)
@@ -1650,11 +1431,11 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
         fig = plot_tournament_odds_table(final_df, 1, conference, 0.057, 0.052, 0.1)
     elif conference in ['America East', 'Mountain West', 'West Coast']:
         seed_order = [team for team, _ in team_win_pcts[:6]]
-        final_df = run_hybrid_tournament(seed_order, stats_and_metrics, num_simulations=1000)
+        final_df = two_playin_games_to_four_team_double_elimination(seed_order, stats_and_metrics, num_simulations=1000)
         fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.134, 0.122, 0.3)
     elif conference == 'ASUN':
         seed_order = [team for team, _ in team_win_pcts[:8]]
-        final_df = run_8_team_double_elim(seed_order, stats_and_metrics)
+        final_df = simulate_and_run_8_team_double_elim(seed_order, stats_and_metrics)
         fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.115, 0.105, 0.2)
     elif conference == "Atlantic 10":
         seed_order = [team for team, _ in team_win_pcts[:7]]
@@ -1664,7 +1445,7 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
         seed_order = [team for team, _ in team_win_pcts[:4]]
         if conference == 'Ivy League':
             seed_order = ['Yale', 'Columbia', 'Penn', 'Harvard']
-        output = run_simulation(seed_order[0], seed_order[1], seed_order[2], seed_order[3], stats_and_metrics, num_simulations)
+        output = double_elimination_bracket([seed_order[0], seed_order[1], seed_order[2], seed_order[3]], stats_and_metrics, num_simulations)
         final_df = pd.DataFrame(list(output.items()), columns=["Team", "Win Tournament"])
         final_df["Win Tournament"] = final_df["Win Tournament"] * 100
         fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.143, 0.12, 0.4)
@@ -1694,7 +1475,6 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
         fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.113, 0.103, 0.2)
     elif conference == 'Patriot League':
         seed_order = [team for team, _ in team_win_pcts[:4]]
-        seed_order = ["Holy Cross", "Navy", "Army West Point", "Lehigh"]
         final_df = simulate_best_of_three_tournament(seed_order, stats_and_metrics, 1000)
         fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.17, 0.15, 0.5)
     elif conference == 'Sun Belt':
