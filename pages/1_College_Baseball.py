@@ -1507,6 +1507,8 @@ def simulate_conference_tournaments(schedule_df, stats_and_metrics, num_simulati
         fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.082, 0.075, 0.1)
     elif conference == 'Big West':
         seed_order = [team for team, _ in team_win_pcts[:5]]
+        if conference == 'Big West':
+            seed_order = ['UC Irvine', 'Cal Poly', 'Cal St. Fullerton', 'UC Santa Barbara', 'Hawaii']
         final_df = simulate_playin_double_elim(seed_order, stats_and_metrics)
         fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.16, 0.14, 0.4)
     elif conference in ['MAAC', 'Southern', 'Western Athletic']:
