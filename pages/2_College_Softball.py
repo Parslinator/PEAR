@@ -170,7 +170,7 @@ def find_spread(home_team, away_team, location = 'Neutral'):
     else:
         return f"{away_team} {spread}"
     
-def find_spread_matchup(home_team, away_team, modeling_stats, location = 'Neutral'):
+def find_spread_matchup(home_team, away_team, modeling_stats, location):
     home_pr = modeling_stats.loc[modeling_stats['Team'] == home_team, 'Rating']
     away_pr = modeling_stats.loc[modeling_stats['Team'] == away_team, 'Rating']
     home_elo = modeling_stats.loc[modeling_stats['Team'] == home_team, 'ELO']
@@ -186,8 +186,7 @@ def find_spread_matchup(home_team, away_team, modeling_stats, location = 'Neutra
     #     rating_diff = home_pr + 0.5 - away_pr
     # else:
     #     rating_diff = home_pr - away_pr
-    rating_diff = home_pr - away_pr
-    win_prob = round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
+    win_prob = PEAR_Win_Prob(home_pr, away_pr, location) / 100
 
     if spread >= 0:
         return f"{home_team} -{spread}", win_prob
