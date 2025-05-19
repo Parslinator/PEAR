@@ -186,7 +186,7 @@ def find_spread_matchup(home_team, away_team, modeling_stats, location):
     #     rating_diff = home_pr + 0.5 - away_pr
     # else:
     #     rating_diff = home_pr - away_pr
-    win_prob = PEAR_Win_Prob(home_pr, away_pr, location) / 100
+    win_prob = PEAR_Win_Prob(home_pr, away_pr, location)
 
     if spread >= 0:
         return f"{home_team} -{spread}", win_prob
