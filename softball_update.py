@@ -243,7 +243,7 @@ def get_stat_dataframe(stat_name):
     page_num = 1
     headers = None  # Only set once
 
-    while True:
+    while page_num < 10:
         url = stat_links[stat_name]
         if page_num > 1:
             url = f"{url}/p{page_num}"
