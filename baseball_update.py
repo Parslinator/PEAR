@@ -355,6 +355,7 @@ def clean_and_merge(stats_raw, transforms_dict):
     for stat, df in stats_raw.items():
         if df is not None and stat in transforms_dict:
             df["Team"] = df["Team"].str.strip()
+            df = df.dropna(subset=["Team"])
             df_clean = transforms_dict[stat](df)
             dfs.append(df_clean)
 
@@ -441,6 +442,7 @@ dfs = []
 for stat, df in raw_woba_stats.items():
     if df is not None and stat in STAT_TRANSFORMS_WOBA:
         df["Team"] = df["Team"].str.strip()
+        df = df.dropna(subset=["Team"])
         dfs.append(STAT_TRANSFORMS_WOBA[stat](df))
 
 # Merge all together
