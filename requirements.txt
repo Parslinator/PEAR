@@ -1,4 +1,4 @@
-cfbd==4.5.2
+cfbd
 openpyxl
 scikit-learn
 matplotlib==3.9.2

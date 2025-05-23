@@ -4,6 +4,11 @@ from tqdm import tqdm # type: ignore
 import matplotlib.pyplot as plt # type: ignore
 import requests # type: ignore
 from PIL import Image # type: ignore
+from scipy.stats import norm # type: ignore
+import requests
+from PIL import Image
+from io import BytesIO
+from concurrent.futures import ThreadPoolExecutor, as_completed # type: ignore
 from io import BytesIO # type: ignore
 from matplotlib.lines import Line2D # type: ignore
 import cfbd # type: ignore
@@ -39,9 +44,12 @@ checkmark_font = fm.FontProperties(family='DejaVu Sans')
 warnings.filterwarnings("ignore")
 np.random.seed(42)
 
-configuration = cfbd.Configuration()
-configuration.api_key['Authorization'] = '7vGedNNOrnl0NGcSvt92FcVahY602p7IroVBlCA1Tt+WI/dCwtT7Gj5VzmaHrrxS'
-configuration.api_key_prefix['Authorization'] = 'Bearer'
+configuration = cfbd.Configuration(
+    access_token = '7vGedNNOrnl0NGcSvt92FcVahY602p7IroVBlCA1Tt+WI/dCwtT7Gj5VzmaHrrxS'
+)
+# configuration = cfbd.Configuration()
+# configuration.api_key['Authorization'] = '7vGedNNOrnl0NGcSvt92FcVahY602p7IroVBlCA1Tt+WI/dCwtT7Gj5VzmaHrrxS'
+# configuration.api_key_prefix['Authorization'] = 'Bearer'
 api_client = cfbd.ApiClient(configuration)
 advanced_instance = cfbd.StatsApi(api_client)
 games_api = cfbd.GamesApi(api_client)
@@ -98,8 +106,7 @@ print(f"Current Week: {current_week}, Current Year: {current_year}")
 print("Double Check The Current Week To Make Sure It Is Correct")
 
 def date_sort(game):
-    game_date = datetime.datetime.strptime(game['start_date'], "%Y-%m-%dT%H:%M:%S.000Z")
-    return game_date
+    return game['start_date']
 
 def PEAR_Win_Prob(home_power_rating, away_power_rating):
     return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
@@ -188,11 +195,10 @@ def average_team_distribution(num_simulations, schedules, average, team_name):
     win_thresholds = analyze_simulation_average(avg_win, avg_loss,schedules)
     return win_thresholds
 
-
 if postseason:
-    elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year)]
+    elo_ratings_list = [*ratings_api.get_elo(year=current_year)]
 else:
-    elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week)]
+    elo_ratings_list = [*ratings_api.get_elo(year=current_year, week=current_week)]
 elo_ratings_dict = [dict(
     team = e.team,
     elo = e.elo
@@ -200,20 +206,20 @@ elo_ratings_dict = [dict(
 elo_ratings = pd.DataFrame(elo_ratings_dict)
 
 # returning production
-production_list = []
-response = players_api.get_returning_production(year = current_year)
-production_list = [*production_list, *response]
-production_dict = [dict(
-    season=r.season,
-    team=r.team,
-    returning_ppa=r.percent_ppa,
-    returning_usage=r.usage
-) for r in production_list]
-returning_production = pd.DataFrame(production_dict)
+# production_list = []
+# response = players_api.get_returning_production(year = current_year)
+# production_list = [*production_list, *response]
+# production_dict = [dict(
+#     season=r.season,
+#     team=r.team,
+#     returning_ppa=r.percent_ppa,
+#     returning_usage=r.usage
+# ) for r in production_list]
+# returning_production = pd.DataFrame(production_dict)
 
 # team records
 records_list = []
-response = games_api.get_team_records(year=current_year)
+response = games_api.get_records(year=current_year)
 records_list = [*records_list, *response]
 records_dict = [dict(
     team = r.team,
@@ -225,22 +231,26 @@ records_dict = [dict(
     conference_losses = r.conference_games.losses
 ) for r in records_list]
 records = pd.DataFrame(records_dict)
+records.at[records[records['team'] == 'Kansas State'].index[0], 'conference_wins'] -= 1
+records.at[records[records['team'] == 'Utah'].index[0], 'conference_wins'] -= 1
+records.at[records[records['team'] == 'Baylor'].index[0], 'conference_losses'] -= 1
+records.at[records[records['team'] == 'Arizona'].index[0], 'conference_losses'] -= 1
 
 # qb ppa
 qb_ppa_list = []
-response = metrics_api.get_player_season_ppa(year=current_year, position = 'QB', threshold = 10)
+response = metrics_api.get_predicted_points_added_by_player_season(year=current_year, position = 'QB', threshold = 10)
 qb_ppa_list = [*qb_ppa_list, *response]
 qb_ppa_dict = [dict(
     team = q.team,
-    qb_average_ppa = q.average_ppa._pass,
-    qb_total_ppa = q.total_ppa._pass
+    qb_average_ppa = q.average_ppa.all,
+    qb_total_ppa = q.total_ppa.all
 ) for q in qb_ppa_list]
 qb_ppa = pd.DataFrame(qb_ppa_dict)
 qb_ppa = qb_ppa.groupby('team', as_index=False).mean()
 
 # fpi ranks
 team_fpi_list = []
-response = ratings_api.get_fpi_ratings(year = current_year)
+response = ratings_api.get_fpi(year = current_year)
 team_fpi_list = [*team_fpi_list, *response]
 team_fpi_dict = [dict(
     team = f.team,
@@ -256,7 +266,7 @@ team_fpi = pd.DataFrame(team_fpi_dict)
 
 # srs ranks
 team_srs_list = []
-response = ratings_api.get_srs_ratings(year = current_year)
+response = ratings_api.get_srs(year = current_year)
 team_srs_list = [*team_srs_list, *response]
 team_srs_dict = [dict(
     team = f.team,
@@ -267,7 +277,7 @@ team_srs = pd.DataFrame(team_srs_dict).dropna().drop_duplicates()
 
 # sp ranks
 team_sp_list = []
-response = ratings_api.get_sp_ratings(year=current_year)
+response = ratings_api.get_sp(year=current_year)
 team_sp_list = [*team_sp_list, *response]
 team_sp_dict = [dict(
     team = t.team,
@@ -283,7 +293,7 @@ logos_info_list = [*logos_info_list, *response]
 logos_info_dict = [dict(
     team = l.school,
     color = l.color,
-    alt_color = l.alt_color,
+    alt_color = l.alternate_color,
     logo = l.logos
 ) for l in logos_info_list]
 logos_info = pd.DataFrame(logos_info_dict)
@@ -291,7 +301,7 @@ logos_info = logos_info.dropna(subset=['logo', 'color'])
 
 # advanced metrics
 advanced_metrics_response = []
-response = advanced_instance.get_advanced_team_season_stats(year = current_year)
+response = advanced_instance.get_advanced_season_stats(year = current_year)
 advanced_metrics_response = [*advanced_metrics_response, *response]
 advanced_metrics = pd.DataFrame()
 def flatten_dict(d, parent_key='', sep='_'):
@@ -315,16 +325,16 @@ for i in range(len(advanced_metrics_response)):
     }
     df = pd.DataFrame([combined_data])
     advanced_metrics = pd.concat([advanced_metrics, df], ignore_index=True)
-columns_to_keep = ['team', 'Offense_success_rate', 'Defense_success_rate', 
-                'Offense_explosiveness', 'Defense_explosiveness', 'Offense_ppa', 'Offense_power_success', 'Offense_stuff_rate', 'Defense_power_success', 'Defense_stuff_rate',
-                'Defense_ppa', 'Offense_points_per_opportunity', 'Defense_points_per_opportunity', 'Defense_havoc_total', 
-                'Offense_field_position_average_predicted_points', 'Defense_field_position_average_predicted_points',
-                'Offense_field_position_average_start', 'Defense_field_position_average_start']
+columns_to_keep = ['team', 'Offense_explosiveness', 'Defense_explosiveness', 'Offense_ppa', 'Defense_ppa', 'Defense_havoc_total',
+                   'Offense_successRate','Defense_successRate','Offense_powerSuccess','Defense_powerSuccess',
+                   'Offense_stuffRate','Defense_stuffRate','Offense_pointsPerOpportunity','Defense_pointsPerOpportunity',
+                   'Offense_fieldPosition_averagePredictedPoints','Defense_fieldPosition_averagePredictedPoints',
+                   'Offense_fieldPosition_averageStart','Defense_fieldPosition_averageStart']
 metrics = advanced_metrics[columns_to_keep]
 
 # conference sp
 conference_sp = []
-response = ratings_api.get_conference_sp_ratings(year=current_year)
+response = ratings_api.get_conference_sp(year=current_year)
 conference_sp = [*conference_sp, *response]
 
 sp_conf = [dict(
@@ -336,12 +346,12 @@ conference_sp_rating = pd.DataFrame(sp_conf)
 
 # team stats
 team_stats_list = []
-response = advanced_instance.get_team_season_stats(year=current_year)
+response = advanced_instance.get_team_stats(year=current_year)
 team_stats_list = [*team_stats_list, *response]
 team_stats_dict = [dict(
     team = s.team,
     stat_name = s.stat_name,
-    stat_value = s.stat_value
+    stat_value = s.stat_value.actual_instance
 ) for s in team_stats_list]
 team_stats = pd.DataFrame(team_stats_dict)
 team_stats = team_stats.pivot(index='team', columns='stat_name', values='stat_value').reset_index().fillna(0)
@@ -356,7 +366,7 @@ for year in range(current_year-3, current_year+1):
     response = teams_api.get_talent(year=year)
     talent_list = [*talent_list, *response]
 talent_dict = [dict(
-    team=t.school,
+    team=t.team,
     season=t.year,
     talent=t.talent
 ) for t in talent_list]
@@ -373,7 +383,7 @@ team_info = pd.DataFrame(team_dict)
 # team recruiting
 recruiting_info_list = []
 for year in range(current_year-3, current_year+1):
-    response = recruiting_api.get_recruiting_teams(year=year)
+    response = recruiting_api.get_team_recruiting_rankings(year=year)
     recruiting_info_list = [*recruiting_info_list, *response]
 recruiting_info_dict = [dict(
     team = r.team,
@@ -411,6 +421,7 @@ mask = team_data['team'].isin(target_teams)
 team_data.loc[mask, 'avg_talent'] = team_data.loc[mask, 'team'].map(
     recruiting_per_team.set_index('team')['avg_points']
 )
+team_data = team_data.drop_duplicates(subset=["team"]).reset_index(drop=True)
 
 print("Data Formatting Done")
 print("Starting Optimization")
@@ -435,33 +446,33 @@ team_data['sp_conf_scaled'] = scaler10.fit_transform(team_data[['sp_conf_rating'
 team_data['total_turnovers_scaled'] = scalerTurnovers.fit_transform(team_data[['total_turnovers']])
 team_data['possession_scaled'] = scaler100.fit_transform(team_data[['possessionTimeMinutes']])
 team_data['third_down_scaled'] = scalerThirdDown.fit_transform(team_data[['thirdDownConversionRate']])
-team_data['offense_avg_field_position_scaled'] = -1*scalerAvgFieldPosition.fit_transform(team_data[['Offense_field_position_average_start']])
-team_data['defense_avg_field_position_scaled'] = scalerAvgFieldPosition.fit_transform(team_data[['Defense_field_position_average_start']])
-team_data['offense_ppo_scaled'] = scalerPPO.fit_transform(team_data[['Offense_points_per_opportunity']])
-team_data['offense_success_scaled'] = scaler100.fit_transform(team_data[['Offense_success_rate']])
+team_data['offense_avg_field_position_scaled'] = -1*scalerAvgFieldPosition.fit_transform(team_data[['Offense_fieldPosition_averageStart']])
+team_data['defense_avg_field_position_scaled'] = scalerAvgFieldPosition.fit_transform(team_data[['Defense_fieldPosition_averageStart']])
+team_data['offense_ppo_scaled'] = scalerPPO.fit_transform(team_data[['Offense_pointsPerOpportunity']])
+team_data['offense_success_scaled'] = scaler100.fit_transform(team_data[['Offense_successRate']])
 team_data['offense_explosive'] = scaler100.fit_transform(team_data[['Offense_explosiveness']])
 team_data['talent_scaled'] = scalerTalent.fit_transform(team_data[['avg_talent']])
 
-def_ppo_min = team_data['Defense_points_per_opportunity'].min()
-def_ppo_max = team_data['Defense_points_per_opportunity'].max()
-team_data['defense_ppo_scaled'] = 100 - (team_data['Defense_points_per_opportunity'] - def_ppo_min) * 99 / (def_ppo_max - def_ppo_min)
+def_ppo_min = team_data['Defense_pointsPerOpportunity'].min()
+def_ppo_max = team_data['Defense_pointsPerOpportunity'].max()
+team_data['defense_ppo_scaled'] = 100 - (team_data['Defense_pointsPerOpportunity'] - def_ppo_min) * 99 / (def_ppo_max - def_ppo_min)
 
 pen_min = team_data['penaltyYards'].min()
 pen_max = team_data['penaltyYards'].max()
 team_data['penalties_scaled'] = 100 - (team_data['penaltyYards'] - pen_min) * 99 / (pen_max - pen_min)
 
-off_field_min = team_data['Offense_field_position_average_start'].min()
-off_field_max = team_data['Offense_field_position_average_start'].max()
-team_data['offense_avg_field_position_scaled'] = 100 - (team_data['Offense_field_position_average_start'] - off_field_min) * 99 / (off_field_max - off_field_min)
+off_field_min = team_data['Offense_fieldPosition_averageStart'].min()
+off_field_max = team_data['Offense_fieldPosition_averageStart'].max()
+team_data['offense_avg_field_position_scaled'] = 100 - (team_data['Offense_fieldPosition_averageStart'] - off_field_min) * 99 / (off_field_max - off_field_min)
 
 team_data['offense_ppa_scaled'] = scaler100.fit_transform(team_data[['Offense_ppa']])
 ppa_min = team_data['Defense_ppa'].min()
 ppa_max = team_data['Defense_ppa'].max()
 team_data['defense_ppa_scaled'] = 100 - (team_data['Defense_ppa'] - ppa_min) * 99 / (ppa_max - ppa_min)
 
-success_min = team_data['Defense_success_rate'].min()
-success_max = team_data['Defense_success_rate'].max()
-team_data['defense_success_scaled'] = 100 - (team_data['Defense_success_rate'] - success_min) * 99 / (success_max - success_min)
+success_min = team_data['Defense_successRate'].min()
+success_max = team_data['Defense_successRate'].max()
+team_data['defense_success_scaled'] = 100 - (team_data['Defense_successRate'] - success_min) * 99 / (success_max - success_min)
 
 explosiveness_min = team_data['Defense_explosiveness'].min()
 explosiveness_max = team_data['Defense_explosiveness'].max()
@@ -494,8 +505,8 @@ from sklearn.preprocessing import MinMaxScaler
 from scipy.optimize import differential_evolution
 
 # --- SETUP COLUMN GROUPS ---
-offensive_columns = ['Offense_success_rate', 'Offense_explosiveness', 'Offense_ppa','Offense_points_per_opportunity']
-defensive_columns = ['Defense_success_rate', 'Defense_explosiveness', 'Defense_ppa','Defense_points_per_opportunity']
+offensive_columns = ['Offense_successRate', 'Offense_explosiveness', 'Offense_ppa','Offense_pointsPerOpportunity']
+defensive_columns = ['Defense_successRate', 'Defense_explosiveness', 'Defense_ppa','Defense_pointsPerOpportunity']
 features_all = offensive_columns + defensive_columns + ['avg_talent', 'thirdDownConversionRate', 'total_turnovers', 'in_house_pr']
 
 # --- SCALING FUNCTION ---
@@ -597,8 +608,8 @@ team_data['PBR_rank'] = team_data['PBR'].rank(method='min', ascending=True)
 team_data['STM'] = (
     (team_data['kickReturnYards'] / team_data['kickReturns']) +
     (team_data['puntReturnYards'] / team_data['puntReturns']) -
-    team_data['Offense_field_position_average_start'] +
-    team_data['Defense_field_position_average_start']
+    team_data['Offense_fieldPosition_averageStart'] +
+    team_data['Defense_fieldPosition_averageStart']
 )
 team_data['STM_rank'] = team_data['STM'].rank(method='min', ascending=False)
 
@@ -670,10 +681,10 @@ start_week = 1
 end_week = 17
 games_list = []
 for week in range(start_week, end_week):
-    response = games_api.get_games(year=current_year, week=week, division='fbs')
+    response = games_api.get_games(year=current_year, week=week, classification='fbs')
     games_list.extend(response)
 if postseason:
-    response = games_api.get_games(year=current_year, division='fbs', season_type='postseason')
+    response = games_api.get_games(year=current_year, classification='fbs', season_type='postseason')
     games_list.extend(response)
 
 games = [
@@ -688,6 +699,17 @@ games = [
 ]
 
 games.sort(key=date_sort)
+
+schedule_info = pd.DataFrame(games)
+schedule_info = schedule_info.merge(team_data[['team', 'power_rating']], left_on='home_team', right_on='team', how='left') \
+                                .rename(columns={'power_rating': 'home_pr'}).drop(columns='team')
+schedule_info = schedule_info.merge(team_data[['team', 'power_rating']], left_on='away_team', right_on='team', how='left') \
+                                .rename(columns={'power_rating': 'away_pr'}).drop(columns='team')
+
+schedule_info['PEAR_win_prob'] = PEAR_Win_Prob(schedule_info['home_pr'], schedule_info['away_pr'])
+schedule_info['home_win_prob'] = round((10 ** ((schedule_info['home_elo'] - schedule_info['away_elo']) / 400)) /
+                                        (1 + 10 ** ((schedule_info['home_elo'] - schedule_info['away_elo']) / 400)) * 100, 2)
+
 year_long_schedule = pd.DataFrame(games)
 
 # --- Merge power ratings ---
@@ -770,40 +792,68 @@ SOR = SOR.sort_values('wins_above_good', ascending=False).reset_index(drop=True)
 SOR['SOR'] = SOR.index + 1
 print("SOR Calculation Done")
 
+num_12_pr = team_data['power_rating'].iloc[11]
+completed_games = year_long_schedule[year_long_schedule['home_points'].notna()]
+completed_games['margin_of_victory'] = completed_games['home_points'] - completed_games['away_points']
+std_dev = completed_games['margin_of_victory'].abs().std()
+
+team_probabilities = []
+for team in team_data['team']:
+    games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
+    total_prob = 0
+
+    for _, g in games.iterrows():
+        home, away = g['home_team'], g['away_team']
+        mov = g['margin_of_victory']
+        home_pr = team_data.loc[team_data['team'] == home, 'power_rating'].values[0]
+        away_pr = team_data.loc[team_data['team'] == away, 'power_rating'].values[0]
+
+        if team == home:
+            expected = 4.6 + home_pr - away_pr
+        else:
+            expected = away_pr - (home_pr + 4.6)
+            mov = -mov
+
+        z = (mov - expected) / std_dev
+        prob = norm.cdf(z) - 0.5
+        total_prob += prob
+
+    team_probabilities.append({'team': team, 'RTP': 10 + 10 * (total_prob / len(games))})
+
+RTP = pd.DataFrame(team_probabilities).sort_values('RTP', ascending=False)
+print("RTP Prep Done!")
+
 # --- Most Deserving Calculation ---
 num_12_pr = team_data['power_rating'].iloc[11]
-
-def f(mov):
-    return np.clip(np.log(np.abs(mov) + 1) * np.sign(mov), -10, 10)
-
+completed_games = year_long_schedule[year_long_schedule['home_points'].notna()]
 completed_games['margin_of_victory'] = completed_games['home_points'] - completed_games['away_points']
+f = lambda mov: np.clip(np.log1p(np.abs(mov)) * np.sign(mov), -10, 10)
 
-def calc_deserving(team):
-    games_played = records.loc[records['team'] == team, 'games_played'].values[0]
+relative_xWins = []
+for team in team_data['team']:
+    games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
+    gp = records.loc[records['team'] == team, 'games_played'].values[0]
     wins = records.loc[records['team'] == team, 'wins'].values[0]
-    team_games = completed_games[(completed_games['home_team'] == team) |
-                                 (completed_games['away_team'] == team)].copy()
 
-    mov_adj = f(team_games['margin_of_victory'])
+    games['avg_win_prob'] = np.where(
+        games['home_team'] == team,
+        PEAR_Win_Prob(num_12_pr, games['away_pr']) + f(games['margin_of_victory']),
+        100 - PEAR_Win_Prob(games['home_pr'], num_12_pr) - f(-games['margin_of_victory'])
+    )
 
-    home_probs = PEAR_Win_Prob_vectorized(num_12_pr, team_games['away_pr']) + mov_adj
-    away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_pr'], num_12_pr) - mov_adj
-    team_games['adj_win_prob'] = np.where(team_games['home_team'] == team, home_probs, away_probs)
+    xWins = games['avg_win_prob'].sum() / 100
+    if gp != len(games): xWins += 1
+    relative_xWins.append(round(wins - xWins, 3))
 
-    xWins = round(team_games['adj_win_prob'].sum() / 100, 3)
-    if games_played != len(team_games):
-        xWins += 1
-    return round(wins - xWins, 3)
-
-deserving_results = Parallel(n_jobs=-1)(delayed(calc_deserving)(team) for team in team_data['team'])
-most_deserving = pd.DataFrame({'team': team_data['team'], 'most_deserving_wins': deserving_results})
+most_deserving = pd.DataFrame({'team': team_data['team'], 'most_deserving_wins': relative_xWins})
 most_deserving = most_deserving.sort_values('most_deserving_wins', ascending=False).reset_index(drop=True)
-most_deserving['most_deserving'] = most_deserving.index + 1
+most_deserving['Performance'] = most_deserving.index + 1
 print("Most Deserving Calculation Done")
 
 team_data = pd.merge(team_data, SOS, how='left', on='team')
 team_data = pd.merge(team_data, SOR, how='left', on='team')
 team_data = pd.merge(team_data, most_deserving, how='left', on='team')
+team_data = pd.merge(team_data, elo_ratings, how='left', on='team')
 
 folder_path = f"./PEAR/PEAR Football/y{current_year}/Data"
 os.makedirs(folder_path, exist_ok=True)
@@ -814,64 +864,10 @@ os.makedirs(folder_path, exist_ok=True)
 folder_path = f"./PEAR/PEAR Football/y{current_year}/Spreads"
 os.makedirs(folder_path, exist_ok=True)
 
-team_data.to_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}_no_adjustments.csv")
-team_power_rankings.to_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}_no_adjustments.csv')
+team_data.to_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}.csv")
+team_power_rankings.to_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv')
 
 print("---------- Power Ratings Done! ----------")
-
-configuration = cfbd.Configuration()
-configuration.api_key['Authorization'] = '7vGedNNOrnl0NGcSvt92FcVahY602p7IroVBlCA1Tt+WI/dCwtT7Gj5VzmaHrrxS'
-configuration.api_key_prefix['Authorization'] = 'Bearer'
-api_client = cfbd.ApiClient(configuration)
-advanced_instance = cfbd.StatsApi(api_client)
-games_api = cfbd.GamesApi(api_client)
-betting_api = cfbd.BettingApi(api_client)
-ratings_api = cfbd.RatingsApi(api_client)
-teams_api = cfbd.TeamsApi(api_client)
-metrics_api = cfbd.MetricsApi(api_client)
-players_api = cfbd.PlayersApi(api_client)
-recruiting_api = cfbd.RecruitingApi(api_client)
-response = teams_api.get_teams()
-
-current_time = datetime.datetime.now(pytz.UTC)
-if current_time.month < 6:
-    calendar_year = current_time.year - 1
-else:
-    calendar_year = current_time.year
-week_start_list = [*games_api.get_calendar(year = calendar_year)]
-calendar_dict = [dict(
-    first_game_start = c.first_game_start,
-    last_game_start = c.last_game_start,
-    season = c.season,
-    season_type = c.season_type,
-    week = c.week
-) for c in week_start_list]
-calendar = pd.DataFrame(calendar_dict)
-calendar['first_game_start'] = pd.to_datetime(calendar['first_game_start'])
-calendar['last_game_start'] = pd.to_datetime(calendar['last_game_start'])
-current_year = int(calendar.loc[0, 'season'])
-
-first_game_start = calendar['first_game_start'].iloc[0]
-last_game_start = calendar['last_game_start'].iloc[-1]
-current_week = None
-if current_time < first_game_start:
-    current_week = 1
-    postseason = False
-elif current_time > last_game_start:
-    current_week = calendar.iloc[-2, -1] + 1
-    postseason = True
-else:
-    condition_1 = (calendar['first_game_start'] <= current_time) & (calendar['last_game_start'] >= current_time)
-    condition_2 = (calendar['last_game_start'].shift(1) < current_time) & (calendar['first_game_start'] > current_time)
-
-    # Combine conditions
-    result = calendar[condition_1 | condition_2].reset_index(drop=True)
-    if result['season_type'][0] == 'regular':
-        current_week = result['week'][0]
-        postseason = False
-    else:
-        current_week = calendar.iloc[-2, -1] + 1
-        postseason = True
 
 current_year = int(current_year)
 current_week = int(current_week)
@@ -884,53 +880,19 @@ conf_folder_path = f"./PEAR/PEAR Football/y{current_year}/Visuals/week_{current_
 os.makedirs(conf_folder_path, exist_ok=True)
 
 logos_info_list = []
+response = teams_api.get_teams()
 logos_info_list = [*logos_info_list, *response]
 logos_info_dict = [dict(
     team = l.school,
     color = l.color,
-    alt_color = l.alt_color,
+    alt_color = l.alternate_color,
     logo = l.logos
 ) for l in logos_info_list]
 logos = pd.DataFrame(logos_info_dict)
 logos = logos.dropna(subset=['logo', 'color'])
 
-if postseason == True:
-    elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year)]
-    elo_ratings_dict = [dict(
-        team = e.team,
-        elo = e.elo
-    ) for e in elo_ratings_list]
-    elo_ratings = pd.DataFrame(elo_ratings_dict)
-else:
-    elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week)]
-    elo_ratings_dict = [dict(
-        team = e.team,
-        elo = e.elo
-    ) for e in elo_ratings_list]
-    elo_ratings = pd.DataFrame(elo_ratings_dict)
-
-print("Elo Prep Done!")
-
-records_list = []
-response = games_api.get_team_records(year=current_year)
-records_list = [*records_list, *response]
-records_dict = [dict(
-    team = r.team,
-    games_played = r.total.games,
-    wins = r.total.wins,
-    losses = r.total.losses,
-    conference_games = r.conference_games.games,
-    conference_wins = r.conference_games.wins,
-    conference_losses = r.conference_games.losses
-) for r in records_list]
-records = pd.DataFrame(records_dict)
-records.at[records[records['team'] == 'Kansas State'].index[0], 'conference_wins'] -= 1
-records.at[records[records['team'] == 'Utah'].index[0], 'conference_wins'] -= 1
-records.at[records[records['team'] == 'Baylor'].index[0], 'conference_losses'] -= 1
-records.at[records[records['team'] == 'Arizona'].index[0], 'conference_losses'] -= 1
-print("Records Prep Done!")
-all_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}.csv")
-team_data = pd.read_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv')
+all_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}_no_adjustments.csv")
+team_data = pd.read_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}_no_adjustments.csv')
 
 start_season_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv")
 if os.path.exists(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week-1}.csv"):
@@ -948,13 +910,28 @@ while week_to_check <= current_week:
         break    
     week_to_check += 1
 
+# Unique list of teams from your main dataset
+unique_teams = all_data['team'].unique()
 
-def date_sort(game):
-    game_date = datetime.datetime.strptime(game['start_date'], "%Y-%m-%dT%H:%M:%S.000Z")
-    return game_date
+# Function to fetch a team's logo using the logos DataFrame
+def fetch_logo(team):
+    try:
+        logo_url = logos.loc[logos['team'] == team, 'logo'].values[0][0]
+        response = requests.get(logo_url, timeout=10)
+        img = Image.open(BytesIO(response.content))
+        return team, img
+    except Exception as e:
+        print(f"Error loading logo for {team}: {e}")
+        return team, None
 
-def PEAR_Win_Prob(home_power_rating, away_power_rating):
-    return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
+# Use ThreadPoolExecutor to download in parallel
+team_logos = {}
+with ThreadPoolExecutor(max_workers=10) as executor:
+    futures = [executor.submit(fetch_logo, team) for team in unique_teams]
+    for future in as_completed(futures):
+        team, img = future.result()
+        if img:
+            team_logos[team] = img
 
 def best_and_worst(all_data, logos, metric, title, subtitle, visual_name):
     if metric == 'average_metric_rank':
@@ -984,9 +961,7 @@ def best_and_worst(all_data, logos, metric, title, subtitle, visual_name):
         for j in range(5):  
             ax = axs[i, j]
             team = top_25_best.loc[i*5 + j, 'team']
-            logo_url = logos[logos['team'] == team]['logo'].values[0][0]
-            response = requests.get(logo_url)
-            img = Image.open(BytesIO(response.content))
+            img = team_logos[team]
             ax.imshow(img)
             ax.set_facecolor('#f0f0f0')
             # ax.set_title(f"#{i*5 + j + 1} {team} \n{round(top_25_best.loc[i*5 + j, metric], 1)}", fontsize=8, fontweight='bold')
@@ -997,9 +972,7 @@ def best_and_worst(all_data, logos, metric, title, subtitle, visual_name):
         for j in range(5, 10):  
             ax = axs[i, j]
             team = top_25_worst.loc[i*5 + (j-5), 'team']
-            logo_url = logos[logos['team'] == team]['logo'].values[0][0]
-            response = requests.get(logo_url)
-            img = Image.open(BytesIO(response.content))
+            img = team_logos[team]
             ax.imshow(img)
             ax.set_facecolor('#f0f0f0')
             
@@ -1131,9 +1104,7 @@ def best_and_worst2(all_data, logos, metric, title, subtitle, visual_name):
         for j in range(5):  
             ax = axs[i, j]
             team = top_25_best.loc[i*5 + j, 'team']
-            logo_url = logos[logos['team'] == team]['logo'].values[0][0]
-            response = requests.get(logo_url)
-            img = Image.open(BytesIO(response.content))
+            img = team_logos[team]
             ax.imshow(img)
             ax.set_facecolor('#f0f0f0')
             ax.set_title(f"#{i*5 + j + 1} \n{round(top_25_best.loc[i*5 + j, metric], rounding)}", fontsize=14, fontweight='bold')
@@ -1143,9 +1114,7 @@ def best_and_worst2(all_data, logos, metric, title, subtitle, visual_name):
         for j in range(5, 10):  
             ax = axs[i, j]
             team = top_25_worst.loc[i*5 + (j-5), 'team']
-            logo_url = logos[logos['team'] == team]['logo'].values[0][0]
-            response = requests.get(logo_url)
-            img = Image.open(BytesIO(response.content))
+            img = team_logos[team]
             ax.imshow(img)
             ax.set_facecolor('#f0f0f0')
             
@@ -1550,22 +1519,8 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
         # Fallback (should not reach here)
         return '#000000'
 
-    def grab_team_elo(team):
-        if postseason == True:
-            elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, team=team)]
-            elo_ratings_dict = [dict(
-                team=e.team,
-                elo=e.elo
-            ) for e in elo_ratings_list]
-            elo_ratings = pd.DataFrame(elo_ratings_dict)
-        else:
-            elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week, team=team)]
-            elo_ratings_dict = [dict(
-                team=e.team,
-                elo=e.elo
-            ) for e in elo_ratings_list]
-            elo_ratings = pd.DataFrame(elo_ratings_dict)        
-        return elo_ratings['elo'].values[0]
+    def grab_team_elo(team):        
+        return elo_ratings[elo_ratings['team'] == team]['elo'].values[0]
 
     ################################# PREPPING DATA NEEDED #################################
 
@@ -1737,14 +1692,12 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     away_logo_url = logos_df[logos_df['team'] == away_team]['logo'].values[0][0]
     away_team_color = logos_df[logos_df['team'] == away_team]['color'].values[0]   
     
-    response = requests.get(home_logo_url)
-    logo_img = Image.open(BytesIO(response.content))
+    logo_img = team_logos[home_team]
     img_ax = fig.add_axes([-.1,-.05,0.4,0.4])
     img_ax.imshow(logo_img)
     img_ax.axis('off')
 
-    response = requests.get(away_logo_url)
-    logo_img = Image.open(BytesIO(response.content))
+    logo_img = team_logos[away_team]
     img_ax = fig.add_axes([1.,-.05,0.4,0.4])
     img_ax.imshow(logo_img)
     img_ax.axis('off')
@@ -2596,10 +2549,6 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
         # Fallback (should not reach here)
         return '#000000'
 
-    team_logo_url = logos[logos['team'] == team]['logo'].values[0][0]
-    response = requests.get(team_logo_url)
-    logo_img = Image.open(BytesIO(response.content))
-
     scaler100 = MinMaxScaler(feature_range=(1,100))
     all_data['talent_scaled_percentile'] = scaler100.fit_transform(all_data[['talent_scaled']])
     all_data['offensive_total_scaled'] = scaler100.fit_transform(all_data[['offensive_total']])
@@ -2611,6 +2560,7 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     all_data['dce_scaled'] = scaler100.fit_transform(all_data[['DCE']])
     all_data['dde_scaled'] = scaler100.fit_transform(all_data[['DDE']])
     all_data['most_deserving_scaled'] = scaler100.fit_transform(all_data[['most_deserving_wins']])
+    all_data['MD'] = all_data['most_deserving_scaled'].rank(ascending=False, method='min').astype(int)
     all_data['talent_performance'] = (all_data['most_deserving_scaled'] - all_data['avg_talent']) / math.sqrt(2)
     all_data['talent_performance_scaled'] = scaler100.fit_transform(all_data[['talent_performance']])
     all_data['TPG_rank'] = all_data['talent_performance_scaled'].rank(method='min', ascending=False)
@@ -2625,7 +2575,7 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
 
     power_rating = all_data[all_data['team'] == team]['power_rating'].values[0]
     rank = all_data[all_data['team'] == team].index[0] + 1
-    MD = all_data[all_data['team'] == team]['most_deserving'].values[0]
+    MD = all_data[all_data['team'] == team]['MD'].values[0]
     SOR = all_data[all_data['team'] == team]['SOR'].values[0]
     SOS = all_data[all_data['team'] == team]['SOS'].values[0]
     PBR_rank = int(all_data[all_data['team'] == team]['PBR_rank'].values[0])
@@ -2895,222 +2845,6 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     plt.savefig(file_path, bbox_inches='tight', dpi = 300)
 
 try:
-    start_week, end_week = 1, 17 # change start_week to current_week for new season
-    games = [
-        game
-        for week in range(start_week, end_week)
-        for game in games_api.get_games(year=current_year, week=week, division='fbs')
-    ]
-    games = [
-        {
-            "id": g.id,
-            "season": g.season,
-            "week": g.week,
-            "start_date": g.start_date,
-            "home_team": g.home_team,
-            "home_elo": g.home_pregame_elo,
-            "away_team": g.away_team,
-            "away_elo": g.away_pregame_elo,
-            "home_points": g.home_points,
-            "away_points": g.away_points,
-        }
-        for g in games if g.home_pregame_elo and g.away_pregame_elo
-    ]
-    games.sort(key=date_sort)
-    schedule_info = pd.DataFrame(games)
-
-    schedule_info = schedule_info.merge(team_data[['team', 'power_rating']], left_on='home_team', right_on='team', how='left') \
-                                 .rename(columns={'power_rating': 'home_pr'}).drop(columns='team')
-    schedule_info = schedule_info.merge(team_data[['team', 'power_rating']], left_on='away_team', right_on='team', how='left') \
-                                 .rename(columns={'power_rating': 'away_pr'}).drop(columns='team')
-
-    schedule_info['PEAR_win_prob'] = PEAR_Win_Prob(schedule_info['home_pr'], schedule_info['away_pr'])
-    schedule_info['home_win_prob'] = round((10 ** ((schedule_info['home_elo'] - schedule_info['away_elo']) / 400)) /
-                                           (1 + 10 ** ((schedule_info['home_elo'] - schedule_info['away_elo']) / 400)) * 100, 2)
-
-except Exception as e:
-    print(f"Error in code chunk: Schedule Info. Error: {e}")
-
-
-try:
-    games_list = [
-        game
-        for week in range(1, 17)
-        for game in games_api.get_games(year=current_year, week=week, division='fbs')
-    ]
-    if postseason:
-        games_list += games_api.get_games(year=current_year, division='fbs', season_type='postseason')
-
-    games = [
-        {
-            "id": g.id,
-            "season": g.season,
-            "week": g.week,
-            "start_date": g.start_date,
-            "home_team": g.home_team,
-            "home_elo": g.home_pregame_elo,
-            "away_team": g.away_team,
-            "away_elo": g.away_pregame_elo,
-            "home_points": g.home_points,
-            "away_points": g.away_points,
-            "neutral": g.neutral_site,
-        }
-        for g in games_list if g.home_pregame_elo and g.away_pregame_elo
-    ]
-    games.sort(key=date_sort)
-    year_long_schedule = pd.DataFrame(games)
-
-    for side in ['home', 'away']:
-        year_long_schedule = year_long_schedule.merge(
-            team_data[['team', 'power_rating']], left_on=f'{side}_team', right_on='team', how='left'
-        ).rename(columns={'power_rating': f'{side}_pr'}).drop(columns='team')
-
-    year_long_schedule['PEAR_win_prob'] = PEAR_Win_Prob(year_long_schedule['home_pr'], year_long_schedule['away_pr'])
-    year_long_schedule['home_win_prob'] = round((10 ** ((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) /
-                                                (1 + 10 ** ((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) * 100, 2)
-
-except Exception as e:
-    print(f"Error in code chunk: Year Long Schedule. Error: {e}")
-
-
-try:
-    average_pr = round(team_data['power_rating'].mean(), 2)
-    elite_team_pr = round(team_data['power_rating'].mean() + 2 * team_data['power_rating'].std(), 2)
-
-    SOS = pd.DataFrame({
-        'team': team_data['team'],
-        'avg_expected_wins': [
-            average_team_distribution(1000, year_long_schedule[(year_long_schedule['home_team'] == team) | (year_long_schedule['away_team'] == team)],
-                                      elite_team_pr, team)['expected_wins'].values[0] /
-            len(year_long_schedule[(year_long_schedule['home_team'] == team) | (year_long_schedule['away_team'] == team)])
-            for team in team_data['team']
-        ]
-    })
-
-    SOS = SOS.sort_values('avg_expected_wins').reset_index(drop=True)
-    SOS['SOS'] = SOS.index + 1
-    print("SOS Prep Done!")
-except Exception as e:
-    print(f"Error in code chunk: SOS Prep. Error: {e}")
-
-
-try:
-    average_pr = team_data['power_rating'].mean()
-    good_pr = average_pr + team_data['power_rating'].std()
-    elite_pr = average_pr + 2 * team_data['power_rating'].std()
-
-    completed_games = year_long_schedule[year_long_schedule['home_points'].notna()]
-    current_xWins_list, good_xWins_list, elite_xWins_list = [], [], []
-
-    for team in team_data['team']:
-        team_games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
-        gp = records.loc[records['team'] == team, 'games_played'].values[0]
-        wins = records.loc[records['team'] == team, 'wins'].values[0]
-
-        for pr_label, pr_val, store in zip(
-            ['avg_win_prob', 'good_win_prob', 'elite_win_prob'],
-            [average_pr, good_pr, elite_pr],
-            [current_xWins_list, good_xWins_list, elite_xWins_list]
-        ):
-            team_games[pr_label] = np.where(
-                team_games['home_team'] == team,
-                PEAR_Win_Prob(pr_val, team_games['away_pr']),
-                100 - PEAR_Win_Prob(team_games['home_pr'], pr_val)
-            )
-
-        current_x = team_games['avg_win_prob'].sum() / 100
-        good_x = team_games['good_win_prob'].sum() / 100
-        elite_x = team_games['elite_win_prob'].sum() / 100
-
-        if gp != len(team_games):
-            current_x += 1
-            good_x += 1
-            elite_x += 1
-
-        current_xWins_list.append(round(wins - current_x, 2))
-        good_xWins_list.append(round(wins - good_x, 2))
-        elite_xWins_list.append(round(wins - elite_x, 2))
-
-    SOR = pd.DataFrame({
-        'team': team_data['team'],
-        'wins_above_average': current_xWins_list,
-        'wins_above_good': good_xWins_list,
-        'wins_above_elite': elite_xWins_list
-    }).sort_values('wins_above_average', ascending=False).reset_index(drop=True)
-    SOR['SOR'] = SOR.index + 1
-    print("SOR Prep Done!")
-except Exception as e:
-    print(f"Error in code chunk: SOR Prep. Error: {e}")
-
-
-try:
-    from scipy.stats import norm
-    num_12_pr = team_data['power_rating'].iloc[11]
-    completed_games = year_long_schedule[year_long_schedule['home_points'].notna()]
-    completed_games['margin_of_victory'] = completed_games['home_points'] - completed_games['away_points']
-    std_dev = completed_games['margin_of_victory'].abs().std()
-
-    team_probabilities = []
-    for team in team_data['team']:
-        games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
-        total_prob = 0
-
-        for _, g in games.iterrows():
-            home, away = g['home_team'], g['away_team']
-            mov = g['margin_of_victory']
-            home_pr = team_data.loc[team_data['team'] == home, 'power_rating'].values[0]
-            away_pr = team_data.loc[team_data['team'] == away, 'power_rating'].values[0]
-
-            if team == home:
-                expected = 4.6 + home_pr - away_pr
-            else:
-                expected = away_pr - (home_pr + 4.6)
-                mov = -mov
-
-            z = (mov - expected) / std_dev
-            prob = norm.cdf(z) - 0.5
-            total_prob += prob
-
-        team_probabilities.append({'team': team, 'RTP': 10 + 10 * (total_prob / len(games))})
-
-    RTP = pd.DataFrame(team_probabilities).sort_values('RTP', ascending=False)
-    print("RTP Prep Done!")
-except Exception as e:
-    print(f"Error in code chunk: RTP Prep. Error: {e}")
-
-
-try:
-    num_12_pr = team_data['power_rating'].iloc[11]
-    completed_games = year_long_schedule[year_long_schedule['home_points'].notna()]
-    completed_games['margin_of_victory'] = completed_games['home_points'] - completed_games['away_points']
-    f = lambda mov: np.clip(np.log1p(np.abs(mov)) * np.sign(mov), -10, 10)
-
-    relative_xWins = []
-    for team in team_data['team']:
-        games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
-        gp = records.loc[records['team'] == team, 'games_played'].values[0]
-        wins = records.loc[records['team'] == team, 'wins'].values[0]
-
-        games['avg_win_prob'] = np.where(
-            games['home_team'] == team,
-            PEAR_Win_Prob(num_12_pr, games['away_pr']) + f(games['margin_of_victory']),
-            100 - PEAR_Win_Prob(games['home_pr'], num_12_pr) - f(-games['margin_of_victory'])
-        )
-
-        xWins = games['avg_win_prob'].sum() / 100
-        if gp != len(games): xWins += 1
-        relative_xWins.append(round(wins - xWins, 3))
-
-    most_deserving = pd.DataFrame({'team': team_data['team'], 'wins_above_average': relative_xWins})
-    most_deserving = most_deserving.sort_values('wins_above_average', ascending=False).reset_index(drop=True)
-    most_deserving['Performance'] = most_deserving.index + 1
-    print("Most Deserving Prep Done!")
-except Exception as e:
-    print(f"Error in code chunk: Most Deserving Prep. Error: {e}")
-
-print("Prep Work Done!")
-
-try:
     top_25 = all_data.head(25).reset_index(drop=True)
     fig, axs = plt.subplots(5, 5, figsize=(7, 7), dpi=125)
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
@@ -3120,9 +2854,7 @@ try:
 
     for i, ax in enumerate(axs.ravel()):
         team = top_25.loc[i, 'team']
-        logo_url = logos.loc[logos['team'] == team, 'logo'].values[0][0]
-        response = requests.get(logo_url)
-        img = Image.open(BytesIO(response.content))
+        img = team_logos[team]
         ax.imshow(img)
         ax.set_facecolor('#f0f0f0')
         ax.set_title(f"#{i+1} {team} \n{round(top_25.loc[i, 'power_rating'], 1)}", fontsize=8)
@@ -3131,6 +2863,26 @@ try:
     print("Top 25 Done!")
 except Exception as e:
     print(f"Error in code chunk: Top 25 Ratings. Error: {e}")
+
+try:
+    top_25 = most_deserving.head(25).reset_index(drop=True)
+    fig, axs = plt.subplots(5, 5, figsize=(7, 7), dpi=125)
+    fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    fig.patch.set_facecolor('#CECEB2')
+    plt.suptitle(f"Week {current_week} Most Deserving Top 25", fontsize=20, fontweight='bold', color='black')
+    fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
+
+    for i, ax in enumerate(axs.ravel()):
+        team = top_25.loc[i, 'team']
+        img = team_logos[team]
+        ax.imshow(img)
+        ax.set_facecolor('#f0f0f0')
+        ax.set_title(f"#{i+1} {team} \n{round(top_25.loc[i, 'most_deserving_wins'], 1)}", fontsize=8)
+        ax.axis('off')
+    plt.savefig(os.path.join(folder_path, "most_deserving"), bbox_inches='tight', dpi=300)
+    print("Most Deserving Done!")
+except Exception as e:
+    print(f"Error in code chunk: Most Deserving Ratings. Error: {e}")
 
 try:
     group_of_5 = ['Conference USA', 'Mid-American', 'Sun Belt', 'American Athletic', 'Mountain West']
@@ -3143,9 +2895,7 @@ try:
 
     for i, ax in enumerate(axs.ravel()):
         team = top_25.loc[i, 'team']
-        logo_url = logos.loc[logos['team'] == team, 'logo'].values[0][0]
-        response = requests.get(logo_url)
-        img = Image.open(BytesIO(response.content))
+        img = team_logos[team]
         ax.imshow(img)
         ax.set_facecolor('#f0f0f0')
         ax.set_title(f"#{i+1} {team} \n{round(top_25.loc[i, 'power_rating'],1)}", fontsize=8)
@@ -3153,7 +2903,7 @@ try:
     plt.savefig(os.path.join(folder_path, "go5_top25"), bbox_inches='tight', dpi=300)
     print("GO5 Top 25 Done!")
 except Exception as e:
-    print(f"Error in code chunk: GO5 Top 25 Ratings. Error: {e}")
+    print(f"Error in code chunk: GO5 Ratings. Error: {e}")
 
 try:
     conference_stats = all_data.groupby('conference')['power_rating'].agg(['mean', 'min', 'max']).reset_index()
@@ -3189,7 +2939,7 @@ try:
     plt.savefig(file_path, dpi = 300)
     print("Conference Average Done!")
 except Exception as e:
-    print(f"Error in code chunk: Conference Average. Error: {e}")
+    print(f"Error in code chunk: Conference Average Ratings. Error: {e}")
 
 try:
     conference_list = ['SEC', 'Big Ten', 'Big 12', 'ACC', 'Pac-12', 'Conference USA', 'Mid-American', 'Sun Belt', 'American Athletic', 'Mountain West']
@@ -3204,11 +2954,6 @@ try:
     at_large_dict = {i + 5: team for i, team in enumerate(at_large_bids['team'])}
     power_5_dict = {i + 1: team for i, team in enumerate(top_4_seeds['team'])}
     seeding = {**power_5_dict, **at_large_dict}
-    # Function to fetch the logo image for a team
-    def fetch_logo_image(logo_url):
-        response = requests.get(logo_url)
-        img = Image.open(BytesIO(response.content))
-        return img
     def draw_playoff_bracket(seeding):
         fig, ax = plt.subplots(figsize=(12, 12),dpi=125)
         
@@ -3236,18 +2981,14 @@ try:
         # Adding matchups from the first round
         for i, (y, text) in enumerate(zip(y_round_1, matchups_text)):
             ax.text(0.05, y+0.05, text, fontsize=10, verticalalignment='center')
-            # Fetch logos for both teams in the matchup from team_data
-            team1_logo_url = logos[logos['team'] == seeding[first_round_matchups[i][0]]]['logo'].values[0][0]
-            team2_logo_url = logos[logos['team'] == seeding[first_round_matchups[i][1]]]['logo'].values[0][0]
-            
             # Display team 1 logo
-            team1_logo = fetch_logo_image(team1_logo_url)
+            team1_logo = team_logos[seeding[first_round_matchups[i][0]]]
             imagebox1 = OffsetImage(team1_logo, zoom=0.1)
             ab1 = AnnotationBbox(imagebox1, (0.1, y), frameon=False)
             ax.add_artist(ab1)
             
             # Display team 2 logo
-            team2_logo = fetch_logo_image(team2_logo_url)
+            team2_logo = team_logos[seeding[first_round_matchups[i][1]]]
             imagebox2 = OffsetImage(team2_logo, zoom=0.1)
             ab2 = AnnotationBbox(imagebox2, (0.2, y), frameon=False)
             ax.add_artist(ab2)
@@ -3256,8 +2997,7 @@ try:
         for i, seed in enumerate(top_seeds):
             # Fetch and display logo for the top seed (bye team)
             ax.text(0.25, top_seed_locations[i]+0.05, f"#{seed} {seeding[seed]}", fontsize=10, verticalalignment='center')
-            bye_team_logo_url = logos[logos['team'] == seeding[seed]]['logo'].values[0][0]
-            bye_team_logo = fetch_logo_image(bye_team_logo_url)
+            bye_team_logo = team_logos[seeding[seed]]
             imagebox_bye = OffsetImage(bye_team_logo, zoom=0.1)
             ab_bye = AnnotationBbox(imagebox_bye, (0.3, top_seed_locations[i]), frameon=False)
             ax.add_artist(ab_bye)
@@ -3300,32 +3040,78 @@ try:
     draw_playoff_bracket(seeding)
     print("Projected Playoff Done!")
 except Exception as e:
-    print(f"Error in code chunk: Projected Playoff. Error: {e}")
+    print(f"Error in code chunk: Projected Playoff Ratings. Error: {e}")
 
 try:
     best_and_worst(all_data, logos, 'total_turnovers_scaled', "Turnover Margin Percentiles", 
-                   "Percentile Based: 100 is best, 1 is worst", "turnovers")
+                    "Percentile Based: 100 is best, 1 is worst", "turnovers")
     print("Turnovers Done!")
 except Exception as e:
-    print(f"Error in code chunk: Turnovers. Error: {e}")
+    print(f"Error in code chunk: Turnover Margin Ratings. Error: {e}")
 
 try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
     all_data['offensive_total'] = scaler100.fit_transform(all_data[['offensive_total']])
     best_and_worst(all_data, logos, 'offensive_total', "PEAR Raw Offenses: Best and Worst 25", 
-                   "Percentile Based: 100 is best, 1 is worst", "offenses")
+                    "Percentile Based: 100 is best, 1 is worst", "offenses")
     print("Offenses Done!")
 except Exception as e:
-    print(f"Error in code chunk: Offenses. Error: {e}")
+    print(f"Error in code chunk: Offenses Ratings. Error: {e}")
 
 try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
     all_data['defensive_total'] = scaler100.fit_transform(all_data[['defensive_total']])
     best_and_worst(all_data, logos, 'defensive_total', "PEAR Raw Defenses: Best and Worst 25", 
-                   "100 is the best raw defense, 1 is the worst", "defenses")
+                    "100 is the best raw defense, 1 is the worst", "defenses")
     print("Defenses Done!")
 except Exception as e:
-    print(f"Error in code chunk: Defenses. Error: {e}")
+    print(f"Error in code chunk: Defenses Ratings. Error: {e}")
+
+try:
+    scaler100 = MinMaxScaler(feature_range=(1, 100))
+    all_data['STM_scaled'] = scaler100.fit_transform(all_data[['STM']])
+    best_and_worst(all_data, logos, 'STM_scaled', "PEAR Special Teams", 
+                    "Percentile Based: 100 is best, 1 is worst", "special_teams")
+    print("Special Teams Done!")
+except Exception as e:
+    print(f"Error in code chunk: Special Teams Ratings. Error: {e}")
+
+try:
+    pbr_min = all_data['PBR'].min()
+    pbr_max = all_data['PBR'].max()
+    all_data['PBR_scaled'] = 100 - (all_data['PBR'] - pbr_min) * (99 / (pbr_max - pbr_min))
+    best_and_worst(all_data, logos, 'PBR_scaled', "PEAR Penalty Burden Ratio", 
+                    "How Penalties Impact Success - 100 is best, 1 is worst", "penalty_burden_ratio")
+    print("PBR Done!")
+except Exception as e:
+    print(f"Error in code chunk: PBR Ratings. Error: {e}")
+
+try:
+    scaler100 = MinMaxScaler(feature_range=(1, 100))
+    all_data['DCE_scaled'] = scaler100.fit_transform(all_data[['DCE']])
+    best_and_worst(all_data, logos, 'DCE_scaled', "PEAR Drive Control Efficiency", 
+                    "How Well You Control the Ball - 100 is best, 1 is worst", "drive_control_efficiency")
+    print("DCE Done!")
+except Exception as e:
+    print(f"Error in code chunk: DCE Ratings. Error: {e}")
+
+try:
+    scaler100 = MinMaxScaler(feature_range=(1, 100))
+    all_data['DDE_scaled'] = scaler100.fit_transform(all_data[['DDE']])
+    best_and_worst(all_data, logos, 'DDE_scaled', "PEAR Drive Disruption Efficiency", 
+                    "How Well You Disrupt the Offense - 100 is best, 1 is worst", "drive_disruption_efficiency")
+    print("DDE Done!")
+except Exception as e:
+    print(f"Error in code chunk: DDE Ratings. Error: {e}")
+
+try:
+    columns_to_average = ["offensive_rank", "defensive_rank", "STM_rank", "PBR_rank", "DCE_rank", "DDE_rank"]
+    all_data["average_metric_rank"] = round(all_data[columns_to_average].mean(axis=1), 1)
+    best_and_worst(all_data, logos, 'average_metric_rank', "PEAR Average Metric Ranking", 
+                    "Average OFF, DEF, ST, PBR, DCE, DDE Ranking - Lower is Better", "average_metric_rank")
+    print("Average Metric Done!")
+except:
+    print(f"Error in code chunk: Average Metric Ratings. Error: {e}")
 
 try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
@@ -3338,9 +3124,7 @@ try:
     plt.gcf().set_facecolor('#CECEB2')
     logo_size = 2  # Half the size of the logo to create spacing
     for i in range(len(all_data)):
-        logo_url = logos[logos['team'] == all_data.loc[i,'team']]['logo'].values[0][0]
-        response = requests.get(logo_url)
-        img = mpimg.imread(BytesIO(response.content), format='png')
+        img = team_logos[all_data.loc[i,'team']]
         ax.imshow(img, aspect='auto', 
                 extent=(all_data['defensive_total'].iloc[i] - (logo_size-0.5),
                         all_data['defensive_total'].iloc[i] + (logo_size-0.5),
@@ -3362,44 +3146,7 @@ try:
     plt.savefig(file_path, bbox_inches='tight', dpi=300)
     print("Offense vs. Defense Done!")
 except Exception as e:
-    print(f"Error in code chunk: Offense vs. Defense. Error: {e}")
-
-try:
-    scaler100 = MinMaxScaler(feature_range=(1, 100))
-    all_data['STM_scaled'] = scaler100.fit_transform(all_data[['STM']])
-    best_and_worst(all_data, logos, 'STM_scaled', "PEAR Special Teams", 
-                   "Percentile Based: 100 is best, 1 is worst", "special_teams")
-    print("Special Teams Done!")
-except Exception as e:
-    print(f"Error in code chunk: Special Teams. Error: {e}")
-
-try:
-    pbr_min = all_data['PBR'].min()
-    pbr_max = all_data['PBR'].max()
-    all_data['PBR_scaled'] = 100 - (all_data['PBR'] - pbr_min) * (99 / (pbr_max - pbr_min))
-    best_and_worst(all_data, logos, 'PBR_scaled', "PEAR Penalty Burden Ratio", 
-                   "How Penalties Impact Success - 100 is best, 1 is worst", "penalty_burden_ratio")
-    print("PBR Done!")
-except Exception as e:
-    print(f"Error in code chunk: PBR. Error: {e}")
-
-try:
-    scaler100 = MinMaxScaler(feature_range=(1, 100))
-    all_data['DCE_scaled'] = scaler100.fit_transform(all_data[['DCE']])
-    best_and_worst(all_data, logos, 'DCE_scaled', "PEAR Drive Control Efficiency", 
-                   "How Well You Control the Ball - 100 is best, 1 is worst", "drive_control_efficiency")
-    print("DCE Done!")
-except Exception as e:
-    print(f"Error in code chunk: DCE. Error: {e}")
-
-try:
-    scaler100 = MinMaxScaler(feature_range=(1, 100))
-    all_data['DDE_scaled'] = scaler100.fit_transform(all_data[['DDE']])
-    best_and_worst(all_data, logos, 'DDE_scaled', "PEAR Drive Disruption Efficiency", 
-                   "How Well You Disrupt the Offense - 100 is best, 1 is worst", "drive_disruption_efficiency")
-    print("DDE Done!")
-except Exception as e:
-    print(f"Error in code chunk: DDE. Error: {e}")
+    print(f"Error in code chunk: Offense vs. Defense Ratings. Error: {e}")
 
 try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
@@ -3436,16 +3183,7 @@ try:
     plt.savefig(file_path, bbox_inches='tight', dpi=300)
     print("DCE vs. DDE Done!")
 except Exception as e:
-    print(f"Error in code chunk: DCE vs. DDE. Error: {e}")
-
-try:
-    columns_to_average = ["offensive_rank", "defensive_rank", "STM_rank", "PBR_rank", "DCE_rank", "DDE_rank"]
-    all_data["average_metric_rank"] = round(all_data[columns_to_average].mean(axis=1), 1)
-    best_and_worst(all_data, logos, 'average_metric_rank', "PEAR Average Metric Ranking", 
-                   "Average OFF, DEF, ST, PBR, DCE, DDE Ranking - Lower is Better", "average_metric_rank")
-    print("Average Metric Done!")
-except Exception as e:
-    print(f"Error in code chunk: Average Metric. Error: {e}")
+    print(f"Error in code chunk: DCE vs. DDE Ratings. Error: {e}")
 
 try:
     performance_list = []
@@ -3456,8 +3194,8 @@ try:
 
         team_games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)].copy()
         team_games['team_win_prob'] = np.where(team_games['home_team'] == team,
-                                               team_games['PEAR_win_prob'],
-                                               100 - team_games['PEAR_win_prob'])
+                                                team_games['PEAR_win_prob'],
+                                                100 - team_games['PEAR_win_prob'])
         xwins = round(team_games['team_win_prob'].sum() / 100, 2)
         if len(team_games) != (wins + losses):
             xwins += 1
@@ -3469,22 +3207,56 @@ try:
                     "Wins ABOVE or BELOW Your Retroactive Win Expectation", "overperformer_and_underperformer")
     print("Achieving vs. Expectation Done!")
 except Exception as e:
-    print(f"Error in code chunk: Achieving vs. Expectation. Error: {e}")
+    print(f"Error in code chunk: Achieving vs. Expectation Ratings. Error: {e}")
 
 try:
-    best_and_worst2(most_deserving, logos, 'wins_above_average', f'Week {current_week} Most Deserving',
-                    "Performance Against Schedule Relative to the No. 12 Power Rated Team", "most_deserving")
-    print("Most Deserving Done!")
+    best_and_worst2(SOS, logos, 'avg_expected_wins', f'Week {current_week} PEAR SOS', 
+                    "Efficiency of an Elite Team Against Your Opponents", "strength_of_schedule")
+    print("SOS Done!")
 except Exception as e:
-    print(f"Error in code chunk: Most Deserving. Error: {e}")
+    print(f"Error in code chunk: SOS Ratings. Error: {e}")
+
+try:
+    best_and_worst2(SOR, logos, 'wins_above_good', f'Week {current_week} PEAR SOR', 
+                    "Wins Above or Below a Good Team", "strength_of_record")
+    print("SOR Done!")
+except Exception as e:
+    print(f"Error in code chunk: SOR Ratings. Error: {e}")
+
+try:
+    scaler100 = MinMaxScaler(feature_range=(1, 100))
+    all_data['most_deserving_scaled'] = scaler100.fit_transform(all_data[['most_deserving_wins']])
+    all_data['talent_performance'] = (all_data['most_deserving_scaled'] - all_data['avg_talent']) / math.sqrt(2)
+    best_and_worst(all_data, logos, 'talent_performance', "PEAR Talent Performance Gap", 
+                    "Is Your Team Outperforming or Underperforming Its Roster?", "talent_performance")
+    print("Talent Performance Done!")
+except Exception as e:
+    print(f"Error in code chunk: Talent Performance Ratings. Error: {e}")
+
+try:
+    scaler100 = MinMaxScaler(feature_range=(1, 100))
+    all_data['defensive_total'] = scaler100.fit_transform(all_data[['defensive_total']])
+    all_data['offensive_total'] = scaler100.fit_transform(all_data[['offensive_total']])
+
+    all_data['dependence_score'] = (all_data['offensive_total'] - all_data['defensive_total']) / (all_data['offensive_total'] + all_data['defensive_total'])
+    best_and_worst2(all_data, logos, 'dependence_score', 'PEAR Unit Dependence', 'Values near 1 indicate offensive dependence, while values near -1 indicate defensive dependence', 'dependence_score')
+    print('Dependence Score Done!')
+except Exception as e:
+    print(f"Error in code chunk: Dependence Score Ratings. Error: {e}")
+
+try:
+    best_and_worst2(RTP, logos, 'RTP', f'PEAR Margin of Victory', "If You Are Expected to Win by 10 Points, Your Average MOV is __ Points", "mov_performance")
+    print("MOV Performance Done!")
+except Exception as e:
+    print(f"Error in code chunk: MOV Performance Ratings. Error: {e}")
 
 try:
     most_deserving_playoff = most_deserving.merge(team_data[['team', 'conference']], on='team', how='left')
     # most_deserving_playoff = most_deserving_playoff[~(most_deserving_playoff['team'] == 'BYU')][0:25]
     # most_deserving_playoff = most_deserving_playoff[~(most_deserving_playoff['team'] == 'Army')][0:25]
     conference_list = ['SEC', 'Big Ten', 'Big 12', 'ACC', 'Conference USA', 'Mid-American', 'Sun Belt', 'American Athletic', 'Mountain West']
-    top_4_seeds = most_deserving_playoff[most_deserving_playoff['conference'].isin(conference_list)].groupby('conference').first().sort_values('wins_above_average', ascending=False).reset_index()[0:4]
-    autobid_5 = most_deserving_playoff[most_deserving_playoff['conference'].isin(conference_list)].groupby('conference').first().sort_values('wins_above_average', ascending=False).reset_index()[4:5]
+    top_4_seeds = most_deserving_playoff[most_deserving_playoff['conference'].isin(conference_list)].groupby('conference').first().sort_values('most_deserving_wins', ascending=False).reset_index()[0:4]
+    autobid_5 = most_deserving_playoff[most_deserving_playoff['conference'].isin(conference_list)].groupby('conference').first().sort_values('most_deserving_wins', ascending=False).reset_index()[4:5]
     # conference_champs = ['Oregon', 'Georgia', 'Boise State', 'Arizona State', 'Clemson', 'Army']
     # top_4_seeds = most_deserving_playoff[most_deserving_playoff['team'].isin(conference_champs)].sort_values('wins_above_average', ascending=False).reset_index()[0:4]
     # autobid_5 = most_deserving_playoff[most_deserving_playoff['team'].isin(conference_champs)].sort_values('wins_above_average', ascending=False).reset_index()[4:5]
@@ -3497,10 +3269,6 @@ try:
     at_large_dict = {i + 5: team for i, team in enumerate(at_large_bids['team'])}
     power_5_dict = {i + 1: team for i, team in enumerate(top_4_seeds['team'])}
     seeding = {**power_5_dict, **at_large_dict}
-    def fetch_logo_image(logo_url):
-        response = requests.get(logo_url)
-        img = Image.open(BytesIO(response.content))
-        return img
     def draw_playoff_bracket(seeding):
         fig, ax = plt.subplots(figsize=(12, 12),dpi=125)
         
@@ -3528,18 +3296,14 @@ try:
         # Adding matchups from the first round
         for i, (y, text) in enumerate(zip(y_round_1, matchups_text)):
             ax.text(0.05, y+0.05, text, fontsize=10, verticalalignment='center')
-            # Fetch logos for both teams in the matchup from team_data
-            team1_logo_url = logos[logos['team'] == seeding[first_round_matchups[i][0]]]['logo'].values[0][0]
-            team2_logo_url = logos[logos['team'] == seeding[first_round_matchups[i][1]]]['logo'].values[0][0]
-            
             # Display team 1 logo
-            team1_logo = fetch_logo_image(team1_logo_url)
+            team1_logo = team_logos[seeding[first_round_matchups[i][0]]]
             imagebox1 = OffsetImage(team1_logo, zoom=0.1)
             ab1 = AnnotationBbox(imagebox1, (0.1, y), frameon=False)
             ax.add_artist(ab1)
             
             # Display team 2 logo
-            team2_logo = fetch_logo_image(team2_logo_url)
+            team2_logo = team_logos[seeding[first_round_matchups[i][1]]]
             imagebox2 = OffsetImage(team2_logo, zoom=0.1)
             ab2 = AnnotationBbox(imagebox2, (0.2, y), frameon=False)
             ax.add_artist(ab2)
@@ -3548,8 +3312,7 @@ try:
         for i, seed in enumerate(top_seeds):
             # Fetch and display logo for the top seed (bye team)
             ax.text(0.25, top_seed_locations[i]+0.05, f"#{seed} {seeding[seed]}", fontsize=10, verticalalignment='center')
-            bye_team_logo_url = logos[logos['team'] == seeding[seed]]['logo'].values[0][0]
-            bye_team_logo = fetch_logo_image(bye_team_logo_url)
+            bye_team_logo = team_logos[seeding[seed]]
             imagebox_bye = OffsetImage(bye_team_logo, zoom=0.1)
             ab_bye = AnnotationBbox(imagebox_bye, (0.3, top_seed_locations[i]), frameon=False)
             ax.add_artist(ab_bye)
@@ -3593,32 +3356,7 @@ try:
     draw_playoff_bracket(seeding)
     print("Most Deserving Playoff Done!")
 except Exception as e:
-    print(f"Error in code chunk: Most Deserving Playoff. Error: {e}")
-
-try:
-    best_and_worst2(SOS, logos, 'avg_expected_wins', f'Week {current_week} PEAR SOS', 
-                    "Efficiency of an Elite Team Against Your Opponents", "strength_of_schedule")
-    print("SOS Done!")
-except Exception as e:
-    print(f"Error in code chunk: SOS. Error: {e}")
-
-try:
-    best_and_worst2(SOR, logos, 'wins_above_good', f'Week {current_week} PEAR SOR', 
-                    "Wins Above or Below a Good Team", "strength_of_record")
-    print("SOR Done!")
-except Exception as e:
-    print(f"Error in code chunk: SOR. Error: {e}")
-
-try:
-    scaler100 = MinMaxScaler(feature_range=(1, 100))
-    all_data['most_deserving_scaled'] = scaler100.fit_transform(all_data[['most_deserving_wins']])
-    all_data['talent_performance'] = (all_data['most_deserving_scaled'] - all_data['avg_talent']) / math.sqrt(2)
-    best_and_worst(all_data, logos, 'talent_performance', "PEAR Talent Performance Gap", 
-                   "Is Your Team Outperforming or Underperforming Its Roster?", "talent_performance")
-    print("Talent Performance Done!")
-except Exception as e:
-    print(f"Error in code chunk: Talent Performance. Error: {e}")
-
+    print(f"Error occurred while drawing MD playoff bracket: {e}")
 
 try:
     average_pr = round(team_data['power_rating'].mean(), 2)
@@ -3652,9 +3390,7 @@ try:
             y = np.full(len(row_teams), -level - row * row_spacing)  # Offset rows within a tier
 
             for i, (team, logo) in enumerate(zip(row_teams['team'], row_teams['logo'])):
-                logo = logo[0]
-                response = requests.get(logo)
-                img = Image.open(BytesIO(response.content))
+                img = team_logos[team]
                 imagebox = OffsetImage(img, zoom=0.1)
                 ab = AnnotationBbox(imagebox, (x[i], y[i]), frameon=False)
                 ax.add_artist(ab)
@@ -3689,23 +3425,23 @@ try:
     plt.savefig(file_path, dpi = 300)
     print("Power Ratings Team Pyramid Done!")
 except Exception as e:
-    print(f"Error in code chunk: Power Ratings Team Pyramid. Error: {e}")
+    print(f"Error occurred while drawing Power Ratings Team Pyramid: {e}")
 
 try:
-    average_pr = round(most_deserving['wins_above_average'].mean(), 2)
-    good_team_pr = round(most_deserving['wins_above_average'].std() + most_deserving['wins_above_average'].mean(), 2)
-    elite_team_pr = round(2 * most_deserving['wins_above_average'].std() + most_deserving['wins_above_average'].mean(), 2)
+    average_pr = round(most_deserving['most_deserving_wins'].mean(), 2)
+    good_team_pr = round(most_deserving['most_deserving_wins'].std() + most_deserving['most_deserving_wins'].mean(), 2)
+    elite_team_pr = round(2 * most_deserving['most_deserving_wins'].std() + most_deserving['most_deserving_wins'].mean(), 2)
     # Merge team_data with logos to include the logo column
     team_data_logo = most_deserving.merge(logos, on='team', how='left')
     # Categorize teams
-    elite_teams = team_data_logo[team_data_logo['wins_above_average'] > elite_team_pr].reset_index(drop=True)
+    elite_teams = team_data_logo[team_data_logo['most_deserving_wins'] > elite_team_pr].reset_index(drop=True)
     good_teams = team_data_logo[
-        (team_data_logo['wins_above_average'] > good_team_pr) & (team_data_logo['wins_above_average'] <= elite_team_pr)
+        (team_data_logo['most_deserving_wins'] > good_team_pr) & (team_data_logo['most_deserving_wins'] <= elite_team_pr)
     ].reset_index(drop=True)
     average_teams = team_data_logo[
-        (team_data_logo['wins_above_average'] > average_pr) & (team_data_logo['wins_above_average'] <= good_team_pr)
+        (team_data_logo['most_deserving_wins'] > average_pr) & (team_data_logo['most_deserving_wins'] <= good_team_pr)
     ].reset_index(drop=True)
-    below_average_teams = team_data_logo[team_data_logo['wins_above_average'] <= average_pr].reset_index(drop=True)
+    below_average_teams = team_data_logo[team_data_logo['most_deserving_wins'] <= average_pr].reset_index(drop=True)
     # Function to plot logos with centering and dynamic spacing
     def plot_team_logos(ax, teams, level, spacing_factor=1.5, row_spacing=0.5, max_teams_per_row=10):
         count = len(teams)
@@ -3719,9 +3455,7 @@ try:
             x = np.linspace(-max_teams_per_row / 2, max_teams_per_row / 2, len(row_teams)) * spacing_factor
             y = np.full(len(row_teams), -level - row * row_spacing)  # Offset rows within a tier
             for i, (team, logo) in enumerate(zip(row_teams['team'], row_teams['logo'])):
-                logo = logo[0]
-                response = requests.get(logo)
-                img = Image.open(BytesIO(response.content))
+                img = team_logos[team]
                 imagebox = OffsetImage(img, zoom=0.1)
                 ab = AnnotationBbox(imagebox, (x[i], y[i]), frameon=False)
                 ax.add_artist(ab)
@@ -3756,24 +3490,7 @@ try:
     plt.savefig(file_path, dpi = 300)
     print("Most Deserving Team Pyramid Done!")
 except Exception as e:
-    print(f"Error in code chunk: Most Deserving Team Pyramid. Error: {e}")
-
-try:
-    scaler100 = MinMaxScaler(feature_range=(1, 100))
-    all_data['defensive_total'] = scaler100.fit_transform(all_data[['defensive_total']])
-    all_data['offensive_total'] = scaler100.fit_transform(all_data[['offensive_total']])
-
-    all_data['dependence_score'] = (all_data['offensive_total'] - all_data['defensive_total']) / (all_data['offensive_total'] + all_data['defensive_total'])
-    best_and_worst2(all_data, logos, 'dependence_score', 'PEAR Unit Dependence', 'Values near 1 indicate offensive dependence, while values near -1 indicate defensive dependence', 'dependence_score')
-    print('Dependence Score Done!')
-except Exception as e:
-    print(f"Error in code chunk: Dependence Score. Error: {e}")
-
-try:
-    best_and_worst2(RTP, logos, 'RTP', f'PEAR Margin of Victory', "If You Are Expected to Win by 10 Points, Your Average MOV is __ Points", "mov_performance")
-    print("MOV Performance Done!")
-except Exception as e:
-    print(f"Error in code chunk: MOV. Error: {e}")
+    print(f"Error occurred while drawing Most Deserving Team Pyramid: {e}")
 
 try:
     # Create the plot
@@ -3785,9 +3502,7 @@ try:
     # Loop through the team_data DataFrame to plot logos
     for i in range(len(all_data)):
         # Get the logo image from the URL
-        logo_url = logos[logos['team'] == all_data.loc[i,'team']]['logo'].values[0][0]
-        response = requests.get(logo_url)
-        img = mpimg.imread(BytesIO(response.content), format='png')
+        img = team_logos[all_data.loc[i,'team']]
         # Calculate the extent for the logo
         # Here we use logo_size for both sides to center the logo at the specific coordinates
         ax.imshow(img, aspect='auto', 
@@ -3827,7 +3542,7 @@ try:
     plt.savefig(file_path, dpi = 300)
     print("Resume Vs Ratings Done!")
 except Exception as e:
-    print(f"Error in code chunk: Resume vs. Ratings. Error: {e}")
+    print(f"Error occurred while drawing Resume Vs Ratings: {e}")
 
 try:
     fig, ax = plt.subplots(figsize=(15, 9),dpi=125)
@@ -3840,9 +3555,7 @@ try:
     all_data['most_deserving_scaled'] = scaler100.fit_transform(all_data[['most_deserving_wins']])
     for i in range(len(all_data)):
         # Get the logo image from the URL
-        logo_url = logos[logos['team'] == all_data.loc[i,'team']]['logo'].values[0][0]
-        response = requests.get(logo_url)
-        img = mpimg.imread(BytesIO(response.content), format='png')
+        img = team_logos[all_data.loc[i,'team']]
 
         # Calculate the extent for the logo
         # Here we use logo_size for both sides to center the logo at the specific coordinates
@@ -3876,7 +3589,7 @@ try:
     plt.savefig(file_path, dpi = 300)
     print("Production vs Talent Done!")
 except Exception as e:
-    print(f"Error in code chunk: Production vs. Talent. Error: {e}")
+    print(f"Error occurred while drawing Production Vs Talent: {e}")
 
 try:
     team_conference_map = team_data.set_index('team')['conference'].to_dict()
@@ -3963,9 +3676,7 @@ try:
             # Loop through each team in the conference
             for i, ax in enumerate(axs.ravel()):
                 # Get the team logo URL
-                logo_url = logos[logos['team'] == this_conference_wins.loc[i, 'team']]['logo'].values[0][0]
-                response = requests.get(logo_url)
-                img = Image.open(BytesIO(response.content))
+                img = team_logos[this_conference_wins.loc[i, 'team']]
                 
                 # Display the team logo with smaller size
                 ax.imshow(img, extent=(1,1.01,1.01,1), alpha=0.9)  # Adjust extent for smaller logo
@@ -4017,7 +3728,7 @@ try:
     conference_standings()
     print("Conference Projections Done!")
 except Exception as e:
-    print(f"Error in code chunk: Conference Projections. Error: {e}")
+    print(f"Error occurred while drawing Conference Projections: {e}")
 
 try:
     i = 1
@@ -4028,7 +3739,7 @@ try:
         i = i+1
     print("Stat Profiles Done!")
 except Exception as e:
-    print(f"Error in code chunk: Stat Profiles. Error: {e}")
+    print(f"Error occurred while drawing Stat Profiles: {e}")
 
 try:
     if postseason:
@@ -4040,11 +3751,11 @@ try:
     print("Win Thresholds Done!")
     if postseason:
         games = []
-        response = games_api.get_games(year=current_year, division = 'fbs', season_type='postseason')
+        response = games_api.get_games(year=current_year, classification = 'fbs', season_type='postseason')
         games = [*games, *response]
     else:
         games = []
-        response = games_api.get_games(year=current_year, week = current_week, division = 'fbs')
+        response = games_api.get_games(year=current_year, week = current_week, classification = 'fbs')
         games = [*games, *response]
 
     games = [dict(
@@ -4075,7 +3786,7 @@ try:
                             start_season_data, all_data, year_long_schedule, records, SOS, SOR, most_deserving, home_team, away_team, neutral)
     print("Matchup Visuals Done!")
 except Exception as e:
-    print(f"Error in code chunk: Game Visuals. Error: {e}")
+    print(f"Error occurred while drawing Matchup Visuals: {e}")
 
 print("---------- Visuals Done! ----------")
 
@@ -4087,17 +3798,13 @@ defensive_scaler = MinMaxScaler(feature_range=(15,40))
 all_data['offensive_total'] = offensive_scaler.fit_transform(all_data[['offensive_total']])
 all_data['defensive_total'] = defensive_scaler.fit_transform(all_data[['defensive_total']])
 
-def date_sort(game):
-    game_date = datetime.datetime.strptime(game['start_date'], "%Y-%m-%dT%H:%M:%S.000Z")
-    return game_date
-
 if postseason:
     games = []
-    response = games_api.get_games(year=current_year, division = 'fbs', season_type='postseason')
+    response = games_api.get_games(year=current_year, classification = 'fbs', season_type='postseason')
     games = [*games, *response]
 else:
     games = []
-    response = games_api.get_games(year=current_year, week = current_week, division = 'fbs')
+    response = games_api.get_games(year=current_year, week = current_week, classification = 'fbs')
     games = [*games, *response]
 
 
@@ -4118,13 +3825,6 @@ games_dict = [dict(
             ) for g in games]
 games_dict.sort(key=date_sort)
 week_games = pd.DataFrame(games_dict)
-
-elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week)]
-elo_ratings_dict = [dict(
-    team = e.team,
-    elo = e.elo
-) for e in elo_ratings_list]
-elo_ratings = pd.DataFrame(elo_ratings_dict)
 
 week_games['home_elo'] = week_games.apply(
     lambda row: elo_ratings.loc[elo_ratings['team'] == row['home_team'], 'elo'].values[0]
@@ -4211,10 +3911,10 @@ for bet in betting:
 
 
         if not consensus_lines.empty:
-            consensus_lines = consensus_lines[['spread', 'formatted_spread','spread_open', 'over_under']]
+            consensus_lines = consensus_lines[['spread', 'formattedSpread','spreadOpen', 'overUnder']]
             combined_data = {
                 'id': data['id'],
-                'season_type': data['season_type']
+                'season_type': data['seasonType']
             }
             df = pd.DataFrame([combined_data])
             full_df = pd.concat([df.reset_index(drop=True), consensus_lines.reset_index(drop=True)], axis=1)
@@ -4223,7 +3923,7 @@ for bet in betting:
 betting_info = pd.concat(betting_info_list, ignore_index=True)
 week_games = pd.merge(week_games, betting_info, on='id', how='left')
 week_games['spread'] = week_games['spread'] * -1
-week_games['spread_open'] = week_games['spread_open'] * -1
+week_games['spreadOpen'] = week_games['spreadOpen'] * -1
 
 # if current_week == 7:
 #     week_games.loc[week_games['home_team'] == 'Western Kentucky', 'pr_spread'] += 0.5
@@ -4245,8 +3945,8 @@ def calculate_pr_prediction(row, pr_spread_col, vegas_spread_col):
         return 'Underdog'
 
 week_games['formatted_open'] = week_games.apply(
-    lambda row: f"{row['away_team']} {row['spread_open']}" if row['spread_open'] < 0 
-                else f"{row['home_team']} -{row['spread_open']}", axis=1
+    lambda row: f"{row['away_team']} {row['spreadOpen']}" if row['spreadOpen'] < 0 
+                else f"{row['home_team']} -{row['spreadOpen']}", axis=1
 )
 
 # Use the above function
@@ -4254,7 +3954,7 @@ def add_pr_prediction(week_games, pr_spread_col, vegas_spread_col, prediction_co
     week_games[prediction_col_name] = week_games.apply(calculate_pr_prediction, axis=1, args=(pr_spread_col,vegas_spread_col,))
     return week_games
 week_games = add_pr_prediction(week_games, 'pr_spread', 'spread', 'pr_prediction')
-week_games = add_pr_prediction(week_games, 'pr_spread', 'spread_open', 'opening_spread_prediction')
+week_games = add_pr_prediction(week_games, 'pr_spread', 'spreadOpen', 'opening_spread_prediction')
 
 # Formatting the KRATOS Power Rating Spread
 week_games['PEAR'] = week_games.apply(
@@ -4262,11 +3962,11 @@ week_games['PEAR'] = week_games.apply(
     else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1)
 
 week_games['difference'] = abs(week_games['pr_spread'] - week_games['spread'])
-week_games['opening_difference'] = abs(week_games['pr_spread'] - week_games['spread_open'])
-week_games['over_under_difference'] = abs(week_games['over_under'] - week_games['predicted_over_under'])
+week_games['opening_difference'] = abs(week_games['pr_spread'] - week_games['spreadOpen'])
+week_games['over_under_difference'] = abs(week_games['overUnder'] - week_games['predicted_over_under'])
 week_games = week_games.sort_values(by=["difference", "home_win_prob"], ascending=False).reset_index(drop=True)
 week_games = week_games.drop_duplicates(subset='home_team')
-prediction_information = week_games[['home_team', 'away_team', 'game_quality', 'home_win_prob','difference', 'formatted_open', 'formatted_spread', 'PEAR', 'pr_prediction', 'home_pr', 'away_pr']]
+prediction_information = week_games[['home_team', 'away_team', 'game_quality', 'home_win_prob','difference', 'formatted_open', 'formattedSpread', 'PEAR', 'pr_prediction', 'home_pr', 'away_pr']]
 prediction_information = prediction_information.dropna()
 print("Total Difference from Vegas Spread:", round(sum(prediction_information['difference']),1))
 print("Average Difference from Vegas Spread:", round(sum(prediction_information['difference'])/len(prediction_information), 2))
@@ -4282,7 +3982,7 @@ def calculate_margin_team(row):
         return ''
 week_games['actual_spread'] = week_games.apply(calculate_margin_team, axis=1)
 week_games = add_pr_prediction(week_games, 'actual_margin', 'spread', 'CLOSE ATS RESULT')
-week_games = add_pr_prediction(week_games, 'actual_margin', 'spread_open', 'OPEN ATS RESULT')
+week_games = add_pr_prediction(week_games, 'actual_margin', 'spreadOpen', 'OPEN ATS RESULT')
 
 def check_prediction_correct(row, prediction_col, ats_tester):
     if row['actual_spread'] == '':
@@ -4307,7 +4007,7 @@ def check_straight_up(row, prediction_col):
     else:
         return 0
 week_games['PEAR SU'] = week_games.apply(lambda row: check_straight_up(row, 'pr_spread'), axis = 1)
-game_completion_info = week_games[['home_team', 'away_team', 'difference', 'formatted_open', 'formatted_spread', 'PEAR', 'spread', 'actual_margin', 'actual_spread', 'PEAR ATS OPEN', 'PEAR ATS CLOSE', 'PEAR SU']]
+game_completion_info = week_games[['home_team', 'away_team', 'difference', 'formatted_open', 'formattedSpread', 'PEAR', 'spread', 'actual_margin', 'actual_spread', 'PEAR ATS OPEN', 'PEAR ATS CLOSE', 'PEAR SU']]
 completed = game_completion_info[game_completion_info["PEAR ATS CLOSE"] != '']
 no_pushes = completed[completed['difference'] != 0]
 no_pushes = no_pushes[no_pushes['spread'] != no_pushes['actual_margin']]
