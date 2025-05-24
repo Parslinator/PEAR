@@ -1419,7 +1419,7 @@ now = datetime.now(central_time_zone)
 ####################### Visuals #######################
 
 # Check if it's Monday and after 10:00 AM and before 3:00 PM
-if now.hour < 23 and now.hour > 7:
+if now.hour < 13 and now.hour > 7:
     print("Starting Visuals")
 
     # --- Config & Setup ---
