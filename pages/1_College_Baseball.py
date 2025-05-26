@@ -2681,7 +2681,16 @@ st.divider()
 
 col1, col2 = st.columns(2)
 with col1:
-    automatic_qualifiers = modeling_stats.loc[modeling_stats.groupby("Conference")["NET"].idxmin()]
+    aq_list = ["Binghamton", "East Carolina", "Stetson", "Rhode Island", "North Carolina", "Arizona",
+            "Creighton", "USC Upstate", "Nebraska", "Cal Poly", "Northeastern", "Western Ky.", "Wright St.",
+            "Columbia", "Fairfield", "Miami (OH)", "Murray St.", "Fresno St.",
+            "Central Conn. St.", "Little Rock", "Holy Cross", "Vanderbilt", "Houston Christian",
+            "ETSU", "Bethune-Cookman", "North Dakota St.", "Coastal Carolina", "Saint Mary's (CA)", "Utah Valley", "Oregon St."]
+    automatic_qualifiers = (
+        modeling_stats[modeling_stats["Team"].isin(aq_list)]
+        .sort_values("NET")
+    )
+    # automatic_qualifiers = modeling_stats.loc[modeling_stats.groupby("Conference")["NET"].idxmin()]
     at_large = modeling_stats.drop(automatic_qualifiers.index)
     at_large = at_large.nsmallest(34, "NET")
     last_four_in = at_large[-4:].reset_index()
@@ -2689,6 +2698,15 @@ with col1:
     tournament = pd.concat([at_large, automatic_qualifiers])
     tournament = tournament.sort_values(by="NET").reset_index(drop=True)
     tournament["Seed"] = (tournament.index // 16) + 1
+
+    if "Northeastern" in tournament.loc[tournament["Seed"] == 1, "Team"].values:
+        # Get Northeastern's row and the #17 team (first Seed 2) row
+        northeastern_idx = tournament[(tournament["Team"] == "Northeastern") & (tournament["Seed"] == 1)].index[0]
+        seed17_idx = tournament[tournament["Seed"] == 2].index[0]
+        # Swap rows
+        tournament.iloc[northeastern_idx], tournament.iloc[seed17_idx] = tournament.iloc[seed17_idx].copy(), tournament.iloc[northeastern_idx].copy()
+        tournament["Seed"] = (tournament.index // 16) + 1
+
     pod_order = list(range(1, 17)) + list(range(16, 0, -1)) + list(range(1, 17)) + list(range(16, 0, -1))
     tournament["Host"] = pod_order
     conference_counts = tournament['Conference'].value_counts()
