@@ -2681,43 +2681,73 @@ st.divider()
 
 col1, col2 = st.columns(2)
 with col1:
+    # automatic_qualifiers = modeling_stats.loc[modeling_stats.groupby("Conference")["NET"].idxmin()]
+    # at_large = modeling_stats.drop(automatic_qualifiers.index)
+    # at_large = at_large.nsmallest(34, "NET")
+    # last_four_in = at_large[-4:].reset_index()
+    # next_8_teams = modeling_stats.drop(automatic_qualifiers.index).nsmallest(42, "NET").iloc[34:].reset_index(drop=True)
+    # tournament = pd.concat([at_large, automatic_qualifiers])
+    # tournament = tournament.sort_values(by="NET").reset_index(drop=True)
+    # tournament["Seed"] = (tournament.index // 16) + 1
+
+    # if "Northeastern" in tournament.loc[tournament["Seed"] == 1, "Team"].values:
+    #     # Get Northeastern's row and the #17 team (first Seed 2) row
+    #     northeastern_idx = tournament[(tournament["Team"] == "Northeastern") & (tournament["Seed"] == 1)].index[0]
+    #     seed17_idx = tournament[tournament["Seed"] == 2].index[0]
+    #     # Swap rows
+    #     tournament.iloc[northeastern_idx], tournament.iloc[seed17_idx] = tournament.iloc[seed17_idx].copy(), tournament.iloc[northeastern_idx].copy()
+    #     tournament["Seed"] = (tournament.index // 16) + 1
+
+    # pod_order = list(range(1, 17)) + list(range(16, 0, -1)) + list(range(1, 17)) + list(range(16, 0, -1))
+    # tournament["Host"] = pod_order
+    # conference_counts = tournament['Conference'].value_counts()
+    # multibid = conference_counts[conference_counts > 1]
+    # formatted_df = tournament.pivot_table(index="Host", columns="Seed", values="Team", aggfunc=lambda x: ' '.join(x))
+    # formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
+    # formatted_df = formatted_df.reset_index()
+    # formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
+    # formatted_df = resolve_conflicts(formatted_df, modeling_stats)
+    # formatted_df.set_index('Host')
+    # formatted_df.index = formatted_df.index + 1
+
     aq_list = ["Binghamton", "East Carolina", "Stetson", "Rhode Island", "North Carolina", "Arizona",
             "Creighton", "USC Upstate", "Nebraska", "Cal Poly", "Northeastern", "Western Ky.", "Wright St.",
             "Columbia", "Fairfield", "Miami (OH)", "Murray St.", "Fresno St.",
             "Central Conn. St.", "Little Rock", "Holy Cross", "Vanderbilt", "Houston Christian",
             "ETSU", "Bethune-Cookman", "North Dakota St.", "Coastal Carolina", "Saint Mary's (CA)", "Utah Valley", "Oregon St."]
+    host_seeds_list = ["Georgia", "Auburn", "Texas", "LSU", "North Carolina", "Clemson", "Coastal Carolina", "Oregon St.",
+                "Oregon", "Arkansas", "Southern Miss.", "Tennessee", "UCLA", "Vanderbilt", "Ole Miss", "Florida St."]
     automatic_qualifiers = (
         modeling_stats[modeling_stats["Team"].isin(aq_list)]
         .sort_values("NET")
     )
-    # automatic_qualifiers = modeling_stats.loc[modeling_stats.groupby("Conference")["NET"].idxmin()]
+    host_seeds = (
+        modeling_stats[modeling_stats["Team"].isin(host_seeds_list)]
+        .sort_values("NET")
+    )
+    amount_of_at_large = 64 - len(set(automatic_qualifiers["Team"]) - set(host_seeds["Team"])) - len(host_seeds)
     at_large = modeling_stats.drop(automatic_qualifiers.index)
-    at_large = at_large.nsmallest(34, "NET")
+    at_large = at_large[~at_large["Team"].isin(host_seeds_list)]
+    automatic_qualifiers = automatic_qualifiers[~automatic_qualifiers["Team"].isin(host_seeds_list)]
+    at_large = at_large.nsmallest(amount_of_at_large, "NET")
     last_four_in = at_large[-4:].reset_index()
-    next_8_teams = modeling_stats.drop(automatic_qualifiers.index).nsmallest(42, "NET").iloc[34:].reset_index(drop=True)
-    tournament = pd.concat([at_large, automatic_qualifiers])
-    tournament = tournament.sort_values(by="NET").reset_index(drop=True)
-    tournament["Seed"] = (tournament.index // 16) + 1
+    next_8 = modeling_stats.drop(automatic_qualifiers.index)
+    next_8 = next_8[~next_8["Team"].isin(host_seeds_list)]
+    next_8_teams = next_8.nsmallest(amount_of_at_large+8, "NET").iloc[amount_of_at_large:].reset_index(drop=True)
+    remaining_teams = pd.concat([automatic_qualifiers, at_large]).sort_values("NET").reset_index(drop=True)
 
-    if "Northeastern" in tournament.loc[tournament["Seed"] == 1, "Team"].values:
-        # Get Northeastern's row and the #17 team (first Seed 2) row
-        northeastern_idx = tournament[(tournament["Team"] == "Northeastern") & (tournament["Seed"] == 1)].index[0]
-        seed17_idx = tournament[tournament["Seed"] == 2].index[0]
-        # Swap rows
-        tournament.iloc[northeastern_idx], tournament.iloc[seed17_idx] = tournament.iloc[seed17_idx].copy(), tournament.iloc[northeastern_idx].copy()
-        tournament["Seed"] = (tournament.index // 16) + 1
-
-    pod_order = list(range(1, 17)) + list(range(16, 0, -1)) + list(range(1, 17)) + list(range(16, 0, -1))
-    tournament["Host"] = pod_order
-    conference_counts = tournament['Conference'].value_counts()
-    multibid = conference_counts[conference_counts > 1]
-    formatted_df = tournament.pivot_table(index="Host", columns="Seed", values="Team", aggfunc=lambda x: ' '.join(x))
-    formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
-    formatted_df = formatted_df.reset_index()
-    formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
+    seed_1_df = host_seeds.sort_values("NET").reset_index(drop=True)
+    seed_1_df = seed_1_df.assign(Seed="1 Seed")
+    seed_2_df = remaining_teams.iloc[0:16].sort_values("NET", ascending=False).copy().assign(Seed="2 Seed")
+    seed_3_df = remaining_teams.iloc[16:32].copy().assign(Seed="3 Seed")
+    seed_4_df = remaining_teams.iloc[32:48].sort_values("NET", ascending=False).copy().assign(Seed="4 Seed")
+    formatted_df = pd.DataFrame(zip(seed_1_df['Team'], seed_1_df['Team'], seed_2_df['Team'], seed_3_df['Team'], seed_4_df['Team']), columns=['Host', '1 Seed', '2 Seed', '3 Seed', '4 Seed'])
     formatted_df = resolve_conflicts(formatted_df, modeling_stats)
-    formatted_df.set_index('Host')
     formatted_df.index = formatted_df.index + 1
+    all_teams = pd.unique(formatted_df[["1 Seed", "2 Seed", "3 Seed", "4 Seed"]].values.ravel())
+    bracket_teams = modeling_stats[modeling_stats["Team"].isin(all_teams)]
+    conference_counts = bracket_teams["Conference"].value_counts()
+    multibid = conference_counts[conference_counts > 1]
     st.markdown(f'<h2 id="tournament-outlook">Tournament Outlook</h2>', unsafe_allow_html=True)
     with st.container(border=True, height=440):
         st.dataframe(formatted_df[['Host', '2 Seed', '3 Seed', '4 Seed']], use_container_width=True)
