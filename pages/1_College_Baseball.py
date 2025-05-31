@@ -1908,6 +1908,12 @@ def team_schedule_quality(team, schedule_df, stats_and_metrics):
         fig.lines.append(plt.Line2D([0.33, 0.33], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
         fig.lines.append(plt.Line2D([0.66, 0.66], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
         fontsize = 32
+    elif cols == 5:
+        fig.lines.append(plt.Line2D([0.2, 0.2], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
+        fig.lines.append(plt.Line2D([0.4, 0.4], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
+        fig.lines.append(plt.Line2D([0.6, 0.6], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
+        fig.lines.append(plt.Line2D([0.8, 0.8], [0, 1], transform=fig.transFigure, color='black', linewidth=2))
+        fontsize = 48
 
     fig.text(0.5, 1.10,f"#{NET} {team} Schedule Quality", ha='center', va='center', fontsize=48, fontweight='bold', color='black')
     fig.text(0.5, 1.06, f"@PEARatings", ha='center', va='center', fontsize=fontsize, color='black', fontweight='bold')
