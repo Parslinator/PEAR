@@ -2887,6 +2887,7 @@ for idx, seed in enumerate(sorted(final_df['Host Seed'].unique())):
     display_df = regional_df[['Team', 'Day 1', 'Day 2', 'Day 3', 'Day 4']].copy()
     for col_name in ['Day 1', 'Day 2', 'Day 3', 'Day 4']:
         display_df[col_name] = (display_df[col_name] * 100).round(1).astype(str) + "%"
+    display_df.index = display_df.index + 1
     with col:
         st.markdown(f"### {host_team} Regional")
         st.dataframe(display_df, use_container_width=True)
