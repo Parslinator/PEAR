@@ -2878,17 +2878,15 @@ with col2:
 
 st.divider()
 
-cols = st.columns(4)
 final_df = pd.read_csv("PEAR/PEAR Baseball/y2025/tracking_regional_simulations.csv")
-# Loop over host seeds and assign each to a column
+cols = st.columns(2)
 for idx, seed in enumerate(sorted(final_df['Host Seed'].unique())):
-    # Select the column to place the table in
-    col = cols[idx % 4]
-    
-    # Filter the DataFrame for this Host Seed
+    col = cols[idx % 2]
     regional_df = final_df[final_df['Host Seed'] == seed].reset_index(drop=True)
-    
-    # Display with a header and the dataframe
+    host_team = regional_df['Team'].iloc[0]
+    display_df = regional_df[['Team', 'Day 1', 'Day 2', 'Day 3', 'Day 4']].copy()
+    for col_name in ['Day 1', 'Day 2', 'Day 3', 'Day 4']:
+        display_df[col_name] = (display_df[col_name] * 100).round(1).astype(str) + "%"
     with col:
-        st.markdown(f"### Regional {seed}")
-        st.dataframe(regional_df, use_container_width=True)
+        st.markdown(f"### {host_team} Regional")
+        st.dataframe(display_df, use_container_width=True)
