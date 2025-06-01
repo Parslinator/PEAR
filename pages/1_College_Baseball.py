@@ -2625,6 +2625,8 @@ st.logo("./PEAR/pear_logo.jpg", size = 'large')
 st.caption(f"Ratings Updated {formatted_latest_date}")
 st.caption(f"Stats Through Games {last_date}")
 st.caption(f"If you get an error, notice a bug, have a suggestion, or a question to ask, reach out to me!")
+if len(modeling_stats) != 299:
+    st.title("WARNGING: Something is wrong with NCAA Data, which causes errors here. Be weary until this message is gone.")
 
 st.sidebar.markdown("""
     <style>
