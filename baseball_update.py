@@ -44,7 +44,7 @@ def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
     if location != "Neutral":
         home_pr += 0.8
     rating_diff = home_pr - away_pr
-    return round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
+    return round(1 / (1 + 10 ** (-rating_diff / 9.1)) * 100, 2)
 
 # --- Helper Functions ---
 def get_soup(url):
@@ -1313,7 +1313,7 @@ def PEAR_Win_Prob(home_pr, away_pr, location = "Neutral"):
     if location != "Neutral":
         home_pr += 0.8
     rating_diff = home_pr - away_pr
-    return round(1 / (1 + 10 ** (-rating_diff / 7)), 4)  # More precision, rounded later in output
+    return round(1 / (1 + 10 ** (-rating_diff / 9.1)), 4)  # More precision, rounded later in output
 
 def remaining_games_rq(row, one_seed_rating):
     """Calculate resume quality for a single game."""
@@ -1985,7 +1985,7 @@ if now.hour < 13 and now.hour > 7:
 
     def PEAR_Win_Prob(home_pr, away_pr):
         rating_diff = home_pr - away_pr
-        return round(1 / (1 + 10 ** (-rating_diff / 7)), 4)  # More precision, rounded later in output
+        return round(1 / (1 + 10 ** (-rating_diff / 9.1)), 4)  # More precision, rounded later in output
 
     def simulate_tournament(team_a, team_b, team_c, team_d, stats_and_metrics):
         teams = [team_a, team_b, team_c, team_d]
@@ -2321,7 +2321,7 @@ if now.hour < 13 and now.hour > 7:
 
     def PEAR_Win_Prob(home_pr, away_pr):
         rating_diff = home_pr - away_pr
-        return round(1 / (1 + 10 ** (-rating_diff / 7)), 4)
+        return round(1 / (1 + 10 ** (-rating_diff / 9.1)), 4)
 
     def normalize_array(values):
         values = np.array(values)

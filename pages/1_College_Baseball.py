@@ -74,7 +74,7 @@ def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
     if location != "Neutral":
         home_pr += 0.8
     rating_diff = home_pr - away_pr
-    return round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
+    return round(1 / (1 + 10 ** (-rating_diff / 9.1)) * 100, 2)
 
 if len(subset_games) > 0:
     subset_games['Result'] = subset_games['Result'].astype(str)
@@ -522,7 +522,7 @@ def grab_team_schedule(team_name, stats_df):
             if location != "Neutral":
                 home_pr += 0.8
             rating_diff = home_pr - away_pr
-            return round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
+            return round(1 / (1 + 10 ** (-rating_diff / 9.1)) * 100, 2)
         remaining_games['PEAR'] = remaining_games.apply(
             lambda row: find_spread(
                 row['Opponent'], row['Team'], row['Location']
@@ -573,7 +573,7 @@ def grab_team_schedule(team_name, stats_df):
 
     def PEAR_Win_Prob(home_pr, away_pr):
         rating_diff = home_pr - away_pr
-        win_prob = round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
+        win_prob = round(1 / (1 + 10 ** (-rating_diff / 9.1)) * 100, 2)
         return win_prob
 
 
@@ -639,7 +639,7 @@ def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
     if location != "Neutral":
         home_pr += 0.8
     rating_diff = home_pr - away_pr
-    return round(1 / (1 + 10 ** (-rating_diff / 7)) * 100, 2)
+    return round(1 / (1 + 10 ** (-rating_diff / 9.1)) * 100, 2)
 
 def plot_tournament_odds_table(final_df, row_height_multiplier, conference, title_y, subtitle_y, cell_height):
     def normalize(value, min_val, max_val):
@@ -2369,7 +2369,7 @@ def simulate_tournament_home_field(teams, ratings):
     import random
     def PEAR_Win_Prob(home_pr, away_pr):
         rating_diff = home_pr - away_pr
-        return round(1 / (1 + 10 ** (-rating_diff / 7)), 4)
+        return round(1 / (1 + 10 ** (-rating_diff / 9.1)), 4)
 
     team_a, team_b, team_c, team_d = teams
     r = ratings
@@ -2886,16 +2886,18 @@ with col2:
 
 st.divider()
 
-final_df = pd.read_csv("PEAR/PEAR Baseball/y2025/tracking_regional_simulations.csv")
-cols = st.columns(2)
-for idx, seed in enumerate(sorted(final_df['Host Seed'].unique())):
-    col = cols[idx % 2]
-    regional_df = final_df[final_df['Host Seed'] == seed].reset_index(drop=True)
-    host_team = regional_df['Team'].iloc[0]
-    display_df = regional_df[['Team', 'Day 1', 'Day 2', 'Day 3', 'Day 4']].copy()
-    for col_name in ['Day 1', 'Day 2', 'Day 3', 'Day 4']:
-        display_df[col_name] = (display_df[col_name] * 100).round(1).astype(str) + "%"
-    display_df.index = display_df.index + 1
-    with col:
-        st.markdown(f"### {host_team} Regional")
-        st.dataframe(display_df, use_container_width=True)
+
+### CODE FOR DAY-BY-DAY REGIONAL PROJECTIONS
+# final_df = pd.read_csv("PEAR/PEAR Baseball/y2025/tracking_regional_simulations.csv")
+# cols = st.columns(2)
+# for idx, seed in enumerate(sorted(final_df['Host Seed'].unique())):
+#     col = cols[idx % 2]
+#     regional_df = final_df[final_df['Host Seed'] == seed].reset_index(drop=True)
+#     host_team = regional_df['Team'].iloc[0]
+#     display_df = regional_df[['Team', 'Day 1', 'Day 2', 'Day 3', 'Day 4']].copy()
+#     for col_name in ['Day 1', 'Day 2', 'Day 3', 'Day 4']:
+#         display_df[col_name] = (display_df[col_name] * 100).round(1).astype(str) + "%"
+#     display_df.index = display_df.index + 1
+#     with col:
+#         st.markdown(f"### {host_team} Regional")
+#         st.dataframe(display_df, use_container_width=True)
