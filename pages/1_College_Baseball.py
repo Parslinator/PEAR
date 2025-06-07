@@ -2904,7 +2904,7 @@ for idx, supers_idx in enumerate(sorted(supers_df['Regional Number'].unique())):
     host = supers['Team'].iloc[0]
     display_df = supers[['Team', 'Day 1', 'Day 2', 'Day 3']].copy()
     for col_name in ['Day 1', 'Day 2', 'Day 3']:
-        display_df[col_name] = (display_df[col_name] * 100).round(1).astype(str) + "%"
+        display_df[col_name] = (display_df[col_name]).round(1).astype(str) + "%"
     display_df.index = display_df.index + 1
     with col:
         st.markdown(f"### {host} Super Regional")
@@ -2921,7 +2921,7 @@ for idx, supers_idx in enumerate(sorted(supers_df['Regional Number'].unique())):
 #     host_team = regional_df['Team'].iloc[0]
 #     display_df = regional_df[['Team', 'Day 1', 'Day 2', 'Day 3', 'Day 4']].copy()
 #     for col_name in ['Day 1', 'Day 2', 'Day 3', 'Day 4']:
-#         display_df[col_name] = (display_df[col_name]).round(1).astype(str) + "%"
+#         display_df[col_name] = (display_df[col_name] * 100).round(1).astype(str) + "%"
 #     display_df.index = display_df.index + 1
 #     with col:
 #         st.markdown(f"### {host_team} Regional")
