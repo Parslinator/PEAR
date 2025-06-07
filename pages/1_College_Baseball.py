@@ -2886,6 +2886,21 @@ with col2:
 
 st.divider()
 
+supers_df = pd.read_csv("./PEAR/PEAR Baseball/y2025/tracking_supers_odds.csv")
+cols = st.columns(2)
+for idx, supers_idx in enumerate(sorted(supers_df['Regional Number'].unique())):
+    col = cols[idx % 2]
+    supers = supers_df[supers_df['Regional Number'] == supers_idx].reset_index(drop=True)
+    host = supers['Team'].iloc[0]
+    display_df = supers[['Team', 'Day 1', 'Day 2', 'Day 3']].copy()
+    for col_name in ['Day 1', 'Day 2', 'Day 3']:
+        display_df[col_name] = (display_df[col_name] * 100).round(1).astype(str) + "%"
+    display_df.index = display_df.index + 1
+    with col:
+        st.markdown(f"### {host} Super Regional")
+        st.dataframe(display_df, use_container_width=True)
+
+
 
 ### CODE FOR DAY-BY-DAY REGIONAL PROJECTIONS
 # final_df = pd.read_csv("PEAR/PEAR Baseball/y2025/tracking_regional_simulations.csv")
