@@ -134,17 +134,27 @@ def calculate_spread_from_stats(home_pr, away_pr, home_elo, away_elo, location):
 # Get valid date files
 date_files = {extract_date(f): f for f in csv_files if extract_date(f) is not None}
 
-# Find the latest date
 if date_files:
-    latest_date = max(date_files.keys())  # Get the most recent date
-    latest_file = date_files[latest_date]
+    sorted_dates = sorted(date_files.keys(), reverse=True)
 
-    # Read the selected CSV file
+    # Try latest date
+    latest_date = sorted_dates[0]
+    latest_file = date_files[latest_date]
     file_path = os.path.join(folder_path, latest_file)
     modeling_stats = pd.read_csv(file_path)
+
+    # If not 299, try previous day
+    if len(modeling_stats) != 299 and len(sorted_dates) > 1:
+        previous_date = sorted_dates[1]
+        previous_file = date_files[previous_date]
+        file_path = os.path.join(folder_path, previous_file)
+        modeling_stats = pd.read_csv(file_path)
+        latest_date = previous_date  # Update to reflect the used date
+
+    formatted_latest_date = latest_date.strftime("%B %d, %Y")
 else:
-    modeling_stats = None  # No valid files found
-formatted_latest_date = latest_date.strftime("%B %d, %Y")
+    modeling_stats = None
+    formatted_latest_date = None
 
 def find_spread(home_team, away_team, location = 'Neutral'):
     default_pr = modeling_stats['Rating'].mean() - 1.75 * modeling_stats['Rating'].std()
@@ -2911,7 +2921,7 @@ for idx, supers_idx in enumerate(sorted(supers_df['Regional Number'].unique())):
 #     host_team = regional_df['Team'].iloc[0]
 #     display_df = regional_df[['Team', 'Day 1', 'Day 2', 'Day 3', 'Day 4']].copy()
 #     for col_name in ['Day 1', 'Day 2', 'Day 3', 'Day 4']:
-#         display_df[col_name] = (display_df[col_name] * 100).round(1).astype(str) + "%"
+#         display_df[col_name] = (display_df[col_name]).round(1).astype(str) + "%"
 #     display_df.index = display_df.index + 1
 #     with col:
 #         st.markdown(f"### {host_team} Regional")
