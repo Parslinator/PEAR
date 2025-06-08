@@ -1,17 +1,17 @@
 ,Team,Regional Number,Day 1,Day 2,Day 3
-0,Louisville,1,56.2,79.0,0
-1,Miami (FL),1,43.8,21.0,0
-2,Oregon St.,2,60.2,81.4,0
-3,Florida St.,2,39.8,18.6,0
-4,North Carolina,3,65.4,84.3,0
-5,Arizona,3,34.6,15.7,0
-6,Auburn,4,54.4,28.1,0
-7,Coastal Carolina,4,45.6,71.9,0
-8,UCLA,5,52.7,0.0,0
-9,UTSA,5,47.3,0.0,0
-10,Duke,6,73.6,0.0,0
-11,Murray St.,6,26.4,0.0,0
-12,LSU,7,76.5,0.0,0
-13,West Virginia,7,23.5,0.0,0
-14,Arkansas,8,62.7,0.0,0
-15,Tennessee,8,37.3,0.0,0
+0,Louisville,1,56.2,79.0,54.2
+1,Miami (FL),1,43.8,21.0,45.8
+2,Oregon St.,2,60.2,81.4,0.0
+3,Florida St.,2,39.8,18.6,0.0
+4,North Carolina,3,65.4,84.3,60.4
+5,Arizona,3,34.6,15.7,39.6
+6,Auburn,4,54.4,28.1,0.0
+7,Coastal Carolina,4,45.6,71.9,100.0
+8,UCLA,5,52.7,0.0,0.0
+9,UTSA,5,47.3,0.0,0.0
+10,Duke,6,73.6,88.6,0.0
+11,Murray St.,6,26.4,11.4,0.0
+12,LSU,7,76.5,90.1,0.0
+13,West Virginia,7,23.5,9.9,0.0
+14,Arkansas,8,62.7,82.8,0.0
+15,Tennessee,8,37.3,17.2,0.0
