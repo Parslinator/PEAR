@@ -1,8 +1,8 @@
 name: run softball power ratings
 
 on:
-  schedule:
-    - cron: "30 15 * * *"   # Runs at 10:30 AM America/Chicago time
+  # schedule:
+  #   - cron: "30 15 * * *"   # Runs at 10:30 AM America/Chicago time
   workflow_dispatch:  # Allows manual trigger if needed
 
 env:
