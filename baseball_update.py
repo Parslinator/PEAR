@@ -846,7 +846,7 @@ schedule_df['away_rating'].fillna(schedule_df['away_team'].map(team_rating_quant
 schedule_df['home_rating'].fillna(missing_rating, inplace=True)
 schedule_df['away_rating'].fillna(missing_rating, inplace=True)
 schedule_df['home_win_prob'] = schedule_df.apply(
-    lambda row: PEAR_Win_Prob(row['home_rating'], row['away_rating']) / 100, axis=1
+    lambda row: PEAR_Win_Prob(row['home_rating'], row['away_rating'], row['Location']) / 100, axis=1
 )
 remaining_games = schedule_df[schedule_df["Date"] > comparison_date].reset_index(drop=True)
 
