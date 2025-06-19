@@ -1,0 +1,294 @@
+,Rank,Team,Conference
+0,1,Clemson,ACC
+1,2,Rice,ConfUSA
+2,3,Cal State Fullerton,BigWest
+3,4,North Carolina,ACC
+4,5,Georgia Tech,ACC
+5,6,Alabama,SEC
+6,7,Oklahoma,Big12
+7,8,Miami,ACC
+8,9,Georgia,SEC
+9,10,Florida State,ACC
+10,11,Texas,Big12
+11,12,Oregon State,Pac10
+12,13,Nebraska,Big12
+13,14,North Carolina State,ACC
+14,15,Col of Charleston,SoCon
+15,16,Virginia,ACC
+16,17,Winthrop,BigSou
+17,18,Ole Miss,SEC
+18,19,Oklahoma State,Big12
+19,20,Arkansas,SEC
+20,21,Troy,SBC
+21,22,Pepperdine,WCC
+22,23,UCLA,Pac10
+23,24,Elon,SoCon
+24,25,Houston,ConfUSA
+25,26,South Carolina,SEC
+26,27,Wake Forest,ACC
+27,28,Kentucky,SEC
+28,29,Tulane,ConfUSA
+29,30,Fresno State,WAC
+30,31,Baylor,Big12
+31,32,Arizona State,Pac10
+32,33,Kansas,Big12
+33,34,Vanderbilt,SEC
+34,35,Mississippi State,SEC
+35,36,Hawaii,WAC
+36,37,Stanford,Pac10
+37,38,LSU,SEC
+38,39,South Alabama,SBC
+39,40,Southern Miss,ConfUSA
+40,41,Oral Roberts,MCC
+41,42,Missouri,Big12
+42,43,UC Irvine,BigWest
+43,44,Florida,SEC
+44,45,Notre Dame,BigEast
+45,46,Wichita State,MVC
+46,47,San Francisco,WCC
+47,48,Jacksonville,AtlSun
+48,49,UNC Wilmington,CAA
+49,50,Long Beach State,BigWest
+50,51,Evansville,MVC
+51,52,Kent State,MAC
+52,53,Michigan,Big10
+53,54,Missouri State,MVC
+54,55,Old Dominion,CAA
+55,56,UL Lafayette,SBC
+56,57,East Carolina,ConfUSA
+57,58,Maryland,ACC
+58,59,San Diego,WCC
+59,60,Connecticut,BigEast
+60,61,Texas Tech,Big12
+61,62,Ball State,MAC
+62,63,Texas Christian,MWC
+63,64,Auburn,SEC
+64,65,USC,Pac10
+65,66,Texas A&M,Big12
+66,67,UC Riverside,BigWest
+67,68,Kansas State,Big12
+68,69,Stetson,AtlSun
+69,70,Tennessee,SEC
+70,71,Middle Tennessee,SBC
+71,72,Florida International,SBC
+72,73,St. John's,BigEast
+73,74,Birmingham-Southern,BigSou
+74,75,James Madison,CAA
+75,76,Arizona,Pac10
+76,77,Washington,Pac10
+77,78,Dallas Baptist,IndyNCAA
+78,79,Georgia Southern,SoCon
+79,80,Memphis,ConfUSA
+80,81,Citadel,SoCon
+81,82,VCU,CAA
+82,83,McNeese State,Sthland
+83,84,Pacific,BigWest
+84,85,Boston College,ACC
+85,86,Cal Poly,BigWest
+86,87,Minnesota,Big10
+87,88,Cal State Northridge,BigWest
+88,89,Louisiana Tech,WAC
+89,90,California,Pac10
+90,91,North Florida,AtlSun
+91,92,Western Carolina,SoCon
+92,93,Mercer,AtlSun
+93,94,Lamar,Sthland
+94,95,Florida Atlantic,AtlSun
+95,96,Furman,SoCon
+96,97,San Jose State,WAC
+97,98,Louisville,BigEast
+98,99,Ohio State,Big10
+99,100,Coastal Carolina,BigSou
+100,101,UT San Antonio,Sthland
+101,102,Creighton,MVC
+102,103,Le Moyne,MAAC
+103,104,Purdue,Big10
+104,105,Northeastern,CAA
+105,106,Liberty,BigSou
+106,107,Rutgers,BigEast
+107,108,UNLV,MWC
+108,109,Rhode Island,Atl10
+109,110,Western Michigan,MAC
+110,111,Virginia Tech,ACC
+111,112,New Orleans,SBC
+112,113,UT Arlington,Sthland
+113,114,Washington State,Pac10
+114,115,East Tennessee State,AtlSun
+115,116,UC Santa Barbara,BigWest
+116,117,West Virginia,BigEast
+117,118,Miami-Ohio,MAC
+118,119,Southern Illinois,MVC
+119,120,UNC Greensboro,SoCon
+120,121,Gonzaga,WCC
+121,122,Texas State,Sthland
+122,123,Manhattan,MAAC
+123,124,UNC Charlotte,Atl10
+124,125,Loyola Marymount,WCC
+125,126,Samford,OVC
+126,127,Central Michigan,MAC
+127,128,Georgia State,CAA
+128,129,Saint Louis,Atl10
+129,130,High Point,BigSou
+130,131,Santa Clara,WCC
+131,132,Central Florida,ConfUSA
+132,133,Illinois-Chicago,Horiz
+133,134,Nevada,WAC
+134,135,Bethune-Cookman,MEAC
+135,136,New Mexico,MWC
+136,137,San Diego State,MWC
+137,138,Northwestern State,Sthland
+138,139,Illinois,Big10
+139,140,Cincinnati,BigEast
+140,141,Alabama-Birmingham,ConfUSA
+141,142,Jacksonville State,OVC
+142,143,Arkansas State,SBC
+143,144,UT Pan American,IndyNCAA
+144,145,Dayton,Atl10
+145,146,George Mason,CAA
+146,147,South Florida,BigEast
+147,148,Michigan State,Big10
+148,149,Northwestern,Big10
+149,150,BYU,MWC
+150,151,UNC Asheville,BigSou
+151,152,Wright State,Horiz
+152,153,Kennesaw State,AtlSun
+153,154,Harvard,Ivy
+154,155,Northern Iowa,MVC
+155,156,Bucknell,Patriot
+156,157,Army,Patriot
+157,158,Delaware,CAA
+158,159,Navy,Patriot
+159,160,St. Mary's CA,WCC
+160,161,George Washington,Atl10
+161,162,Maine,AmEast
+162,163,Marshall,ConfUSA
+163,164,Eastern Michigan,MAC
+164,165,Appalachian State,SoCon
+165,166,VMI,BigSou
+166,167,Illinois State,MVC
+167,168,William and Mary,CAA
+168,169,New York Tech,IndyNCAA
+169,170,Toledo,MAC
+170,171,St. Bonaventure,Atl10
+171,172,Eastern Illinois,OVC
+172,173,Southeastern Louisiana,Sthland
+173,174,Gardner-Webb,AtlSun
+174,175,Belmont,AtlSun
+175,176,Penn State,Big10
+176,177,Western Kentucky,SBC
+177,178,UC Davis,IndyNCAA
+178,179,Hofstra,CAA
+179,180,Charleston Southern,BigSou
+180,181,Iowa,Big10
+181,182,Pittsburgh,BigEast
+182,183,Yale,Ivy
+183,184,Villanova,BigEast
+184,185,Dartmouth,Ivy
+185,186,Towson,CAA
+186,187,Northern Illinois,MAC
+187,188,Austin Peay,OVC
+188,189,Binghamton,AmEast
+189,190,Marist,MAAC
+190,191,Brown,Ivy
+191,192,Bradley,MVC
+192,193,Duke,ACC
+193,194,Quinnipiac,NEC
+194,195,New Mexico State,WAC
+195,196,Arkansas-Little Rock,SBC
+196,197,Sacramento State,WAC
+197,198,Central Connecticut State,NEC
+198,199,Lehigh,Patriot
+199,200,Milwaukee,Horiz
+200,201,Richmond,Atl10
+201,202,Davidson,SoCon
+202,203,Bowling Green,MAC
+203,204,Portland,WCC
+204,205,Campbell,AtlSun
+205,206,Niagara,MAAC
+206,207,Siena,MAAC
+207,208,Wofford,SoCon
+208,209,Utah,MWC
+209,210,Texas A&M-Corpus Christi,IndyNCAA
+210,211,Georgetown,BigEast
+211,212,Stony Brook,AmEast
+212,213,Monmouth,NEC
+213,214,Sam Houston State,Sthland
+214,215,Lafayette,Patriot
+215,216,Lipscomb,AtlSun
+216,217,Indiana,Big10
+217,218,Eastern Kentucky,OVC
+218,219,Ohio,MAC
+219,220,Southeast Missouri State,OVC
+220,221,Holy Cross,Patriot
+221,222,Princeton,Ivy
+222,223,Indiana State,MVC
+223,224,Seton Hall,BigEast
+224,225,Rider,MAAC
+225,226,Fordham,Atl10
+226,227,Northern Colorado,IndyNCAA
+227,228,Louisiana-Monroe,Sthland
+228,229,Longwood,IndyNCAA
+229,230,Fairfield,MAAC
+230,231,Xavier,Atl10
+231,232,Sacred Heart,NEC
+232,233,Southern,SWAC
+233,234,Youngstown State,Horiz
+234,235,Western Illinois,MCC
+235,236,Vermont,AmEast
+236,237,Savannah State,IndyNCAA
+237,238,Southern Utah,MCC
+238,239,Albany,AmEast
+239,240,Nicholls State,Sthland
+240,241,Duquesne,Atl10
+241,242,Mississippi Valley State,SWAC
+242,243,Centenary-LA,MCC
+243,244,Wagner,NEC
+244,245,Stephen F. Austin,Sthland
+245,246,LaSalle,Atl10
+246,247,Prairie View A&M,SWAC
+247,248,Mount St. Mary's,NEC
+248,249,Buffalo,MAC
+249,250,Butler,Horiz
+250,251,Tennessee-Martin,OVC
+251,252,Norfolk State,MEAC
+252,253,Utah Valley,IndyNCAA
+253,254,Oakland,MCC
+254,255,Jackson State,SWAC
+255,256,Akron,MAC
+256,257,Massachusetts,Atl10
+257,258,UMBC,AmEast
+258,259,Murray State,OVC
+259,260,Tennessee Tech,OVC
+260,261,North Carolina A&T,MEAC
+261,262,Alcorn State,SWAC
+262,263,Delaware State,MEAC
+263,264,Hartford,AmEast
+264,265,IPFW,IndyNCAA
+265,266,Hawaii-Hilo,IndyNCAA
+266,267,Cleveland State,Horiz
+267,268,Cornell,Ivy
+268,269,Radford,BigSou
+269,270,Columbia,Ivy
+270,271,UMES,MEAC
+271,272,Saint Joseph's,Atl10
+272,273,Canisius,MAAC
+273,274,Iona,MAAC
+274,275,North Dakota State,IndyNCAA
+275,276,Penn,Ivy
+276,277,Arkansas-Pine Bluff,SWAC
+277,278,Morehead State,OVC
+278,279,Florida A&M,MEAC
+279,280,South Dakota State,IndyNCAA
+280,281,Texas Southern,SWAC
+281,282,Air Force,MWC
+282,283,Long Island,NEC
+283,284,Valparaiso,MCC
+284,285,Coppin State,MEAC
+285,286,Temple,Atl10
+286,287,St. Peter's,MAAC
+287,288,Chicago State,MCC
+288,289,Fairleigh Dickinson,NEC
+289,290,St. Francis,NEC
+290,291,Grambling State,SWAC
+291,292,Alabama State,SWAC
+292,293,Alabama A&M,SWAC
