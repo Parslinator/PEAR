@@ -22,6 +22,7 @@ from matplotlib.colors import LinearSegmentedColormap
 import matplotlib
 from collections import defaultdict
 import random
+import glob
 font_prop = fm.FontProperties(fname="./PEAR/trebuc.ttf")
 fm.fontManager.addfont("./PEAR/trebuc.ttf")
 fm.fontManager.addfont("./PEAR/Trebuchet MS Bold.ttf")
