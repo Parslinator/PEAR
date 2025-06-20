@@ -156,6 +156,52 @@ else:
     modeling_stats = None
     formatted_latest_date = None
 
+
+base_path = "PEAR/PEAR Baseball"
+seasons = [2012, 2013, 2014, 2015, 2016, 2017,
+           2018, 2019, 2021, 2022, 2023, 2024, 2025]
+
+all_data_list = []
+
+date_pattern = re.compile(r"baseball_(\d{2}_\d{2}_\d{4})\.csv")
+
+for year in seasons:
+    folder = os.path.join(base_path, f"y{year}", "Data")
+    pattern = os.path.join(folder, "baseball_*.csv")
+    files = glob.glob(pattern)
+
+    valid_files = []
+    for f in files:
+        filename = os.path.basename(f)
+        match = date_pattern.fullmatch(filename)
+        if match:
+            valid_files.append((f, pd.to_datetime(match.group(1), format="%m_%d_%Y")))
+
+    if valid_files:
+        # Pick file with latest date
+        latest_file = max(valid_files, key=lambda x: x[1])[0]
+
+        df = pd.read_csv(latest_file)[['Team', 'Conference', 'Rating', 'NET_Score']]
+        df['Season'] = year
+        all_data_list.append(df)
+    else:
+        print(f"No valid file found for {year}")
+
+all_data = pd.concat(all_data_list, ignore_index=True)
+all_data['Normalized_Rating'] = all_data.groupby('Season')['Rating'].transform(
+    lambda x: (x - x.mean()) / x.std()
+)
+
+current_range = all_data['Normalized_Rating'].max() - all_data['Normalized_Rating'].min()
+desired_range = 15
+scaling_factor = desired_range / current_range
+all_data['Normalized_Rating'] = round(all_data['Normalized_Rating'] * scaling_factor, 4)
+all_data['Normalized_Rating'] = all_data['Normalized_Rating'] - all_data['Normalized_Rating'].min()
+all_data['Normalized_Rating'] = round(all_data['Normalized_Rating'] - all_data['Normalized_Rating'].mean(),2)
+all_data['Normalized_Rating'] = round(all_data['Normalized_Rating'], 2)
+all_data = all_data.sort_values('Normalized_Rating', ascending=False).reset_index(drop=True)
+all_data['Season'] = all_data['Season'].astype(int)
+
 def find_spread(home_team, away_team, location = 'Neutral'):
     default_pr = modeling_stats['Rating'].mean() - 1.75 * modeling_stats['Rating'].std()
     default_elo = 1200
@@ -2723,6 +2769,94 @@ def conference_projected_standing(this_conference, projected_wins):
     plt.text(0.055, -1, f"@PEARatings", fontsize=16, ha='left')
     return fig
 
+import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib.patches as mpatches
+
+def plot_rating_vs_net(team_name, df):
+    """
+    Scatter plot of Rating vs NET_Score for a given team, using distinct colors by season.
+    National champions are highlighted in gold. Legend is ordered by season.
+    """
+    team_data = df[df['Team'] == team_name].copy()
+    team_data['Season'] = team_data['Season'].astype(int)
+    team_data = team_data.sort_values('Season')
+    team_avg_rating = team_data['Normalized_Rating'].mean()
+    team_avg_net = team_data['NET_Score'].mean()
+
+    if team_data.empty:
+        print(f"No data found for team: {team_name}")
+        return
+
+    seasons = sorted(team_data['Season'].unique())
+
+    # Set up the figure and background color
+    fig, ax = plt.subplots(figsize=(8, 6), dpi=500)
+    fig.patch.set_facecolor('#CECEB2')
+    ax.set_facecolor('#CECEB2')
+
+    # Plot each season with its own color
+    for season in seasons:
+        season_data = team_data[team_data['Season'] == season]
+        ax.scatter(season_data['Normalized_Rating'], season_data['NET_Score'],
+                   color='darkgreen', edgecolor='black', s=400, label=str(season), alpha=0.6)
+
+    for _, row in team_data.iterrows():
+        ax.text(row['Normalized_Rating'], row['NET_Score'], str(row['Season'])[2:],
+                fontsize=9, ha='center', va='center', color='black', fontweight='bold')
+
+    # Highlight national champions in gold
+    champions = [
+        ('Arizona', 2012), ('UCLA', 2013), ('Vanderbilt', 2014), ('Virginia', 2015),
+        ('Coastal Carolina', 2016), ('Florida', 2017), ('Oregon St.', 2018),
+        ('Vanderbilt', 2019), ("Mississippi St.", 2021), ('Ole Miss', 2022), ('LSU', 2023), ('Tennessee', 2024),
+    ]
+    champ_df = df[df.apply(lambda row: (row['Team'], row['Season']) in champions, axis=1)]
+
+    if not champ_df.empty:
+        ax.scatter(champ_df['Normalized_Rating'], champ_df['NET_Score'],
+                   color='gold', edgecolor='black', s=200, zorder=5, alpha=0.4)
+    for _, row in champ_df.iterrows():
+        ax.text(row['Normalized_Rating'], row['NET_Score'], str(row['Season'])[2:],
+                fontsize=5, ha='center', va='center', color='black', fontweight='bold')
+
+    # Labels and styling
+    plt.title(f"Team Strength vs NET for {team_name} Since 2012 (excl. '20)", 
+                 fontsize=16, color='black', pad=30, fontweight='bold')
+    plt.suptitle("@PEARatings", y=0.85, fontsize=14, ha='center', va='center')
+    # ax.text(-1.2, 1.04, "@PEARatings", fontsize=14, ha='center', va='center')
+    ax.set_xlabel('Team Strength', color='black')
+    ax.set_ylabel('NET Score', color='black')
+    ax.tick_params(colors='black')
+    ax.grid(True, linestyle='--', alpha=0.4, color='gray')
+    x_min = df['Normalized_Rating'].min()
+    x_max = df['Normalized_Rating'].max()
+    x_mean = df['Normalized_Rating'].mean()
+    y_mean = df['NET_Score'].mean()
+    avg_rating_patch = mpatches.Patch(color='none', label=f'Average Rating is 0', linewidth=0)
+    team_rating_patch = mpatches.Patch(color='none', label=f"{team_name} avg: {team_avg_rating:.2f}")
+    avg_net_patch = mpatches.Patch(color='none', label=f'Average NET is 0.56', linewidth=0)
+    team_net_patch = mpatches.Patch(color='none', label=f"{team_name} avg: {team_avg_net:.2f}")
+
+    leg = ax.legend(handles=[avg_rating_patch, team_rating_patch, avg_net_patch, team_net_patch],
+                    fontsize=10,
+                    title_fontsize=11,
+                    loc='best',
+                    frameon=True,
+                    facecolor='#4B5320',  # Dark olive green for contrast
+                    edgecolor='black',
+                    handlelength=0,
+                    handletextpad=0,
+                    borderpad=1,
+                    labelspacing=0.6)
+
+    # Center the legend text labels horizontally
+    for text in leg.get_texts():
+        text.set_ha('center')
+
+    plt.tight_layout()
+    return fig
+
 st.title(f"{current_season} CBASE PEAR")
 st.logo("./PEAR/pear_logo.jpg", size = 'large')
 st.caption(f"Ratings Updated {formatted_latest_date}")
@@ -2758,6 +2892,7 @@ st.sidebar.markdown("""
     <a class="nav-link" href="#conference-team-sheets">Conference Team Sheets</a>
     <a class="nav-link" href="#simulate-regional">Simulate Regional</a>
     <a class="nav-link" href="#projected-conference-tournament">Projected Conference Tournament</a>
+    <a class="nav-link" href='#historical-team-performance'>Historical Team Performance</a>
 """, unsafe_allow_html=True)
 
 st.divider()
@@ -2958,13 +3093,28 @@ with col2:
 
 st.divider()
 
-if len(subset_games) > 0:
-    comparison_date = comparison_date.strftime("%B %d, %Y")
-    st.subheader(f"{comparison_date} Games")
-    subset_games['Home'] = subset_games['home_team']
-    subset_games['Away'] = subset_games['away_team']
-    with st.container(border=True, height=440):
-        st.dataframe(subset_games[['Home', 'Away', 'GQI', 'PEAR', 'Result']], use_container_width=True)
+import os
+import glob
+import pandas as pd
+import re
+
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown(f'<h2 id="historical-team-performance">Historical Team Performance</h2>', unsafe_allow_html=True)
+    with st.form(key='historical-team-performance'):
+        team = st.selectbox("Team", ["Select Team"] + list(sorted(all_data['Team'].unique())))
+        team_performance = st.form_submit_button("Historical Performance")
+        if team_performance:
+            fig = plot_rating_vs_net(team, all_data)
+            st.pyplot(fig)
+with col2:
+    if len(subset_games) > 0:
+        comparison_date = comparison_date.strftime("%B %d, %Y")
+        st.subheader(f"{comparison_date} Games")
+        subset_games['Home'] = subset_games['home_team']
+        subset_games['Away'] = subset_games['away_team']
+        with st.container(border=True, height=440):
+            st.dataframe(subset_games[['Home', 'Away', 'GQI', 'PEAR', 'Result']], use_container_width=True)
 
 st.divider()
 
