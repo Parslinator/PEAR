@@ -2838,6 +2838,15 @@ def plot_rating_vs_net(team_name, df):
     x_max = df['Normalized_Rating'].max()
     x_mean = df['Normalized_Rating'].mean()
     y_mean = df['NET_Score'].mean()
+
+    if team_data['Normalized_Rating'].min() < x_mean:
+        ax.axvline(x_mean, linestyle='--', linewidth=1, color='red')
+        ax.text(x_mean-0.02, ax.get_ylim()[1]-0.02, f'Avg Rating', 
+                color='red', fontsize=9, ha='right', va='top', rotation=90, )
+    if team_data['NET_Score'].min() < y_mean:
+        ax.axhline(y_mean, linestyle='--', linewidth=1, color='red')
+        ax.text(ax.get_xlim()[1]-0.02, y_mean-0.005, f'Avg NET', 
+                color='red', fontsize=9, ha='right', va='top')
     avg_rating_patch = mpatches.Patch(color='none', label=f'Average Rating is 0', linewidth=0)
     team_rating_patch = mpatches.Patch(color='none', label=f"{team_name} avg: {team_avg_rating:.2f}")
     avg_net_patch = mpatches.Patch(color='none', label=f'Average NET is 0.56', linewidth=0)
