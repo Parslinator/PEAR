@@ -2796,6 +2796,10 @@ def plot_rating_vs_net(team_name, df):
     fig.patch.set_facecolor('#CECEB2')
     ax.set_facecolor('#CECEB2')
 
+    for spine in ax.spines.values():
+        spine.set_edgecolor('black')
+        spine.set_linewidth(1)
+
     # Plot each season with its own color
     for season in seasons:
         season_data = team_data[team_data['Season'] == season]
