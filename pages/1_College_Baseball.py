@@ -159,7 +159,7 @@ else:
 
 
 base_path = "PEAR/PEAR Baseball"
-seasons = [2012, 2013, 2014, 2015, 2016, 2017,
+seasons = [2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017,
            2018, 2019, 2021, 2022, 2023, 2024, 2025]
 
 all_data_list = []
@@ -2854,6 +2854,7 @@ def plot_rating_vs_net(team_name, df):
 
     # Highlight national champions in gold
     champions = [
+        ("Fresno St.", 2008), ("LSU", 2009), ("South Carolina", 2010), ("South Carolina", 2011),
         ('Arizona', 2012), ('UCLA', 2013), ('Vanderbilt', 2014), ('Virginia', 2015),
         ('Coastal Carolina', 2016), ('Florida', 2017), ('Oregon St.', 2018),
         ('Vanderbilt', 2019), ("Mississippi St.", 2021), ('Ole Miss', 2022), ('LSU', 2023), ('Tennessee', 2024),
@@ -2868,7 +2869,7 @@ def plot_rating_vs_net(team_name, df):
                 fontsize=5, ha='center', va='center', color='black', fontweight='bold')
 
     # Labels and styling
-    plt.title(f"Team Strength vs NET for {team_name} Since 2012 (excl. '20)", 
+    plt.title(f"Team Strength vs NET for {team_name} Since 2008 (excl. '20)", 
                  fontsize=16, color='black', pad=30, fontweight='bold')
     plt.suptitle("@PEARatings", y=0.85, fontsize=14, ha='center', va='center')
     # ax.text(-1.2, 1.04, "@PEARatings", fontsize=14, ha='center', va='center')
