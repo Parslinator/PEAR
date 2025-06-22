@@ -203,6 +203,48 @@ all_data['Normalized_Rating'] = round(all_data['Normalized_Rating'], 2)
 all_data = all_data.sort_values('Normalized_Rating', ascending=False).reset_index(drop=True)
 all_data['Season'] = all_data['Season'].astype(int)
 
+all_data_full_list = []
+
+date_pattern = re.compile(r"baseball_(\d{2}_\d{2}_\d{4})\.csv")
+
+for year in seasons:
+    folder = os.path.join(base_path, f"y{year}", "Data")
+    pattern = os.path.join(folder, "baseball_*.csv")
+    files = glob.glob(pattern)
+
+    valid_files = []
+    for f in files:
+        filename = os.path.basename(f)
+        match = date_pattern.fullmatch(filename)
+        if match:
+            valid_files.append((f, pd.to_datetime(match.group(1), format="%m_%d_%Y")))
+
+    if valid_files:
+        # Pick file with latest date
+        latest_file = max(valid_files, key=lambda x: x[1])[0]
+
+        df = pd.read_csv(latest_file)
+        df['Season'] = year
+        all_data_full_list.append(df)
+    else:
+        print(f"No valid file found for {year}")
+
+all_data_full = pd.concat(all_data_full_list, ignore_index=True)
+all_data_full['Normalized_Rating'] = all_data_full.groupby('Season')['Rating'].transform(
+    lambda x: (x - x.mean()) / x.std()
+)
+
+current_range = all_data_full['Normalized_Rating'].max() - all_data_full['Normalized_Rating'].min()
+desired_range = 15
+scaling_factor = desired_range / current_range
+all_data_full['Normalized_Rating'] = round(all_data_full['Normalized_Rating'] * scaling_factor, 4)
+all_data_full['Normalized_Rating'] = all_data_full['Normalized_Rating'] - all_data_full['Normalized_Rating'].min()
+all_data_full['Normalized_Rating'] = round(all_data_full['Normalized_Rating'] - all_data_full['Normalized_Rating'].mean(),2)
+all_data_full['Normalized_Rating'] = round(all_data_full['Normalized_Rating'], 2)
+all_data_full = all_data_full.sort_values('Normalized_Rating', ascending=False).reset_index(drop=True)
+all_data_full['Season'] = all_data_full['Season'].astype(int)
+
+
 def find_spread(home_team, away_team, location = 'Neutral'):
     default_pr = modeling_stats['Rating'].mean() - 1.75 * modeling_stats['Rating'].std()
     default_elo = 1200
@@ -2871,6 +2913,264 @@ def plot_rating_vs_net(team_name, df):
     plt.tight_layout()
     return fig
 
+def find_spread_matchup_with_year(home_team, away_team, home_year, away_year, modeling_stats, location="Neutral"):
+    def get_stat(team, year, stat):
+        match = modeling_stats[(modeling_stats['Team'] == team) & (modeling_stats['Season'] == year)]
+        if not match.empty and pd.notna(match[stat].values[0]):
+            return match[stat].values[0]
+        return np.nan
+
+    def approximate_elo(net_value, net_max=300, elo_min=1000, elo_max=1600):
+        # Convert NET (where 0 is best) to ELO (where higher is better)
+        if pd.isna(net_value):
+            return 1200
+        scale = elo_max - elo_min
+        normalized = 1 - (net_value / net_max)  # invert: low NET = better
+        return round(elo_min + normalized * scale)
+
+    home_pr = get_stat(home_team, home_year, 'Normalized_Rating')
+    away_pr = get_stat(away_team, away_year, 'Normalized_Rating')
+
+    home_elo = get_stat(home_team, home_year, 'ELO')
+    if pd.isna(home_elo):
+        home_net = get_stat(home_team, home_year, 'NET')
+        home_elo = approximate_elo(home_net)
+
+    away_elo = get_stat(away_team, away_year, 'ELO')
+    if pd.isna(away_elo):
+        away_net = get_stat(away_team, away_year, 'NET')
+        away_elo = approximate_elo(away_net)
+
+    spread, elo_win_prob = calculate_spread_from_stats(home_pr, away_pr, home_elo, away_elo, location)
+    # if location != "Neutral":
+    #     rating_diff = home_pr + 0.5 - away_pr
+    # else:
+    #     rating_diff = home_pr - away_pr
+    rating_diff = home_pr - away_pr
+    win_prob = round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
+
+    if spread >= 0:
+        return f"{home_year} {home_team} -{spread}", win_prob
+    else:
+        return f"{away_year} {away_team} {spread}", win_prob
+
+def matchup_percentiles_with_year(team_1, team_2, team_1_year, team_2_year, stats_and_metrics, location = 'Neutral'):
+    BASE_URL = "https://www.warrennolan.com"
+    bubble_team_rating = stats_and_metrics['Rating'].quantile(0.90)
+    percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
+    custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'WAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
+
+    team1_data = stats_and_metrics[(stats_and_metrics['Team'] == team_1) & (stats_and_metrics['Season'] == team_1_year)]
+    team1_record = get_total_record(team1_data.iloc[0])
+    team1_proj_record = team1_data['Projected_Record'].values[0]
+    team1_proj_net = team1_data['Projected_NET'].values[0]
+    team1_rating = team1_data['Rating'].values[0]
+    team1_Q1 = team1_data['Q1'].values[0]
+    team1_Q2 = team1_data['Q2'].values[0]
+    team1_Q3 = team1_data['Q3'].values[0]
+    team1_Q4 = team1_data['Q4'].values[0]
+    team1_net = stats_and_metrics[(stats_and_metrics['Team'] == team_1) & (stats_and_metrics['Season'] == team_1_year)]['NET'].values[0]
+    team1_data = team1_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
+    team_links = stats_and_metrics[stats_and_metrics['Team'] == team_1]['Team Link']
+    team1_link = team_links[team_links.notna()].values[0]
+    team1_url = BASE_URL + team1_link
+    img1 = None
+    if len(team1_url) > len(BASE_URL):
+        try:
+            response = requests.get(team1_url)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            img_tag = soup.find("img", class_="team-menu__image")
+
+            if img_tag and img_tag.get("src"):
+                img_src = img_tag.get("src")
+                image_url = BASE_URL + img_src
+                response = requests.get(image_url)
+                img1 = Image.open(BytesIO(response.content))
+        except Exception as e:
+            print(f"Failed to fetch image for {team_1}: {e}")
+
+    team2_data = stats_and_metrics[(stats_and_metrics['Team'] == team_2) & (stats_and_metrics['Season'] == team_2_year)]
+    team2_record = get_total_record(team2_data.iloc[0])
+    team2_proj_record = team2_data['Projected_Record'].values[0]
+    team2_proj_net = team2_data['Projected_NET'].values[0]
+    team2_rating = team2_data['Rating'].values[0]
+    team2_Q1 = team2_data['Q1'].values[0]
+    team2_Q2 = team2_data['Q2'].values[0]
+    team2_Q3 = team2_data['Q3'].values[0]
+    team2_Q4 = team2_data['Q4'].values[0]
+    team2_net = stats_and_metrics[(stats_and_metrics['Team'] == team_2) & (stats_and_metrics['Season'] == team_2_year)]['NET'].values[0]
+    team2_data = team2_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
+    team_links = stats_and_metrics[stats_and_metrics['Team'] == team_2]['Team Link']
+    team2_link = team_links[team_links.notna()].values[0]
+    team2_url = BASE_URL + team2_link
+    img2 = None
+    if len(team2_url) > len(BASE_URL):
+        try:
+            response = requests.get(team2_url)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            img_tag = soup.find("img", class_="team-menu__image")
+
+            if img_tag and img_tag.get("src"):
+                img_src = img_tag.get("src")
+                image_url = BASE_URL + img_src
+                response = requests.get(image_url)
+                img2 = Image.open(BytesIO(response.content))
+        except Exception as e:
+            print(f"Failed to fetch image for {team_2}: {e}")
+
+    team2_quality = PEAR_Win_Prob(bubble_team_rating, team1_rating, location) / 100
+    team2_win_quality, team2_loss_quality = (1 - team2_quality), -team2_quality
+
+    team1_quality = 1-PEAR_Win_Prob(team2_rating, bubble_team_rating, location) / 100
+    team1_win_quality, team1_loss_quality = (1 - team1_quality), -team1_quality
+    spread, team_2_win_prob = find_spread_matchup_with_year(team_2, team_1, team_2_year, team_1_year, stats_and_metrics)
+
+    max_net = 299
+    w_tq = 0.70   # NET AVG
+    w_wp = 0.20   # Win Probability
+    w_ned = 0.10  # NET Differential
+    avg_net = (team1_net + team2_net) / 2
+    tq = (max_net - avg_net) / (max_net - 1)
+    wp = 1 - 2 * np.abs((team_2_win_prob/100) - 0.5)
+    ned = 1 - (np.abs(team2_net - team1_net) / (max_net - 1))
+    gqi = round(10*(w_tq * tq + w_wp * wp + w_ned * ned), 1)
+
+    team_2_win_prob = round(team_2_win_prob / 100,3)
+    team_1_win_prob = 1 - team_2_win_prob
+    team_2_probs, team_1_probs = calculate_series_probabilities(team_2_win_prob)
+    team_2_one_win = team_2_probs[0]
+    team_2_two_win = team_2_probs[1]
+    team_2_three_win = team_2_probs[2]
+    team_1_one_win = team_1_probs[0]
+    team_1_two_win = team_1_probs[1]
+    team_1_three_win = team_1_probs[2]
+    combined = pd.DataFrame({
+        'Metric': team1_data['Metric'],
+        'Percentile': team1_data['Percentile'] - team2_data['Percentile']
+    })
+    cmap = plt.get_cmap('seismic')
+    colors = [cmap(abs(p) / 100) for p in combined['Percentile']]
+    colors1 = [cmap(p/100) for p in team1_data['Percentile']]
+    colors2 = [cmap(p/100) for p in team2_data['Percentile']]
+    def darken_color(color, factor=0.3):
+        color = mcolors.hex2color(color)
+        darkened_color = [max(c - factor, 0) for c in color]
+        return mcolors.rgb2hex(darkened_color)
+    darkened_colors = [darken_color(c) for c in colors]
+    darkened_colors1 = [darken_color(c) for c in colors1]
+    darkened_colors2 = [darken_color(c) for c in colors2]
+    fig, ax = plt.subplots(figsize=(8, 10))
+    fig.patch.set_facecolor('#CECEB2')
+    ax.set_facecolor('#CECEB2')
+    ax.barh(combined['Metric'], 99, color='gray', height=0.1, left=0)
+    ax.barh(combined['Metric'], -99, color='gray', height=0.1, left=0)
+    bars = ax.barh(combined['Metric'], combined['Percentile'], color=colors, height=0.3, edgecolor=darkened_colors, linewidth=3)
+    bars1 = ax.barh(team1_data['Metric'], team1_data['Percentile'], color=colors1, height=0.3, edgecolor=darkened_colors1, linewidth=3)
+    bars2 = ax.barh(team2_data['Metric'], -team2_data['Percentile'], color=colors2, height=0.3, edgecolor=darkened_colors2, linewidth=3)
+    i = 0
+    for idx, (bar, percentile) in enumerate(zip(bars1, team1_data['Percentile'])):
+        text = ax.text(bar.get_width(), bar.get_y() + bar.get_height()/2, 
+                    str(abs(percentile)), ha='center', va='center', 
+                    fontsize=16, fontweight='bold', color='white', zorder=2,
+                    bbox=dict(facecolor=colors1[i], edgecolor=darkened_colors1[i], boxstyle='circle,pad=0.4', linewidth=3))
+        text.set_path_effects([
+            pe.withStroke(linewidth=2, foreground='black')
+        ])
+        ax.text(0, bar.get_y() - 0.35, custom_labels[i], fontsize=12, fontweight='bold', ha='center', va='center')
+        i = i+1
+    i = 0
+    for idx, (bar, percentile) in enumerate(zip(bars2, team2_data['Percentile'])):
+        text = ax.text(bar.get_width(), bar.get_y() + bar.get_height()/2, 
+                    str(abs(percentile)), ha='center', va='center', 
+                    fontsize=16, fontweight='bold', color='white', zorder=2,
+                    bbox=dict(facecolor=colors2[i], edgecolor=darkened_colors2[i], boxstyle='circle,pad=0.4', linewidth=3))
+        text.set_path_effects([
+            pe.withStroke(linewidth=2, foreground='black')
+        ])
+        i = i+1
+    i = 0
+    for idx, (bar, percentile) in enumerate(zip(bars, combined['Percentile'])):
+        text = ax.text(bar.get_width(), bar.get_y() + bar.get_height()/2, 
+                    str(abs(percentile)), ha='center', va='center', 
+                    fontsize=14, fontweight='bold', color='white', zorder=2,
+                    bbox=dict(facecolor=colors[i], edgecolor=darkened_colors[i], boxstyle='circle,pad=0.3', linewidth=3))
+        text.set_path_effects([
+            pe.withStroke(linewidth=2, foreground='black')
+        ])
+        i = i+1
+
+    ax.set_xlim(-104, 104)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.invert_yaxis()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    plt.text(0, -1.7, f"{team_2_year} {team_2} vs. {team_1_year} {team_1}", ha='center', fontsize=24, fontweight='bold')
+    # plt.text(0, -1.25, "Matchup Comparison", ha='center', fontsize=16)
+    plt.text(0, -1.25, f"Game Quality: {gqi}", ha='center', fontsize=16, fontweight='bold')
+    plt.text(0, -0.8, f"{spread}", ha='center', fontsize=16, fontweight='bold')
+    plt.text(0, 12.8, "@PEARatings", ha='center', fontsize=16, fontweight='bold')
+
+    plt.text(-135, 0.5, f"{team_2}", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-135, 1.0, f"{team2_record}", ha='center', fontsize=16)
+    plt.text(-135, 2.0, "Single Game", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-135, 2.5, f"{round(team_2_win_prob*100)}%", ha='center', fontsize=16)
+    plt.text(-135, 3.5, "Series", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-135, 4.0, f"Win 1: {round(team_2_one_win*100)}%", ha='center', fontsize=16)
+    plt.text(-135, 4.5, f"Win 2: {round(team_2_two_win*100)}%", ha='center', fontsize=16)
+    plt.text(-135, 5.0, f"Win 3: {round(team_2_three_win*100)}%", ha='center', fontsize=16)
+    plt.text(-135, 6.0, "NET Quads", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-148, 6.5, f"Q1: {team2_Q1}", ha='left', fontsize=16)
+    plt.text(-148, 7.0, f"Q2: {team2_Q2}", ha='left', fontsize=16)
+    plt.text(-148, 7.5, f"Q3: {team2_Q3}", ha='left', fontsize=16)
+    plt.text(-148, 8.0, f"Q4: {team2_Q4}", ha='left', fontsize=16)
+    plt.text(-135, 9.0, f"{team_2_year} NET", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-135, 9.5, f"#{team2_net}", ha='center', fontsize=16)
+    # plt.text(-135, 10.5, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
+    # plt.text(-135, 11.0, f"{team2_proj_record}", ha='center', fontsize=16)
+    plt.text(-135, 10.5, "Win Quality", ha='center', fontsize=16, fontweight='bold')
+    plt.text(-155, 11.0, f"{team2_win_quality:.2f}", ha='left', fontsize=16, color='green', fontweight='bold')
+    plt.text(-115, 11.0, f"{team2_loss_quality:.2f}", ha='right', fontsize=16, color='red', fontweight='bold')
+
+    plt.text(135, 0.5, f"{team_1}", ha='center', fontsize=16, fontweight='bold')
+    plt.text(135, 1.0, f"{team1_record}", ha='center', fontsize=16)
+    plt.text(135, 2.0, "Single Game", ha='center', fontsize=16, fontweight='bold')
+    plt.text(135, 2.5, f"{round(team_1_win_prob*100)}%", ha='center', fontsize=16)
+    plt.text(135, 3.5, "Series", ha='center', fontsize=16, fontweight='bold')
+    plt.text(135, 4.0, f"Win 1: {round(team_1_one_win*100)}%", ha='center', fontsize=16)
+    plt.text(135, 4.5, f"Win 2: {round(team_1_two_win*100)}%", ha='center', fontsize=16)
+    plt.text(135, 5.0, f"Win 3: {round(team_1_three_win*100)}%", ha='center', fontsize=16)
+    plt.text(135, 6.0, "NET Quads", ha='center', fontsize=16, fontweight='bold')
+    plt.text(122, 6.5, f"Q1: {team1_Q1}", ha='left', fontsize=16)
+    plt.text(122, 7.0, f"Q2: {team1_Q2}", ha='left', fontsize=16)
+    plt.text(122, 7.5, f"Q3: {team1_Q3}", ha='left', fontsize=16)
+    plt.text(122, 8.0, f"Q4: {team1_Q4}", ha='left', fontsize=16)
+    plt.text(135, 9.0, f"{team_1_year} NET", ha='center', fontsize=16, fontweight='bold')
+    plt.text(135, 9.5, f"#{team1_net}", ha='center', fontsize=16)
+    # plt.text(135, 10.5, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
+    # plt.text(135, 11.0, f"{team1_proj_record}", ha='center', fontsize=16)
+    plt.text(135, 10.5, "Win Quality", ha='center', fontsize=16, fontweight='bold')
+    plt.text(115, 11.0, f"{team1_win_quality:.2f}", ha='left', fontsize=16, color='green', fontweight='bold')
+    plt.text(155, 11.0, f"{team1_loss_quality:.2f}", ha='right', fontsize=16, color='red', fontweight='bold')
+
+    plt.text(-150, 13.2, "Middle Bubble is Difference Between Team Percentiles", ha='left', fontsize = 12)
+    plt.text(150, 13.2, "Series Percentages are the Chance to Win __ Games", ha='right', fontsize = 12)
+    plt.text(-150, 13.6, "NET - PEAR's Ranking System, Combining TSR and RQI", ha='left', fontsize = 12)
+    plt.text(150, 13.6, "TSR - Team Strength Rating, How Good Your Team Is", ha='right', fontsize = 12)
+    plt.text(-150, 14.0, "RQI - Resume Quality Index, How Good Your Wins Are", ha='left', fontsize = 12)
+    plt.text(150, 14.0, "PWP - Pythagorean Win Percent, Expected Win Rate", ha='right', fontsize = 12)
+
+    ax_img1 = fig.add_axes([0.94, 0.83, 0.15, 0.15])
+    ax_img1.imshow(img1)
+    ax_img1.axis("off")
+    ax_img2 = fig.add_axes([-0.065, 0.83, 0.15, 0.15])
+    ax_img2.imshow(img2)
+    ax_img2.axis("off")
+
+    return fig
+
 st.title(f"{current_season} CBASE PEAR")
 st.logo("./PEAR/pear_logo.jpg", size = 'large')
 st.caption(f"Ratings Updated {formatted_latest_date}")
@@ -3122,13 +3422,34 @@ with col1:
             fig = plot_rating_vs_net(team, all_data)
             st.pyplot(fig)
 with col2:
-    if len(subset_games) > 0:
-        comparison_date = comparison_date.strftime("%B %d, %Y")
-        st.subheader(f"{comparison_date} Games")
-        subset_games['Home'] = subset_games['home_team']
-        subset_games['Away'] = subset_games['away_team']
-        with st.container(border=True, height=440):
-            st.dataframe(subset_games[['Home', 'Away', 'GQI', 'PEAR', 'Result']], use_container_width=True)
+    st.markdown(f'<h2 id="calculate-spread-two-teams-from-different-year">Calculate Spread Between Two Teams From Different Years</h2>', unsafe_allow_html=True)
+    with st.form(key='calculate_spread_two_teams'):
+        away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(all_data_full['Team'].unique())))
+        away_season = st.selectbox("Away Season", ["Select Season"] + list(sorted(all_data_full['Season'].unique())))
+        home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(all_data_full['Team'].unique())))
+        home_season = st.selectbox("Home Season", ["Select Season"] + list(sorted(all_data_full['Season'].unique())))
+        neutrality = st.radio(
+            "Game Location",
+            ["On Campus", "Neutral"]
+        )
+        two_spread_button = st.form_submit_button("Calculate")
+        if two_spread_button:
+            if neutrality == 'Neutral':
+                location = 'Neutral'
+            else:
+                location = 'Home'
+            fig = matchup_percentiles_with_year(away_team, home_team, away_season, home_season, all_data_full, neutrality)
+            st.pyplot(fig)
+
+st.divider()
+
+if len(subset_games) > 0:
+    comparison_date = comparison_date.strftime("%B %d, %Y")
+    st.subheader(f"{comparison_date} Games")
+    subset_games['Home'] = subset_games['home_team']
+    subset_games['Away'] = subset_games['away_team']
+    with st.container(border=True, height=440):
+        st.dataframe(subset_games[['Home', 'Away', 'GQI', 'PEAR', 'Result']], use_container_width=True)
 
 st.divider()
 
