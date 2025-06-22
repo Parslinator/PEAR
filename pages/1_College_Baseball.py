@@ -3424,10 +3424,23 @@ with col1:
 with col2:
     st.markdown(f'<h2 id="calculate-spread-two-teams-from-different-year">Calculate Spread Between Two Teams From Different Years</h2>', unsafe_allow_html=True)
     with st.form(key='calculate_spread_two_teams'):
-        away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(all_data_full['Team'].unique())))
-        away_season = st.selectbox("Away Season", ["Select Season"] + list(sorted(all_data_full['Season'].unique())))
-        home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(all_data_full['Team'].unique())))
-        home_season = st.selectbox("Home Season", ["Select Season"] + list(sorted(all_data_full['Season'].unique())))
+        team_season_pairs = sorted(all_data_full[['Team', 'Season']].drop_duplicates().values.tolist())
+
+        # Format as "Team (Season)" for display
+        options = ["Select Team & Season"] + [f"{team} ({season})" for team, season in team_season_pairs]
+
+        # Selectboxes
+        away_selection = st.selectbox("Away Team & Season", options)
+        home_selection = st.selectbox("Home Team & Season", options)
+
+        # Parse selections
+        if away_selection != "Select Team & Season":
+            away_team, away_season = away_selection.rsplit(" (", 1)
+            away_season = int(away_season[:-1])  # Remove trailing ')'
+
+        if home_selection != "Select Team & Season":
+            home_team, home_season = home_selection.rsplit(" (", 1)
+            home_season = int(home_season[:-1])
         neutrality = st.radio(
             "Game Location",
             ["On Campus", "Neutral"]
