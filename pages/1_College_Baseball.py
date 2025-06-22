@@ -2971,23 +2971,27 @@ def matchup_percentiles_with_year(team_1, team_2, team_1_year, team_2_year, stat
     team1_Q4 = team1_data['Q4'].values[0]
     team1_net = stats_and_metrics[(stats_and_metrics['Team'] == team_1) & (stats_and_metrics['Season'] == team_1_year)]['NET'].values[0]
     team1_data = team1_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
-    team_links = stats_and_metrics[stats_and_metrics['Team'] == team_1]['Team Link']
-    team1_link = team_links[team_links.notna()].values[0]
-    team1_url = BASE_URL + team1_link
     img1 = None
-    if len(team1_url) > len(BASE_URL):
-        try:
-            response = requests.get(team1_url)
-            soup = BeautifulSoup(response.text, 'html.parser')
-            img_tag = soup.find("img", class_="team-menu__image")
+    try:
+        team_links = stats_and_metrics[stats_and_metrics['Team'] == team_1]['Team Link']
+        valid_links = team_links[team_links.notna()]
 
-            if img_tag and img_tag.get("src"):
-                img_src = img_tag.get("src")
-                image_url = BASE_URL + img_src
-                response = requests.get(image_url)
-                img1 = Image.open(BytesIO(response.content))
-        except Exception as e:
-            print(f"Failed to fetch image for {team_1}: {e}")
+        if not valid_links.empty:
+            team1_link = valid_links.values[0]
+            team1_url = BASE_URL + team1_link
+
+            if len(team1_url) > len(BASE_URL):
+                response = requests.get(team1_url)
+                soup = BeautifulSoup(response.text, 'html.parser')
+                img_tag = soup.find("img", class_="team-menu__image")
+
+                if img_tag and img_tag.get("src"):
+                    img_src = img_tag.get("src")
+                    image_url = BASE_URL + img_src
+                    response = requests.get(image_url)
+                    img1 = Image.open(BytesIO(response.content))
+    except Exception as e:
+        print(f"Failed to fetch image for {team_1}: {e}")
 
     team2_data = stats_and_metrics[(stats_and_metrics['Team'] == team_2) & (stats_and_metrics['Season'] == team_2_year)]
     team2_record = get_total_record(team2_data.iloc[0])
@@ -3000,23 +3004,27 @@ def matchup_percentiles_with_year(team_1, team_2, team_1_year, team_2_year, stat
     team2_Q4 = team2_data['Q4'].values[0]
     team2_net = stats_and_metrics[(stats_and_metrics['Team'] == team_2) & (stats_and_metrics['Season'] == team_2_year)]['NET'].values[0]
     team2_data = team2_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
-    team_links = stats_and_metrics[stats_and_metrics['Team'] == team_2]['Team Link']
-    team2_link = team_links[team_links.notna()].values[0]
-    team2_url = BASE_URL + team2_link
     img2 = None
-    if len(team2_url) > len(BASE_URL):
-        try:
-            response = requests.get(team2_url)
-            soup = BeautifulSoup(response.text, 'html.parser')
-            img_tag = soup.find("img", class_="team-menu__image")
+    try:
+        team_links = stats_and_metrics[stats_and_metrics['Team'] == team_2]['Team Link']
+        valid_links = team_links[team_links.notna()]
 
-            if img_tag and img_tag.get("src"):
-                img_src = img_tag.get("src")
-                image_url = BASE_URL + img_src
-                response = requests.get(image_url)
-                img2 = Image.open(BytesIO(response.content))
-        except Exception as e:
-            print(f"Failed to fetch image for {team_2}: {e}")
+        if not valid_links.empty:
+            team2_link = valid_links.values[0]
+            team2_url = BASE_URL + team2_link
+
+            if len(team2_url) > len(BASE_URL):
+                response = requests.get(team2_url)
+                soup = BeautifulSoup(response.text, 'html.parser')
+                img_tag = soup.find("img", class_="team-menu__image")
+
+                if img_tag and img_tag.get("src"):
+                    img_src = img_tag.get("src")
+                    image_url = BASE_URL + img_src
+                    response = requests.get(image_url)
+                    img2 = Image.open(BytesIO(response.content))
+    except Exception as e:
+        print(f"Failed to fetch image for {team_2}: {e}")
 
     team2_quality = PEAR_Win_Prob(bubble_team_rating, team1_rating, location) / 100
     team2_win_quality, team2_loss_quality = (1 - team2_quality), -team2_quality
@@ -3162,12 +3170,15 @@ def matchup_percentiles_with_year(team_1, team_2, team_1_year, team_2_year, stat
     plt.text(-150, 14.0, "RQI - Resume Quality Index, How Good Your Wins Are", ha='left', fontsize = 12)
     plt.text(150, 14.0, "PWP - Pythagorean Win Percent, Expected Win Rate", ha='right', fontsize = 12)
 
-    ax_img1 = fig.add_axes([0.94, 0.83, 0.15, 0.15])
-    ax_img1.imshow(img1)
-    ax_img1.axis("off")
-    ax_img2 = fig.add_axes([-0.065, 0.83, 0.15, 0.15])
-    ax_img2.imshow(img2)
-    ax_img2.axis("off")
+    if img1 is not None:
+        ax_img1 = fig.add_axes([0.94, 0.83, 0.15, 0.15])
+        ax_img1.imshow(img1)
+        ax_img1.axis("off")
+
+    if img2 is not None:
+        ax_img2 = fig.add_axes([-0.065, 0.83, 0.15, 0.15])
+        ax_img2.imshow(img2)
+        ax_img2.axis("off")
 
     return fig
 
