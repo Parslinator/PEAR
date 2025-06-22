@@ -3031,7 +3031,7 @@ def matchup_percentiles_with_year(team_1, team_2, team_1_year, team_2_year, stat
 
     team1_quality = 1-PEAR_Win_Prob(team2_rating, bubble_team_rating, location) / 100
     team1_win_quality, team1_loss_quality = (1 - team1_quality), -team1_quality
-    spread, team_2_win_prob = find_spread_matchup_with_year(team_2, team_1, team_2_year, team_1_year, stats_and_metrics)
+    spread, team_2_win_prob = find_spread_matchup_with_year(team_2, team_1, team_2_year, team_1_year, stats_and_metrics, location)
 
     max_net = 299
     w_tq = 0.70   # NET AVG
