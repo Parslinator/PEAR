@@ -2858,6 +2858,7 @@ def plot_rating_vs_net(team_name, df):
         ('Arizona', 2012), ('UCLA', 2013), ('Vanderbilt', 2014), ('Virginia', 2015),
         ('Coastal Carolina', 2016), ('Florida', 2017), ('Oregon St.', 2018),
         ('Vanderbilt', 2019), ("Mississippi St.", 2021), ('Ole Miss', 2022), ('LSU', 2023), ('Tennessee', 2024),
+        ('LSU', 2025)
     ]
     champ_df = df[df.apply(lambda row: (row['Team'], row['Season']) in champions, axis=1)]
 
@@ -3478,19 +3479,19 @@ if len(subset_games) > 0:
 
 st.divider()
 
-supers_df = pd.read_csv("./PEAR/PEAR Baseball/y2025/tracking_supers_odds.csv")
-cols = st.columns(2)
-for idx, supers_idx in enumerate(sorted(supers_df['Regional Number'].unique())):
-    col = cols[idx % 2]
-    supers = supers_df[supers_df['Regional Number'] == supers_idx].reset_index(drop=True)
-    host = supers['Team'].iloc[0]
-    display_df = supers[['Team', 'Day 1', 'Day 2', 'Day 3']].copy()
-    for col_name in ['Day 1', 'Day 2', 'Day 3']:
-        display_df[col_name] = (display_df[col_name]).round(1).astype(str) + "%"
-    display_df.index = display_df.index + 1
-    with col:
-        st.markdown(f"### {host} Super Regional")
-        st.dataframe(display_df, use_container_width=True)
+# supers_df = pd.read_csv("./PEAR/PEAR Baseball/y2025/tracking_supers_odds.csv")
+# cols = st.columns(2)
+# for idx, supers_idx in enumerate(sorted(supers_df['Regional Number'].unique())):
+#     col = cols[idx % 2]
+#     supers = supers_df[supers_df['Regional Number'] == supers_idx].reset_index(drop=True)
+#     host = supers['Team'].iloc[0]
+#     display_df = supers[['Team', 'Day 1', 'Day 2', 'Day 3']].copy()
+#     for col_name in ['Day 1', 'Day 2', 'Day 3']:
+#         display_df[col_name] = (display_df[col_name]).round(1).astype(str) + "%"
+#     display_df.index = display_df.index + 1
+#     with col:
+#         st.markdown(f"### {host} Super Regional")
+#         st.dataframe(display_df, use_container_width=True)
 
 
 
