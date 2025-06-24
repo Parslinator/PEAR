@@ -23,6 +23,7 @@ import matplotlib
 from collections import defaultdict
 import random
 import glob
+from matplotlib.patches import FancyBboxPatch
 font_prop = fm.FontProperties(fname="./PEAR/trebuc.ttf")
 fm.fontManager.addfont("./PEAR/trebuc.ttf")
 fm.fontManager.addfont("./PEAR/Trebuchet MS Bold.ttf")
@@ -2838,19 +2839,28 @@ def plot_rating_vs_net(team_name, df):
     fig.patch.set_facecolor('#CECEB2')
     ax.set_facecolor('#CECEB2')
 
+    x_start = 3.5
+    x_end = 6
+    y_start = 0.9
+    y_end = 1
+    box_width = x_end - x_start
+    box_height = y_end - y_start
+
+    elite_box = FancyBboxPatch((x_start, y_start),
+                            width=box_width,
+                            height=box_height,
+                            boxstyle="round,pad=0.02,rounding_size=0.05",
+                            edgecolor="#D51F1F",
+                            facecolor="#C8416E",  # Peach Puff
+                            linewidth=2,
+                            alpha=0.35,
+                            mutation_scale=0.05,
+                            zorder=1)
+    ax.add_patch(elite_box)
+
     for spine in ax.spines.values():
         spine.set_edgecolor('black')
         spine.set_linewidth(1)
-
-    # Plot each season with its own color
-    for season in seasons:
-        season_data = team_data[team_data['Season'] == season]
-        ax.scatter(season_data['Normalized_Rating'], season_data['NET_Score'],
-                   color='darkgreen', edgecolor='black', s=400, label=str(season), alpha=0.6)
-
-    for _, row in team_data.iterrows():
-        ax.text(row['Normalized_Rating'], row['NET_Score'], str(row['Season'])[2:],
-                fontsize=9, ha='center', va='center', color='black', fontweight='bold')
 
     # Highlight national champions in gold
     champions = [
@@ -2864,10 +2874,20 @@ def plot_rating_vs_net(team_name, df):
 
     if not champ_df.empty:
         ax.scatter(champ_df['Normalized_Rating'], champ_df['NET_Score'],
-                   color='gold', edgecolor='black', s=200, zorder=5, alpha=0.4)
+                   color='gold', edgecolor='black', s=200, zorder=5, alpha=0.3)
     for _, row in champ_df.iterrows():
         ax.text(row['Normalized_Rating'], row['NET_Score'], str(row['Season'])[2:],
                 fontsize=5, ha='center', va='center', color='black', fontweight='bold')
+
+    # Plot each season with its own color
+    for season in seasons:
+        season_data = team_data[team_data['Season'] == season]
+        ax.scatter(season_data['Normalized_Rating'], season_data['NET_Score'],
+                   color='darkgreen', edgecolor='black', s=400, label=str(season), alpha=0.7)
+
+    for _, row in team_data.iterrows():
+        ax.text(row['Normalized_Rating'], row['NET_Score'], str(row['Season'])[2:],
+                fontsize=9, ha='center', va='center', color='black', fontweight='bold')
 
     # Labels and styling
     plt.title(f"Team Strength vs NET for {team_name} Since 2008 (excl. '20)", 
