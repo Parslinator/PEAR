@@ -826,6 +826,21 @@ rating_ranks = modeling_stats['Rating'].rank(ascending=False)
 spearman_corr, _ = spearmanr(rating_ranks, modeling_stats['ELO_Rank'])
 print(f"Rating and ELO Correlation: {spearman_corr * 100:.1f}%")
 
+features_all = ["BB%", "PCT", "OPS", "PYTHAG", "fWAR", "K/BB", "wRC+", "LOB%", "WHIP+", "wOBA", "NET_Score"]
+feature_weights_dict = dict(zip(selected_features, best_weights))
+total_weight = sum(feature_weights_dict.values())
+normalized_weights = {feat: round((weight / total_weight) * 100,1) for feat, weight in feature_weights_dict.items()}
+entry_row = {feat: normalized_weights.get(feat, 0.0) for feat in features_all}
+entry_row["Date"] = datetime.today().strftime('%Y-%m-%d')
+entry_row["ELO_Correlation"] = round(spearman_corr * 100,1)  # already computed earlier
+cols_order = ["Date"] + features_all + ["ELO_Correlation"]
+try:
+    df = pd.read_csv(f'./PEAR/PEAR Baseball/y{current_season}/team_strength_tracking.csv')
+except FileNotFoundError:
+    df = pd.DataFrame(columns=cols_order)
+df = pd.concat([df, pd.DataFrame([entry_row])], ignore_index=True)
+df.to_csv(f'./PEAR/PEAR Baseball/y{current_season}/team_strength_tracking.csv', index=False)
+
 ending_data = pd.merge(baseball_stats, modeling_stats[['Team', 'Rating']], on="Team", how="inner").sort_values('Rating', ascending=False).reset_index(drop=True)
 ending_data.index = ending_data.index + 1
 
@@ -1153,6 +1168,20 @@ adj_sos_weight = (optimized_weights[1]) / ((1 - (optimized_weights[0] + optimize
 adj_rqi_weight = (1 - (optimized_weights[0] + optimized_weights[1])) / ((1 - (optimized_weights[0] + optimized_weights[1])) + (optimized_weights[1]))
 stats_and_metrics['Norm_Resume'] = adj_rqi_weight * stats_and_metrics['Norm_RQI'] + adj_sos_weight * stats_and_metrics['Norm_SOS']
 stats_and_metrics['aRQI'] = stats_and_metrics['Norm_Resume'].rank(ascending=False).astype(int)
+
+net_row = {
+    "Date": datetime.today().strftime('%Y-%m-%d'),
+    "Rating": round(optimized_weights[0] * 100,1),
+    "SOS": round(optimized_weights[1] * 100,1),
+    "RQI": round((1 - (optimized_weights[0] + optimized_weights[1])) * 100,1),
+    "NET_RPI_Correlation": round(stats_and_metrics[['NET', 'RPI']].corr(method='spearman').iloc[0, 1] * 100,1)
+}
+try:
+    df_net = pd.read_csv(f"./PEAR/PEAR Baseball/y{current_season}/net_tracking.csv")
+except FileNotFoundError:
+    df_net = pd.DataFrame(columns=["Date", "Rating", "SOS", "RQI", "NET_RPI_Correlation"])
+df_net = pd.concat([df_net, pd.DataFrame([net_row])], ignore_index=True)
+df_net.to_csv(f"./PEAR/PEAR Baseball/y{current_season}/net_tracking.csv", index=False)
 
 ####################### Quadrants #######################
 
