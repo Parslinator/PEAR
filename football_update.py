@@ -231,10 +231,6 @@ records_dict = [dict(
     conference_losses = r.conference_games.losses
 ) for r in records_list]
 records = pd.DataFrame(records_dict)
-records.at[records[records['team'] == 'Kansas State'].index[0], 'conference_wins'] -= 1
-records.at[records[records['team'] == 'Utah'].index[0], 'conference_wins'] -= 1
-records.at[records[records['team'] == 'Baylor'].index[0], 'conference_losses'] -= 1
-records.at[records[records['team'] == 'Arizona'].index[0], 'conference_losses'] -= 1
 
 # qb ppa
 qb_ppa_list = []
