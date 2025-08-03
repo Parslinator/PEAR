@@ -205,18 +205,6 @@ elo_ratings_dict = [dict(
 ) for e in elo_ratings_list]
 elo_ratings = pd.DataFrame(elo_ratings_dict)
 
-# returning production
-# production_list = []
-# response = players_api.get_returning_production(year = current_year)
-# production_list = [*production_list, *response]
-# production_dict = [dict(
-#     season=r.season,
-#     team=r.team,
-#     returning_ppa=r.percent_ppa,
-#     returning_usage=r.usage
-# ) for r in production_list]
-# returning_production = pd.DataFrame(production_dict)
-
 # team records
 records_list = []
 response = games_api.get_records(year=current_year)
@@ -231,18 +219,6 @@ records_dict = [dict(
     conference_losses = r.conference_games.losses
 ) for r in records_list]
 records = pd.DataFrame(records_dict)
-
-# qb ppa
-qb_ppa_list = []
-response = metrics_api.get_predicted_points_added_by_player_season(year=current_year, position = 'QB', threshold = 10)
-qb_ppa_list = [*qb_ppa_list, *response]
-qb_ppa_dict = [dict(
-    team = q.team,
-    qb_average_ppa = q.average_ppa.all,
-    qb_total_ppa = q.total_ppa.all
-) for q in qb_ppa_list]
-qb_ppa = pd.DataFrame(qb_ppa_dict)
-qb_ppa = qb_ppa.groupby('team', as_index=False).mean()
 
 # fpi ranks
 team_fpi_list = []
@@ -259,17 +235,6 @@ team_fpi_dict = [dict(
     special_eff = f.efficiencies.special_teams
 ) for f in team_fpi_list]
 team_fpi = pd.DataFrame(team_fpi_dict)
-
-# srs ranks
-team_srs_list = []
-response = ratings_api.get_srs(year = current_year)
-team_srs_list = [*team_srs_list, *response]
-team_srs_dict = [dict(
-    team = f.team,
-    srs = f.rating,
-    srs_rank = f.ranking
-) for f in team_srs_list]
-team_srs = pd.DataFrame(team_srs_dict).dropna().drop_duplicates()
 
 # sp ranks
 team_sp_list = []
@@ -388,6 +353,28 @@ recruiting_info_dict = [dict(
 ) for r in recruiting_info_list]
 recruiting = pd.DataFrame(recruiting_info_dict)
 
+start_week = 1
+end_week = current_week - 1
+games_list = []
+for week in range(start_week,end_week):
+    response = games_api.get_games(year=current_year, week=week,classification = 'fbs')
+    games_list = [*games_list, *response]
+games = [dict(
+            id=g.id,
+            season=g.season,
+            week=g.week,
+            start_date=g.start_date,
+            home_team=g.home_team,
+            home_elo=g.home_pregame_elo,
+            away_team=g.away_team,
+            away_elo=g.away_pregame_elo,
+            home_points = g.home_points,
+            away_points = g.away_points,
+            neutral = g.neutral_site
+            ) for g in games_list]
+games.sort(key=date_sort)
+opponent_adjustment_schedule = pd.DataFrame(games)
+
 print("Data Load Done")
 
 # entire talent profile for the team over the last three years
@@ -405,10 +392,42 @@ intermediate_1 = pd.merge(team_info, avg_talent_per_team, how='left', on='team')
 intermediate_2 = pd.merge(intermediate_1, conference_sp_rating, how='left', on='conference')
 intermediate_3 = pd.merge(intermediate_2, team_stats, how='left', on='team')
 intermediate_4 = pd.merge(intermediate_3, logos_info, how='left', on='team')
-intermediate_5 = pd.merge(intermediate_4, qb_ppa, how='left', on='team')
-intermediate_6 = pd.merge(intermediate_5, team_fpi, how='left', on='team')
+intermediate_6 = pd.merge(intermediate_4, team_fpi, how='left', on='team')
 intermediate_7 = pd.merge(intermediate_6, records, how='left', on='team')
 team_data = pd.merge(intermediate_7, metrics, how='left', on='team')
+
+# Step 1: Create a dictionary for quick PPA lookup
+team_ppa = team_data.set_index('team')[['Offense_ppa', 'Defense_ppa']]
+adjusted_ppa_list = []
+for _, row in opponent_adjustment_schedule.iterrows():
+    home = row['home_team']
+    away = row['away_team']
+    if home not in team_ppa.index or away not in team_ppa.index:
+        continue
+    adjusted_ppa_list.append({
+        'team': home,
+        'opp_offense_ppa': team_ppa.loc[away, 'Offense_ppa'],
+        'opp_defense_ppa': team_ppa.loc[away, 'Defense_ppa']
+    })
+    adjusted_ppa_list.append({
+        'team': away,
+        'opp_offense_ppa': team_ppa.loc[home, 'Offense_ppa'],
+        'opp_defense_ppa': team_ppa.loc[home, 'Defense_ppa']
+    })
+adjusted_df = pd.DataFrame(adjusted_ppa_list)
+opp_ppa_summary = adjusted_df.groupby('team').agg(
+    avg_opp_offense_ppa = ('opp_offense_ppa', 'mean'),
+    avg_opp_defense_ppa = ('opp_defense_ppa', 'mean')
+).reset_index()
+
+team_data = pd.merge(team_data, opp_ppa_summary, on='team', how='left')
+team_data['adj_offense_ppa'] = (
+    team_data['Offense_ppa'] - team_data['avg_opp_defense_ppa']
+)
+
+team_data['adj_defense_ppa'] = (
+    team_data['Defense_ppa'] - team_data['avg_opp_offense_ppa']
+)
 
 # For military schools and new FBS schools, use recruiting points instead of team talent
 # New FBS Schools - you get on here for 3 years
@@ -424,177 +443,65 @@ print("Starting Optimization")
 
 ############ IN HOUSE PR #################
 
-# All the scalers used for the team data
-scaler100 = MinMaxScaler(feature_range=(1, 100))
-scaler60 = MinMaxScaler(feature_range=(40,98.8))
-scaler10 = MinMaxScaler(feature_range=(1,10))
-scalerTurnovers = MinMaxScaler(feature_range=(1, 100))
-scalerPenalties = MinMaxScaler(feature_range=(1, 100))
-scalerThirdDown = MinMaxScaler(feature_range=(1, 100))
-scalerTalent = MinMaxScaler(feature_range=(100,1000))
-scalerAvgFieldPosition = MinMaxScaler(feature_range=(-10,10))
-scalerPPO = MinMaxScaler(feature_range=(1,100))
-
-#################################################################################################################################################
-
-# scaling all the data based on the scaler
-team_data['sp_conf_scaled'] = scaler10.fit_transform(team_data[['sp_conf_rating']])
-team_data['total_turnovers_scaled'] = scalerTurnovers.fit_transform(team_data[['total_turnovers']])
-team_data['possession_scaled'] = scaler100.fit_transform(team_data[['possessionTimeMinutes']])
-team_data['third_down_scaled'] = scalerThirdDown.fit_transform(team_data[['thirdDownConversionRate']])
-team_data['offense_avg_field_position_scaled'] = -1*scalerAvgFieldPosition.fit_transform(team_data[['Offense_fieldPosition_averageStart']])
-team_data['defense_avg_field_position_scaled'] = scalerAvgFieldPosition.fit_transform(team_data[['Defense_fieldPosition_averageStart']])
-team_data['offense_ppo_scaled'] = scalerPPO.fit_transform(team_data[['Offense_pointsPerOpportunity']])
-team_data['offense_success_scaled'] = scaler100.fit_transform(team_data[['Offense_successRate']])
-team_data['offense_explosive'] = scaler100.fit_transform(team_data[['Offense_explosiveness']])
-team_data['talent_scaled'] = scalerTalent.fit_transform(team_data[['avg_talent']])
-
-def_ppo_min = team_data['Defense_pointsPerOpportunity'].min()
-def_ppo_max = team_data['Defense_pointsPerOpportunity'].max()
-team_data['defense_ppo_scaled'] = 100 - (team_data['Defense_pointsPerOpportunity'] - def_ppo_min) * 99 / (def_ppo_max - def_ppo_min)
-
-pen_min = team_data['penaltyYards'].min()
-pen_max = team_data['penaltyYards'].max()
-team_data['penalties_scaled'] = 100 - (team_data['penaltyYards'] - pen_min) * 99 / (pen_max - pen_min)
-
-off_field_min = team_data['Offense_fieldPosition_averageStart'].min()
-off_field_max = team_data['Offense_fieldPosition_averageStart'].max()
-team_data['offense_avg_field_position_scaled'] = 100 - (team_data['Offense_fieldPosition_averageStart'] - off_field_min) * 99 / (off_field_max - off_field_min)
-
-team_data['offense_ppa_scaled'] = scaler100.fit_transform(team_data[['Offense_ppa']])
-ppa_min = team_data['Defense_ppa'].min()
-ppa_max = team_data['Defense_ppa'].max()
-team_data['defense_ppa_scaled'] = 100 - (team_data['Defense_ppa'] - ppa_min) * 99 / (ppa_max - ppa_min)
-
-success_min = team_data['Defense_successRate'].min()
-success_max = team_data['Defense_successRate'].max()
-team_data['defense_success_scaled'] = 100 - (team_data['Defense_successRate'] - success_min) * 99 / (success_max - success_min)
-
-explosiveness_min = team_data['Defense_explosiveness'].min()
-explosiveness_max = team_data['Defense_explosiveness'].max()
-team_data['defense_explosive'] = 100 - (team_data['Defense_explosiveness'] - explosiveness_min) * 99 / (explosiveness_max - explosiveness_min)
-
-#################################################################################################################################################
-
-# calculating the adjusted metric as well as the power rating for each team
-alpha = .05
-team_data['adjusted_metric'] = (0.7 * (team_data['offense_success_scaled'] + team_data['defense_success_scaled']) +
-                                (alpha * team_data['sp_conf_scaled']**0.5) +
-                                0.25 * (team_data['offense_explosive'] + team_data['defense_explosive']) +
-                                (0*team_data['talent_scaled']) + (0.4*(team_data['total_turnovers_scaled'] + team_data['penalties_scaled'] + team_data['offense_ppo_scaled'])))
-team_data['average_metric'] = (team_data['offense_success_scaled'] + team_data['offense_explosive'] + team_data['offense_ppa_scaled'] + 
-                            team_data['defense_success_scaled'] + team_data['defense_explosive'] + team_data['defense_ppa_scaled']) / 6
-team_data['in_house_pr'] = scaler60.fit_transform(team_data[['adjusted_metric']]).round(2)
-team_data['in_house_pr'] = round(team_data['in_house_pr'] - team_data['in_house_pr'].mean(), 1)
-
-###############################################################################
-###############################################################################
-###############################################################################
-## When adding in the pre-season ratings, I think this is a good spot for it ##
-###############################################################################
-###############################################################################
-###############################################################################
-
-import pandas as pd
-import numpy as np
-from sklearn.preprocessing import MinMaxScaler
+from scipy.stats import zscore, rankdata, spearmanr
 from scipy.optimize import differential_evolution
+import numpy as np
+import pandas as pd
 
-# --- SETUP COLUMN GROUPS ---
-offensive_columns = ['Offense_successRate', 'Offense_explosiveness', 'Offense_ppa','Offense_pointsPerOpportunity']
-defensive_columns = ['Defense_successRate', 'Defense_explosiveness', 'Defense_ppa','Defense_pointsPerOpportunity']
-features_all = offensive_columns + defensive_columns + ['avg_talent', 'thirdDownConversionRate', 'total_turnovers', 'in_house_pr']
+# Clean dataset
+team_data = team_data[~team_data['team'].isin(['Missouri State', 'Delaware'])]
 
-# --- SCALING FUNCTION ---
-def scale_columns(df, columns, reverse=False):
-    scaler = MinMaxScaler(feature_range=(1, 100))
-    data = -df[columns] if reverse else df[columns]
-    scaled = scaler.fit_transform(data)
-    return pd.DataFrame(scaled, columns=columns)
+# Define raw metrics
+off_ppa = team_data['adj_offense_ppa']
+def_ppa = -team_data['adj_defense_ppa']
+turnover_margin = (team_data['turnovers'] - team_data['turnoversOpponent']) / team_data['games_played']
+off_ppo = team_data['Offense_pointsPerOpportunity']
+def_ppo = -team_data['Defense_pointsPerOpportunity']
+talent = team_data['avg_talent']
 
-# --- APPLY SCALING ---
-scaling_config = {
-    'offense': (offensive_columns, False),
-    'defense': (defensive_columns, True),
-    'talent': (['avg_talent'], False),
-    'third_down': (['thirdDownConversionRate'], False),
-    'fourth_down': (['fourthDownConversionRate'], False),
-    'turnovers': (['total_turnovers'], True),
-    'returns': (['puntReturnTDs', 'kickReturnTDs'], False),
-    'havoc': (['Defense_havoc_total'], False),
-}
-for _, (cols, rev) in scaling_config.items():
-    team_data[cols] = scale_columns(team_data, cols, reverse=rev)
+# Assemble metric dataframe
+metrics = pd.DataFrame({
+    'off_ppa': off_ppa,
+    'def_ppa': def_ppa,
+    'off_ppo': off_ppo,
+    'def_ppo': def_ppo,
+    'talent': talent
+})
 
-# --- MERGE DATA ---
-merged_data = pd.merge(team_data, team_sp[['team', 'ranking']], on='team')
-X = merged_data[features_all].values  # Feature matrix
+# Z-score the inputs
+z_metrics = metrics.apply(lambda col: zscore(col, nan_policy='omit')).fillna(0)
 
-# --- OBJECTIVE FUNCTION ---
-def objective_spearman(weights_all):
-    feature_weights = np.array(weights_all[:-2])
-    rank_weights = np.array(weights_all[-2:])
+# Target: FPI rankings (lower rank = better team)
+fpi_ranks = rankdata(-team_data['fpi'].values, method='ordinal')  # negative because higher FPI is better
+
+fixed_scale = 12.5
+lambda_reg = 0.01  # Try 0.05, 0.1, 0.2 etc.
+
+def objective(weights):
+    weights = np.array(weights)
+    weights = weights / weights.sum()
     
-    if np.sum(feature_weights) == 0 or np.all(feature_weights < 0.01):
-        return 1
+    model_output = z_metrics.values @ weights * fixed_scale
+    model_ranks = rankdata(-model_output, method='ordinal')
+
+    rank_diff = np.abs(model_ranks - fpi_ranks)
+    l1_penalty = lambda_reg * np.sum(np.abs(weights))
     
-    feature_weights /= np.sum(feature_weights)
-    rank_weights /= np.sum(rank_weights)
+    return rank_diff.mean() + l1_penalty
 
-    power_ranking = X @ feature_weights
-    merged_data['power_ranking'] = power_ranking
-    merged_data['calculated_rank'] = merged_data['power_ranking'].rank(ascending=False)
+# Optimize weights (no scale)
+bounds = [(0, 1)] * 5
+result = differential_evolution(objective, bounds, strategy='best1bin', maxiter=1000, seed=42)
 
-    merged_data['combined_rank'] = (
-        merged_data['fpi_rank'] * rank_weights[0] +
-        merged_data['ranking'] * rank_weights[1]
-    )
+# Get best weights
+opt_weights = result.x / sum(result.x)
 
-    corr = merged_data[['calculated_rank', 'combined_rank']].corr(method='spearman').iloc[0, 1]
-    return -corr
+# Apply final rating
+team_data['power_rating'] = (z_metrics @ opt_weights) * fixed_scale
 
-# --- RUN DIFFERENTIAL EVOLUTION ---
-def run_differential_evolution():
-    bounds = [(0, 1)] * (len(features_all) + 2)
-    result = differential_evolution(
-        objective_spearman,
-        bounds=bounds,
-        strategy='best1bin',
-        maxiter=1000,
-        tol=1e-4,
-        polish=True,
-        seed=42
-    )
-
-    all_weights = result.x
-    feature_weights = all_weights[:-2]
-    rank_weights = all_weights[-2:]
-
-    feature_weights /= np.sum(feature_weights)
-    rank_weights /= np.sum(rank_weights)
-
-    selected_features = [feat for feat, w in zip(features_all, feature_weights) if w > 0.01]
-    selected_weights = [w for w in feature_weights if w > 0.01]
-
-    return selected_features, selected_weights, rank_weights, -result.fun
-
-# --- GET BEST FEATURES & WEIGHTS ---
-selected_features, best_weights, rank_weights, best_spearman = run_differential_evolution()
-
-feature_weights_dict = dict(zip(selected_features, best_weights))
-sorted_features_weights = sorted(feature_weights_dict.items(), key=lambda item: item[1], reverse=True)
-
-print("Selected Features:")
-for feature, weight in sorted_features_weights:
-    print(f"{feature}: {weight:.4f}")
-merged_data['combined_rank'] = merged_data['fpi_rank'] * rank_weights[0] + merged_data['ranking'] * rank_weights[1]
-
-# --- FINAL POWER RANKING COLUMN ---
-merged_data['power_ranking'] = sum(
-    merged_data[feat] * weight for feat, weight in zip(selected_features, best_weights)
-)
-output_model = merged_data.copy()
-team_data = output_model.copy()
+# Show results
+print("Best weights:", dict(zip(z_metrics.columns, opt_weights)))
+print("Fixed scale factor:", fixed_scale)
 
 ######################################## TEAM STATS AND RANKINGS #################################################
 
@@ -624,7 +531,8 @@ team_data['DDE'] = (
     (1.6 * team_data['sacks'])
 )
 team_data['DDE_rank'] = team_data['DDE'].rank(method='min', ascending=False)
-
+offensive_columns = ["adj_offense_ppa", "Offense_pointsPerOpportunity"]
+defensive_columns = ["adj_defense_ppa", "Defense_pointsPerOpportunity"]
 team_data["offensive_total"] = team_data[offensive_columns].sum(axis=1)
 team_data["offensive_rank"] = team_data["offensive_total"].rank(ascending=False, method="dense").astype(int)
 team_data["defensive_total"] = team_data[defensive_columns].sum(axis=1)
