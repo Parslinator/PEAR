@@ -1,135 +1,135 @@
 ,team,power_rating,week,season
-0,Ohio State,22.0,0,2025
-1,Texas,21.86,0,2025
-2,Georgia,21.79,0,2025
-3,Alabama,21.74,0,2025
-4,Oregon,21.22,0,2025
-5,Notre Dame,20.37,0,2025
-6,Penn State,19.8,0,2025
-7,LSU,17.18,0,2025
-8,Tennessee,16.66,0,2025
-9,Miami,16.4,0,2025
-10,Florida,15.65,0,2025
-11,Texas A&M,14.81,0,2025
-12,Ole Miss,14.54,0,2025
-13,Michigan,14.08,0,2025
-14,Clemson,14.01,0,2025
-15,South Carolina,13.25,0,2025
-16,Oklahoma,12.35,0,2025
-17,Missouri,12.12,0,2025
-18,USC,12.05,0,2025
-19,Indiana,10.89,0,2025
-20,Auburn,10.87,0,2025
-21,Nebraska,10.17,0,2025
-22,TCU,9.61,0,2025
-23,Iowa,8.21,0,2025
-24,Arkansas,7.85,0,2025
-25,Colorado,7.69,0,2025
-26,Boise State,7.58,0,2025
-27,Iowa State,7.45,0,2025
-28,Illinois,7.23,0,2025
-29,SMU,7.21,0,2025
-30,Minnesota,6.62,0,2025
-31,Kentucky,6.46,0,2025
-32,Arizona State,6.32,0,2025
-33,Kansas State,6.3,0,2025
-34,Texas Tech,6.28,0,2025
-35,Syracuse,6.11,0,2025
-36,Louisville,6.09,0,2025
-37,Baylor,6.06,0,2025
-38,Georgia Tech,6.05,0,2025
-39,Virginia Tech,5.86,0,2025
-40,Vanderbilt,5.83,0,2025
-41,Rutgers,4.97,0,2025
-42,Wisconsin,4.96,0,2025
-43,Memphis,4.83,0,2025
-44,North Carolina,4.82,0,2025
-45,BYU,4.69,0,2025
-46,Boston College,4.57,0,2025
-47,Duke,4.36,0,2025
-48,Pittsburgh,3.97,0,2025
-49,Florida State,3.65,0,2025
-50,NC State,3.51,0,2025
-51,Washington,3.21,0,2025
-52,Utah,3.15,0,2025
-53,Tulane,2.99,0,2025
-54,UCF,2.95,0,2025
-55,UCLA,2.95,0,2025
-56,Cincinnati,2.74,0,2025
-57,Mississippi State,2.73,0,2025
-58,West Virginia,2.3,0,2025
-59,Maryland,2.21,0,2025
-60,Michigan State,1.72,0,2025
-61,Washington State,1.53,0,2025
-62,California,0.97,0,2025
-63,Stanford,0.8,0,2025
-64,Kansas,0.8,0,2025
-65,South Florida,0.26,0,2025
-66,Oklahoma State,-0.57,0,2025
-67,Wake Forest,-0.63,0,2025
-68,UNLV,-0.8,0,2025
-69,Arizona,-0.86,0,2025
-70,East Carolina,-0.96,0,2025
-71,Northwestern,-1.27,0,2025
-72,Virginia,-1.4,0,2025
-73,Houston,-1.73,0,2025
-74,South Alabama,-1.95,0,2025
-75,Marshall,-1.97,0,2025
-76,UTSA,-2.73,0,2025
-77,Louisiana,-2.77,0,2025
-78,Miami (OH),-2.86,0,2025
-79,Oregon State,-2.99,0,2025
-80,Fresno State,-3.66,0,2025
-81,Toledo,-3.76,0,2025
-82,Colorado State,-3.94,0,2025
-83,Arkansas State,-4.15,0,2025
-84,Purdue,-4.97,0,2025
-85,Northern Illinois,-5.02,0,2025
-86,Coastal Carolina,-5.22,0,2025
-87,App State,-5.3,0,2025
-88,Ohio,-5.42,0,2025
-89,Georgia Southern,-5.56,0,2025
-90,Texas State,-6.03,0,2025
-91,Buffalo,-6.3,0,2025
-92,Troy,-6.37,0,2025
-93,San José State,-6.67,0,2025
-94,Bowling Green,-6.69,0,2025
-95,Liberty,-6.79,0,2025
-96,Western Kentucky,-7.21,0,2025
-97,Western Michigan,-7.65,0,2025
-98,UConn,-8.01,0,2025
-99,San Diego State,-8.1,0,2025
-100,Florida International,-8.11,0,2025
-101,North Texas,-8.13,0,2025
-102,Florida Atlantic,-8.39,0,2025
-103,James Madison,-8.47,0,2025
-104,Utah State,-8.51,0,2025
-105,Sam Houston,-8.57,0,2025
-106,Old Dominion,-9.3,0,2025
-107,Georgia State,-9.44,0,2025
-108,Army,-9.47,0,2025
-109,Eastern Michigan,-9.68,0,2025
-110,UAB,-9.71,0,2025
-111,Rice,-9.72,0,2025
-112,Nevada,-10.25,0,2025
-113,Louisiana Tech,-10.35,0,2025
-114,Central Michigan,-10.65,0,2025
-115,Jacksonville State,-11.38,0,2025
-116,Temple,-11.52,0,2025
-117,Tulsa,-11.72,0,2025
-118,Wyoming,-12.06,0,2025
-119,Hawai'i,-12.44,0,2025
-120,Navy,-13.18,0,2025
-121,Ball State,-13.82,0,2025
-122,Southern Miss,-13.84,0,2025
-123,UTEP,-14.24,0,2025
-124,Akron,-14.56,0,2025
-125,Middle Tennessee,-14.72,0,2025
-126,Charlotte,-14.95,0,2025
-127,New Mexico,-15.37,0,2025
-128,UL Monroe,-15.43,0,2025
-129,Air Force,-15.45,0,2025
-130,Kent State,-17.21,0,2025
-131,New Mexico State,-18.34,0,2025
-132,Massachusetts,-19.1,0,2025
-133,Kennesaw State,-24.65,0,2025
+0,Ohio State,22.4,0,2025
+1,Penn State,21.6,0,2025
+2,Alabama,20.7,0,2025
+3,Georgia,19.3,0,2025
+4,Notre Dame,18.6,0,2025
+5,LSU,17.9,0,2025
+6,Texas,17.8,0,2025
+7,Clemson,16.8,0,2025
+8,Oregon,16.8,0,2025
+9,Texas A&M,16.7,0,2025
+10,Florida,13.8,0,2025
+11,Michigan,12.9,0,2025
+12,Tennessee,12.8,0,2025
+13,Oklahoma,11.3,0,2025
+14,Miami,11.3,0,2025
+15,Ole Miss,11.1,0,2025
+16,South Carolina,10.5,0,2025
+17,TCU,10.0,0,2025
+18,Nebraska,9.2,0,2025
+19,USC,8.4,0,2025
+20,Kansas State,8.3,0,2025
+21,NC State,7.3,0,2025
+22,SMU,7.3,0,2025
+23,Missouri,7.1,0,2025
+24,Iowa State,6.7,0,2025
+25,Baylor,6.6,0,2025
+26,Georgia Tech,6.3,0,2025
+27,Auburn,6.1,0,2025
+28,Iowa,6.0,0,2025
+29,Virginia Tech,5.7,0,2025
+30,Indiana,5.7,0,2025
+31,Boise State,5.6,0,2025
+32,Pittsburgh,5.4,0,2025
+33,Vanderbilt,4.9,0,2025
+34,Louisville,4.8,0,2025
+35,Texas Tech,4.8,0,2025
+36,Arkansas,4.8,0,2025
+37,Arizona State,4.7,0,2025
+38,Illinois,4.6,0,2025
+39,Cincinnati,4.3,0,2025
+40,Rutgers,4.2,0,2025
+41,South Florida,3.8,0,2025
+42,BYU,3.7,0,2025
+43,Minnesota,3.2,0,2025
+44,Washington,2.9,0,2025
+45,Boston College,2.7,0,2025
+46,Kansas,2.2,0,2025
+47,Kentucky,2.1,0,2025
+48,UCF,2.0,0,2025
+49,UTSA,1.9,0,2025
+50,Colorado,1.9,0,2025
+51,Wisconsin,1.9,0,2025
+52,Marshall,0.9,0,2025
+53,North Carolina,0.8,0,2025
+54,Memphis,0.6,0,2025
+55,Arizona,0.5,0,2025
+56,Houston,0.3,0,2025
+57,Florida State,-0.1,0,2025
+58,Michigan State,-0.4,0,2025
+59,Tulane,-0.4,0,2025
+60,Mississippi State,-0.5,0,2025
+61,Utah,-0.5,0,2025
+62,Syracuse,-0.6,0,2025
+63,Texas State,-0.6,0,2025
+64,Duke,-0.7,0,2025
+65,Northwestern,-0.8,0,2025
+66,Liberty,-0.9,0,2025
+67,Toledo,-1.4,0,2025
+68,Washington State,-1.4,0,2025
+69,Oklahoma State,-1.5,0,2025
+70,UCLA,-1.5,0,2025
+71,Coastal Carolina,-1.7,0,2025
+72,West Virginia,-2.3,0,2025
+73,South Alabama,-2.4,0,2025
+74,James Madison,-2.6,0,2025
+75,Maryland,-2.8,0,2025
+76,California,-3.0,0,2025
+77,Oregon State,-3.1,0,2025
+78,Louisiana,-3.2,0,2025
+79,Ohio,-3.6,0,2025
+80,East Carolina,-3.7,0,2025
+81,Miami (OH),-3.7,0,2025
+82,Western Michigan,-4.0,0,2025
+83,Georgia Southern,-4.2,0,2025
+84,San José State,-4.8,0,2025
+85,Troy,-5.2,0,2025
+86,Wake Forest,-5.3,0,2025
+87,UNLV,-5.5,0,2025
+88,Fresno State,-5.5,0,2025
+89,Stanford,-5.8,0,2025
+90,Northern Illinois,-5.9,0,2025
+91,Arkansas State,-6.3,0,2025
+92,Colorado State,-6.4,0,2025
+93,Sam Houston,-6.5,0,2025
+94,Jacksonville State,-6.8,0,2025
+95,Virginia,-7.0,0,2025
+96,Tulsa,-7.2,0,2025
+97,Rice,-7.2,0,2025
+98,Navy,-7.4,0,2025
+99,San Diego State,-7.4,0,2025
+100,Purdue,-7.5,0,2025
+101,Old Dominion,-7.5,0,2025
+102,Georgia State,-7.6,0,2025
+103,UConn,-7.7,0,2025
+104,UAB,-8.1,0,2025
+105,Utah State,-8.4,0,2025
+106,Buffalo,-8.4,0,2025
+107,App State,-8.4,0,2025
+108,Temple,-8.7,0,2025
+109,North Texas,-8.8,0,2025
+110,Florida International,-8.8,0,2025
+111,Western Kentucky,-9.2,0,2025
+112,Wyoming,-9.4,0,2025
+113,Middle Tennessee,-9.7,0,2025
+114,Louisiana Tech,-9.9,0,2025
+115,Air Force,-10.3,0,2025
+116,Florida Atlantic,-10.8,0,2025
+117,Nevada,-11.1,0,2025
+118,Bowling Green,-11.1,0,2025
+119,UTEP,-11.5,0,2025
+120,Army,-12.5,0,2025
+121,Hawai'i,-13.9,0,2025
+122,Eastern Michigan,-14.2,0,2025
+123,Massachusetts,-14.5,0,2025
+124,Central Michigan,-15.6,0,2025
+125,UL Monroe,-15.8,0,2025
+126,Akron,-16.3,0,2025
+127,Southern Miss,-16.4,0,2025
+128,New Mexico State,-17.5,0,2025
+129,New Mexico,-18.4,0,2025
+130,Ball State,-19.3,0,2025
+131,Charlotte,-19.4,0,2025
+132,Kent State,-25.5,0,2025
+133,Kennesaw State,,0,2025

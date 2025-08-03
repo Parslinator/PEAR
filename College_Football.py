@@ -91,13 +91,13 @@ week_list = [9,10,11,12,13,14,15,16]
 # current_week = int(current_week)
 # current_year = int(current_year)
 postseason = True
-current_year = 2024
-current_week = 17
+current_year = 2025
+current_week = 0
 team_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv").drop(columns=['Unnamed: 0'])
 all_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}.csv")
 
-all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
-all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
+# all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
+# all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
 
 def date_sort(game):
     game_date = datetime.datetime.strptime(game['start_date'], "%Y-%m-%dT%H:%M:%S.000Z")
@@ -483,7 +483,8 @@ all_data['DDE'] = all_data['DDE_rank']
 
 all_data.index = all_data.index + 1
 with st.container(border=True, height=440):
-    st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
+    st.dataframe(all_data[['Team', 'Rating', 'SOS', 'win_total']], use_container_width=True)
+    # st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
 st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
 # , MD - Most Deserving Rankings
 
@@ -544,7 +545,7 @@ st.sidebar.markdown(f"[Team Specific Stats](#view-a-specific-teams-stats)", unsa
 # st.sidebar.markdown(f"[Spread Between Years](#calculate-spread-between-two-teams-from-different-years)", unsafe_allow_html=True)
 
 
-years = [2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]
+years = [2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]
 for year in years:
     st.sidebar.markdown(f"[{year} Ratings](#{year}-ratings)", unsafe_allow_html=True)
 
@@ -585,6 +586,28 @@ with st.form(key='filter_team'):
 #         else:
 #             neutrality = False
 #         st.write(spreads_across_years(home_team, home_season, away_team, away_season, team_data, neutrality))
+
+st.divider()
+
+st.markdown(f'<h2 id="2024-ratings">2024 Ratings</h2>', unsafe_allow_html=True)
+all_data = pd.read_csv("./PEAR/PEAR Football/y2024/Data/team_data_week17.csv")
+all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
+all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
+all_data['OFF'] = all_data['Offense']
+all_data['DEF'] = all_data['Defense']
+all_data['MD'] = all_data['most_deserving']
+all_data['Rating'] = all_data['power_rating']
+all_data['Team'] = all_data['team']
+all_data['CONF'] = all_data['conference']
+all_data['ST'] = all_data['STM_rank']
+all_data['PBR'] = all_data['PBR_rank']
+all_data['DCE'] = all_data['DCE_rank']
+all_data['DDE'] = all_data['DDE_rank']
+all_data.index = all_data.index + 1
+with st.container(border=True, height=440):
+    st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
+st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
+# , MD - Most Deserving Rankings
 
 st.divider()
 
