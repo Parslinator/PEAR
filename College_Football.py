@@ -470,16 +470,16 @@ st.logo("./PEAR/pear_logo.jpg", size = 'large')
 st.divider()
 
 st.markdown(f'<h2 id="fbs-power-ratings">FBS Power Ratings</h2>', unsafe_allow_html=True)
-all_data['OFF'] = all_data['Offense']
-all_data['DEF'] = all_data['Defense']
-all_data['MD'] = all_data['most_deserving']
+# all_data['OFF'] = all_data['Offense']
+# all_data['DEF'] = all_data['Defense']
+# all_data['MD'] = all_data['most_deserving']
 all_data['Rating'] = all_data['power_rating']
 all_data['Team'] = all_data['team']
-all_data['CONF'] = all_data['conference']
-all_data['ST'] = all_data['STM_rank']
-all_data['PBR'] = all_data['PBR_rank']
-all_data['DCE'] = all_data['DCE_rank']
-all_data['DDE'] = all_data['DDE_rank']
+# all_data['CONF'] = all_data['conference']
+# all_data['ST'] = all_data['STM_rank']
+# all_data['PBR'] = all_data['PBR_rank']
+# all_data['DCE'] = all_data['DCE_rank']
+# all_data['DDE'] = all_data['DDE_rank']
 
 all_data.index = all_data.index + 1
 with st.container(border=True, height=440):
