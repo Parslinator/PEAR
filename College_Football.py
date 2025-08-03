@@ -92,9 +92,10 @@ week_list = [9,10,11,12,13,14,15,16]
 # current_year = int(current_year)
 postseason = True
 current_year = 2025
-current_week = 0
+current_week = 1
 team_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv").drop(columns=['Unnamed: 0'])
 all_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}.csv")
+spreads = pd.read_excel(f"./PEAR/PEAR Football/y{current_year}/Spreads/spreads_tracker_week1.xlsx")
 
 # all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 # all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
@@ -487,6 +488,12 @@ with st.container(border=True, height=440):
     # st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
 st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
 # , MD - Most Deserving Rankings
+
+st.divider()
+
+st.markdown(f'<h2 id="fbs-power-ratings">Week {current_week} Spreads</h2>', unsafe_allow_html=True)
+with st.container(border=True, height=440):
+    st.dataframe(spreads[['home_team', 'away_team', 'PEAR']], use_container_width=True)
 
 st.divider()
 
