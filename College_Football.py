@@ -158,27 +158,28 @@ def grab_team_rating(team):
 #         elo_ratings = pd.DataFrame(elo_ratings_dict)        
 #     return elo_ratings['elo'].values[0]
 
-# @st.cache_data()
-# def find_spread(home_team, away_team, neutral=False):
-#     home_elo = grab_team_elo(home_team)
-#     away_elo = grab_team_elo(away_team)
-#     home_pr = grab_team_rating(home_team)
-#     away_pr = grab_team_rating(away_team)
-#     home_win_prob = round((10 ** ((home_elo - away_elo) / 400)) / ((10 ** ((home_elo - away_elo) / 400)) + 1) * 100, 2)
-#     HFA = 4.6
-#     adjustment = adjust_home_pr(home_win_prob)
-#     raw_spread = HFA + home_pr + adjustment - away_pr
-#     if neutral:
-#         raw_spread -= HFA
+@st.cache_data()
+def find_spread(home_team, away_team, neutral=False):
+    # home_elo = grab_team_elo(home_team)
+    # away_elo = grab_team_elo(away_team)
+    home_pr = grab_team_rating(home_team)
+    away_pr = grab_team_rating(away_team)
+    # home_win_prob = round((10 ** ((home_elo - away_elo) / 400)) / ((10 ** ((home_elo - away_elo) / 400)) + 1) * 100, 2)
+    HFA = 4.6
+    # adjustment = adjust_home_pr(home_win_prob)
+    # raw_spread = HFA + home_pr + adjustment - away_pr
+    raw_spread = HFA + home_pr - away_pr
+    if neutral:
+        raw_spread -= HFA
 
-#     spread = round(raw_spread,1)
-#     PEAR_win_prob = PEAR_Win_Prob(home_pr, away_pr)
-#     game_quality = round(((home_pr + away_pr) / 2) - (abs(spread + 0.01) * 0.5), 1)
+    spread = round(raw_spread,1)
+    PEAR_win_prob = PEAR_Win_Prob(home_pr, away_pr)
+    game_quality = round(((home_pr + away_pr) / 2) - (abs(spread + 0.01) * 0.5), 1)
 
-#     if spread >= 0:
-#         return f"{home_team} -{spread}"
-#     else:
-#         return f"{away_team} {spread}"
+    if spread >= 0:
+        return f"{home_team} -{spread}"
+    else:
+        return f"{away_team} {spread}"
 
 # team_data.index = team_data.index + 1
 def get_week_spreads(team_data):
@@ -450,24 +451,6 @@ st.logo("./PEAR/pear_logo.jpg", size = 'large')
 
 # st.divider()
 
-# st.sidebar.markdown(f"[Calculate {current_year} Spread](#calculate-spread-between-any-two-teams)", unsafe_allow_html=True)
-# st.sidebar.markdown(f"[{current_year} Power Ratings](#fbs-power-ratings)", unsafe_allow_html=True)
-# st.markdown(f'<h2 id="calculate-spread-between-any-two-teams">Calculate Spread Between Any Two Teams</h2>', unsafe_allow_html=True)
-# with st.form(key='calculate_spread'):
-#     away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'])))
-#     home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(team_data['team'])))
-#     neutrality = st.radio(
-#         "Game Location",
-#         ["Neutral Field", "On Campus"]
-#     )
-#     spread_button = st.form_submit_button("Calculate Spread")
-#     if spread_button:
-#         if neutrality == 'Neutral Field':
-#             neutrality = True
-#         else:
-#             neutrality = False
-#         st.write(find_spread(home_team, away_team, neutrality))
-
 st.divider()
 
 st.markdown(f'<h2 id="fbs-power-ratings">FBS Power Ratings</h2>', unsafe_allow_html=True)
@@ -488,6 +471,26 @@ with st.container(border=True, height=440):
     # st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
 st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
 # , MD - Most Deserving Rankings
+
+st.divider()
+
+st.sidebar.markdown(f"[Calculate {current_year} Spread](#calculate-spread-between-any-two-teams)", unsafe_allow_html=True)
+st.sidebar.markdown(f"[{current_year} Power Ratings](#fbs-power-ratings)", unsafe_allow_html=True)
+st.markdown(f'<h2 id="calculate-spread-between-any-two-teams">Calculate Spread Between Any Two Teams</h2>', unsafe_allow_html=True)
+with st.form(key='calculate_spread'):
+    away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'])))
+    home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(team_data['team'])))
+    neutrality = st.radio(
+        "Game Location",
+        ["Neutral Field", "On Campus"]
+    )
+    spread_button = st.form_submit_button("Calculate Spread")
+    if spread_button:
+        if neutrality == 'Neutral Field':
+            neutrality = True
+        else:
+            neutrality = False
+        st.write(find_spread(home_team, away_team, neutrality))
 
 st.divider()
 
