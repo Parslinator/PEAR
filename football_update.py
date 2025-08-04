@@ -855,9 +855,9 @@ def best_and_worst(all_data, logos, metric, title, subtitle, visual_name):
     fig.patch.set_facecolor('#CECEB2')
 
     # Title and description
-    plt.suptitle(title, fontsize=20, fontweight='bold', color='black')
-    plt.text(0.51, 0.935, subtitle, ha='center', fontsize=14, color='black', transform=fig.transFigure)
-    plt.text(0.9, 0.09, "@PEARatings", ha='right', fontsize=18, color='black', transform=fig.transFigure, fontweight='bold')
+    plt.suptitle(title, fontsize=24, fontweight='bold', color='black')
+    plt.text(0.51, 0.92, subtitle, ha='center', fontsize=18, color='black', transform=fig.transFigure)
+    plt.text(0.51, 0.88, "@PEARatings", ha='center', fontsize=18, color='black', transform=fig.transFigure, fontweight='bold')
 
     # Fill the grid alternating Best and Worst Defenses
     for i in range(5):  # There are 5 rows
@@ -869,7 +869,7 @@ def best_and_worst(all_data, logos, metric, title, subtitle, visual_name):
             ax.imshow(img)
             ax.set_facecolor('#f0f0f0')
             # ax.set_title(f"#{i*5 + j + 1} {team} \n{round(top_25_best.loc[i*5 + j, metric], 1)}", fontsize=8, fontweight='bold')
-            ax.set_title(f"#{i*5 + j + 1} \n{round(top_25_best.loc[i*5 + j, metric], 1)}", fontsize=14, fontweight='bold')
+            ax.text(0.5, -0.07, f"#{i*5 + j + 1} \n{round(top_25_best.loc[i*5 + j, metric], 1)}", fontsize=14, fontweight='bold', transform=ax.transAxes, ha='center', va='top')
             ax.axis('off')
 
         # Worst defenses: Columns 5-9 for each row (Worst in every even index after 5)
@@ -882,12 +882,12 @@ def best_and_worst(all_data, logos, metric, title, subtitle, visual_name):
             
             # Start counting for Worst from 134 and decrement
             worst_rank = (len(all_data) - 24) + (i*5 + (j-5)) 
-            ax.set_title(f"#{worst_rank} \n{round(top_25_worst.loc[i*5 + (j-5), metric], 1)}", fontsize=14, fontweight='bold')
+            ax.text(0.5, -0.07, f"#{worst_rank} \n{round(top_25_worst.loc[i*5 + (j-5), metric], 1)}", fontsize=14, fontweight='bold', transform=ax.transAxes, ha='center', va='top')
             ax.axis('off')
 
-    fig.add_artist(Line2D([0.512, 0.512], [0.12, 0.92], color='black', lw=5))
-    fig.text(0.13, 0.965, "Best", ha='left', va='center', fontsize=20, fontweight='bold', color='black')
-    fig.text(0.89, 0.965, "Worst", ha='right', va='center', fontsize=20, fontweight='bold', color='black')
+    fig.add_artist(Line2D([0.512, 0.512], [0.06, 0.86], color='black', lw=5))
+    fig.text(0.13, 0.92, "Best", ha='left', va='center', fontsize=18, fontweight='bold', color='black')
+    fig.text(0.89, 0.92, "Worst", ha='right', va='center', fontsize=18, fontweight='bold', color='black')
 
     file_path = os.path.join(folder_path, visual_name)
     # Show the final figure
@@ -961,7 +961,7 @@ def plot_bar_charts(ax, data, logos, metric, title, top_or_bottom):
     for spine in ['top', 'left', 'bottom', 'right']:
         ax.spines[spine].set_visible(False)
 
-def best_and_worst2(all_data, logos, metric, title, subtitle, visual_name):
+def other_best_and_worst(all_data, logos, metric, title, subtitle, visual_name):
     if metric == 'avg_expected_wins':
         top_25_best = all_data.sort_values(metric, ascending=True)[:25].reset_index(drop=True)
         top_25_worst = all_data.sort_values(metric, ascending=False)[:25].reset_index(drop=True)
@@ -976,7 +976,7 @@ def best_and_worst2(all_data, logos, metric, title, subtitle, visual_name):
         rounding = 1
         if (metric == 'wins_above_good') or (metric == 'performance'):
             rounding = 3
-        if (metric == 'RTP') or (metric == 'wins_above_average') or ('dependence_score'):
+        if (metric == 'RTP') or (metric == 'wins_above_average'):
             rounding = 2
         good = 'Best'
         bad = 'Worst'
@@ -986,9 +986,6 @@ def best_and_worst2(all_data, logos, metric, title, subtitle, visual_name):
         if (metric == 'wins_above_average'):
             good = 'Most'
             bad = 'Least'
-        if (metric == 'dependence_score'):
-            good = 'Offensive Dependence'
-            bad = 'Defensive Dependence'
 
     # Create a figure with 5 rows and 10 columns
     fig, axs = plt.subplots(5, 10, figsize=(20, 10), dpi=125)
@@ -998,9 +995,9 @@ def best_and_worst2(all_data, logos, metric, title, subtitle, visual_name):
     fig.patch.set_facecolor('#CECEB2')
 
     # Title and description
-    plt.suptitle(title, fontsize=20, fontweight='bold', color='black')
-    plt.text(0.51, 0.935, subtitle, ha='center', fontsize=14, color='black', transform=fig.transFigure)
-    plt.text(0.9, 0.09, "@PEARatings", ha='right', fontsize=18, color='black', transform=fig.transFigure, fontweight='bold')
+    plt.suptitle(title, fontsize=24, fontweight='bold', color='black')
+    plt.text(0.51, 0.92, subtitle, ha='center', fontsize=18, color='black', transform=fig.transFigure)
+    plt.text(0.51, 0.88, "@PEARatings", ha='center', fontsize=18, color='black', transform=fig.transFigure, fontweight='bold')
 
     # Fill the grid alternating Best and Worst Defenses
     for i in range(5):  # There are 5 rows
@@ -1011,7 +1008,7 @@ def best_and_worst2(all_data, logos, metric, title, subtitle, visual_name):
             img = team_logos[team]
             ax.imshow(img)
             ax.set_facecolor('#f0f0f0')
-            ax.set_title(f"#{i*5 + j + 1} \n{round(top_25_best.loc[i*5 + j, metric], rounding)}", fontsize=14, fontweight='bold')
+            ax.text(0.5, -0.07, f"#{i*5 + j + 1} \n{round(top_25_best.loc[i*5 + j, metric], rounding)}", fontsize=14, fontweight='bold', transform=ax.transAxes, ha='center', va='top')
             ax.axis('off')
 
         # Worst defenses: Columns 5-9 for each row (Worst in every even index after 5)
@@ -1024,12 +1021,12 @@ def best_and_worst2(all_data, logos, metric, title, subtitle, visual_name):
             
             # Start counting for Worst from 134 and decrement
             worst_rank = (len(all_data) - 24) + (i*5 + (j-5)) 
-            ax.set_title(f"#{worst_rank} \n{round(top_25_worst.loc[i*5 + (j-5), metric], rounding)}", fontsize=14, fontweight='bold')
+            ax.text(0.5, -0.07, f"#{worst_rank} \n{round(top_25_worst.loc[i*5 + (j-5), metric], rounding)}", fontsize=14, fontweight='bold', transform=ax.transAxes, ha='center', va='top')
             ax.axis('off')
 
-    fig.add_artist(Line2D([0.512, 0.512], [0.12, 0.92], color='black', lw=5))
-    fig.text(0.13, 0.965, good, ha='left', va='center', fontsize=20, fontweight='bold', color='black')
-    fig.text(0.89, 0.965, bad, ha='right', va='center', fontsize=20, fontweight='bold', color='black')
+    fig.add_artist(Line2D([0.512, 0.512], [0.06, 0.86], color='black', lw=5))
+    fig.text(0.13, 0.92, good, ha='left', fontsize=18, fontweight='bold', color='black')
+    fig.text(0.89, 0.92, bad, ha='right', fontsize=18, fontweight='bold', color='black')
 
     file_path = os.path.join(folder_path, visual_name)
     # Show the final figure
@@ -2754,14 +2751,15 @@ try:
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#CECEB2')
     plt.suptitle(f"Week {current_week} PEAR Top 25", fontsize=20, fontweight='bold', color='black')
-    fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
+    fig.text(0.5, 0.92, "Power Rating", fontsize=12, ha='center', color='black')
+    fig.text(0.5, 0.89, "@PEARatings", fontsize=12, ha='center', color='black', fontweight='bold')
 
     for i, ax in enumerate(axs.ravel()):
         team = top_25.loc[i, 'team']
         img = team_logos[team]
         ax.imshow(img)
         ax.set_facecolor('#f0f0f0')
-        ax.set_title(f"#{i+1} {team} \n{round(top_25.loc[i, 'power_rating'], 1)}", fontsize=8)
+        ax.text(0.5, -0.1, f"#{i+1} {team} \n{round(top_25.loc[i, 'power_rating'], 1)}", fontsize=8, transform=ax.transAxes, ha='center', va='top')
         ax.axis('off')
     plt.savefig(os.path.join(folder_path, "top25"), bbox_inches='tight', dpi=300)
     print("Top 25 Done!")
@@ -2774,14 +2772,15 @@ try:
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#CECEB2')
     plt.suptitle(f"Week {current_week} Most Deserving Top 25", fontsize=20, fontweight='bold', color='black')
-    fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
+    fig.text(0.5, 0.92, "AP Style Rankings", fontsize=12, ha='center', color='black')
+    fig.text(0.9, 0.89, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
 
     for i, ax in enumerate(axs.ravel()):
         team = top_25.loc[i, 'team']
         img = team_logos[team]
         ax.imshow(img)
         ax.set_facecolor('#f0f0f0')
-        ax.set_title(f"#{i+1} {team} \n{round(top_25.loc[i, 'most_deserving_wins'], 1)}", fontsize=8)
+        ax.text(0.5, -0.1, f"#{i+1} {team} \n{round(top_25.loc[i, 'most_deserving_wins'], 1)}", fontsize=8, transform=ax.transAxes, ha='center', va='top')
         ax.axis('off')
     plt.savefig(os.path.join(folder_path, "most_deserving"), bbox_inches='tight', dpi=300)
     print("Most Deserving Done!")
@@ -2795,6 +2794,7 @@ try:
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#CECEB2')
     plt.suptitle(f"Week {current_week} GO5 PEAR", fontsize=20, fontweight='bold', color='black')
+    fig.text(0.5, 0.92, "GO5 Power Rating", fontsize=12, ha='center', color='black')
     fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
 
     for i, ax in enumerate(axs.ravel()):
@@ -2802,7 +2802,7 @@ try:
         img = team_logos[team]
         ax.imshow(img)
         ax.set_facecolor('#f0f0f0')
-        ax.set_title(f"#{i+1} {team} \n{round(top_25.loc[i, 'power_rating'],1)}", fontsize=8)
+        ax.text(0.5, -0.1, f"#{i+1} {team} \n{round(top_25.loc[i, 'power_rating'],1)}", fontsize=8, transform=ax.transAxes, ha='center', va='top')
         ax.axis('off')
     plt.savefig(os.path.join(folder_path, "go5_top25"), bbox_inches='tight', dpi=300)
     print("GO5 Top 25 Done!")
@@ -3106,7 +3106,7 @@ try:
         performance_list.append(wins - xwins)
 
     current_performance = pd.DataFrame({'team': team_data['team'], 'performance': performance_list})
-    best_and_worst2(current_performance, logos, 'performance', 
+    other_best_and_worst(current_performance, logos, 'performance', 
                     f'Week {current_week} PEAR Overperformers and Underperformers', 
                     "Wins ABOVE or BELOW Your Retroactive Win Expectation", "overperformer_and_underperformer")
     print("Achieving vs. Expectation Done!")
@@ -3114,14 +3114,14 @@ except Exception as e:
     print(f"Error in code chunk: Achieving vs. Expectation Ratings. Error: {e}")
 
 try:
-    best_and_worst2(SOS, logos, 'avg_expected_wins', f'Week {current_week} PEAR SOS', 
+    other_best_and_worst(SOS, logos, 'avg_expected_wins', f'Week {current_week} PEAR SOS', 
                     "Efficiency of an Elite Team Against Your Opponents", "strength_of_schedule")
     print("SOS Done!")
 except Exception as e:
     print(f"Error in code chunk: SOS Ratings. Error: {e}")
 
 try:
-    best_and_worst2(SOR, logos, 'wins_above_good', f'Week {current_week} PEAR SOR', 
+    other_best_and_worst(SOR, logos, 'wins_above_good', f'Week {current_week} PEAR SOR', 
                     "Wins Above or Below a Good Team", "strength_of_record")
     print("SOR Done!")
 except Exception as e:
@@ -3143,13 +3143,13 @@ try:
     all_data['offensive_total'] = scaler100.fit_transform(all_data[['offensive_total']])
 
     all_data['dependence_score'] = (all_data['offensive_total'] - all_data['defensive_total']) / (all_data['offensive_total'] + all_data['defensive_total'])
-    best_and_worst2(all_data, logos, 'dependence_score', 'PEAR Unit Dependence', 'Values near 1 indicate offensive dependence, while values near -1 indicate defensive dependence', 'dependence_score')
+    other_best_and_worst(all_data, logos, 'dependence_score', 'PEAR Unit Dependence', 'Values near 1 indicate offensive dependence, while values near -1 indicate defensive dependence', 'dependence_score')
     print('Dependence Score Done!')
 except Exception as e:
     print(f"Error in code chunk: Dependence Score Ratings. Error: {e}")
 
 try:
-    best_and_worst2(RTP, logos, 'RTP', f'PEAR Margin of Victory', "If You Are Expected to Win by 10 Points, Your Average MOV is __ Points", "mov_performance")
+    other_best_and_worst(RTP, logos, 'RTP', f'PEAR Margin of Victory', "If You Are Expected to Win by 10 Points, Your Average MOV is __ Points", "mov_performance")
     print("MOV Performance Done!")
 except Exception as e:
     print(f"Error in code chunk: MOV Performance Ratings. Error: {e}")
