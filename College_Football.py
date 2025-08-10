@@ -132,7 +132,7 @@ def PEAR_Win_Prob(home_pr, away_pr):
     return win_prob
 
 def adjust_home_pr(home_win_prob):
-    return ((home_win_prob - 50) / 50) * 5
+    return ((home_win_prob - 50) / 50) * 1
 
 def round_to_nearest_half(x):
     return np.round(x * 2) / 2
@@ -165,7 +165,7 @@ def find_spread(home_team, away_team, neutral=False):
     home_pr = grab_team_rating(home_team)
     away_pr = grab_team_rating(away_team)
     # home_win_prob = round((10 ** ((home_elo - away_elo) / 400)) / ((10 ** ((home_elo - away_elo) / 400)) + 1) * 100, 2)
-    HFA = 4.6
+    HFA = 4.5
     # adjustment = adjust_home_pr(home_win_prob)
     # raw_spread = HFA + home_pr + adjustment - away_pr
     raw_spread = HFA + home_pr - away_pr
@@ -279,16 +279,16 @@ def get_week_spreads(team_data):
         how='left'
     ).rename(columns={'offensive_total':'away_offense', 'defensive_total':'away_defense'})
     week_games = week_games.drop(columns=['team_x', 'team_y'])
-    week_games['xhome_points'] = round((week_games['home_offense'] - week_games['away_defense'] + (4.6/2)),1)
-    week_games['xaway_points'] = round((week_games['away_offense'] - week_games['home_defense'] - (4.6/2)),1)
+    week_games['xhome_points'] = round((week_games['home_offense'] - week_games['away_defense'] + (4.5/2)),1)
+    week_games['xaway_points'] = round((week_games['away_offense'] - week_games['home_defense'] - (4.5/2)),1)
     week_games['predicted_over_under'] = week_games['xhome_points'] + week_games['xaway_points']
 
     def adjust_home_pr(home_win_prob):
-        return ((home_win_prob - 50) / 50) * 5
+        return ((home_win_prob - 50) / 50) * 1
     week_games['home_win_prob'] = round((10**((week_games['home_elo'] - week_games['away_elo']) / 400)) / ((10**((week_games['home_elo'] - week_games['away_elo']) / 400)) + 1)*100,2)
     
-    week_games['pr_spread'] = (4.6 + week_games['home_pr'] + (week_games['home_win_prob'].apply(adjust_home_pr)) - week_games['away_pr']).round(1)
-    week_games['pr_spread'] = np.where(week_games['neutral'], week_games['pr_spread'] - 4.6, week_games['pr_spread']).round(1)
+    week_games['pr_spread'] = (4.5 + week_games['home_pr'] + (week_games['home_win_prob'].apply(adjust_home_pr)) - week_games['away_pr']).round(1)
+    week_games['pr_spread'] = np.where(week_games['neutral'], week_games['pr_spread'] - 4.5, week_games['pr_spread']).round(1)
     # week_games['pr_spread'] = week_games['pr_spread'].apply(round_to_nearest_half)
 
     scaler10 = MinMaxScaler(feature_range=(1,10))
@@ -503,7 +503,7 @@ st.divider()
 team_data = pd.read_csv("./PEAR/PEAR Football/normalized_power_rating_across_years.csv")
 
 def adjust_home_pr(home_win_prob):
-    return ((home_win_prob - 50) / 50) * 5
+    return ((home_win_prob - 50) / 50) * 1
 
 # def grab_team_elo_across_years(team, season):
 #     season = int(season)
@@ -527,7 +527,7 @@ def adjust_home_pr(home_win_prob):
 #     if neutrality:
 #         spread = home_pr + adjustment - away_pr
 #     else:
-#         spread = 4.6 + home_pr + adjustment - away_pr
+#         spread = 4.5 + home_pr + adjustment - away_pr
 #     spread = round(spread,1)
 
 #     if spread >= 0:

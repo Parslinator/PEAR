@@ -713,9 +713,9 @@ for team in team_data['team']:
         away_pr = team_data.loc[team_data['team'] == away, 'power_rating'].values[0]
 
         if team == home:
-            expected = 4.6 + home_pr - away_pr
+            expected = 4.5 + home_pr - away_pr
         else:
-            expected = away_pr - (home_pr + 4.6)
+            expected = away_pr - (home_pr + 4.5)
             mov = -mov
 
         z = (mov - expected) / std_dev
@@ -1305,7 +1305,7 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
         return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
 
     def adjust_home_pr(home_win_prob):
-        return ((home_win_prob - 50) / 50) * 5
+        return ((home_win_prob - 50) / 50) * 1
 
     def round_to_nearest_half(x):
         return np.round(x * 2) / 2   
@@ -1315,13 +1315,13 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
         away_rating = team_data[team_data['team'] == away_team]['power_rating'].values[0]
         home_win_prob = game['home_win_prob']
         def adjust_home_pr(home_win_prob):
-            return ((home_win_prob - 50) / 50) * 5
+            return ((home_win_prob - 50) / 50) * 1
         def round_to_nearest_half(x):
             return np.round(x * 2) / 2 
         if neutral:
             spread = round((home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
         else:
-            spread = round((4.6 + home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
+            spread = round((4.5 + home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
         if (home_team == team_name) & (spread > 0):
             output = "-" + str(spread)
         elif (home_team == team_name) & (spread < 0):
@@ -1570,9 +1570,9 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
 
     home_win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1)*100,2)
     PEAR_home_prob = PEAR_Win_Prob(home_power_rating, away_power_rating)
-    spread = (4.6 + home_power_rating + adjust_home_pr(home_win_prob) - away_power_rating).round(1)
+    spread = (4.5 + home_power_rating + adjust_home_pr(home_win_prob) - away_power_rating).round(1)
     if neutrality:
-        spread = (spread - 4.6).round(1)
+        spread = (spread - 4.5).round(1)
     spread = round(spread,1)
     if (spread) <= 0:
         formatted_spread = (f'{away_team} {spread}')
@@ -1840,13 +1840,13 @@ def plot_win_probabilities(wins_df, all_conference_wins, logos_df, team_data, la
         away_rating = team_data[team_data['team'] == away_team]['power_rating'].values[0]
         home_win_prob = game['home_win_prob']
         def adjust_home_pr(home_win_prob):
-            return ((home_win_prob - 50) / 50) * 5
+            return ((home_win_prob - 50) / 50) * 1
         def round_to_nearest_half(x):
             return np.round(x * 2) / 2 
         if neutral:
             spread = round((home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
         else:
-            spread = round((4.6 + home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
+            spread = round((4.5 + home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
         if (home_team == team_name) & (spread > 0):
             output = "-" + str(spread)
         elif (home_team == team_name) & (spread < 0):
@@ -2613,13 +2613,13 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
         away_rating = all_data[all_data['team'] == away_team]['power_rating'].values[0]
         home_win_prob = game['home_win_prob']
         def adjust_home_pr(home_win_prob):
-            return ((home_win_prob - 50) / 50) * 5
+            return ((home_win_prob - 50) / 50) * 1
         def round_to_nearest_half(x):
             return np.round(x * 2) / 2 
         if neutral:
             spread = round((home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
         else:
-            spread = round((4.6 + home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
+            spread = round((4.5 + home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
         if (home_team == team_name) & (spread > 0):
             output = "-" + str(spread)
         elif (home_team == team_name) & (spread < 0):
@@ -3770,15 +3770,15 @@ week_games = week_games.merge(
     how='left'
 ).rename(columns={'offensive_total':'away_offense', 'defensive_total':'away_defense'})
 week_games = week_games.drop(columns=['team_x', 'team_y'])
-week_games['xhome_points'] = round((week_games['home_offense'] - week_games['away_defense'] + (4.6/2)),1)
-week_games['xaway_points'] = round((week_games['away_offense'] - week_games['home_defense'] - (4.6/2)),1)
+week_games['xhome_points'] = round((week_games['home_offense'] - week_games['away_defense'] + (4.5/2)),1)
+week_games['xaway_points'] = round((week_games['away_offense'] - week_games['home_defense'] - (4.5/2)),1)
 week_games['predicted_over_under'] = week_games['xhome_points'] + week_games['xaway_points']
 
 def adjust_home_pr(home_win_prob):
-    return ((home_win_prob - 50) / 50) * 5
+    return ((home_win_prob - 50) / 50) * 1
 week_games['home_win_prob'] = round((10**((week_games['home_elo'] - week_games['away_elo']) / 400)) / ((10**((week_games['home_elo'] - week_games['away_elo']) / 400)) + 1)*100,2)
-week_games['pr_spread'] = (4.6 + week_games['home_pr'] + (week_games['home_win_prob'].apply(adjust_home_pr)) - week_games['away_pr']).round(1)
-week_games['pr_spread'] = np.where(week_games['neutral'], week_games['pr_spread'] - 4.6, week_games['pr_spread']).round(1)
+week_games['pr_spread'] = (4.5 + week_games['home_pr'] + (week_games['home_win_prob'].apply(adjust_home_pr)) - week_games['away_pr']).round(1)
+week_games['pr_spread'] = np.where(week_games['neutral'], week_games['pr_spread'] - 4.5, week_games['pr_spread']).round(1)
 # week_games['pr_spread'] = week_games['pr_spread'].apply(round_to_nearest_half)
 
 scaler10 = MinMaxScaler(feature_range=(1,10))
