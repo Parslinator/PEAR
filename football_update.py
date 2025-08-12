@@ -2810,6 +2810,56 @@ except Exception as e:
     print(f"Error in code chunk: GO5 Ratings. Error: {e}")
 
 try:
+    all_data = all_data.sort_values('power_rating', ascending=True).reset_index(drop=True)
+    n_teams = len(all_data)
+    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
+    fig_width = n_columns * 2.5
+    fig_height = 20 * 0.9
+    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
+    plt.subplots_adjust(hspace=0.3, wspace=0.1)
+    fig.patch.set_facecolor('#CECEB2')
+    plt.suptitle(f"PEAR's {current_week} Power Ratings", fontsize=20, y=0.905, x=0.52, fontweight='bold')
+    min_rating = all_data['power_rating'].min()
+    max_rating = all_data['power_rating'].max()
+    cmap = plt.get_cmap('RdYlGn')  # green = high, red = low
+    def get_color(value):
+        """Return a color based on the normalized win_total."""
+        norm_value = (value - min_rating) / (max_rating - min_rating)
+        return cmap(norm_value)
+    for idx, team in all_data.iterrows():
+        power_rating = team['power_rating']
+        team_name = team['team']
+        row = idx % 20
+        col = idx // 20
+        ax = axes[row, col]
+        ax.axis('off')  # Hide the main axis
+
+        img = team_logos[team_name]
+        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
+
+        text_ax = ax.inset_axes([0, 0, 1, 1])
+        text_ax.axis('off')
+        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
+        box_color = get_color(power_rating)
+        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
+        text_ax.text(1.8, 0.5, f"{power_rating:.2f}", ha='center', va='center',
+                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
+
+    if n_teams % 20 != 0:
+        for empty_row in range(n_teams % 20, 20):
+            axes[empty_row, n_columns - 1].axis('off')
+
+    pear_img = Image.open('./PEAR/pear_logo.jpg')
+    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
+    logo_ax.imshow(pear_img)
+    logo_ax.axis('off')
+    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
+    plt.savefig(os.path.join(folder_path, "all_power_ratings"), bbox_inches='tight', dpi=300)
+    print("All Power Ratings Done!")
+except Exception as e:
+    print(f"Error in code chunk: All Power Ratings. Error: {e}")
+
+try:
     conference_stats = all_data.groupby('conference')['power_rating'].agg(['mean', 'min', 'max']).reset_index()
     conference_stats = conference_stats.sort_values(by='mean', ascending=False)
 
