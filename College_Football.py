@@ -36,7 +36,7 @@ warnings.filterwarnings("ignore")
 
 st.set_page_config(layout="wide")
 
-week_list = [9,10,11,12,13,14,15,16]
+# week_list = [9,10,11,12,13,14,15,16]
 
 # configuration = cfbd.Configuration()
 # configuration.api_key['Authorization'] = "7vGedNNOrnl0NGcSvt92FcVahY602p7IroVBlCA1Tt+WI/dCwtT7Gj5VzmaHrrxS"
@@ -90,12 +90,12 @@ week_list = [9,10,11,12,13,14,15,16]
 #         postseason = True
 # current_week = int(current_week)
 # current_year = int(current_year)
-postseason = True
+postseason = False
 current_year = 2025
 current_week = 1
 team_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv").drop(columns=['Unnamed: 0'])
 all_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}.csv")
-spreads = pd.read_excel(f"./PEAR/PEAR Football/y{current_year}/Spreads/spreads_tracker_week1.xlsx")
+spreads = pd.read_excel(f"./PEAR/PEAR Football/y{current_year}/Spreads/spreads_tracker_week{current_week}.xlsx")
 
 # all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
 # all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
@@ -474,33 +474,27 @@ st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule
 
 st.divider()
 
-st.sidebar.markdown(f"[Calculate {current_year} Spread](#calculate-spread-between-any-two-teams)", unsafe_allow_html=True)
-st.sidebar.markdown(f"[{current_year} Power Ratings](#fbs-power-ratings)", unsafe_allow_html=True)
-st.markdown(f'<h2 id="calculate-spread-between-any-two-teams">Calculate Spread Between Any Two Teams</h2>', unsafe_allow_html=True)
-with st.form(key='calculate_spread'):
-    away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'])))
-    home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(team_data['team'])))
-    neutrality = st.radio(
-        "Game Location",
-        ["Neutral Field", "On Campus"]
-    )
-    spread_button = st.form_submit_button("Calculate Spread")
-    if spread_button:
-        if neutrality == 'Neutral Field':
-            neutrality = True
-        else:
-            neutrality = False
-        st.write(find_spread(home_team, away_team, neutrality))
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown(f'<h2 id="fbs-power-ratings">Week {current_week} Spreads</h2>', unsafe_allow_html=True)
+    with st.container(border=True, height=440):
+        st.dataframe(spreads[['home_team', 'away_team', 'PEAR']], use_container_width=True)
+
+with col2:
+    st.sidebar.markdown(f"[Calculate {current_year} Spread](#calculate-spread-between-any-two-teams)", unsafe_allow_html=True)
+    st.sidebar.markdown(f"[{current_year} Power Ratings](#fbs-power-ratings)", unsafe_allow_html=True)
+    st.markdown(f'<h2 id="calculate-spread-between-any-two-teams">Calculate Spread Between Any Two Teams</h2>', unsafe_allow_html=True)
+    with st.form(key='calculate_spread'):
+        away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'])))
+        home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(team_data['team'])))
+        neutrality = st.radio("Game Location", ["Neutral Field", "On Campus"])
+        spread_button = st.form_submit_button("Calculate Spread")
+        if spread_button:
+            neutrality = True if neutrality == "Neutral Field" else False
+            st.write(find_spread(home_team, away_team, neutrality))
 
 st.divider()
-
-st.markdown(f'<h2 id="fbs-power-ratings">Week {current_week} Spreads</h2>', unsafe_allow_html=True)
-with st.container(border=True, height=440):
-    st.dataframe(spreads[['home_team', 'away_team', 'PEAR']], use_container_width=True)
-
-st.divider()
-
-team_data = pd.read_csv("./PEAR/PEAR Football/normalized_power_rating_across_years.csv")
 
 def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 1
@@ -550,10 +544,9 @@ def teams_yearly_stats(team, data):
     team_df = team_df[['Season', 'Normalized Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE']]
     return team_df
 
+team_data = pd.read_csv("./PEAR/PEAR Football/normalized_power_rating_across_years.csv")
 st.sidebar.markdown(f"[Year Normalized Ratings](#year-normalized-ratings)", unsafe_allow_html=True)
 st.sidebar.markdown(f"[Team Specific Stats](#view-a-specific-teams-stats)", unsafe_allow_html=True)
-# st.sidebar.markdown(f"[Spread Between Years](#calculate-spread-between-two-teams-from-different-years)", unsafe_allow_html=True)
-
 
 years = [2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]
 for year in years:
@@ -563,283 +556,81 @@ team_data.index += 1
 team_data['Team'] = team_data['team']
 team_data['Season'] = team_data['season'].astype(str)
 team_data['Normalized Rating'] = team_data['norm_pr']
+
 st.title("CFB Ratings Archive")
-st.markdown(f'<h2 id="year-normalized-ratings">Year Normalized Ratings</h2>', unsafe_allow_html=True)
-with st.container(border=True, height=440):
-    st.dataframe(team_data[['Team', 'Normalized Rating', 'Season']], use_container_width=True)
+
+# Two columns
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown(f'<h2 id="year-normalized-ratings">Year Normalized Ratings</h2>', unsafe_allow_html=True)
+    with st.container(border=True, height=440):
+        st.dataframe(team_data[['Team', 'Normalized Rating', 'Season']], use_container_width=True)
+
+with col2:
+    st.markdown(f'<h2 id="view-a-specific-teams-stats">View A Specific Teams Stats</h2>', unsafe_allow_html=True)
+    with st.form(key='filter_team'):
+        team = st.selectbox("Team Filter", ["Select Team"] + list(sorted(team_data['team'].unique())))
+        filter_button = st.form_submit_button("Filter Team")
+        if filter_button:
+            st.dataframe(teams_yearly_stats(team, team_data), use_container_width=True)
 
 st.divider()
 
-st.markdown(f'<h2 id="view-a-specific-teams-stats">View A Specific Teams Stats</h2>', unsafe_allow_html=True)
-with st.form(key='filter_team'):
-    team = st.selectbox("Team Filter", ["Select Team"] + list(sorted(team_data['team'].unique())))
-    filter_button = st.form_submit_button("Filter Team")
-    if filter_button:
-        st.dataframe(teams_yearly_stats(team, team_data), use_container_width=True)
+def render_year(year: int, week: int, col):
+    """Render a single year's ratings in the given column."""
+    st.markdown(f'<h2 id="{year}-ratings">{year} Ratings</h2>', unsafe_allow_html=True)
+    all_data = pd.read_csv(f"./PEAR/PEAR Football/y{year}/Data/team_data_week{week}.csv")
 
-# st.divider()
+    # Rename + add convenience cols
+    all_data.rename(columns={"offensive_rank": "Offense", "defensive_rank": "Defense"}, inplace=True)
+    all_data['OFF'] = all_data['Offense']
+    all_data['DEF'] = all_data['Defense']
+    all_data['MD'] = all_data['most_deserving']
+    all_data['Rating'] = all_data['power_rating']
+    all_data['Team'] = all_data['team']
+    all_data['CONF'] = all_data['conference']
+    all_data['ST'] = all_data['STM_rank']
+    all_data['PBR'] = all_data['PBR_rank']
+    all_data['DCE'] = all_data['DCE_rank']
+    all_data['DDE'] = all_data['DDE_rank']
+    all_data.index = all_data.index + 1
 
-# st.markdown(f'<h2 id="calculate-spread-between-two-teams-from-different-years">Calculate Spread Between Two Teams From Different Years</h2>', unsafe_allow_html=True)
-# with st.form(key='calculate_spread_two_teams'):
-#     away_team = st.selectbox("Away Team", ["Select Team"] + list(sorted(team_data['team'].unique())))
-#     away_season = st.selectbox("Away Season", ["Select Season"] + list(sorted(team_data['season'].unique())))
-#     home_team = st.selectbox("Home Team", ["Select Team"] + list(sorted(team_data['team'].unique())))
-#     home_season = st.selectbox("Home Season", ["Select Season"] + list(sorted(team_data['season'].unique())))
-#     neutrality = st.radio(
-#         "Game Location",
-#         ["Neutral Field", "On Campus"]
-#     )
-#     spread_button_two_teams = st.form_submit_button("Calculate Spread Two Teams")
-#     if spread_button_two_teams:
-#         if neutrality == 'Neutral Field':
-#             neutrality = True
-#         else:
-#             neutrality = False
-#         st.write(spreads_across_years(home_team, home_season, away_team, away_season, team_data, neutrality))
+    with st.container(border=True, height=440):
+        st.dataframe(
+            all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF',
+                      'ST', 'PBR', 'DCE', 'DDE', 'CONF']],
+            use_container_width=True
+        )
+    st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, "
+               "SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, "
+               "PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
 
-st.divider()
+# --- Now render in pairs ---
+# Year : Week mapping since your weeks vary
+year_week_map = {
+    2024: 17, 2023: 15,
+    2022: 16, 2021: 16,
+    2020: 17, 2019: 17,
+    2018: 16, 2017: 16,
+    2016: 16, 2015: 16,
+    2014: 17
+}
 
-st.markdown(f'<h2 id="2024-ratings">2024 Ratings</h2>', unsafe_allow_html=True)
-all_data = pd.read_csv("./PEAR/PEAR Football/y2024/Data/team_data_week17.csv")
-all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
-all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
-all_data['OFF'] = all_data['Offense']
-all_data['DEF'] = all_data['Defense']
-all_data['MD'] = all_data['most_deserving']
-all_data['Rating'] = all_data['power_rating']
-all_data['Team'] = all_data['team']
-all_data['CONF'] = all_data['conference']
-all_data['ST'] = all_data['STM_rank']
-all_data['PBR'] = all_data['PBR_rank']
-all_data['DCE'] = all_data['DCE_rank']
-all_data['DDE'] = all_data['DDE_rank']
-all_data.index = all_data.index + 1
-with st.container(border=True, height=440):
-    st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
-st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
-# , MD - Most Deserving Rankings
+years = list(year_week_map.keys())
 
-st.divider()
+# Loop through pairs of years
+for i in range(0, len(years), 2):
+    col1, col2 = st.columns(2)
 
-st.markdown(f'<h2 id="2023-ratings">2023 Ratings</h2>', unsafe_allow_html=True)
-all_data = pd.read_csv("./PEAR/PEAR Football/y2023/Data/team_data_week15.csv")
-all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
-all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
-all_data['OFF'] = all_data['Offense']
-all_data['DEF'] = all_data['Defense']
-all_data['MD'] = all_data['most_deserving']
-all_data['Rating'] = all_data['power_rating']
-all_data['Team'] = all_data['team']
-all_data['CONF'] = all_data['conference']
-all_data['ST'] = all_data['STM_rank']
-all_data['PBR'] = all_data['PBR_rank']
-all_data['DCE'] = all_data['DCE_rank']
-all_data['DDE'] = all_data['DDE_rank']
-all_data.index = all_data.index + 1
-with st.container(border=True, height=440):
-    st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
-st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
-# , MD - Most Deserving Rankings
+    with col1:
+        render_year(years[i], year_week_map[years[i]], col1)
 
-st.divider()
+    if i + 1 < len(years):   # make sure we don’t go out of range
+        with col2:
+            render_year(years[i+1], year_week_map[years[i+1]], col2)
 
-all_data = pd.read_csv("./PEAR/PEAR Football/y2022/Data/team_data_week16.csv")
-all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
-all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
-st.markdown(f'<h2 id="2022-ratings">2022 Ratings</h2>', unsafe_allow_html=True)
-all_data['OFF'] = all_data['Offense']
-all_data['DEF'] = all_data['Defense']
-all_data['MD'] = all_data['most_deserving']
-all_data['Rating'] = all_data['power_rating']
-all_data['Team'] = all_data['team']
-all_data['CONF'] = all_data['conference']
-all_data['ST'] = all_data['STM_rank']
-all_data['PBR'] = all_data['PBR_rank']
-all_data['DCE'] = all_data['DCE_rank']
-all_data['DDE'] = all_data['DDE_rank']
-all_data.index = all_data.index + 1
-with st.container(border=True, height=440):
-    st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
-st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
-# , MD - Most Deserving Rankings
-
-st.divider()
-
-all_data = pd.read_csv("./PEAR/PEAR Football/y2021/Data/team_data_week16.csv")
-all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
-all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
-st.markdown(f'<h2 id="2021-ratings">2021 Ratings</h2>', unsafe_allow_html=True)
-all_data['OFF'] = all_data['Offense']
-all_data['DEF'] = all_data['Defense']
-all_data['MD'] = all_data['most_deserving']
-all_data['Rating'] = all_data['power_rating']
-all_data['Team'] = all_data['team']
-all_data['CONF'] = all_data['conference']
-all_data['ST'] = all_data['STM_rank']
-all_data['PBR'] = all_data['PBR_rank']
-all_data['DCE'] = all_data['DCE_rank']
-all_data['DDE'] = all_data['DDE_rank']
-all_data.index = all_data.index + 1
-with st.container(border=True, height=440):
-    st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
-st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
-# , MD - Most Deserving Rankings
-
-st.divider()
-
-all_data = pd.read_csv("./PEAR/PEAR Football/y2020/Data/team_data_week17.csv")
-all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
-all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
-st.markdown(f'<h2 id="2020-ratings">2020 Ratings</h2>', unsafe_allow_html=True)
-all_data['OFF'] = all_data['Offense']
-all_data['DEF'] = all_data['Defense']
-all_data['MD'] = all_data['most_deserving']
-all_data['Rating'] = all_data['power_rating']
-all_data['Team'] = all_data['team']
-all_data['CONF'] = all_data['conference']
-all_data['ST'] = all_data['STM_rank']
-all_data['PBR'] = all_data['PBR_rank']
-all_data['DCE'] = all_data['DCE_rank']
-all_data['DDE'] = all_data['DDE_rank']
-all_data.index = all_data.index + 1
-with st.container(border=True, height=440):
-    st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
-st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
-# , MD - Most Deserving Rankings
-
-st.divider()
-
-all_data = pd.read_csv("./PEAR/PEAR Football/y2019/Data/team_data_week17.csv")
-all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
-all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
-st.markdown(f'<h2 id="2019-ratings">2019 Ratings</h2>', unsafe_allow_html=True)
-all_data['OFF'] = all_data['Offense']
-all_data['DEF'] = all_data['Defense']
-all_data['MD'] = all_data['most_deserving']
-all_data['Rating'] = all_data['power_rating']
-all_data['Team'] = all_data['team']
-all_data['CONF'] = all_data['conference']
-all_data['ST'] = all_data['STM_rank']
-all_data['PBR'] = all_data['PBR_rank']
-all_data['DCE'] = all_data['DCE_rank']
-all_data['DDE'] = all_data['DDE_rank']
-all_data.index = all_data.index + 1
-with st.container(border=True, height=440):
-    st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
-st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
-# , MD - Most Deserving Rankings
-
-st.divider()
-
-all_data = pd.read_csv("./PEAR/PEAR Football/y2018/Data/team_data_week16.csv")
-all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
-all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
-st.markdown(f'<h2 id="2018-ratings">2018 Ratings</h2>', unsafe_allow_html=True)
-all_data['OFF'] = all_data['Offense']
-all_data['DEF'] = all_data['Defense']
-all_data['MD'] = all_data['most_deserving']
-all_data['Rating'] = all_data['power_rating']
-all_data['Team'] = all_data['team']
-all_data['CONF'] = all_data['conference']
-all_data['ST'] = all_data['STM_rank']
-all_data['PBR'] = all_data['PBR_rank']
-all_data['DCE'] = all_data['DCE_rank']
-all_data['DDE'] = all_data['DDE_rank']
-all_data.index = all_data.index + 1
-with st.container(border=True, height=440):
-    st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
-st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
-# , MD - Most Deserving Rankings
-
-st.divider()
-
-all_data = pd.read_csv("./PEAR/PEAR Football/y2017/Data/team_data_week16.csv")
-all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
-all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
-st.markdown(f'<h2 id="2017-ratings">2017 Ratings</h2>', unsafe_allow_html=True)
-all_data['OFF'] = all_data['Offense']
-all_data['DEF'] = all_data['Defense']
-all_data['MD'] = all_data['most_deserving']
-all_data['Rating'] = all_data['power_rating']
-all_data['Team'] = all_data['team']
-all_data['CONF'] = all_data['conference']
-all_data['ST'] = all_data['STM_rank']
-all_data['PBR'] = all_data['PBR_rank']
-all_data['DCE'] = all_data['DCE_rank']
-all_data['DDE'] = all_data['DDE_rank']
-all_data.index = all_data.index + 1
-with st.container(border=True, height=440):
-    st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
-st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
-# , MD - Most Deserving Rankings
-
-st.divider()
-
-all_data = pd.read_csv("./PEAR/PEAR Football/y2016/Data/team_data_week16.csv")
-all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
-all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
-st.markdown(f'<h2 id="2016-ratings">2016 Ratings</h2>', unsafe_allow_html=True)
-all_data['OFF'] = all_data['Offense']
-all_data['DEF'] = all_data['Defense']
-all_data['MD'] = all_data['most_deserving']
-all_data['Rating'] = all_data['power_rating']
-all_data['Team'] = all_data['team']
-all_data['CONF'] = all_data['conference']
-all_data['ST'] = all_data['STM_rank']
-all_data['PBR'] = all_data['PBR_rank']
-all_data['DCE'] = all_data['DCE_rank']
-all_data['DDE'] = all_data['DDE_rank']
-all_data.index = all_data.index + 1
-with st.container(border=True, height=440):
-    st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
-st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
-# , MD - Most Deserving Rankings
-
-st.divider()
-
-all_data = pd.read_csv("./PEAR/PEAR Football/y2015/Data/team_data_week16.csv")
-all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
-all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
-st.markdown(f'<h2 id="2015-ratings">2015 Ratings</h2>', unsafe_allow_html=True)
-all_data['OFF'] = all_data['Offense']
-all_data['DEF'] = all_data['Defense']
-all_data['MD'] = all_data['most_deserving']
-all_data['Rating'] = all_data['power_rating']
-all_data['Team'] = all_data['team']
-all_data['CONF'] = all_data['conference']
-all_data['ST'] = all_data['STM_rank']
-all_data['PBR'] = all_data['PBR_rank']
-all_data['DCE'] = all_data['DCE_rank']
-all_data['DDE'] = all_data['DDE_rank']
-all_data.index = all_data.index + 1
-with st.container(border=True, height=440):
-    st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
-st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
-# , MD - Most Deserving Rankings
-
-st.divider()
-
-all_data = pd.read_csv("./PEAR/PEAR Football/y2014/Data/team_data_week17.csv")
-all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
-all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
-st.markdown(f'<h2 id="2014-ratings">2014 Ratings</h2>', unsafe_allow_html=True)
-all_data['OFF'] = all_data['Offense']
-all_data['DEF'] = all_data['Defense']
-all_data['MD'] = all_data['most_deserving']
-all_data['Rating'] = all_data['power_rating']
-all_data['Team'] = all_data['team']
-all_data['CONF'] = all_data['conference']
-all_data['ST'] = all_data['STM_rank']
-all_data['PBR'] = all_data['PBR_rank']
-all_data['DCE'] = all_data['DCE_rank']
-all_data['DDE'] = all_data['DDE_rank']
-all_data.index = all_data.index + 1
-with st.container(border=True, height=440):
-    st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
-st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
-# , MD - Most Deserving Rankings
-
-st.divider()
+    st.divider()
 
 # st.markdown("General Info for PEAR v2")
 # st.caption(f"SU Since Week 9: {SU}%")
