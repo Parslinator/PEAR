@@ -4,7 +4,6 @@ import cfbd # type: ignore
 import numpy as np # type: ignore
 import statistics # type: ignore
 from sklearn.preprocessing import MinMaxScaler # type: ignore
-import datetime # type: ignore
 import matplotlib.pyplot as plt # type: ignore
 from PIL import Image # type: ignore
 import requests # type: ignore
@@ -30,75 +29,33 @@ from io import BytesIO # type: ignore
 import matplotlib.font_manager as fm # type: ignore
 import matplotlib.colors as mcolors # type: ignore
 import pytz # type: ignore
-import datetime
+from datetime import datetime, timedelta
 checkmark_font = fm.FontProperties(family='DejaVu Sans')
 warnings.filterwarnings("ignore")
 
+central = pytz.timezone("US/Central")
+now_ct = datetime.now(central)
+start_dt = central.localize(datetime(2025, 9, 2, 12, 0, 0))
+
+if now_ct < start_dt:
+    current_week = 1
+else:
+    current_week = 2
+    first_sunday = start_dt + timedelta(days=(6 - start_dt.weekday()))  # weekday: Mon=0, Sun=6
+    first_sunday = first_sunday.replace(hour=12, minute=0, second=0, microsecond=0)
+    if first_sunday <= start_dt:
+        first_sunday += timedelta(weeks=1)
+    if now_ct >= first_sunday:
+        weeks_since = ((now_ct - first_sunday).days // 7) + 1
+        current_week += weeks_since
+
 st.set_page_config(layout="wide")
 
-# week_list = [9,10,11,12,13,14,15,16]
-
-# configuration = cfbd.Configuration()
-# configuration.api_key['Authorization'] = "7vGedNNOrnl0NGcSvt92FcVahY602p7IroVBlCA1Tt+WI/dCwtT7Gj5VzmaHrrxS"
-# configuration.api_key_prefix['Authorization'] = 'Bearer'
-# api_client = cfbd.ApiClient(configuration)
-# games_api = cfbd.GamesApi(api_client)
-# betting_api = cfbd.BettingApi(api_client)
-# ratings_api = cfbd.RatingsApi(api_client)
-# teams_api = cfbd.TeamsApi(api_client)
-# metrics_api = cfbd.MetricsApi(api_client)
-# players_api = cfbd.PlayersApi(api_client)
-# recruiting_api = cfbd.RecruitingApi(api_client)
-
-# current_time = datetime.datetime.now(pytz.UTC)
-# if current_time.month < 6:
-#     calendar_year = current_time.year - 1
-# else:
-#     calendar_year = current_time.year
-# week_start_list = [*games_api.get_calendar(year = calendar_year)]
-# calendar_dict = [dict(
-#     first_game_start = c.first_game_start,
-#     last_game_start = c.last_game_start,
-#     season = c.season,
-#     season_type = c.season_type,
-#     week = c.week
-# ) for c in week_start_list]
-# calendar = pd.DataFrame(calendar_dict)
-# calendar['first_game_start'] = pd.to_datetime(calendar['first_game_start'])
-# calendar['last_game_start'] = pd.to_datetime(calendar['last_game_start'])
-# current_year = int(calendar.loc[0, 'season'])
-# first_game_start = calendar['first_game_start'].iloc[0]
-# last_game_start = calendar['last_game_start'].iloc[-1]
-# current_week = None
-# if current_time < first_game_start:
-#     current_week = 1
-#     postseason = False
-# elif current_time > last_game_start:
-#     current_week = calendar.iloc[-2, -1] + 1
-#     postseason = True
-# else:
-#     condition_1 = (calendar['first_game_start'] <= current_time) & (calendar['last_game_start'] >= current_time)
-#     condition_2 = (calendar['last_game_start'].shift(1) < current_time) & (calendar['first_game_start'] > current_time)
-
-#     # Combine conditions
-#     result = calendar[condition_1 | condition_2].reset_index(drop=True)
-#     if result['season_type'][0] == 'regular':
-#         current_week = result['week'][0]
-#         postseason = False
-#     else:
-#         current_week = calendar.iloc[-2, -1] + 1
-#         postseason = True
-# current_week = int(current_week)
-# current_year = int(current_year)
 postseason = False
 current_year = 2025
-current_week = 1
 team_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv").drop(columns=['Unnamed: 0'])
 all_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}.csv")
 spreads = pd.read_excel(f"./PEAR/PEAR Football/y{current_year}/Spreads/spreads_tracker_week{current_week}.xlsx")
-
-# all_data.rename(columns={"offensive_rank": "Offense"}, inplace=True)
-# all_data.rename(columns={"defensive_rank": "Defense"}, inplace=True)
 
 def date_sort(game):
     game_date = datetime.datetime.strptime(game['start_date'], "%Y-%m-%dT%H:%M:%S.000Z")
@@ -109,28 +66,39 @@ def PEAR_Win_Prob(home_pr, away_pr):
     win_prob = round(1 / (1 + 10 ** (-rating_diff / 20)) * 100, 2)
     return win_prob
 
-# @st.cache_data()
-# def get_elo():
-#     elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week)]
-#     elo_ratings_dict = [dict(
-#         team = e.team,
-#         elo = e.elo
-#     ) for e in elo_ratings_list]
-#     elo_ratings = pd.DataFrame(elo_ratings_dict)
-#     return elo_ratings
-# elo_ratings = get_elo()
+def render_year(year: int, week: int, col):
+    """Render a single year's ratings in the given column."""
+    st.markdown(f'<h2 id="{year}-ratings">{year} Ratings</h2>', unsafe_allow_html=True)
+    all_data = pd.read_csv(f"./PEAR/PEAR Football/y{year}/Data/team_data_week{week}.csv")
 
-@st.cache_data()
+    # Rename + add convenience cols
+    all_data.rename(columns={"offensive_rank": "Offense", "defensive_rank": "Defense"}, inplace=True)
+    all_data['OFF'] = all_data['Offense']
+    all_data['DEF'] = all_data['Defense']
+    all_data['MD'] = all_data['most_deserving']
+    all_data['Rating'] = all_data['power_rating']
+    all_data['Team'] = all_data['team']
+    all_data['CONF'] = all_data['conference']
+    all_data['ST'] = all_data['STM_rank']
+    all_data['PBR'] = all_data['PBR_rank']
+    all_data['DCE'] = all_data['DCE_rank']
+    all_data['DDE'] = all_data['DDE_rank']
+    all_data.index = all_data.index + 1
+
+    with st.container(border=True, height=440):
+        st.dataframe(
+            all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF',
+                      'ST', 'PBR', 'DCE', 'DDE', 'CONF']],
+            use_container_width=True
+        )
+    st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, "
+               "SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, "
+               "PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
+
 def fetch_logo_image(logo_url):
     response = requests.get(logo_url)
     return Image.open(BytesIO(response.content))
     
-# Function to calculate spread
-def PEAR_Win_Prob(home_pr, away_pr):
-    rating_diff = home_pr - away_pr
-    win_prob = round(1 / (1 + 10 ** (-rating_diff / 20)) * 100, 2)
-    return win_prob
-
 def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 1
 
@@ -140,25 +108,6 @@ def round_to_nearest_half(x):
 def grab_team_rating(team):
     return team_data[team_data['team'] == team]['power_rating'].values[0]
 
-# @st.cache_data()
-# def grab_team_elo(team):
-#     if postseason == True:
-#         elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, team=team)]
-#         elo_ratings_dict = [dict(
-#             team=e.team,
-#             elo=e.elo
-#         ) for e in elo_ratings_list]
-#         elo_ratings = pd.DataFrame(elo_ratings_dict)
-#     else:
-#         elo_ratings_list = [*ratings_api.get_elo_ratings(year=current_year, week=current_week, team=team)]
-#         elo_ratings_dict = [dict(
-#             team=e.team,
-#             elo=e.elo
-#         ) for e in elo_ratings_list]
-#         elo_ratings = pd.DataFrame(elo_ratings_dict)        
-#     return elo_ratings['elo'].values[0]
-
-@st.cache_data()
 def find_spread(home_team, away_team, neutral=False):
     # home_elo = grab_team_elo(home_team)
     # away_elo = grab_team_elo(away_team)
@@ -181,7 +130,6 @@ def find_spread(home_team, away_team, neutral=False):
     else:
         return f"{away_team} {spread}"
 
-# team_data.index = team_data.index + 1
 def get_week_spreads(team_data):
     import datetime
     configuration = cfbd.Configuration()
@@ -417,39 +365,27 @@ def get_week_spreads(team_data):
             return 0
     week_games['PEAR SU'] = week_games.apply(lambda row: check_straight_up(row, 'pr_spread'), axis = 1)
     return week_games
+
+def teams_yearly_stats(team, data):
+    team_df = data[data['team'] == team]
+    team_df['OFF'] = team_df['offensive_rank']
+    team_df['DEF'] = team_df['defensive_rank']
+    team_df['MD'] = team_df['most_deserving']
+    team_df['Rating'] = team_df['power_rating']
+    team_df['Team'] = team_df['team']
+    team_df['CONF'] = team_df['conference']
+    team_df['ST'] = team_df['STM_rank']
+    team_df['PBR'] = team_df['PBR_rank']
+    team_df['DCE'] = team_df['DCE_rank']
+    team_df['DDE'] = team_df['DDE_rank']
+    team_df = team_df[['Season', 'Normalized Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE']]
+    return team_df
+
+def adjust_home_pr(home_win_prob):
+    return ((home_win_prob - 50) / 50) * 1
+
 st.title(f"{current_year} CFB PEAR")
 st.logo("./PEAR/pear_logo.jpg", size = 'large')
-
-# week_spreads = get_week_spreads(team_data)
-# week_spreads['DK Spread'] = week_spreads['formatted_spread']
-# week_spreads['PEAR Spread'] = week_spreads['PEAR']
-# week_spreads.columns.values[4] = 'Home'
-# week_spreads.columns.values[8] = 'Away'
-# week_spreads.index = week_spreads.index + 1
-# game_completion_info = week_spreads[['Home', 'Away', 'difference', 'formatted_open', 'formatted_spread', 'PEAR', 'actual_spread', 'PEAR ATS OPEN', 'PEAR ATS CLOSE', 'PEAR SU']]
-# completed = game_completion_info[game_completion_info["PEAR ATS CLOSE"] != '']
-# if postseason == True:
-#     st.subheader("Bowl Games Projected Spreads, Ordered by Deviation")
-# else:
-#     st.subheader(f"Week {current_week} Projected Spreads, Ordered by Deviation")
-# week_spreads['Deviation'] = week_spreads['difference']
-# week_spreads['ATS'] = week_spreads['PEAR ATS CLOSE']
-# with st.container(border=True, height=440):
-#     st.dataframe(week_spreads[['PEAR Spread', 'DK Spread', 'Deviation','Home', 'Away', 'ATS']], use_container_width=True)
-# X = 10
-# if len(completed) > 0:
-#     no_pushes = completed[completed['difference'] != 0.0]
-#     st.markdown(f"ATS This Week: {round(100 * sum(no_pushes['PEAR ATS CLOSE']) / len(no_pushes),1)}% through {round(100*len(completed)/len(week_spreads))}% of games.")
-#     st.markdown(f"SU This Week: {round(100*sum(completed['PEAR SU'] / len(completed)),1)}%")
-#     # print(f'wATS: {wATS}%')
-#     # print(f"MAE: {MAE}")
-#     # print(f"DAE: {DAE}")
-#     # print(f"RMSE: {RMSE}")
-#     # print(f"MAE+: {round(100-MAE_plus,2)}%")
-#     # print(f"AE < {X}: {round(count/len(completed)*100,2)}%")
-# st.caption(f"Deviation is defined as the absolute difference from the DraftKings spread at the time of the data load. The current average deviation is {round(week_spreads['Deviation'].mean(),2)} points. The total deviation is {round(week_spreads['Deviation'].sum(),1)} points.")
-
-# st.divider()
 
 st.divider()
 
@@ -476,6 +412,7 @@ st.divider()
 
 col1, col2 = st.columns(2)
 spreads['Vegas'] = spreads['formattedSpread']
+spreads.index = spreads.index+1
 with col1:
     st.markdown(f'<h2 id="fbs-power-ratings">Week {current_week} Spreads</h2>', unsafe_allow_html=True)
     with st.container(border=True, height=440):
@@ -495,54 +432,6 @@ with col2:
             st.write(find_spread(home_team, away_team, neutrality))
 
 st.divider()
-
-def adjust_home_pr(home_win_prob):
-    return ((home_win_prob - 50) / 50) * 1
-
-# def grab_team_elo_across_years(team, season):
-#     season = int(season)
-#     elo_ratings_list = [*ratings_api.get_elo_ratings(year=season, team=team)]
-#     elo_ratings_dict = [dict(
-#         team=e.team,
-#         elo=e.elo
-#     ) for e in elo_ratings_list]
-#     elo_ratings = pd.DataFrame(elo_ratings_dict)       
-#     return elo_ratings['elo'].values[0]
-
-# def spreads_across_years(team1, team1_season, team2, team2_season, data, neutrality=False):
-#     team1_season = int(team1_season)
-#     team2_season = int(team2_season)
-#     home_elo = grab_team_elo_across_years(team1, team1_season)
-#     away_elo = grab_team_elo_across_years(team2, team2_season)
-#     home_pr = data.loc[(data['team'] == team1) & (data['season'] == team1_season), 'norm_pr'].values[0]
-#     away_pr = data.loc[(data['team'] == team2) & (data['season'] == team2_season), 'norm_pr'].values[0]
-#     home_win_prob = round((10 ** ((home_elo - away_elo) / 400)) / ((10 ** ((home_elo - away_elo) / 400)) + 1) * 100, 2)
-#     adjustment = adjust_home_pr(home_win_prob)
-#     if neutrality:
-#         spread = home_pr + adjustment - away_pr
-#     else:
-#         spread = 4.5 + home_pr + adjustment - away_pr
-#     spread = round(spread,1)
-
-#     if spread >= 0:
-#         return f"{team1_season} {team1} -{spread}"
-#     else:
-#         return f"{team2_season} {team2} {spread}"
-    
-def teams_yearly_stats(team, data):
-    team_df = data[data['team'] == team]
-    team_df['OFF'] = team_df['offensive_rank']
-    team_df['DEF'] = team_df['defensive_rank']
-    team_df['MD'] = team_df['most_deserving']
-    team_df['Rating'] = team_df['power_rating']
-    team_df['Team'] = team_df['team']
-    team_df['CONF'] = team_df['conference']
-    team_df['ST'] = team_df['STM_rank']
-    team_df['PBR'] = team_df['PBR_rank']
-    team_df['DCE'] = team_df['DCE_rank']
-    team_df['DDE'] = team_df['DDE_rank']
-    team_df = team_df[['Season', 'Normalized Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE']]
-    return team_df
 
 team_data = pd.read_csv("./PEAR/PEAR Football/normalized_power_rating_across_years.csv")
 st.sidebar.markdown(f"[Year Normalized Ratings](#year-normalized-ratings)", unsafe_allow_html=True)
@@ -576,35 +465,6 @@ with col2:
             st.dataframe(teams_yearly_stats(team, team_data), use_container_width=True)
 
 st.divider()
-
-def render_year(year: int, week: int, col):
-    """Render a single year's ratings in the given column."""
-    st.markdown(f'<h2 id="{year}-ratings">{year} Ratings</h2>', unsafe_allow_html=True)
-    all_data = pd.read_csv(f"./PEAR/PEAR Football/y{year}/Data/team_data_week{week}.csv")
-
-    # Rename + add convenience cols
-    all_data.rename(columns={"offensive_rank": "Offense", "defensive_rank": "Defense"}, inplace=True)
-    all_data['OFF'] = all_data['Offense']
-    all_data['DEF'] = all_data['Defense']
-    all_data['MD'] = all_data['most_deserving']
-    all_data['Rating'] = all_data['power_rating']
-    all_data['Team'] = all_data['team']
-    all_data['CONF'] = all_data['conference']
-    all_data['ST'] = all_data['STM_rank']
-    all_data['PBR'] = all_data['PBR_rank']
-    all_data['DCE'] = all_data['DCE_rank']
-    all_data['DDE'] = all_data['DDE_rank']
-    all_data.index = all_data.index + 1
-
-    with st.container(border=True, height=440):
-        st.dataframe(
-            all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF',
-                      'ST', 'PBR', 'DCE', 'DDE', 'CONF']],
-            use_container_width=True
-        )
-    st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, "
-               "SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, "
-               "PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
 
 # --- Now render in pairs ---
 # Year : Week mapping since your weeks vary
