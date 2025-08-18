@@ -475,11 +475,11 @@ st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule
 st.divider()
 
 col1, col2 = st.columns(2)
-
+spreads['Vegas'] = spreads['formattedSpread']
 with col1:
     st.markdown(f'<h2 id="fbs-power-ratings">Week {current_week} Spreads</h2>', unsafe_allow_html=True)
     with st.container(border=True, height=440):
-        st.dataframe(spreads[['home_team', 'away_team', 'PEAR']], use_container_width=True)
+        st.dataframe(spreads[['home_team', 'away_team', 'PEAR', 'Vegas', 'difference']], use_container_width=True)
 
 with col2:
     st.sidebar.markdown(f"[Calculate {current_year} Spread](#calculate-spread-between-any-two-teams)", unsafe_allow_html=True)
@@ -631,12 +631,3 @@ for i in range(0, len(years), 2):
             render_year(years[i+1], year_week_map[years[i+1]], col2)
 
     st.divider()
-
-# st.markdown("General Info for PEAR v2")
-# st.caption(f"SU Since Week 9: {SU}%")
-# st.caption(f"ATS Since Week 9: {ATS}%")
-# st.caption(f"Mean Absolute Error: {MAE}")
-# st.caption(f"Median Absolute Error: {DAE}")
-# st.caption(f"Root Square Error: {RMSE}")
-# st.caption("Made by me. Who is me? Well, I'm me. If you run into an error, please reach out to me at @PEARRatingsCFB on Twitter/X.")
-st.caption("PEAR v2 came to be in Week 9, 2024. Currently powered by PEAR v2.9")
