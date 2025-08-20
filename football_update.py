@@ -397,7 +397,7 @@ intermediate_7 = pd.merge(intermediate_6, records, how='left', on='team')
 team_data = pd.merge(intermediate_7, metrics, how='left', on='team')
 
 # Step 1: Create a dictionary for quick PPA lookup
-team_ppa = team_data.set_index('team')[['Offense_ppa', 'Defense_ppa']]
+team_ppa = metrics.set_index('team')[['Offense_ppa', 'Defense_ppa', 'Offense_pointsPerOpportunity', 'Defense_pointsPerOpportunity']]
 adjusted_ppa_list = []
 for _, row in opponent_adjustment_schedule.iterrows():
     home = row['home_team']
@@ -407,17 +407,23 @@ for _, row in opponent_adjustment_schedule.iterrows():
     adjusted_ppa_list.append({
         'team': home,
         'opp_offense_ppa': team_ppa.loc[away, 'Offense_ppa'],
-        'opp_defense_ppa': team_ppa.loc[away, 'Defense_ppa']
+        'opp_defense_ppa': team_ppa.loc[away, 'Defense_ppa'],
+        'opp_offense_ppo': team_ppa.loc[away, 'Offense_pointsPerOpportunity'],
+        'opp_defense_ppo': team_ppa.loc[away, 'Defense_pointsPerOpportunity']
     })
     adjusted_ppa_list.append({
         'team': away,
         'opp_offense_ppa': team_ppa.loc[home, 'Offense_ppa'],
-        'opp_defense_ppa': team_ppa.loc[home, 'Defense_ppa']
+        'opp_defense_ppa': team_ppa.loc[home, 'Defense_ppa'],
+        'opp_offense_ppo': team_ppa.loc[home, 'Offense_pointsPerOpportunity'],
+        'opp_defense_ppo': team_ppa.loc[home, 'Defense_pointsPerOpportunity']
     })
 adjusted_df = pd.DataFrame(adjusted_ppa_list)
 opp_ppa_summary = adjusted_df.groupby('team').agg(
     avg_opp_offense_ppa = ('opp_offense_ppa', 'mean'),
-    avg_opp_defense_ppa = ('opp_defense_ppa', 'mean')
+    avg_opp_defense_ppa = ('opp_defense_ppa', 'mean'),
+    avg_opp_offense_ppo = ('opp_offense_ppo', 'mean'),
+    avg_opp_defense_ppo = ('opp_defense_ppo', 'mean')
 ).reset_index()
 
 team_data = pd.merge(team_data, opp_ppa_summary, on='team', how='left')
@@ -427,6 +433,14 @@ team_data['adj_offense_ppa'] = (
 
 team_data['adj_defense_ppa'] = (
     team_data['Defense_ppa'] - team_data['avg_opp_offense_ppa']
+)
+
+team_data['adj_offense_ppo'] = (
+    team_data['Offense_pointsPerOpportunity'] - team_data['avg_opp_defense_ppo']
+)
+
+team_data['adj_defense_ppo'] = (
+    team_data['Defense_pointsPerOpportunity'] - team_data['avg_opp_offense_ppo']
 )
 
 # For military schools and new FBS schools, use recruiting points instead of team talent
@@ -449,14 +463,18 @@ import numpy as np
 import pandas as pd
 
 # Clean dataset
-team_data = team_data[~team_data['team'].isin(['Missouri State', 'Delaware'])]
+if current_week == 1:
+    off_ppa = team_data['Offense_ppa']
+    def_ppa = -team_data['Defense_ppa']
+    off_ppo = team_data['Offense_pointsPerOpportunity']
+    def_ppo = -team_data['Defense_pointsPerOpportunity']
+else:
+    off_ppa = team_data['adj_offense_ppa']
+    def_ppa = -team_data['adj_defense_ppa']
+    off_ppo = team_data['adj_offense_ppo']
+    def_ppo = -team_data['adj_defense_ppo']
 
-# Define raw metrics
-off_ppa = team_data['adj_offense_ppa']
-def_ppa = -team_data['adj_defense_ppa']
 turnover_margin = (team_data['turnovers'] - team_data['turnoversOpponent']) / team_data['games_played']
-off_ppo = team_data['Offense_pointsPerOpportunity']
-def_ppo = -team_data['Defense_pointsPerOpportunity']
 talent = team_data['avg_talent']
 
 # Assemble metric dataframe
