@@ -3815,6 +3815,26 @@ week_games['away_elo'] = week_games.apply(
     if pd.isna(row['away_elo']) else row['away_elo'], axis=1
 )
 
+def calculate_game_quality(df, pr_min, pr_max, spread_cap=20, beta=8.5):
+    tq = (df['home_pr'] + df['away_pr']) / 2
+    tq_norm = (tq - pr_min) / (pr_max - pr_min)
+    tq_norm = tq_norm.clip(lower=0, upper=1)
+    
+    spread = df['home_pr'] - df['away_pr']
+    sc = 1 - (np.abs(spread) / spread_cap)
+    sc = sc.clip(lower=0, upper=1)
+    
+    # Combined input
+    x = (0.65*tq_norm + 0.35*sc)
+    
+    # Sigmoid transform
+    gq_raw = 1 / (1 + np.exp(-beta * (x - 0.5)))
+    
+    # Scale to 1–10
+    gq = (1 + 9 * gq_raw) + 0.1
+    gq = gq.clip(upper=10)
+    return gq.round(1)
+
 def round_to_nearest_half(x):
     return np.round(x * 2) / 2
 week_games = week_games.merge(
@@ -3855,9 +3875,16 @@ week_games['pr_spread'] = (4.5 + week_games['home_pr'] + (week_games['home_win_p
 week_games['pr_spread'] = np.where(week_games['neutral'], week_games['pr_spread'] - 4.5, week_games['pr_spread']).round(1)
 # week_games['pr_spread'] = week_games['pr_spread'].apply(round_to_nearest_half)
 
-scaler10 = MinMaxScaler(feature_range=(1,10))
-week_games['game_quality'] = ((week_games['home_pr'] + week_games['away_pr']) / 2) - abs(week_games['pr_spread'] * 0.5)
-week_games['game_quality'] = round(week_games['game_quality'], 1)
+pr_min = team_data['power_rating'].min()
+pr_max = team_data['power_rating'].max()
+
+# Calculate game quality
+week_games['GQI'] = calculate_game_quality(
+    week_games,
+    pr_min=pr_min,
+    pr_max=pr_max,
+    spread_cap=30
+)
 
 if postseason:
     betting = []
@@ -3944,7 +3971,7 @@ week_games['opening_difference'] = abs(week_games['pr_spread'] - week_games['spr
 week_games['over_under_difference'] = abs(week_games['overUnder'] - week_games['predicted_over_under'])
 week_games = week_games.sort_values(by=["difference", "home_win_prob"], ascending=False).reset_index(drop=True)
 week_games = week_games.drop_duplicates(subset='home_team')
-prediction_information = week_games[['home_team', 'away_team', 'game_quality', 'home_win_prob','difference', 'formatted_open', 'formattedSpread', 'PEAR', 'pr_prediction', 'home_pr', 'away_pr']]
+prediction_information = week_games[['home_team', 'away_team', 'GQI', 'home_win_prob','difference', 'formatted_open', 'formattedSpread', 'PEAR', 'pr_prediction', 'home_pr', 'away_pr']]
 prediction_information = prediction_information.dropna()
 print("Total Difference from Vegas Spread:", round(sum(prediction_information['difference']),1))
 print("Average Difference from Vegas Spread:", round(sum(prediction_information['difference'])/len(prediction_information), 2))
@@ -3985,7 +4012,7 @@ def check_straight_up(row, prediction_col):
     else:
         return 0
 week_games['PEAR SU'] = week_games.apply(lambda row: check_straight_up(row, 'pr_spread'), axis = 1)
-game_completion_info = week_games[['home_team', 'away_team', 'difference', 'formatted_open', 'formattedSpread', 'PEAR', 'pr_spread', 'spread', 'actual_margin', 'actual_spread', 'PEAR ATS OPEN', 'PEAR ATS CLOSE', 'PEAR SU']]
+game_completion_info = week_games[['home_team', 'away_team', 'GQI', 'difference', 'formatted_open', 'formattedSpread', 'PEAR', 'pr_spread', 'spread', 'actual_margin', 'actual_spread', 'PEAR ATS OPEN', 'PEAR ATS CLOSE', 'PEAR SU']]
 completed = game_completion_info[game_completion_info["PEAR ATS CLOSE"] != '']
 no_pushes = completed[completed['difference'] != 0]
 no_pushes = no_pushes[no_pushes['spread'] != no_pushes['actual_margin']]
