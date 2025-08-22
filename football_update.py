@@ -204,6 +204,12 @@ elo_ratings_dict = [dict(
     elo = e.elo
 ) for e in elo_ratings_list]
 elo_ratings = pd.DataFrame(elo_ratings_dict)
+if current_week == 1:
+    new_teams = pd.DataFrame({
+        "team": ["Missouri State", "Delaware"],
+        "elo": [1500, 1500]
+    })
+    elo_ratings = pd.concat([elo_ratings, new_teams], ignore_index=True)
 
 # team records
 records_list = []
@@ -3979,7 +3985,7 @@ def check_straight_up(row, prediction_col):
     else:
         return 0
 week_games['PEAR SU'] = week_games.apply(lambda row: check_straight_up(row, 'pr_spread'), axis = 1)
-game_completion_info = week_games[['home_team', 'away_team', 'difference', 'formatted_open', 'formattedSpread', 'PEAR', 'spread', 'actual_margin', 'actual_spread', 'PEAR ATS OPEN', 'PEAR ATS CLOSE', 'PEAR SU']]
+game_completion_info = week_games[['home_team', 'away_team', 'difference', 'formatted_open', 'formattedSpread', 'PEAR', 'pr_spread', 'spread', 'actual_margin', 'actual_spread', 'PEAR ATS OPEN', 'PEAR ATS CLOSE', 'PEAR SU']]
 completed = game_completion_info[game_completion_info["PEAR ATS CLOSE"] != '']
 no_pushes = completed[completed['difference'] != 0]
 no_pushes = no_pushes[no_pushes['spread'] != no_pushes['actual_margin']]

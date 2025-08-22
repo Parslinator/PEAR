@@ -412,6 +412,7 @@ st.divider()
 
 col1, col2 = st.columns(2)
 spreads['Vegas'] = spreads['formattedSpread']
+spreads['PEAR_raw'] = spreads['pr_spread']
 spreads.index = spreads.index+1
 with col1:
     st.markdown(f'<h2 id="fbs-power-ratings">Week {current_week} Spreads</h2>', unsafe_allow_html=True)
