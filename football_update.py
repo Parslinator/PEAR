@@ -4041,4 +4041,99 @@ if len(completed) > 0:
 
 game_completion_info.to_excel(f'./PEAR/PEAR Football/y{current_year}/Spreads/spreads_tracker_week{current_week}.xlsx')
 
+logo_cache = {}
+
+for _, row in logos.iterrows():
+    team_name = row['team']
+    logo_url = row['logo'][0]  # Assuming logo is a list with URL at index 0
+    try:
+        response = requests.get(logo_url)
+        img = Image.open(BytesIO(response.content))  # Ensure transparency support
+        logo_cache[team_name] = img
+    except Exception as e:
+        print(f"Error loading logo for {team_name}: {e}")
+        logo_cache[team_name] = None  # Placeholder if something fails
+
+def PEAR_Win_Prob(home_power_rating, away_power_rating):
+    return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
+
+visual = week_games[['week', 'start_date', 'home_team', 'away_team', 'home_pr', 'away_pr', 'PEAR', 'GQI']].dropna()
+visual['start_date'] = pd.to_datetime(visual['start_date'], utc=True)
+visual['start_date'] = visual['start_date'].dt.tz_convert('US/Central')
+visual['start_date'] = visual['start_date'].dt.date
+visual = visual.sort_values(['start_date', 'GQI'], ascending=[True, False]).reset_index(drop=True)
+
+visual['PEAR_win_prob'] = round(100*(visual.apply(
+    lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
+)),1)
+
+save_dir = f"PEAR/PEAR Football/y{current_year}/Visuals/Schedule"
+os.makedirs(save_dir, exist_ok=True)  # create the folder if it doesn't exist
+
+def ordinal(n: int) -> str:
+    if 11 <= n % 100 <= 13:
+        suffix = "th"
+    else:
+        suffix = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return f"{n}{suffix}"
+
+for date, group in visual.groupby('start_date'):
+    n_games = len(group)
+    
+    # Grid size: up to 6 columns, enough rows to fit all games
+    max_cols = 4 if n_games <= 16 else 6
+    
+    n_cols = min(max_cols, n_games)
+    n_rows = math.ceil(n_games / n_cols)
+
+    fig, axes = plt.subplots(
+        n_rows, n_cols,
+        figsize=(n_cols*4.6, n_rows*3.6),
+        dpi=250
+    )
+    fig.patch.set_facecolor("#CECEB2")
+    axes = axes.flatten() if n_games > 1 else [axes]
+
+    for i, (idx, row) in enumerate(group.iterrows()):
+        ax = axes[i]
+        ax.set_facecolor("#CECEB2")
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+        
+        # Example plot: spread bar (replace with your actual visual)
+        ax.barh([0], [row['PEAR']], color="skyblue")
+
+        img = logo_cache[row['away_team']]
+        imagebox = OffsetImage(img, zoom=0.2)
+        ab = AnnotationBbox(imagebox, (0.03, 0.3), frameon=False)
+        ax.add_artist(ab)
+
+        img = logo_cache[row['home_team']]
+        imagebox = OffsetImage(img, zoom=0.2)
+        ab = AnnotationBbox(imagebox, (-0.03, 0.3), frameon=False)
+        ax.add_artist(ab)
+
+        ax.text(0, -0.4, f'{row["PEAR"]}', ha='center', va='center', fontsize=28, fontweight='bold')
+        ax.text(-0.03, -0.1, f'{row["PEAR_win_prob"]}%', ha='center', va='center', fontsize=24)
+        ax.text(0.03, -0.1, f'{round(100-row["PEAR_win_prob"],1)}%', ha='center', va='center', fontsize=24)
+        ax.text(0, -0.25, f'GQI: {row["GQI"]}', ha='center', va='center', fontsize=24)
+
+        # ax.set_title(f"{row['away_team']} @ {row['home_team']}")
+        ax.set_yticks([])
+        ax.set_xticks([])
+        # ax.set_xlabel("Spread")
+
+    # Hide unused axes if grid > n_games
+    for j in range(n_games, len(axes)):
+        fig.delaxes(axes[j])
+    
+    day_str = ordinal(date.day)
+    date_str = date.strftime(f"%A, %B {day_str}")
+    fig.suptitle(f"{date_str} Games\n@PEARatings", fontsize=32, fontweight='bold')
+    plt.tight_layout()
+    filename = f"schedule_{date.strftime('%m_%d_%Y')}.png"
+    fig_path = os.path.join(save_dir, filename)
+    fig.savefig(fig_path, facecolor=fig.get_facecolor())  # ensures bg color is saved
+    plt.close(fig)  # close to free memory
+
 print("---------- Spreads Done! ----------")
