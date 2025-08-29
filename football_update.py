@@ -360,9 +360,9 @@ recruiting_info_dict = [dict(
 recruiting = pd.DataFrame(recruiting_info_dict)
 
 start_week = 1
-end_week = current_week - 1
+end_week = current_week
 games_list = []
-for week in range(start_week,end_week):
+for week in range(start_week,end_week+1):
     response = games_api.get_games(year=current_year, week=week,classification = 'fbs')
     games_list = [*games_list, *response]
 games = [dict(
@@ -377,7 +377,7 @@ games = [dict(
             home_points = g.home_points,
             away_points = g.away_points,
             neutral = g.neutral_site
-            ) for g in games_list]
+            ) for g in games_list if g.home_points is not None]
 games.sort(key=date_sort)
 opponent_adjustment_schedule = pd.DataFrame(games)
 
