@@ -529,6 +529,57 @@ print("Fixed scale factor:", fixed_scale)
 
 ######################################## TEAM STATS AND RANKINGS #################################################
 
+# All the scalers used for the team data
+scaler100 = MinMaxScaler(feature_range=(1, 100))
+scaler60 = MinMaxScaler(feature_range=(40,98.8))
+scaler10 = MinMaxScaler(feature_range=(1,10))
+scalerTurnovers = MinMaxScaler(feature_range=(1, 100))
+scalerPenalties = MinMaxScaler(feature_range=(1, 100))
+scalerThirdDown = MinMaxScaler(feature_range=(1, 100))
+scalerTalent = MinMaxScaler(feature_range=(100,1000))
+scalerAvgFieldPosition = MinMaxScaler(feature_range=(-10,10))
+scalerPPO = MinMaxScaler(feature_range=(1,100))
+
+# scaling all the data based on the scaler
+team_data['sp_conf_scaled'] = scaler10.fit_transform(team_data[['sp_conf_rating']])
+team_data['total_turnovers_scaled'] = scalerTurnovers.fit_transform(team_data[['total_turnovers']])
+team_data['possession_scaled'] = scaler100.fit_transform(team_data[['possessionTimeMinutes']])
+team_data['third_down_scaled'] = scalerThirdDown.fit_transform(team_data[['thirdDownConversionRate']])
+team_data['offense_avg_field_position_scaled'] = -1*scalerAvgFieldPosition.fit_transform(team_data[['Offense_fieldPosition_averageStart']])
+team_data['defense_avg_field_position_scaled'] = scalerAvgFieldPosition.fit_transform(team_data[['Defense_fieldPosition_averageStart']])
+team_data['offense_ppo_scaled'] = scalerPPO.fit_transform(team_data[['Offense_pointsPerOpportunity']])
+team_data['offense_success_scaled'] = scaler100.fit_transform(team_data[['Offense_successRate']])
+team_data['offense_explosive'] = scaler100.fit_transform(team_data[['Offense_explosiveness']])
+team_data['talent_scaled'] = scalerTalent.fit_transform(team_data[['avg_talent']])
+
+def_ppo_min = team_data['Defense_pointsPerOpportunity'].min()
+def_ppo_max = team_data['Defense_pointsPerOpportunity'].max()
+team_data['defense_ppo_scaled'] = 100 - (team_data['Defense_pointsPerOpportunity'] - def_ppo_min) * 99 / (def_ppo_max - def_ppo_min)
+
+pen_min = team_data['penaltyYards'].min()
+pen_max = team_data['penaltyYards'].max()
+team_data['penalties_scaled'] = 100 - (team_data['penaltyYards'] - pen_min) * 99 / (pen_max - pen_min)
+
+off_field_min = team_data['Offense_fieldPosition_averageStart'].min()
+off_field_max = team_data['Offense_fieldPosition_averageStart'].max()
+team_data['offense_avg_field_position_scaled'] = 100 - (team_data['Offense_fieldPosition_averageStart'] - off_field_min) * 99 / (off_field_max - off_field_min)
+
+team_data['offense_ppa_scaled'] = scaler100.fit_transform(team_data[['Offense_ppa']])
+ppa_min = team_data['Defense_ppa'].min()
+ppa_max = team_data['Defense_ppa'].max()
+team_data['defense_ppa_scaled'] = 100 - (team_data['Defense_ppa'] - ppa_min) * 99 / (ppa_max - ppa_min)
+
+success_min = team_data['Defense_successRate'].min()
+success_max = team_data['Defense_successRate'].max()
+team_data['defense_success_scaled'] = 100 - (team_data['Defense_successRate'] - success_min) * 99 / (success_max - success_min)
+
+explosiveness_min = team_data['Defense_explosiveness'].min()
+explosiveness_max = team_data['Defense_explosiveness'].max()
+team_data['defense_explosive'] = 100 - (team_data['Defense_explosiveness'] - explosiveness_min) * 99 / (explosiveness_max - explosiveness_min)
+
+
+
+
 team_data['PBR'] = team_data['penaltyYards'] / team_data['talent_scaled']
 team_data['PBR_rank'] = team_data['PBR'].rank(method='min', ascending=True)
 
@@ -555,8 +606,8 @@ team_data['DDE'] = (
     (1.6 * team_data['sacks'])
 )
 team_data['DDE_rank'] = team_data['DDE'].rank(method='min', ascending=False)
-offensive_columns = ["adj_offense_ppa", "Offense_pointsPerOpportunity"]
-defensive_columns = ["adj_defense_ppa", "Defense_pointsPerOpportunity"]
+offensive_columns = ["adj_offense_ppa", "adj_offense_ppo"]
+defensive_columns = ["adj_defense_ppa", "adj_defense_ppo"]
 team_data["offensive_total"] = team_data[offensive_columns].sum(axis=1)
 team_data["offensive_rank"] = team_data["offensive_total"].rank(ascending=False, method="dense").astype(int)
 team_data["defensive_total"] = team_data[defensive_columns].sum(axis=1)
