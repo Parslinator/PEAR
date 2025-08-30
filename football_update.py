@@ -59,6 +59,7 @@ teams_api = cfbd.TeamsApi(api_client)
 metrics_api = cfbd.MetricsApi(api_client)
 players_api = cfbd.PlayersApi(api_client)
 recruiting_api = cfbd.RecruitingApi(api_client)
+drives_api = cfbd.DrivesApi(api_client)
 
 current_time = datetime.datetime.now(pytz.UTC)
 if current_time.month < 6:
@@ -226,6 +227,32 @@ records_dict = [dict(
 ) for r in records_list]
 records = pd.DataFrame(records_dict)
 
+drives_list = []
+for this_week in range(1, current_week):
+    response = drives_api.get_drives(year=current_year, week=this_week)
+    drives_list = [*drives_list, *response]
+drives_dict = [dict(
+    offense = g.offense,
+    defense = g.defense,
+    drive_number = g.drive_number,
+    scoring = g.scoring,
+    start_period = g.start_period,
+    start_yardline = g.start_yardline,
+    start_yards_to_goal = g.start_yards_to_goal,
+    end_period = g.end_period,
+    end_yardline = g.end_yardline,
+    end_yards_to_goal = g.end_yards_to_goal,
+    plays = g.plays,
+    yards = g.yards,
+    drive_result = g.drive_result,
+    is_home_offense = g.is_home_offense,
+    start_offense_score = g.start_offense_score,
+    start_defense_score = g.start_defense_score,
+    end_offense_score = g.end_offense_score,
+    end_defense_score = g.end_defense_score
+) for g in drives_list]
+drives = pd.DataFrame(drives_dict)
+
 # fpi ranks
 team_fpi_list = []
 response = ratings_api.get_fpi(year = current_year)
@@ -383,6 +410,133 @@ opponent_adjustment_schedule = pd.DataFrame(games)
 
 print("Data Load Done")
 
+offense_stats = (
+    drives.groupby("offense")
+          .apply(lambda g: pd.Series({
+              "offense_total_drives": len(g),
+              "offense_drives_40_or_less": (g["end_yards_to_goal"] <= 40).sum(),
+              "offense_3_and_outs": (((g["plays"] <= 3) & (g["drive_result"] == "PUNT")) | (g["end_yards_to_goal"] > 75)).sum()
+          }))
+          .reset_index()
+          .rename(columns={"offense": "team"})
+)
+
+offense_stats["offense_pct_drives_40_or_less"] = (
+    offense_stats["offense_drives_40_or_less"] / offense_stats["offense_total_drives"] * 100
+)
+offense_stats["offense_pct_3_and_out"] = (
+    offense_stats["offense_3_and_outs"] / offense_stats["offense_total_drives"] * 100
+)
+defense_stats = (
+    drives.groupby("defense")
+          .apply(lambda g: pd.Series({
+              "defense_total_drives": len(g),
+              "defense_drives_40_or_less": (g["end_yards_to_goal"] <= 40).sum(),
+              "defense_3_and_outs": (((g["plays"] <= 3) & (g["drive_result"] == "PUNT")) | (g["end_yards_to_goal"] > 75)).sum()
+          }))
+          .reset_index()
+          .rename(columns={"defense": "team"})
+)
+
+defense_stats["defense_pct_drives_40_or_less"] = (
+    defense_stats["defense_drives_40_or_less"] / defense_stats["defense_total_drives"] * 100
+)
+defense_stats["defense_pct_3_and_out"] = (
+    defense_stats["defense_3_and_outs"] / defense_stats["defense_total_drives"] * 100
+)
+combined = pd.merge(offense_stats, defense_stats, on="team", how="outer")
+combined["offense_drive_quality"] = (
+    combined["offense_pct_drives_40_or_less"] - combined["offense_pct_3_and_out"]
+)
+combined["defense_drive_quality"] = (
+    combined["defense_pct_drives_40_or_less"] - combined["defense_pct_3_and_out"]
+)
+combined["offense_drive_quality_count"] = (
+    combined["offense_drives_40_or_less"] - combined["offense_3_and_outs"]
+)
+combined["defense_drive_quality_count"] = (
+    combined["defense_drives_40_or_less"] - combined["defense_3_and_outs"]
+)
+for col in combined.filter(like="pct").columns.tolist() + [
+    "offense_drive_quality", "defense_drive_quality"
+]:
+    combined[col] = combined[col].round(1)
+
+# Create dictionary for quick lookup of counts
+team_drive_stats = combined.set_index('team')[[
+    'offense_drive_quality_count', 'offense_total_drives',
+    'defense_drive_quality_count', 'defense_total_drives'
+]]
+
+opp_drive_list = []
+
+for _, row in opponent_adjustment_schedule.iterrows():
+    home = row['home_team']
+    away = row['away_team']
+    if home not in team_drive_stats.index or away not in team_drive_stats.index:
+        continue
+    
+    # Home perspective: opponent = away
+    opp_drive_list.append({
+        'team': home,
+        'opp_offense_quality_count': team_drive_stats.loc[away, 'offense_drive_quality_count'],
+        'opp_offense_total_drives': team_drive_stats.loc[away, 'offense_total_drives'],
+        'opp_defense_quality_count': team_drive_stats.loc[away, 'defense_drive_quality_count'],
+        'opp_defense_total_drives': team_drive_stats.loc[away, 'defense_total_drives']
+    })
+    
+    # Away perspective: opponent = home
+    opp_drive_list.append({
+        'team': away,
+        'opp_offense_quality_count': team_drive_stats.loc[home, 'offense_drive_quality_count'],
+        'opp_offense_total_drives': team_drive_stats.loc[home, 'offense_total_drives'],
+        'opp_defense_quality_count': team_drive_stats.loc[home, 'defense_drive_quality_count'],
+        'opp_defense_total_drives': team_drive_stats.loc[home, 'defense_total_drives']
+    })
+
+# Build dataframe
+opp_drive_df = pd.DataFrame(opp_drive_list)
+
+# Aggregate: sum counts and total drives per team
+opp_drive_summary = opp_drive_df.groupby('team').agg(
+    sum_opp_offense_quality_count = ('opp_offense_quality_count', 'sum'),
+    sum_opp_offense_total_drives = ('opp_offense_total_drives', 'sum'),
+    sum_opp_defense_quality_count = ('opp_defense_quality_count', 'sum'),
+    sum_opp_defense_total_drives = ('opp_defense_total_drives', 'sum')
+).reset_index()
+
+# Compute opponent average drive quality percentages
+opp_drive_summary['avg_opp_offense_drive_quality_pct'] = (
+    opp_drive_summary['sum_opp_offense_quality_count'] / opp_drive_summary['sum_opp_offense_total_drives'] * 100
+)
+opp_drive_summary['avg_opp_defense_drive_quality_pct'] = (
+    opp_drive_summary['sum_opp_defense_quality_count'] / opp_drive_summary['sum_opp_defense_total_drives'] * 100
+)
+
+# Optional: round percentages
+opp_drive_summary[['avg_opp_offense_drive_quality_pct', 'avg_opp_defense_drive_quality_pct']] = \
+    opp_drive_summary[['avg_opp_offense_drive_quality_pct', 'avg_opp_defense_drive_quality_pct']].round(1)
+
+combined_with_adj = combined.merge(
+    opp_drive_summary[['team', 'avg_opp_offense_drive_quality_pct', 'avg_opp_defense_drive_quality_pct']],
+    on='team',
+    how='left'
+)
+
+combined_with_adj['adj_offense_drive_quality'] = (
+    combined_with_adj['offense_drive_quality'] - combined_with_adj['avg_opp_defense_drive_quality_pct']
+)
+
+combined_with_adj['adj_defense_drive_quality'] = (
+    combined_with_adj['defense_drive_quality'] - combined_with_adj['avg_opp_offense_drive_quality_pct']
+)
+
+# Optional: round percentages
+combined_with_adj[['adj_offense_drive_quality', 'adj_defense_drive_quality']] = \
+    combined_with_adj[['adj_offense_drive_quality', 'adj_defense_drive_quality']].round(1)
+
+drive_quality = combined_with_adj[['team', 'offense_drive_quality', 'defense_drive_quality', 'avg_opp_offense_drive_quality_pct', 'avg_opp_defense_drive_quality_pct', 'adj_offense_drive_quality', 'adj_defense_drive_quality']]
+
 # entire talent profile for the team over the last three years
 last_three_rows = talent.groupby('team').tail(3)
 avg_talent_per_team = last_three_rows.groupby('team')['talent'].mean().reset_index()
@@ -401,6 +555,8 @@ intermediate_4 = pd.merge(intermediate_3, logos_info, how='left', on='team')
 intermediate_6 = pd.merge(intermediate_4, team_fpi, how='left', on='team')
 intermediate_7 = pd.merge(intermediate_6, records, how='left', on='team')
 team_data = pd.merge(intermediate_7, metrics, how='left', on='team')
+team_data = pd.merge(team_data, drive_quality, on='team', how='left')
+team_data = pd.merge(team_data, elo_ratings, on='team', how='left')
 
 # Step 1: Create a dictionary for quick PPA lookup
 team_ppa = metrics.set_index('team')[['Offense_ppa', 'Defense_ppa', 'Offense_pointsPerOpportunity', 'Defense_pointsPerOpportunity']]
@@ -468,17 +624,36 @@ from scipy.optimize import differential_evolution
 import numpy as np
 import pandas as pd
 
-# Clean dataset
-if current_week == 1:
-    off_ppa = team_data['Offense_ppa']
-    def_ppa = -team_data['Defense_ppa']
-    off_ppo = team_data['Offense_pointsPerOpportunity']
-    def_ppo = -team_data['Defense_pointsPerOpportunity']
-else:
-    off_ppa = team_data['adj_offense_ppa']
-    def_ppa = -team_data['adj_defense_ppa']
-    off_ppo = team_data['adj_offense_ppo']
-    def_ppo = -team_data['adj_defense_ppo']
+off_ppa = np.where(
+    (team_data['adj_offense_drive_quality'].isna()) | (team_data['adj_offense_drive_quality'] == 0),
+    team_data['Offense_ppa'],  # first set
+    team_data['adj_offense_ppa']  # second set
+)
+off_ppo = np.where(
+    (team_data['adj_offense_drive_quality'].isna()) | (team_data['adj_offense_drive_quality'] == 0),
+    team_data['Offense_pointsPerOpportunity'],
+    team_data['adj_offense_ppo']
+)
+off_dq = np.where(
+    (team_data['adj_offense_drive_quality'].isna()) | (team_data['adj_offense_drive_quality'] == 0),
+    team_data['offense_drive_quality'],
+    team_data['adj_offense_drive_quality']
+)
+def_ppa = -np.where(
+    (team_data['adj_offense_drive_quality'].isna()) | (team_data['adj_offense_drive_quality'] == 0),
+    team_data['Defense_ppa'],
+    team_data['adj_defense_ppa']
+)
+def_ppo = -np.where(
+    (team_data['adj_offense_drive_quality'].isna()) | (team_data['adj_offense_drive_quality'] == 0),
+    team_data['Defense_pointsPerOpportunity'],
+    team_data['adj_defense_ppo']
+)
+def_dq = -np.where(
+    (team_data['adj_offense_drive_quality'].isna()) | (team_data['adj_offense_drive_quality'] == 0),
+    team_data['defense_drive_quality'],
+    team_data['adj_defense_drive_quality']
+)
 
 turnover_margin = (team_data['turnovers'] - team_data['turnoversOpponent']) / team_data['games_played']
 talent = team_data['avg_talent']
@@ -489,6 +664,8 @@ metrics = pd.DataFrame({
     'def_ppa': def_ppa,
     'off_ppo': off_ppo,
     'def_ppo': def_ppo,
+    'off_dq': off_dq,
+    'def_dq': def_dq,
     'talent': talent
 })
 
@@ -498,7 +675,7 @@ z_metrics = metrics.apply(lambda col: zscore(col, nan_policy='omit')).fillna(0)
 # Target: FPI rankings (lower rank = better team)
 fpi_ranks = rankdata(-team_data['fpi'].values, method='ordinal')  # negative because higher FPI is better
 
-fixed_scale = 12.5
+fixed_scale = 14
 lambda_reg = 0.01  # Try 0.05, 0.1, 0.2 etc.
 
 def objective(weights):
@@ -514,7 +691,7 @@ def objective(weights):
     return rank_diff.mean() + l1_penalty
 
 # Optimize weights (no scale)
-bounds = [(0, 1)] * 5
+bounds = [(0, 1)] * 7
 result = differential_evolution(objective, bounds, strategy='best1bin', maxiter=1000, seed=42)
 
 # Get best weights
@@ -522,6 +699,7 @@ opt_weights = result.x / sum(result.x)
 
 # Apply final rating
 team_data['power_rating'] = (z_metrics @ opt_weights) * fixed_scale
+team_data['power_rating'] = team_data['power_rating'].round(1)
 
 # Show results
 print("Best weights:", dict(zip(z_metrics.columns, opt_weights)))
