@@ -624,36 +624,36 @@ from scipy.optimize import differential_evolution
 import numpy as np
 import pandas as pd
 
-off_ppa = np.where(
-    (team_data['adj_offense_drive_quality'].isna()) | (team_data['adj_offense_drive_quality'] == 0),
-    team_data['Offense_ppa'],  # first set
-    team_data['adj_offense_ppa']  # second set
-)
-off_ppo = np.where(
-    (team_data['adj_offense_drive_quality'].isna()) | (team_data['adj_offense_drive_quality'] == 0),
-    team_data['Offense_pointsPerOpportunity'],
-    team_data['adj_offense_ppo']
-)
-off_dq = np.where(
-    (team_data['adj_offense_drive_quality'].isna()) | (team_data['adj_offense_drive_quality'] == 0),
-    team_data['offense_drive_quality'],
-    team_data['adj_offense_drive_quality']
-)
-def_ppa = -np.where(
-    (team_data['adj_offense_drive_quality'].isna()) | (team_data['adj_offense_drive_quality'] == 0),
-    team_data['Defense_ppa'],
-    team_data['adj_defense_ppa']
-)
-def_ppo = -np.where(
-    (team_data['adj_offense_drive_quality'].isna()) | (team_data['adj_offense_drive_quality'] == 0),
-    team_data['Defense_pointsPerOpportunity'],
-    team_data['adj_defense_ppo']
-)
-def_dq = -np.where(
-    (team_data['adj_offense_drive_quality'].isna()) | (team_data['adj_offense_drive_quality'] == 0),
-    team_data['defense_drive_quality'],
-    team_data['adj_defense_drive_quality']
-)
+if current_week <= 3:
+    mask = (team_data['adj_offense_drive_quality'].isna()) | (team_data['adj_offense_drive_quality'] == 0)
+
+    stat_map = {
+        "off_ppa": ("Offense_ppa", "adj_offense_ppa", 1),
+        "def_ppa": ("Defense_ppa", "adj_defense_ppa", -1),
+        "off_ppo": ("Offense_pointsPerOpportunity", "adj_offense_ppo", 1),
+        "def_ppo": ("Defense_pointsPerOpportunity", "adj_defense_ppo", -1),
+        "off_dq": ("offense_drive_quality", "adj_offense_drive_quality", 1),
+        "def_dq": ("defense_drive_quality", "adj_defense_drive_quality", -1),
+    }
+
+    results = {}
+    for key, (raw_col, adj_col, sign) in stat_map.items():
+        results[key] = np.where(mask, team_data[raw_col], team_data[adj_col]) * sign
+
+else:
+    results = {
+        "off_ppa": team_data['adj_offense_ppa'],
+        "def_ppa": -team_data['adj_defense_ppa'],
+        "off_ppo": team_data['adj_offense_ppo'],
+        "def_ppo": -team_data['adj_defense_ppo'],
+        "off_dq": team_data['adj_offense_drive_quality'],
+        "def_dq": -team_data['adj_defense_drive_quality'],
+    }
+
+# unpack into variables if you want
+off_ppa, def_ppa = results["off_ppa"], results["def_ppa"]
+off_ppo, def_ppo = results["off_ppo"], results["def_ppo"]
+off_dq, def_dq = results["off_dq"], results["def_dq"]
 
 turnover_margin = (team_data['turnovers'] - team_data['turnoversOpponent']) / team_data['games_played']
 talent = team_data['avg_talent']
