@@ -407,8 +407,15 @@ games = [dict(
             ) for g in games_list if g.home_points is not None]
 games.sort(key=date_sort)
 opponent_adjustment_schedule = pd.DataFrame(games)
+opponent_adjustment_schedule = opponent_adjustment_schedule.dropna(subset=['home_elo', 'away_elo']).reset_index(drop=True)
 
 print("Data Load Done")
+
+drives["end_yards_to_goal"] = np.where(
+    (~drives["drive_result"].str.contains("TD")) & (drives["end_yards_to_goal"] == 0),
+    drives["start_yards_to_goal"] - drives["yards"],
+    drives["end_yards_to_goal"]
+)
 
 offense_stats = (
     drives.groupby("offense")
@@ -625,21 +632,15 @@ import numpy as np
 import pandas as pd
 
 if current_week <= 3:
-    mask = (team_data['adj_offense_drive_quality'].isna()) | (team_data['adj_offense_drive_quality'] == 0)
-
-    stat_map = {
-        "off_ppa": ("Offense_ppa", "adj_offense_ppa", 1),
-        "def_ppa": ("Defense_ppa", "adj_defense_ppa", -1),
-        "off_ppo": ("Offense_pointsPerOpportunity", "adj_offense_ppo", 1),
-        "def_ppo": ("Defense_pointsPerOpportunity", "adj_defense_ppo", -1),
-        "off_dq": ("offense_drive_quality", "adj_offense_drive_quality", 1),
-        "def_dq": ("defense_drive_quality", "adj_defense_drive_quality", -1),
+    team_data = team_data.dropna(subset=['offense_drive_quality']).reset_index(drop=True)
+    results = {
+        "off_ppa": team_data['Offense_ppa'],
+        "def_ppa": -team_data['Defense_ppa'],
+        "off_ppo": team_data['Offense_pointsPerOpportunity'],
+        "def_ppo": -team_data['Defense_pointsPerOpportunity'],
+        "off_dq": team_data['offense_drive_quality'],
+        "def_dq": -team_data['defense_drive_quality'],
     }
-
-    results = {}
-    for key, (raw_col, adj_col, sign) in stat_map.items():
-        results[key] = np.where(mask, team_data[raw_col], team_data[adj_col]) * sign
-
 else:
     results = {
         "off_ppa": team_data['adj_offense_ppa'],
@@ -649,6 +650,7 @@ else:
         "off_dq": team_data['adj_offense_drive_quality'],
         "def_dq": -team_data['adj_defense_drive_quality'],
     }
+
 
 # unpack into variables if you want
 off_ppa, def_ppa = results["off_ppa"], results["def_ppa"]
@@ -682,6 +684,9 @@ def objective(weights):
     weights = np.array(weights)
     weights = weights / weights.sum()
     
+    if weights[-1] > 0.5:  
+        return 1e6  # big penalty
+    
     model_output = z_metrics.values @ weights * fixed_scale
     model_ranks = rankdata(-model_output, method='ordinal')
 
@@ -703,7 +708,39 @@ team_data['power_rating'] = team_data['power_rating'].round(1)
 
 # Show results
 print("Best weights:", dict(zip(z_metrics.columns, opt_weights)))
-print("Fixed scale factor:", fixed_scale)
+
+if current_week < 6:
+    preseason = pd.read_csv("./PEAR/PEAR Football/y2025/Ratings/PEAR_week1.csv")
+    merged = preseason.merge(
+        team_data[['team', 'power_rating']],
+        on='team',
+        how='left',
+        suffixes=('_pre', '_team')
+    )
+
+    if current_week == 2:
+        pre_weight, season_weight = 0.85, 0.15
+    elif current_week == 3:
+        pre_weight, season_weight = 0.65, 0.35
+    elif current_week == 4:
+        pre_weight, season_weight = 0.35, 0.65
+    elif current_week == 5:
+        pre_weight, season_weight = 0.15, 0.85
+    merged['weighted_power'] = np.where(
+        merged['power_rating_team'].notna(),
+        pre_weight * merged['power_rating_pre'] + season_weight * merged['power_rating_team'],
+        merged['power_rating_pre']
+    )
+
+    merged['weighted_power'] = merged['weighted_power'].round(1)
+    team_data = team_data.rename(columns={'power_rating': 'unweighted_power'})
+    team_data = team_data.merge(
+        merged[['team', 'weighted_power']],
+        on='team',
+        how='left'
+    )
+    team_data['power_rating'] = team_data['weighted_power']
+    team_data = team_data.drop(columns=['weighted_power'])
 
 ######################################## TEAM STATS AND RANKINGS #################################################
 
@@ -799,14 +836,6 @@ team_data['defense_explosive_rank'] = team_data['defense_explosive'].rank(method
 team_data['total_turnovers_rank'] = team_data['total_turnovers_scaled'].rank(method='min', ascending=False)
 team_data['penalties_rank'] = team_data['penalties_scaled'].rank(method='min', ascending=False)
 
-######################################## POWER RATING #################################################
-
-team_data['power_rating'] = team_data['power_ranking'] - team_data['power_ranking'].mean()
-current_range = team_data['power_rating'].max() - team_data['power_rating'].min()
-desired_range = 50  # The target range
-scaling_factor = desired_range / current_range
-team_data['power_rating'] = round(team_data['power_rating'] * scaling_factor,2)
-
 ######################################## FINAL FORMATTING #################################################
 
 team_data = team_data.sort_values(by='power_rating', ascending=False).reset_index(drop=True)
@@ -852,7 +881,7 @@ games = [
         home_points=g.home_points, away_points=g.away_points,
         neutral=g.neutral_site
     )
-    for g in games_list if g.home_pregame_elo is not None and g.away_pregame_elo is not None
+    for g in games_list
 ]
 
 games.sort(key=date_sort)
@@ -876,6 +905,9 @@ year_long_schedule = year_long_schedule.merge(team_data[['team', 'power_rating']
 year_long_schedule = year_long_schedule.merge(team_data[['team', 'power_rating']],
                                               left_on='away_team', right_on='team', how='left')\
                                        .rename(columns={'power_rating': 'away_pr'}).drop(columns='team')
+fallback_value = team_data['power_rating'].mean() - 2 * team_data['power_rating'].std()
+year_long_schedule['home_pr'] = year_long_schedule['home_pr'].fillna(fallback_value)
+year_long_schedule['away_pr'] = year_long_schedule['away_pr'].fillna(fallback_value)
 
 # --- Add Win Probabilities ---
 year_long_schedule['PEAR_win_prob'] = PEAR_Win_Prob_vectorized(
@@ -962,8 +994,15 @@ for team in team_data['team']:
     for _, g in games.iterrows():
         home, away = g['home_team'], g['away_team']
         mov = g['margin_of_victory']
-        home_pr = team_data.loc[team_data['team'] == home, 'power_rating'].values[0]
-        away_pr = team_data.loc[team_data['team'] == away, 'power_rating'].values[0]
+        if home in team_data['team'].values:
+            home_pr = team_data.loc[team_data['team'] == home, 'power_rating'].values[0]
+        else:
+            home_pr = fallback_value
+
+        if away in team_data['team'].values:
+            away_pr = team_data.loc[team_data['team'] == away, 'power_rating'].values[0]
+        else:
+            away_pr = fallback_value
 
         if team == home:
             expected = 4.5 + home_pr - away_pr
@@ -982,29 +1021,35 @@ print("RTP Prep Done!")
 
 # --- Most Deserving Calculation ---
 num_12_pr = team_data['power_rating'].iloc[11]
-completed_games = year_long_schedule[year_long_schedule['home_points'].notna()]
+
+def f(mov):
+    return np.clip(np.log(np.abs(mov) + 1) * np.sign(mov), -10, 10)
+
 completed_games['margin_of_victory'] = completed_games['home_points'] - completed_games['away_points']
-f = lambda mov: np.clip(np.log1p(np.abs(mov)) * np.sign(mov), -10, 10)
 
-relative_xWins = []
-for team in team_data['team']:
-    games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
-    gp = records.loc[records['team'] == team, 'games_played'].values[0]
+def calc_deserving(team):
+    games_played = records.loc[records['team'] == team, 'games_played'].values[0]
     wins = records.loc[records['team'] == team, 'wins'].values[0]
+    team_games = completed_games[(completed_games['home_team'] == team) |
+                                 (completed_games['away_team'] == team)].copy()
+    if current_week < 6:
+        mov_adj = 0
+    else:
+        mov_adj = f(team_games['margin_of_victory'])
 
-    games['avg_win_prob'] = np.where(
-        games['home_team'] == team,
-        PEAR_Win_Prob(num_12_pr, games['away_pr']) + f(games['margin_of_victory']),
-        100 - PEAR_Win_Prob(games['home_pr'], num_12_pr) - f(-games['margin_of_victory'])
-    )
+    home_probs = PEAR_Win_Prob_vectorized(num_12_pr, team_games['away_pr']) + mov_adj
+    away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_pr'], num_12_pr) - mov_adj
+    team_games['adj_win_prob'] = np.where(team_games['home_team'] == team, home_probs, away_probs)
 
-    xWins = games['avg_win_prob'].sum() / 100
-    if gp != len(games): xWins += 1
-    relative_xWins.append(round(wins - xWins, 3))
+    xWins = round(team_games['adj_win_prob'].sum() / 100, 3)
+    if games_played != len(team_games):
+        xWins += 1
+    return round(wins - xWins, 3)
 
-most_deserving = pd.DataFrame({'team': team_data['team'], 'most_deserving_wins': relative_xWins})
+deserving_results = Parallel(n_jobs=-1)(delayed(calc_deserving)(team) for team in team_data['team'])
+most_deserving = pd.DataFrame({'team': team_data['team'], 'most_deserving_wins': deserving_results})
 most_deserving = most_deserving.sort_values('most_deserving_wins', ascending=False).reset_index(drop=True)
-most_deserving['Performance'] = most_deserving.index + 1
+most_deserving['most_deserving'] = most_deserving.index + 1
 print("Most Deserving Calculation Done")
 
 team_data = pd.merge(team_data, SOS, how='left', on='team')
@@ -1048,8 +1093,8 @@ logos_info_dict = [dict(
 logos = pd.DataFrame(logos_info_dict)
 logos = logos.dropna(subset=['logo', 'color'])
 
-all_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}_no_adjustments.csv")
-team_data = pd.read_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}_no_adjustments.csv')
+all_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}.csv")
+team_data = pd.read_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv')
 
 start_season_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv")
 if os.path.exists(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week-1}.csv"):
@@ -1364,8 +1409,10 @@ def simulate_season_known(schedules, team_data):
 
     for _, game in schedules.iterrows():
         winner, loser = simulate_game_known(game['home_team'], game['away_team'], game['PEAR_win_prob'])
-        team_wins[winner] += 1
-        team_losses[loser] += 1
+        if winner in team_wins:
+            team_wins[winner] += 1
+        if loser in team_losses:
+            team_losses[loser] += 1
 
     return team_wins, team_losses
 
@@ -1564,8 +1611,10 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
         return np.round(x * 2) / 2   
 
     def find_team_spread(game, team_data, team_name, home_team, away_team, neutral):
-        home_rating = team_data[team_data['team'] == home_team]['power_rating'].values[0]
-        away_rating = team_data[team_data['team'] == away_team]['power_rating'].values[0]
+        fallback_value = team_data['power_rating'].mean() - 2 * team_data['power_rating'].std()
+        rating_map = dict(zip(team_data['team'], team_data['power_rating']))
+        home_rating = rating_map.get(home_team, fallback_value)
+        away_rating = rating_map.get(away_team, fallback_value)
         home_win_prob = game['home_win_prob']
         def adjust_home_pr(home_win_prob):
             return ((home_win_prob - 50) / 50) * 1
@@ -1777,6 +1826,21 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     if (len(away_non_completed_games) != 0):
         away_non_completed_games = add_spreads(away_non_completed_games, team_data, away_team)
 
+    def safe_int_rank(df, team, col_name, fallback=None):
+        val = df.loc[df['team'] == team, col_name]
+        if val.empty or pd.isna(val.values[0]):
+            return int(fallback if fallback is not None else df[col_name].max() + 1)
+        return int(val.values[0])
+
+    home_stm = safe_int_rank(all_data, home_team, 'STM_rank')
+    home_pbr = safe_int_rank(all_data, home_team, 'PBR_rank')
+    home_dce = safe_int_rank(all_data, home_team, 'DCE_rank')
+    home_dde = safe_int_rank(all_data, home_team, 'DDE_rank')
+    away_stm = safe_int_rank(all_data, away_team, 'STM_rank')
+    away_pbr = safe_int_rank(all_data, away_team, 'PBR_rank')
+    away_dce = safe_int_rank(all_data, away_team, 'DCE_rank')
+    away_dde = safe_int_rank(all_data, away_team, 'DDE_rank')
+
     home_power_rating = round(team_data[team_data['team'] == home_team]['power_rating'].values[0], 2)
     home_talent_scaled = round(all_data[all_data['team'] == home_team]['talent_scaled_percentile'].values[0], 2)
     home_offense_success = round(all_data[all_data['team'] == home_team]['offense_success_scaled'].values[0], 2)
@@ -1787,10 +1851,6 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     home_penalties = round(all_data[all_data['team'] == home_team]['penalties_scaled'].values[0], 2)
     home_offensive = all_data[all_data['team'] == home_team]['offensive_rank'].values[0]
     home_defensive = all_data[all_data['team'] == home_team]['defensive_rank'].values[0]
-    home_stm = int(all_data[all_data['team'] == home_team]['STM_rank'].values[0])
-    home_pbr = int(all_data[all_data['team'] == home_team]['PBR_rank'].values[0])
-    home_dce = int(all_data[all_data['team'] == home_team]['DCE_rank'].values[0])
-    home_dde = int(all_data[all_data['team'] == home_team]['DDE_rank'].values[0])
     home_talent_rank = int(all_data[all_data['team'] == home_team]['talent_scaled_rank'].values[0])
     home_offense_success_rank = int(all_data[all_data['team'] == home_team]['offense_success_rank'].values[0])
     home_defense_success_rank = int(all_data[all_data['team'] == home_team]['defense_success_rank'].values[0])
@@ -1809,10 +1869,6 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     away_penalties = round(all_data[all_data['team'] == away_team]['penalties_scaled'].values[0], 2)
     away_offensive = all_data[all_data['team'] == away_team]['offensive_rank'].values[0]
     away_defensive = all_data[all_data['team'] == away_team]['defensive_rank'].values[0]
-    away_stm = int(all_data[all_data['team'] == away_team]['STM_rank'].values[0])
-    away_pbr = int(all_data[all_data['team'] == away_team]['PBR_rank'].values[0])
-    away_dce = int(all_data[all_data['team'] == away_team]['DCE_rank'].values[0])
-    away_dde = int(all_data[all_data['team'] == away_team]['DDE_rank'].values[0])
     away_talent_rank = int(all_data[all_data['team'] == away_team]['talent_scaled_rank'].values[0])
     away_offense_success_rank = int(all_data[all_data['team'] == away_team]['offense_success_rank'].values[0])
     away_defense_success_rank = int(all_data[all_data['team'] == away_team]['defense_success_rank'].values[0])
@@ -2089,8 +2145,10 @@ def plot_win_probabilities(wins_df, all_conference_wins, logos_df, team_data, la
     win_out = wins + 12 - games_played
     win_out_percentage = round(wins_df[f'win_{win_out}'].values[0] * 100, 1)
     def find_team_spread(game, team_data, team_name, home_team, away_team, neutral):
-        home_rating = team_data[team_data['team'] == home_team]['power_rating'].values[0]
-        away_rating = team_data[team_data['team'] == away_team]['power_rating'].values[0]
+        fallback_value = team_data['power_rating'].mean() - 2 * team_data['power_rating'].std()
+        rating_map = dict(zip(team_data['team'], team_data['power_rating']))
+        home_rating = rating_map.get(home_team, fallback_value)
+        away_rating = rating_map.get(away_team, fallback_value)
         home_win_prob = game['home_win_prob']
         def adjust_home_pr(home_win_prob):
             return ((home_win_prob - 50) / 50) * 1
@@ -2862,8 +2920,10 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
             return '#660000'
 
     def find_team_spread(game, team_data, team_name, home_team, away_team, neutral):
-        home_rating = all_data[all_data['team'] == home_team]['power_rating'].values[0]
-        away_rating = all_data[all_data['team'] == away_team]['power_rating'].values[0]
+        fallback_value = team_data['power_rating'].mean() - 2 * team_data['power_rating'].std()
+        rating_map = dict(zip(team_data['team'], team_data['power_rating']))
+        home_rating = rating_map.get(home_team, fallback_value)
+        away_rating = rating_map.get(away_team, fallback_value)
         home_win_prob = game['home_win_prob']
         def adjust_home_pr(home_win_prob):
             return ((home_win_prob - 50) / 50) * 1
