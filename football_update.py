@@ -103,6 +103,7 @@ else:
 
 current_year = int(current_year)
 current_week = int(current_week)
+current_week = 2
 print(f"Current Week: {current_week}, Current Year: {current_year}")
 print("Double Check The Current Week To Make Sure It Is Correct")
 
@@ -352,6 +353,8 @@ team_stats = team_stats.pivot(index='team', columns='stat_name', values='stat_va
 team_stats['total_turnovers'] = team_stats['fumblesRecovered'] + team_stats['passesIntercepted'] - team_stats['turnovers']
 team_stats['thirdDownConversionRate'] = round(team_stats['thirdDownConversions'] / team_stats['thirdDowns'],4)
 team_stats['fourthDownConversionRate'] = round(team_stats['fourthDownConversions'] / team_stats['fourthDowns'], 4)
+team_stats['thirdDownConversionRate'] = team_stats['thirdDownConversionRate'].fillna(0)
+team_stats['fourthDownConversionRate'] = team_stats['fourthDownConversionRate'].fillna(0)
 team_stats['possessionTimeMinutes'] = round(team_stats['possessionTime'] / 60,2)
 
 # team talent
@@ -2785,17 +2788,24 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     color = all_data[all_data['team'] == team]['color'].values[0]
     alt_color = all_data[all_data['team'] == team]['alt_color'].values[0]
 
+    def safe_int_rank(df, team, col_name, fallback=None):
+        val = df.loc[df['team'] == team, col_name]
+        if val.empty or pd.isna(val.values[0]):
+            return int(fallback if fallback is not None else df[col_name].max() + 1)
+        return int(val.values[0])
+
+    stm_rank = safe_int_rank(all_data, team, 'STM_rank')
+    PBR_rank = safe_int_rank(all_data, team, 'PBR_rank')
+    DCE_rank = safe_int_rank(all_data, team, 'DCE_rank')
+    DDE_rank = safe_int_rank(all_data, team, 'DDE_rank')
+    offensive_rank = safe_int_rank(all_data, team, 'offensive_rank')
+    defensive_rank = safe_int_rank(all_data, team, 'defensive_rank')
+
     power_rating = all_data[all_data['team'] == team]['power_rating'].values[0]
     rank = all_data[all_data['team'] == team].index[0] + 1
     MD = all_data[all_data['team'] == team]['MD'].values[0]
     SOR = all_data[all_data['team'] == team]['SOR'].values[0]
     SOS = all_data[all_data['team'] == team]['SOS'].values[0]
-    PBR_rank = int(all_data[all_data['team'] == team]['PBR_rank'].values[0])
-    DCE_rank = int(all_data[all_data['team'] == team]['DCE_rank'].values[0])
-    DDE_rank = int(all_data[all_data['team'] == team]['DDE_rank'].values[0])
-    offensive_rank = all_data[all_data['team'] == team]['offensive_rank'].values[0]
-    defensive_rank = all_data[all_data['team'] == team]['defensive_rank'].values[0]
-    stm_rank = int(all_data[all_data['team'] == team]['STM_rank'].values[0])
     talent_rank = int(all_data[all_data['team'] == team]['talent_scaled_rank'].values[0])
     offense_success_rank = int(all_data[all_data['team'] == team]['offense_success_rank'].values[0])
     offense_explosive_rank = int(all_data[all_data['team'] == team]['offense_explosive_rank'].values[0])
