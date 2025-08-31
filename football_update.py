@@ -824,12 +824,28 @@ team_data['DDE'] = (
     (1.6 * team_data['sacks'])
 )
 team_data['DDE_rank'] = team_data['DDE'].rank(method='min', ascending=False)
-offensive_columns = ["adj_offense_ppa", "adj_offense_ppo"]
-defensive_columns = ["adj_defense_ppa", "adj_defense_ppo"]
-team_data["offensive_total"] = team_data[offensive_columns].sum(axis=1)
-team_data["offensive_rank"] = team_data["offensive_total"].rank(ascending=False, method="dense").astype(int)
-team_data["defensive_total"] = team_data[defensive_columns].sum(axis=1)
-team_data["defensive_rank"] = team_data["defensive_total"].rank(ascending=False, method="dense").astype(int)
+
+raw_z = {k: zscore(v, nan_policy="omit") for k, v in results.items()}
+results_z = {
+    "off_ppa": raw_z["off_ppa"],
+    "off_ppo": raw_z["off_ppo"],
+    "off_dq": raw_z["off_dq"],
+    "def_ppa": -raw_z["def_ppa"],
+    "def_ppo": -raw_z["def_ppo"],
+    "def_dq": -raw_z["def_dq"],
+}
+team_data["offensive_total"] = (
+    results_z["off_ppa"] + results_z["off_ppo"] + results_z["off_dq"]
+)
+team_data["defensive_total"] = (
+    results_z["def_ppa"] + results_z["def_ppo"] + results_z["def_dq"]
+)
+team_data["offensive_rank"] = team_data["offensive_total"].rank(
+    ascending=False, method="dense"
+).astype(int)
+team_data["defensive_rank"] = team_data["defensive_total"].rank(
+    ascending=True, method="dense"
+).astype(int)
 
 team_data['talent_scaled_rank'] = team_data['talent_scaled'].rank(method='min', ascending=False)
 team_data['offense_success_rank'] = team_data['offense_success_scaled'].rank(method='min', ascending=False)
@@ -1796,8 +1812,8 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     away_win_out = away_wins + 12 - away_games_played
     home_win_out_percent = round(home_wins_df[f'win_{home_win_out}'].values[0] * 100, 1)
     away_win_out_percent = round(away_wins_df[f'win_{away_win_out}'].values[0] * 100, 1)
-    home_md = most_deserving[most_deserving['team'] == home_team]['Performance'].values[0]
-    away_md = most_deserving[most_deserving['team'] == away_team]['Performance'].values[0]
+    home_md = all_data[all_data['team'] == home_team]['most_deserving'].values[0]
+    away_md = all_data[all_data['team'] == away_team]['most_deserving'].values[0]
     home_sor = SOR[SOR['team'] == home_team]['SOR'].values[0]
     home_sos = SOS[SOS['team'] == home_team]['SOS'].values[0]
     away_sor = SOR[SOR['team'] == away_team]['SOR'].values[0]
