@@ -3086,14 +3086,14 @@ try:
     fig.patch.set_facecolor('#CECEB2')
     plt.suptitle(f"Week {current_week} Most Deserving Top 25", fontsize=20, fontweight='bold', color='black')
     fig.text(0.5, 0.92, "AP Style Rankings", fontsize=12, ha='center', color='black')
-    fig.text(0.9, 0.89, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
+    fig.text(0.5, 0.89, "@PEARatings", fontsize=12, ha='center', color='black', fontweight='bold')
 
     for i, ax in enumerate(axs.ravel()):
         team = top_25.loc[i, 'team']
         img = team_logos[team]
         ax.imshow(img)
         ax.set_facecolor('#f0f0f0')
-        ax.text(0.5, -0.1, f"#{i+1} {team} \n{round(top_25.loc[i, 'most_deserving_wins'], 1)}", fontsize=8, transform=ax.transAxes, ha='center', va='top')
+        ax.text(0.5, -0.1, f"#{i+1} {team} \n{round(top_25.loc[i, 'most_deserving_wins'], 3)}", fontsize=8, transform=ax.transAxes, ha='center', va='top')
         ax.axis('off')
     plt.savefig(os.path.join(folder_path, "most_deserving"), bbox_inches='tight', dpi=300)
     print("Most Deserving Done!")
@@ -3108,7 +3108,7 @@ try:
     fig.patch.set_facecolor('#CECEB2')
     plt.suptitle(f"Week {current_week} GO5 PEAR", fontsize=20, fontweight='bold', color='black')
     fig.text(0.5, 0.92, "GO5 Power Rating", fontsize=12, ha='center', color='black')
-    fig.text(0.9, 0.07, "@PEARatings", fontsize=12, ha='right', color='black', fontweight='bold')
+    fig.text(0.5, 0.89, "@PEARatings", fontsize=12, ha='center', color='black', fontweight='bold')
 
     for i, ax in enumerate(axs.ravel()):
         team = top_25.loc[i, 'team']
