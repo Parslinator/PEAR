@@ -103,7 +103,6 @@ else:
 
 current_year = int(current_year)
 current_week = int(current_week)
-current_week = 2
 print(f"Current Week: {current_week}, Current Year: {current_year}")
 print("Double Check The Current Week To Make Sure It Is Correct")
 
@@ -617,7 +616,7 @@ team_data['adj_defense_ppo'] = (
 
 # For military schools and new FBS schools, use recruiting points instead of team talent
 # New FBS Schools - you get on here for 3 years
-target_teams = ['Air Force', 'Army', 'Navy', 'Kennesaw State', 'Jacksonville State', 'Sam Houston']
+target_teams = ['Air Force', 'Army', 'Navy', 'Kennesaw State', 'Jacksonville State', 'Sam Houston', 'Delaware', 'Missouri State']
 mask = team_data['team'].isin(target_teams)
 team_data.loc[mask, 'avg_talent'] = team_data.loc[mask, 'team'].map(
     recruiting_per_team.set_index('team')['avg_points']
@@ -680,7 +679,10 @@ z_metrics = metrics.apply(lambda col: zscore(col, nan_policy='omit')).fillna(0)
 # Target: FPI rankings (lower rank = better team)
 fpi_ranks = rankdata(-team_data['fpi'].values, method='ordinal')  # negative because higher FPI is better
 
-fixed_scale = 14
+if current_week <= 3:
+    fixed_scale = 18
+else:
+    fixed_scale = 14
 lambda_reg = 0.01  # Try 0.05, 0.1, 0.2 etc.
 
 def objective(weights):
@@ -1056,8 +1058,11 @@ def calc_deserving(team):
     else:
         mov_adj = f(team_games['margin_of_victory'])
 
-    home_probs = PEAR_Win_Prob_vectorized(num_12_pr, team_games['away_pr']) + mov_adj
-    away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_pr'], num_12_pr) - mov_adj
+    team_games['home_input'] = np.where(~team_games['neutral'], team_games['home_pr'] + 2, team_games['home_pr'])
+    team_games['home_12_pr'] = np.where(~team_games['neutral'], num_12_pr + 2, num_12_pr)
+    team_games['away_12_pr'] = num_12_pr
+    home_probs = PEAR_Win_Prob_vectorized(team_games['home_12_pr'], team_games['away_pr']) + mov_adj
+    away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_input'], team_games['away_12_pr']) - mov_adj
     team_games['adj_win_prob'] = np.where(team_games['home_team'] == team, home_probs, away_probs)
 
     xWins = round(team_games['adj_win_prob'].sum() / 100, 3)
@@ -1107,7 +1112,8 @@ logos_info_dict = [dict(
     team = l.school,
     color = l.color,
     alt_color = l.alternate_color,
-    logo = l.logos
+    logo = l.logos,
+    classification = l.classification
 ) for l in logos_info_list]
 logos = pd.DataFrame(logos_info_dict)
 logos = logos.dropna(subset=['logo', 'color'])
@@ -3086,19 +3092,34 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
 
 try:
     top_25 = all_data.head(25).reset_index(drop=True)
+    comparison = top_25.merge(
+        last_week_data[['team', 'power_rating']].rename(columns={'power_rating': 'last_week_pr'}),
+        on='team',
+        how='left'
+    )
+    comparison['pr_diff'] = comparison['power_rating'] - comparison['last_week_pr']
     fig, axs = plt.subplots(5, 5, figsize=(7, 7), dpi=125)
     fig.subplots_adjust(hspace=0.5, wspace=0.5)
     fig.patch.set_facecolor('#CECEB2')
     plt.suptitle(f"Week {current_week} PEAR Top 25", fontsize=20, fontweight='bold', color='black')
-    fig.text(0.5, 0.92, "Power Rating", fontsize=12, ha='center', color='black')
+    fig.text(0.5, 0.92, "Power Rating (Δ from last week)", fontsize=12, ha='center', color='black')
     fig.text(0.5, 0.89, "@PEARatings", fontsize=12, ha='center', color='black', fontweight='bold')
-
     for i, ax in enumerate(axs.ravel()):
-        team = top_25.loc[i, 'team']
+        team = comparison.loc[i, 'team']
         img = team_logos[team]
+        pr = round(comparison.loc[i, 'power_rating'], 1)
+        diff = comparison.loc[i, 'pr_diff']
+        diff_str = f"{diff:+.1f}" if not pd.isna(diff) else "N/A"
         ax.imshow(img)
         ax.set_facecolor('#f0f0f0')
-        ax.text(0.5, -0.1, f"#{i+1} {team} \n{round(top_25.loc[i, 'power_rating'], 1)}", fontsize=8, transform=ax.transAxes, ha='center', va='top')
+        ax.text(
+            0.5, -0.1,
+            f"#{i+1} {team}\n{pr} ({diff_str})",
+            fontsize=8,
+            transform=ax.transAxes,
+            ha='center',
+            va='top'
+        )
         ax.axis('off')
     plt.savefig(os.path.join(folder_path, "top25"), bbox_inches='tight', dpi=300)
     print("Top 25 Done!")
@@ -4127,7 +4148,7 @@ week_games['home_elo'] = week_games.apply(
 # Update `away_elo` where it is NaN or None
 week_games['away_elo'] = week_games.apply(
     lambda row: elo_ratings.loc[elo_ratings['team'] == row['away_team'], 'elo'].values[0]
-    if pd.isna(row['away_elo']) else row['away_elo'], axis=1
+    if not elo_ratings.loc[elo_ratings['team'] == row['away_team'], 'elo'].empty else None, axis=1
 )
 
 def calculate_game_quality(df, pr_min, pr_max, spread_cap=20, beta=8.5):
@@ -4150,6 +4171,8 @@ def calculate_game_quality(df, pr_min, pr_max, spread_cap=20, beta=8.5):
     gq = gq.clip(upper=10)
     return gq.round(1)
 
+missing_rating = round(team_data['power_rating'].mean() - 2*team_data['power_rating'].std(),1)
+team_data.fillna(missing_rating, inplace=True)
 def round_to_nearest_half(x):
     return np.round(x * 2) / 2
 week_games = week_games.merge(
@@ -4249,7 +4272,7 @@ week_games['spreadOpen'] = week_games['spreadOpen'] * -1
 #     week_games.loc[week_games['home_team'] == 'Western Kentucky', 'pr_spread'] += 0.5
 
 # Capping predictions that are more than 15 points away from the Vegas Spread
-threshold = 10
+threshold = 25
 capped_preds = np.clip(week_games['pr_spread'], week_games['spread'] - threshold, week_games['spread'] + threshold)
 week_games['pr_spread'] = capped_preds
 
@@ -4357,7 +4380,7 @@ if len(completed) > 0:
 game_completion_info.to_excel(f'./PEAR/PEAR Football/y{current_year}/Spreads/spreads_tracker_week{current_week}.xlsx')
 
 logo_cache = {}
-
+logos = logos[logos['classification'] == 'fbs'].reset_index(drop=True)
 for _, row in logos.iterrows():
     team_name = row['team']
     logo_url = row['logo'][0]  # Assuming logo is a list with URL at index 0
@@ -4375,8 +4398,24 @@ def PEAR_Win_Prob(home_power_rating, away_power_rating):
 visual = week_games[['week', 'start_date', 'home_team', 'away_team', 'home_pr', 'away_pr', 'PEAR', 'GQI']].dropna()
 visual['start_date'] = pd.to_datetime(visual['start_date'], utc=True)
 visual['start_date'] = visual['start_date'].dt.tz_convert('US/Central')
+time_thresholds = [
+    datetime.time(14,30),  # morning -> afternoon
+    datetime.time(18,0),   # afternoon -> evening
+    datetime.time(20,0)    # evening -> night
+]
+def get_time_class(t):
+    if t < time_thresholds[0]:
+        return 0  # Morning
+    elif t < time_thresholds[1]:
+        return 1  # Afternoon
+    elif t < time_thresholds[2]:
+        return 2  # Evening
+    else:
+        return 3  # Night
+visual['start_time'] = visual['start_date'].dt.tz_convert('US/Central').dt.time
+visual['time_class'] = visual['start_time'].apply(get_time_class)
 visual['start_date'] = visual['start_date'].dt.date
-visual = visual.sort_values(['start_date', 'GQI'], ascending=[True, False]).reset_index(drop=True)
+visual = visual.sort_values(['start_date', 'time_class', 'GQI'], ascending=[True, True, False]).reset_index(drop=True)
 
 visual['PEAR_win_prob'] = round(100*(visual.apply(
     lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
@@ -4385,6 +4424,8 @@ visual['PEAR_win_prob'] = round(100*(visual.apply(
 save_dir = f"PEAR/PEAR Football/y{current_year}/Visuals/Schedule"
 os.makedirs(save_dir, exist_ok=True)  # create the folder if it doesn't exist
 
+from matplotlib.lines import Line2D
+
 def ordinal(n: int) -> str:
     if 11 <= n % 100 <= 13:
         suffix = "th"
@@ -4392,31 +4433,81 @@ def ordinal(n: int) -> str:
         suffix = {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
     return f"{n}{suffix}"
 
-for date, group in visual.groupby('start_date'):
-    n_games = len(group)
-    
-    # Grid size: up to 6 columns, enough rows to fit all games
-    max_cols = 4 if n_games <= 16 else 6
-    
-    n_cols = min(max_cols, n_games)
-    n_rows = math.ceil(n_games / n_cols)
+for date, group in visual.groupby(visual['start_date']):
+    if len(group) <= 4:
+        max_cols = 2
+    elif len(group) <= 9:
+        max_cols = 3
+    elif len(group) <= 16:
+        max_cols = 4
+    elif len(group) <= 25:
+        max_cols = 5
+    else:
+        max_cols = 6
+    group = group.sort_values('start_time').reset_index(drop=True)
+    group['time_class'] = group['start_time'].apply(get_time_class)
+    group = group.sort_values(['time_class', 'GQI'], ascending=[True, False]).reset_index(drop=True)
 
-    fig, axes = plt.subplots(
-        n_rows, n_cols,
-        figsize=(n_cols*4.6, n_rows*3.6),
-        dpi=250
-    )
+    # First pass: compute rows needed
+    rows_needed = 0
+    current_class = None
+    col = 0
+    for _, row in group.iterrows():
+        if row['time_class'] != current_class:
+            rows_needed += 1
+            col = 0
+            current_class = row['time_class']
+        elif col == max_cols:
+            rows_needed += 1
+            col = 0
+        col += 1
+
+    fig, axes = plt.subplots(rows_needed, max_cols, figsize=(max_cols*4.6, rows_needed*3.6), dpi=250)
     fig.patch.set_facecolor("#CECEB2")
-    axes = axes.flatten() if n_games > 1 else [axes]
+    axes = axes.flatten()
 
-    for i, (idx, row) in enumerate(group.iterrows()):
-        ax = axes[i]
+    # Keep track of row breaks caused by time_class changes
+    time_class_row_breaks = []
+
+    # Plotting with i,j logic
+    i = 0  # current row
+    j = 0  # current column
+    current_class = None
+    row_start_idx = 0  # index of first axis in the current row
+
+    for idx, row in group.iterrows():
+        if row['time_class'] != current_class:
+            # Only mark breaks when time_class changes
+            if current_class is not None:
+                # Save previous row for horizontal line
+                time_class_row_breaks.append((row_start_idx, row_start_idx + j - 1))
+                # Hide remaining unused axes in previous row
+                for k in range(row_start_idx + j, row_start_idx + max_cols):
+                    if k < len(axes):
+                        fig.delaxes(axes[k])
+
+            # Start new row
+            i += 1 if current_class is not None else 0
+            j = 0
+            row_start_idx = i * max_cols
+            current_class = row['time_class']
+
+        elif j == max_cols:
+            # Row wrap due to max_cols: just start new row without adding a time_class break
+            i += 1
+            j = 0
+            row_start_idx = i * max_cols
+
+        ax_idx = i * max_cols + j
+        ax = axes[ax_idx]
+        j += 1
+
+        # Plot content
         ax.set_facecolor("#CECEB2")
         for spine in ax.spines.values():
             spine.set_visible(False)
-        
-        # Example plot: spread bar (replace with your actual visual)
-        ax.barh([0], [row['PEAR']], color="skyblue")
+
+        ax.barh([0], [row['PEAR']], color="skyblue", alpha=0)
 
         img = logo_cache[row['away_team']]
         imagebox = OffsetImage(img, zoom=0.2)
@@ -4428,27 +4519,50 @@ for date, group in visual.groupby('start_date'):
         ab = AnnotationBbox(imagebox, (-0.03, 0.3), frameon=False)
         ax.add_artist(ab)
 
-        ax.text(0, -0.4, f'{row["PEAR"]}', ha='center', va='center', fontsize=28, fontweight='bold')
+        fontsize_PE = 24 if 'Washington State' in row['PEAR'] else 28
+        ax.text(0, -0.4, f'{row["PEAR"]}', ha='center', va='center', fontsize=fontsize_PE, fontweight='bold')
         ax.text(-0.03, -0.1, f'{row["PEAR_win_prob"]}%', ha='center', va='center', fontsize=24)
         ax.text(0.03, -0.1, f'{round(100-row["PEAR_win_prob"],1)}%', ha='center', va='center', fontsize=24)
         ax.text(0, -0.25, f'GQI: {row["GQI"]}', ha='center', va='center', fontsize=24)
 
-        # ax.set_title(f"{row['away_team']} @ {row['home_team']}")
         ax.set_yticks([])
         ax.set_xticks([])
-        # ax.set_xlabel("Spread")
 
-    # Hide unused axes if grid > n_games
-    for j in range(n_games, len(axes)):
-        fig.delaxes(axes[j])
-    
+    # Hide unused axes in the last row
+    for k in range(row_start_idx + j, len(axes)):
+        fig.delaxes(axes[k])
+
+    # Finalize layout first
+    if max_cols == 2:
+        if rows_needed == 1:
+            height = 0.75
+        elif rows_needed == 2:
+            height = 0.85
+        else:
+            height = 0.9
+    elif max_cols == 3:
+        height = 0.9
+    else:
+        height = 0.95
+    plt.tight_layout(rect=[0, 0, 1, height])  # leave top 10% for suptitle
+
+    # Draw horizontal lines only for time_class changes
+    for start_idx, end_idx in time_class_row_breaks:
+        row_axes_positions = [axes[k].get_position().y0 for k in range(start_idx, end_idx + 1)]
+        if row_axes_positions:
+            if max_cols > 3:
+                y_bottom = min(row_axes_positions) - 0.01  # slightly below the row
+            else:
+                y_bottom = min(row_axes_positions) - 0.02  # slightly below the row
+            line = Line2D([0, 1], [y_bottom, y_bottom], transform=fig.transFigure, color='black', linewidth=2, linestyle='--')
+            fig.add_artist(line)
+
     day_str = ordinal(date.day)
     date_str = date.strftime(f"%A, %B {day_str}")
     fig.suptitle(f"{date_str} Games\n@PEARatings", fontsize=32, fontweight='bold')
-    plt.tight_layout()
     filename = f"schedule_{date.strftime('%m_%d_%Y')}.png"
     fig_path = os.path.join(save_dir, filename)
-    fig.savefig(fig_path, facecolor=fig.get_facecolor())  # ensures bg color is saved
-    plt.close(fig)  # close to free memory
+    fig.savefig(fig_path, facecolor=fig.get_facecolor())
+    plt.close(fig)
 
 print("---------- Spreads Done! ----------")
