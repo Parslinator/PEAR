@@ -1866,14 +1866,14 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     away_dce = safe_int_rank(all_data, away_team, 'DCE_rank')
     away_dde = safe_int_rank(all_data, away_team, 'DDE_rank')
 
-    home_power_rating = round(team_data[team_data['team'] == home_team]['power_rating'].values[0], 2)
-    home_talent_scaled = round(all_data[all_data['team'] == home_team]['talent_scaled_percentile'].values[0], 2)
-    home_offense_success = round(all_data[all_data['team'] == home_team]['offense_success_scaled'].values[0], 2)
-    home_defense_success = round(all_data[all_data['team'] == home_team]['defense_success_scaled'].values[0], 2)
-    home_offense_explosive = round(all_data[all_data['team'] == home_team]['offense_explosive'].values[0], 2)
-    home_defense_explosive = round(all_data[all_data['team'] == home_team]['defense_explosive'].values[0], 2)
-    home_turnovers = round(all_data[all_data['team'] == home_team]['total_turnovers_scaled'].values[0], 2)
-    home_penalties = round(all_data[all_data['team'] == home_team]['penalties_scaled'].values[0], 2)
+    home_power_rating = round(team_data[team_data['team'] == home_team]['power_rating'].values[0], 1)
+    home_talent_scaled = round(all_data[all_data['team'] == home_team]['talent_scaled_percentile'].values[0], 1)
+    home_offense_success = round(all_data[all_data['team'] == home_team]['offense_success_scaled'].values[0], 1)
+    home_defense_success = round(all_data[all_data['team'] == home_team]['defense_success_scaled'].values[0], 1)
+    home_offense_explosive = round(all_data[all_data['team'] == home_team]['offense_explosive'].values[0], 1)
+    home_defense_explosive = round(all_data[all_data['team'] == home_team]['defense_explosive'].values[0], 1)
+    home_turnovers = round(all_data[all_data['team'] == home_team]['total_turnovers_scaled'].values[0], 1)
+    home_penalties = round(all_data[all_data['team'] == home_team]['penalties_scaled'].values[0], 1)
     home_offensive = all_data[all_data['team'] == home_team]['offensive_rank'].values[0]
     home_defensive = all_data[all_data['team'] == home_team]['defensive_rank'].values[0]
     home_talent_rank = int(all_data[all_data['team'] == home_team]['talent_scaled_rank'].values[0])
@@ -1884,14 +1884,14 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     home_turnover_rank = int(all_data[all_data['team'] == home_team]['total_turnovers_rank'].values[0])
     home_penalties_rank = int(all_data[all_data['team'] == home_team]['penalties_rank'].values[0])
 
-    away_power_rating = round(team_data[team_data['team'] == away_team]['power_rating'].values[0], 2)
-    away_talent_scaled = round(all_data[all_data['team'] == away_team]['talent_scaled_percentile'].values[0], 2)
-    away_offense_success = round(all_data[all_data['team'] == away_team]['offense_success_scaled'].values[0], 2)
-    away_defense_success = round(all_data[all_data['team'] == away_team]['defense_success_scaled'].values[0], 2)
-    away_offense_explosive = round(all_data[all_data['team'] == away_team]['offense_explosive'].values[0], 2)
-    away_defense_explosive = round(all_data[all_data['team'] == away_team]['defense_explosive'].values[0], 2)
-    away_turnovers = round(all_data[all_data['team'] == away_team]['total_turnovers_scaled'].values[0], 2)
-    away_penalties = round(all_data[all_data['team'] == away_team]['penalties_scaled'].values[0], 2)
+    away_power_rating = round(team_data[team_data['team'] == away_team]['power_rating'].values[0], 1)
+    away_talent_scaled = round(all_data[all_data['team'] == away_team]['talent_scaled_percentile'].values[0], 1)
+    away_offense_success = round(all_data[all_data['team'] == away_team]['offense_success_scaled'].values[0], 1)
+    away_defense_success = round(all_data[all_data['team'] == away_team]['defense_success_scaled'].values[0], 1)
+    away_offense_explosive = round(all_data[all_data['team'] == away_team]['offense_explosive'].values[0], 1)
+    away_defense_explosive = round(all_data[all_data['team'] == away_team]['defense_explosive'].values[0], 1)
+    away_turnovers = round(all_data[all_data['team'] == away_team]['total_turnovers_scaled'].values[0], 1)
+    away_penalties = round(all_data[all_data['team'] == away_team]['penalties_scaled'].values[0], 1)
     away_offensive = all_data[all_data['team'] == away_team]['offensive_rank'].values[0]
     away_defensive = all_data[all_data['team'] == away_team]['defensive_rank'].values[0]
     away_talent_rank = int(all_data[all_data['team'] == away_team]['talent_scaled_rank'].values[0])
@@ -2085,6 +2085,7 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     plt.text(-0.075, 0.39, f"SOS: #{home_sos}", fontsize=25, verticalalignment='top', ha='left', transform=ax.transAxes, fontweight='bold', color=get_rank_color(home_sos))
     plt.text(0.15, 0.39, f"SOR: #{home_sor}", fontsize=25, verticalalignment='top', ha='left', transform=ax.transAxes, fontweight='bold', color=get_rank_color(home_sor))
 
+    plt.text(0.45, 0.74, f"WP: {game_win_prob:.1f}%", fontsize = 25, va='top', ha='left', transform=ax.transAxes, fontweight='bold')
     plt.text(0.45, 0.69, f"MD: #{home_md}", fontsize = 25, va='top', ha='left', transform=ax.transAxes, fontweight='bold', color=get_rank_color(home_md))
     plt.text(0.45, 0.64, f"OFF: #{home_offensive}", fontsize = 25, va='top', ha='left', transform=ax.transAxes, fontweight='bold', color=get_rank_color(home_offensive))
     plt.text(0.45, 0.59, f"DEF: #{home_defensive}", fontsize = 25, va='top', ha='left', transform=ax.transAxes, fontweight='bold', color=get_rank_color(home_defensive))
@@ -2110,6 +2111,7 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     plt.text(1.16, 0.39, f"SOS: #{away_sos}", fontsize=25, verticalalignment='top', ha='right', transform=ax.transAxes, fontweight='bold', color=get_rank_color(away_sos))
     plt.text(1.38, 0.39, f"SOR: #{away_sor}", fontsize=25, verticalalignment='top', ha='right', transform=ax.transAxes, fontweight='bold', color=get_rank_color(away_sor))
 
+    plt.text(0.85, 0.74, f"WP: {round(100-game_win_prob,1)}%", fontsize = 25, va='top', ha='right', transform=ax.transAxes, fontweight='bold')
     plt.text(0.85, 0.69, f"MD: #{away_md}", fontsize = 25, va='top', ha='right', transform=ax.transAxes, fontweight='bold', color=get_rank_color(away_md))
     plt.text(0.85, 0.64, f"OFF: #{away_offensive}", fontsize = 25, va='top', ha='right', transform=ax.transAxes, fontweight='bold', color=get_rank_color(away_offensive))
     plt.text(0.85, 0.59, f"DEF: #{away_defensive}", fontsize = 25, va='top', ha='right', transform=ax.transAxes, fontweight='bold', color=get_rank_color(away_defensive))
@@ -2122,7 +2124,7 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     plt.text(0.65, 0.895, f"@PEARatings", fontsize=25, va='top', ha='center', transform=ax.transAxes)
     plt.text(0.65, 0.85, f"{home_team} vs. {away_team}", fontsize = 35, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
     plt.text(0.65, 0.79, f"{formatted_spread}", fontsize = 25, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
-    plt.text(0.65, 0.74, f"Win Prob: {game_win_prob}%", fontsize = 25, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
+    # plt.text(0.65, 0.74, f"Win Prob: {game_win_prob}%", fontsize = 25, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
     plt.text(0.65, 0.35, "Team Stats are Percentile Based", fontsize = 16, va='top', ha='center', transform=ax.transAxes, fontweight='bold')
 
     plt.tight_layout()
