@@ -35,7 +35,7 @@ warnings.filterwarnings("ignore")
 
 central = pytz.timezone("US/Central")
 now_ct = datetime.now(central)
-start_dt = central.localize(datetime(2025, 9, 2, 12, 0, 0))
+start_dt = central.localize(datetime(2025, 9, 2, 9, 0, 0))
 
 if now_ct < start_dt:
     current_week = 1
@@ -416,6 +416,23 @@ else:
         st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
     st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
     # , MD - Most Deserving Rankings
+
+st.divider()
+
+col1, col2 = st.columns(2)
+with col1:
+    folder_path = f'./PEAR/PEAR Football/y2025/Visuals/week_{current_week}/Games'
+
+    # Get list of .png files
+    file_list = [f for f in os.listdir(folder_path) if f.endswith('.png')]
+
+    # Dropdown
+    selected_file = st.selectbox("Select a game image:", file_list)
+
+    # Display selected image
+    if selected_file:
+        file_path = os.path.join(folder_path, selected_file)
+        st.image(file_path, caption=selected_file, use_column_width=True)
 
 st.divider()
 
