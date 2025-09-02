@@ -420,16 +420,21 @@ else:
 st.divider()
 
 col1, col2 = st.columns(2)
+
+# --- Column 1: Game Images ---
 with col1:
     folder_path = f'./PEAR/PEAR Football/y2025/Visuals/week_{current_week}/Games'
+    file_list = sorted([f for f in os.listdir(folder_path) if f.endswith('.png')])
+    selected_file = st.selectbox("Select a game image:", file_list, key="game_image")
+    if selected_file:
+        file_path = os.path.join(folder_path, selected_file)
+        st.image(file_path, caption=selected_file, use_column_width=True)
 
-    # Get list of .png files
-    file_list = [f for f in os.listdir(folder_path) if f.endswith('.png')]
-
-    # Dropdown
-    selected_file = st.selectbox("Select a game image:", file_list)
-
-    # Display selected image
+# --- Column 2: Stat Profiles ---
+with col2:
+    folder_path = f'./PEAR/PEAR Football/y2025/Visuals/week_{current_week}/Stat Profiles'
+    file_list = sorted([f for f in os.listdir(folder_path) if f.endswith('.png')])
+    selected_file = st.selectbox("Select a stat profile:", file_list, key="stat_profile")
     if selected_file:
         file_path = os.path.join(folder_path, selected_file)
         st.image(file_path, caption=selected_file, use_column_width=True)

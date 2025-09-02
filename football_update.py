@@ -1788,10 +1788,10 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     away_completed_games = completed_games[(completed_games['home_team'] == away_team) | (completed_games['away_team'] == away_team)]
     home_completed_games['team_win_prob'] = np.where(home_completed_games['home_team'] == home_team, 
                                     home_completed_games['PEAR_win_prob'], 
-                                    100 - home_completed_games['PEAR_win_prob'])
+                                    1 - home_completed_games['PEAR_win_prob'])
     away_completed_games['team_win_prob'] = np.where(away_completed_games['home_team'] == away_team, 
                                     away_completed_games['PEAR_win_prob'], 
-                                    100 - away_completed_games['PEAR_win_prob'])
+                                    1 - away_completed_games['PEAR_win_prob'])
     home_completed_games['avg_win_prob'] = np.where(home_completed_games['home_team'] == home_team, 
                                     PEAR_Win_Prob(average_pr, home_completed_games['away_pr']), 
                                     100 - PEAR_Win_Prob(home_completed_games['home_pr'], average_pr))
@@ -1802,8 +1802,8 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     home_avg_xlosses = round(len(home_completed_games) - home_avg_xwins, 1)
     away_avg_xwins = round(sum(away_completed_games['avg_win_prob']) / 100, 1)
     away_avg_xlosses = round(len(away_completed_games) - away_avg_xwins, 1)
-    home_completed_xwins = round(sum(home_completed_games['team_win_prob']) / 100, 1)
-    away_completed_xwins = round(sum(away_completed_games['team_win_prob']) / 100, 1)
+    home_completed_xwins = round(sum(home_completed_games['team_win_prob']), 1)
+    away_completed_xwins = round(sum(away_completed_games['team_win_prob']), 1)
     home_completed_xlosses = round(len(home_completed_games) - home_completed_xwins, 1)
     away_completed_xlosses = round(len(away_completed_games) - away_completed_xwins, 1)
     home_games_played = home_wins + home_losses
@@ -2937,10 +2937,10 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     team_completed_games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
     team_completed_games['team_win_prob'] = np.where(team_completed_games['home_team'] == team, 
                                     team_completed_games['PEAR_win_prob'], 
-                                    100 - team_completed_games['PEAR_win_prob'])
+                                    1 - team_completed_games['PEAR_win_prob'])
     games_played = records[records['team'] == team]['games_played'].values[0]
     difference = games_played - len(team_completed_games)
-    expected_wins = round((team_completed_games['team_win_prob'] / 100).sum(),1)
+    expected_wins = round((team_completed_games['team_win_prob']).sum(),1)
     expected_wins = round(expected_wins + (difference * 0.95),1)
     expected_losses = round(games_played - expected_wins,1)
 
