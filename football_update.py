@@ -1707,8 +1707,8 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
         Returns:
             str: Hex color code corresponding to the input number.
         """
-        if not 1 <= number <= 134:
-            raise ValueError("Number must be between 1 and 134")
+        if not 1 <= number <= 136:
+            raise ValueError("Number must be between 1 and 136")
         
         # Define the color gradient points
         gradient = [
@@ -1716,7 +1716,7 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
             (35, '#2C5E00'),   # Midpoint green
             (67, '#808080'),   # Grey
             (105, '#8B0000'),  # Red in the middle
-            (134, '#660000')   # End dark red
+            (136, '#660000')   # End dark red
         ]
         
         # Convert hex to RGB
@@ -2746,8 +2746,8 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
         Returns:
             str: Hex color code corresponding to the input number.
         """
-        if not 1 <= number <= 134:
-            raise ValueError("Number must be between 1 and 134")
+        if not 1 <= number <= 136:
+            raise ValueError("Number must be between 1 and 136")
         
         # Define the color gradient points
         gradient = [
@@ -2755,7 +2755,7 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
             (35, '#2C5E00'),   # Midpoint green
             (67, '#808080'),   # Grey
             (105, '#8B0000'),  # Red in the middle
-            (134, '#660000')   # End dark red
+            (136, '#660000')   # End dark red
         ]
         
         # Convert hex to RGB
@@ -2839,7 +2839,7 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
 
     offensive_total = round(all_data[all_data['team'] == team]['offensive_total_scaled'].values[0])
     defensive_total = round(all_data[all_data['team'] == team]['defensive_total_scaled'].values[0])
-    stm = round(all_data[all_data['team'] == team]['stm_scaled'].values[0])
+    stm = round(all_data.loc[all_data['team'] == team, 'stm_scaled'].fillna(0).values[0])
     offense_success = round(all_data[all_data['team'] == team]['offense_success_scaled'].values[0])
     offense_explosive = round(all_data[all_data['team'] == team]['offense_explosive'].values[0])
     defense_success = round(all_data[all_data['team'] == team]['defense_success_scaled'].values[0])
@@ -2878,7 +2878,13 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
     ax.set_yticks([25, 50, 75, 102])
     ax.set_yticklabels(['25', '50', '75', '100'], color="white")
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(categories, fontsize=10)
+    ax.set_xticklabels(categories, fontsize=10, fontweight='bold')
+    grid_color = "black"
+    ax.yaxis.grid(True, color=grid_color, linewidth=1, alpha=0.4)
+    ax.xaxis.grid(True, color=grid_color, linewidth=1, alpha=0.4)
+    ax.spines['polar'].set_color(grid_color)
+    ax.spines['polar'].set_alpha(0.4)
+    ax.spines['polar'].set_linewidth(1)
 
     plt.text(
         0.5, 1.1, team,
@@ -4043,6 +4049,49 @@ try:
     print("Conference Projections Done!")
 except Exception as e:
     print(f"Error occurred while drawing Conference Projections: {e}")
+
+start_week = 1
+end_week = 16
+games_list = []
+for week in range(start_week,end_week):
+    response = games_api.get_games(year=current_year, week=week,classification = 'fbs')
+    games_list = [*games_list, *response]
+if postseason:
+    response = games_api.get_games(year=current_year, division = 'fbs', season_type='postseason')
+    games_list = [*games_list, *response]
+games = [dict(
+            id=g.id,
+            season=g.season,
+            week=g.week,
+            start_date=g.start_date,
+            home_team=g.home_team,
+            home_elo=g.home_pregame_elo,
+            away_team=g.away_team,
+            away_elo=g.away_pregame_elo,
+            home_points = g.home_points,
+            away_points = g.away_points,
+            neutral = g.neutral_site
+            ) for g in games_list if g.home_pregame_elo is not None and g.away_pregame_elo is not None]
+games.sort(key=date_sort)
+year_long_schedule = pd.DataFrame(games)
+year_long_schedule = year_long_schedule.merge(team_data[['team', 'power_rating']], 
+                                    left_on='home_team', 
+                                    right_on='team', 
+                                    how='left').rename(columns={'power_rating': 'home_pr'})
+year_long_schedule = year_long_schedule.drop(columns=['team'])
+year_long_schedule = year_long_schedule.merge(team_data[['team', 'power_rating']], 
+                                    left_on='away_team', 
+                                    right_on='team', 
+                                    how='left').rename(columns={'power_rating': 'away_pr'})
+year_long_schedule = year_long_schedule.drop(columns=['team'])
+fallback_value = team_data['power_rating'].mean() - 2 * team_data['power_rating'].std()
+year_long_schedule['home_pr'] = year_long_schedule['home_pr'].fillna(fallback_value)
+year_long_schedule['away_pr'] = year_long_schedule['away_pr'].fillna(fallback_value)
+
+year_long_schedule['PEAR_win_prob'] = year_long_schedule.apply(
+    lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
+)
+year_long_schedule['home_win_prob'] = round((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) / ((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) + 1)*100,2)
 
 try:
     i = 1
