@@ -390,23 +390,32 @@ st.logo("./PEAR/pear_logo.jpg", size = 'large')
 st.divider()
 
 st.markdown(f'<h2 id="fbs-power-ratings">FBS Power Ratings</h2>', unsafe_allow_html=True)
-# all_data['OFF'] = all_data['Offense']
-# all_data['DEF'] = all_data['Defense']
-# all_data['MD'] = all_data['most_deserving']
-all_data['Rating'] = all_data['power_rating']
-all_data['Team'] = all_data['team']
-# all_data['CONF'] = all_data['conference']
-# all_data['ST'] = all_data['STM_rank']
-# all_data['PBR'] = all_data['PBR_rank']
-# all_data['DCE'] = all_data['DCE_rank']
-# all_data['DDE'] = all_data['DDE_rank']
+if current_week == 1:
+    all_data['Rating'] = all_data['power_rating']
+    all_data['Team'] = all_data['team']
+    all_data.index = all_data.index + 1
+    with st.container(border=True, height=440):
+        st.dataframe(all_data[['Team', 'Rating', 'SOS', 'win_total']], use_container_width=True)
+        # st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
+    st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
+    # , MD - Most Deserving Rankings
+else:
+    all_data['OFF'] = all_data['Offense']
+    all_data['DEF'] = all_data['Defense']
+    all_data['MD'] = all_data['most_deserving']
+    all_data['Rating'] = all_data['power_rating']
+    all_data['Team'] = all_data['team']
+    all_data['CONF'] = all_data['conference']
+    all_data['ST'] = all_data['STM_rank']
+    all_data['PBR'] = all_data['PBR_rank']
+    all_data['DCE'] = all_data['DCE_rank']
+    all_data['DDE'] = all_data['DDE_rank']
 
-all_data.index = all_data.index + 1
-with st.container(border=True, height=440):
-    st.dataframe(all_data[['Team', 'Rating', 'SOS', 'win_total']], use_container_width=True)
-    # st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
-st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
-# , MD - Most Deserving Rankings
+    all_data.index = all_data.index + 1
+    with st.container(border=True, height=440):
+        st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
+    st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
+    # , MD - Most Deserving Rankings
 
 st.divider()
 
