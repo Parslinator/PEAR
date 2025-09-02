@@ -428,7 +428,7 @@ with col1:
     selected_file = st.selectbox("Select a game image:", file_list, key="game_image")
     if selected_file:
         file_path = os.path.join(folder_path, selected_file)
-        st.image(file_path, caption=selected_file, use_column_width=True)
+        st.image(file_path, caption=selected_file, use_container_width=True)
 
 # --- Column 2: Stat Profiles ---
 with col2:
@@ -437,7 +437,7 @@ with col2:
     selected_file = st.selectbox("Select a stat profile:", file_list, key="stat_profile")
     if selected_file:
         file_path = os.path.join(folder_path, selected_file)
-        st.image(file_path, caption=selected_file, use_column_width=True)
+        st.image(file_path, caption=selected_file, use_container_width=True)
 
 st.divider()
 
