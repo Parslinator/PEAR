@@ -448,7 +448,7 @@ spreads.index = spreads.index+1
 with col1:
     st.markdown(f'<h2 id="fbs-power-ratings">Week {current_week} Spreads</h2>', unsafe_allow_html=True)
     with st.container(border=True, height=440):
-        st.dataframe(spreads[['home_team', 'away_team', 'GQI', 'PEAR', 'Vegas', 'difference', 'PEAR_raw']], use_container_width=True)
+        st.dataframe(spreads[['home_team', 'away_team', 'GQI', 'PEAR', 'Vegas', 'difference', 'PEAR_raw']].dropna(), use_container_width=True)
 
 with col2:
     st.sidebar.markdown(f"[Calculate {current_year} Spread](#calculate-spread-between-any-two-teams)", unsafe_allow_html=True)
