@@ -400,8 +400,8 @@ if current_week == 1:
     st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
     # , MD - Most Deserving Rankings
 else:
-    all_data['OFF'] = all_data['Offense']
-    all_data['DEF'] = all_data['Defense']
+    all_data['OFF'] = all_data['offensive_rank']
+    all_data['DEF'] = all_data['defensive_rank']
     all_data['MD'] = all_data['most_deserving']
     all_data['Rating'] = all_data['power_rating']
     all_data['Team'] = all_data['team']
