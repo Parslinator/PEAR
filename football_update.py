@@ -4570,11 +4570,30 @@ for date, group in visual.groupby(visual['start_date']):
         ab = AnnotationBbox(imagebox, (-0.03, 0.3), frameon=False)
         ax.add_artist(ab)
 
-        fontsize_PE = 24 if 'Washington State' in row['PEAR'] else 28
-        ax.text(0, -0.4, f'{row["PEAR"]}', ha='center', va='center', fontsize=fontsize_PE, fontweight='bold')
-        ax.text(-0.03, -0.1, f'{row["PEAR_win_prob"]}%', ha='center', va='center', fontsize=24)
-        ax.text(0.03, -0.1, f'{round(100-row["PEAR_win_prob"],1)}%', ha='center', va='center', fontsize=24)
-        ax.text(0, -0.25, f'GQI: {row["GQI"]}', ha='center', va='center', fontsize=24)
+        if rows_needed < 4:
+            # Your original logic
+            fontsize_PE = 24 if 'Washington State' in row['PEAR'] else 28
+            ax.text(0, -0.1, f'{row["PEAR"]}', ha='center', va='center',
+                    fontsize=fontsize_PE, fontweight='bold')
+
+            ax.text(-0.03, -0.25, f'{row["PEAR_win_prob"]}%', ha='center', va='center',
+                    fontsize=24)
+            ax.text(0.03, -0.25, f'{round(100-row["PEAR_win_prob"],1)}%', ha='center', va='center',
+                    fontsize=24)
+            ax.text(0, -0.4, f'GQI: {row["GQI"]}', ha='center', va='center',
+                    fontsize=24)
+        else:
+            # Larger & bold for everything
+            fontsize_PE = 24 if 'Washington State' in row['PEAR'] else 28
+            ax.text(0, -0.1, f'{row["PEAR"]}', ha='center', va='center',
+                    fontsize=fontsize_PE, fontweight='bold')
+
+            ax.text(-0.03, -0.25, f'{row["PEAR_win_prob"]}%', ha='center', va='center',
+                    fontsize=28, fontweight='bold')
+            ax.text(0.03, -0.25, f'{round(100-row["PEAR_win_prob"],1)}%', ha='center', va='center',
+                    fontsize=28, fontweight='bold')
+            ax.text(0, -0.4, f'GQI: {row["GQI"]}', ha='center', va='center',
+                    fontsize=28, fontweight='bold')
 
         ax.set_yticks([])
         ax.set_xticks([])
