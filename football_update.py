@@ -3178,7 +3178,7 @@ except Exception as e:
     print(f"Error in code chunk: GO5 Ratings. Error: {e}")
 
 try:
-    all_data = all_data.sort_values('power_rating', ascending=True).reset_index(drop=True)
+    all_data = all_data.sort_values('power_rating', ascending=False).reset_index(drop=True)
     n_teams = len(all_data)
     n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
     fig_width = n_columns * 2.5
@@ -3210,7 +3210,7 @@ try:
         text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
         box_color = get_color(power_rating)
         text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
-        text_ax.text(1.8, 0.5, f"{power_rating:.2f}", ha='center', va='center',
+        text_ax.text(1.8, 0.5, f"{power_rating:.1f}", ha='center', va='center',
                     fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
 
     if n_teams % 20 != 0:
@@ -3226,6 +3226,131 @@ try:
     print("All Power Ratings Done!")
 except Exception as e:
     print(f"Error in code chunk: All Power Ratings. Error: {e}")
+
+try:
+    from matplotlib.colors import ListedColormap
+    start_week = 1
+    end_week = 16
+    games_list = []
+    for week in range(start_week,end_week):
+        response = games_api.get_games(year=current_year, week=week,classification = 'fbs')
+        games_list = [*games_list, *response]
+    games = [dict(
+                id=g.id,
+                season=g.season,
+                week=g.week,
+                start_date=g.start_date,
+                home_team=g.home_team,
+                home_elo=g.home_pregame_elo,
+                away_team=g.away_team,
+                away_elo=g.away_pregame_elo,
+                home_points = g.home_points,
+                away_points = g.away_points,
+                neutral = g.neutral_site
+                ) for g in games_list if g.home_points is None]
+    games.sort(key=date_sort)
+    uncompleted = pd.DataFrame(games)
+    uncompleted = uncompleted.merge(team_data[['team', 'power_rating']], 
+                                        left_on='home_team', 
+                                        right_on='team', 
+                                        how='left').rename(columns={'power_rating': 'home_pr'})
+    uncompleted = uncompleted.drop(columns=['team'])
+    uncompleted = uncompleted.merge(team_data[['team', 'power_rating']], 
+                                        left_on='away_team', 
+                                        right_on='team', 
+                                        how='left').rename(columns={'power_rating': 'away_pr'})
+    uncompleted = uncompleted.drop(columns=['team'])
+    missing_rating =round(team_data['power_rating'].mean() - 2.25*team_data['power_rating'].std(),2)
+    uncompleted['home_pr'].fillna(missing_rating, inplace=True)
+    uncompleted['away_pr'].fillna(missing_rating, inplace=True)
+    uncompleted['PEAR_win_prob'] = uncompleted.apply(
+        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
+    )
+    uncompleted['home_win_prob'] = round((10**((uncompleted['home_elo'] - uncompleted['away_elo']) / 400)) / ((10**((uncompleted['home_elo'] - uncompleted['away_elo']) / 400)) + 1)*100,2)
+
+    def adjust_home_pr(home_win_prob):
+        if home_win_prob is None or (isinstance(home_win_prob, float) and math.isnan(home_win_prob)):
+            return 0
+        return ((home_win_prob - 50) / 50) * 1
+
+    uncompleted['pr_spread'] = (4.5 + uncompleted['home_pr'] + (uncompleted['home_win_prob'].apply(adjust_home_pr)) - uncompleted['away_pr']).round(1)
+    uncompleted['pr_spread'] = np.where(uncompleted['neutral'], uncompleted['pr_spread'] - 4.5, uncompleted['pr_spread']).round(1)
+    uncompleted['PEAR'] = uncompleted.apply(
+        lambda row: f"{row['away_team']} {-abs(row['pr_spread'])}" if ((row['pr_spread'] <= 0)) 
+        else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1)
+
+    home_wins = uncompleted.groupby('home_team')['PEAR_win_prob'].sum().reset_index()
+    home_wins.columns = ['team', 'home_win_exp']
+    away_wins = uncompleted.groupby('away_team')['PEAR_win_prob'].apply(lambda x: (1 - x).sum()).reset_index()
+    away_wins.columns = ['team', 'away_win_exp']
+    total_wins = pd.merge(home_wins, away_wins, on='team', how='outer').fillna(0)
+    total_wins['win_total'] = round(total_wins['home_win_exp'] + total_wins['away_win_exp'],1)
+    # result = total_wins[['team', 'win_total']].sort_values('win_total', ascending=False).reset_index(drop=True)
+    updated_win_total = pd.merge(total_wins[['team', 'win_total']], records[['team', 'wins']], on='team', how='left')
+    updated_win_total = pd.merge(team_data[['team']], updated_win_total, on='team', how='left')
+    updated_win_total['updated_win_total'] = updated_win_total['win_total'] + updated_win_total['wins']
+    updated_win_total = updated_win_total.sort_values('updated_win_total', ascending=False).reset_index(drop=True)
+
+    n_teams = len(updated_win_total)
+    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
+
+    # Plot configuration
+    fig_width = n_columns * 2.5
+    fig_height = 20 * 0.9
+    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
+    plt.subplots_adjust(hspace=0.3, wspace=0.1)
+
+    fig.patch.set_facecolor('#CECEB2')
+    plt.suptitle(f"PEAR's Updated Win Totals", fontsize=20, y=0.905, x=0.52, fontweight='bold')
+
+    # Define colormap and normalization
+    min_rating = updated_win_total['updated_win_total'].min()
+    max_rating = updated_win_total['updated_win_total'].max()
+    base_cmap = plt.get_cmap('RdYlGn')
+    colors = base_cmap(np.linspace(0, 1, 256))
+    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
+    cmap = ListedColormap(colors)
+
+    def get_color(value):
+        """Return a color based on the normalized win_total."""
+        norm_value = (value - min_rating) / (max_rating - min_rating)
+        return cmap(norm_value)
+
+    # Iterate through the data to plot
+    for idx, team in updated_win_total.iterrows():
+        power_rating = team['updated_win_total']
+        team_name = team['team']
+        
+        row = idx % 20
+        col = idx // 20
+        ax = axes[row, col]
+        ax.axis('off')  # Hide the main axis
+
+        img = team_logos[team_name]
+        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
+
+        text_ax = ax.inset_axes([0, 0, 1, 1])
+        text_ax.axis('off')
+        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
+        box_color = get_color(power_rating)
+        # numbers go: bottom left x, bottom left y, how wide the box is, how tall the box is
+        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
+        text_ax.text(1.8, 0.5, f"{power_rating:.1f}", ha='center', va='center',
+                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
+
+    if n_teams % 20 != 0:
+        for empty_row in range(n_teams % 20, 20):
+            axes[empty_row, n_columns - 1].axis('off')
+
+    pear_img = Image.open('./PEAR/pear_logo.jpg')
+    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
+    logo_ax.imshow(pear_img)
+    logo_ax.axis('off')
+    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
+    file_path = os.path.join(folder_path, "updated_win_totals")
+    plt.savefig(file_path, dpi = 300, bbox_inches='tight')
+except Exception as e:
+    print(f"Error in code chunk: Updated Win Totals. Error: {e}")
 
 try:
     conference_stats = all_data.groupby('conference')['power_rating'].agg(['mean', 'min', 'max']).reset_index()
