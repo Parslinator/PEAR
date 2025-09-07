@@ -717,27 +717,30 @@ print("Best weights:", dict(zip(z_metrics.columns, opt_weights)))
 if current_week < 6:
     preseason = pd.read_csv("./PEAR/PEAR Football/y2025/Ratings/PEAR_week1.csv")
     merged = preseason.merge(
-        team_data[['team', 'power_rating']],
+        team_data[['team', 'power_rating', 'games_played']],
         on='team',
         how='left',
         suffixes=('_pre', '_team')
     )
 
-    if current_week == 2:
-        pre_weight, season_weight = 0.85, 0.15
-    elif current_week == 3:
-        pre_weight, season_weight = 0.65, 0.35
-    elif current_week == 4:
-        pre_weight, season_weight = 0.35, 0.65
-    elif current_week == 5:
-        pre_weight, season_weight = 0.15, 0.85
-    merged['weighted_power'] = np.where(
-        merged['power_rating_team'].notna(),
-        pre_weight * merged['power_rating_pre'] + season_weight * merged['power_rating_team'],
-        merged['power_rating_pre']
-    )
+    # Map games_played -> (pre_weight, season_weight)
+    weight_map = {
+        1: (0.85, 0.15),  # current_week == 2
+        2: (0.65, 0.35),  # current_week == 3
+        3: (0.35, 0.65),  # current_week == 4
+        4: (0.15, 0.85),  # current_week == 5
+    }
 
-    merged['weighted_power'] = merged['weighted_power'].round(1)
+    def get_weighted_power(row):
+        gp = max(row['games_played'] - 0, 0)  # already decremented naturally
+        pre_w, season_w = weight_map.get(gp, (0, 1))  # default: full season rating
+        if pd.notna(row['power_rating_team']):
+            return pre_w * row['power_rating_pre'] + season_w * row['power_rating_team']
+        else:
+            return row['power_rating_pre']
+
+    merged['weighted_power'] = merged.apply(get_weighted_power, axis=1).round(1)
+
     team_data = team_data.rename(columns={'power_rating': 'unweighted_power'})
     team_data = team_data.merge(
         merged[['team', 'weighted_power']],
