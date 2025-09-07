@@ -733,6 +733,12 @@ print("Best weights:", dict(zip(z_metrics.columns, opt_weights)))
 
 if current_week < 6:
     preseason = pd.read_csv("./PEAR/PEAR Football/y2025/Ratings/PEAR_week1.csv")
+    preseason.loc[preseason['team'] == 'UCLA', 'power_rating'] = -8.0
+    preseason.loc[preseason['team'] == 'Oregon State', 'power_rating'] = -10.0
+    preseason.loc[preseason['team'] == 'Coastal Carolina', 'power_rating'] = -15.0
+    preseason.loc[preseason['team'] == 'Arkansas State', 'power_rating'] = -15.0
+    preseason.loc[preseason['team'] == 'Tulsa', 'power_rating'] = -17.0
+    preseason.loc[preseason['team'] == 'Massachusetts', 'power_rating'] = -25.0
     merged = preseason.merge(
         team_data[['team', 'power_rating', 'games_played']],
         on='team',
