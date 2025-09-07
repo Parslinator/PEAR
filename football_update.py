@@ -3206,7 +3206,7 @@ try:
     fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
     plt.subplots_adjust(hspace=0.3, wspace=0.1)
     fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"PEAR's {current_week} Power Ratings", fontsize=20, y=0.905, x=0.52, fontweight='bold')
+    plt.suptitle(f"PEAR's Week {current_week} Power Ratings", fontsize=20, y=0.905, x=0.52, fontweight='bold')
     min_rating = all_data['power_rating'].min()
     max_rating = all_data['power_rating'].max()
     cmap = plt.get_cmap('RdYlGn')  # green = high, red = low
