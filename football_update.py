@@ -29,6 +29,7 @@ import math # type: ignore
 import matplotlib.patches as patches # type: ignore
 from unittest import result
 import datetime
+from datetime import timedelta
 import numpy as np # type: ignore
 from PIL import ImageGrab # type: ignore
 from base64 import b64decode # type: ignore
@@ -81,12 +82,12 @@ current_year = int(calendar.loc[0, 'season'])
 
 first_game_start = calendar['first_game_start'].iloc[0]
 last_game_start = calendar['last_game_start'].iloc[-1]
-current_week = None
+# current_week = None
 if current_time < first_game_start:
-    current_week = 1
+    # current_week = 1
     postseason = False
 elif current_time > last_game_start:
-    current_week = calendar.iloc[-2, -1] + 1
+    # current_week = calendar.iloc[-2, -1] + 1
     postseason = True
 else:
     condition_1 = (calendar['first_game_start'] <= current_time) & (calendar['last_game_start'] >= current_time)
@@ -95,11 +96,27 @@ else:
     # Combine conditions
     result = calendar[condition_1 | condition_2].reset_index(drop=True)
     if result['season_type'][0] == 'regular':
-        current_week = result['week'][0]
+        # current_week = result['week'][0]
         postseason = False
     else:
-        current_week = calendar.iloc[-2, -1] + 1
+        # current_week = calendar.iloc[-2, -1] + 1
         postseason = True
+
+central = pytz.timezone("US/Central")
+now_ct = datetime.datetime.now(central)
+start_dt = central.localize(datetime.datetime(2025, 9, 2, 9, 0, 0))
+
+if now_ct < start_dt:
+    current_week = 1
+else:
+    current_week = 2
+    first_sunday = start_dt + timedelta(days=(6 - start_dt.weekday()))  # weekday: Mon=0, Sun=6
+    first_sunday = first_sunday.replace(hour=12, minute=0, second=0, microsecond=0)
+    if first_sunday <= start_dt:
+        first_sunday += timedelta(weeks=1)
+    if now_ct >= first_sunday:
+        weeks_since = ((now_ct - first_sunday).days // 7) + 1
+        current_week += weeks_since
 
 current_year = int(current_year)
 current_week = int(current_week)
@@ -2088,7 +2105,7 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     plt.text(-0.075, 0.39, f"SOS: #{home_sos}", fontsize=25, verticalalignment='top', ha='left', transform=ax.transAxes, fontweight='bold', color=get_rank_color(home_sos))
     plt.text(0.15, 0.39, f"SOR: #{home_sor}", fontsize=25, verticalalignment='top', ha='left', transform=ax.transAxes, fontweight='bold', color=get_rank_color(home_sor))
 
-    plt.text(0.45, 0.74, f"WP: {game_win_prob:.1f}%", fontsize = 25, va='top', ha='left', transform=ax.transAxes, fontweight='bold')
+    plt.text(0.45, 0.74, f"WP: {PEAR_home_prob:.1f}%", fontsize = 25, va='top', ha='left', transform=ax.transAxes, fontweight='bold')
     plt.text(0.45, 0.69, f"MD: #{home_md}", fontsize = 25, va='top', ha='left', transform=ax.transAxes, fontweight='bold', color=get_rank_color(home_md))
     plt.text(0.45, 0.64, f"OFF: #{home_offensive}", fontsize = 25, va='top', ha='left', transform=ax.transAxes, fontweight='bold', color=get_rank_color(home_offensive))
     plt.text(0.45, 0.59, f"DEF: #{home_defensive}", fontsize = 25, va='top', ha='left', transform=ax.transAxes, fontweight='bold', color=get_rank_color(home_defensive))
@@ -2114,7 +2131,7 @@ def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_da
     plt.text(1.16, 0.39, f"SOS: #{away_sos}", fontsize=25, verticalalignment='top', ha='right', transform=ax.transAxes, fontweight='bold', color=get_rank_color(away_sos))
     plt.text(1.38, 0.39, f"SOR: #{away_sor}", fontsize=25, verticalalignment='top', ha='right', transform=ax.transAxes, fontweight='bold', color=get_rank_color(away_sor))
 
-    plt.text(0.85, 0.74, f"WP: {round(100-game_win_prob,1)}%", fontsize = 25, va='top', ha='right', transform=ax.transAxes, fontweight='bold')
+    plt.text(0.85, 0.74, f"WP: {round(100-PEAR_home_prob,1)}%", fontsize = 25, va='top', ha='right', transform=ax.transAxes, fontweight='bold')
     plt.text(0.85, 0.69, f"MD: #{away_md}", fontsize = 25, va='top', ha='right', transform=ax.transAxes, fontweight='bold', color=get_rank_color(away_md))
     plt.text(0.85, 0.64, f"OFF: #{away_offensive}", fontsize = 25, va='top', ha='right', transform=ax.transAxes, fontweight='bold', color=get_rank_color(away_offensive))
     plt.text(0.85, 0.59, f"DEF: #{away_defensive}", fontsize = 25, va='top', ha='right', transform=ax.transAxes, fontweight='bold', color=get_rank_color(away_defensive))
@@ -3460,7 +3477,7 @@ try:
         ax = axes[row, col]
         ax.axis('off')  # Hide the main axis
 
-        img = logo_cache.get(team_name)
+        img = team_logos[team_name]
         ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
 
         text_ax = ax.inset_axes([0, 0, 1, 1])
@@ -3526,7 +3543,7 @@ try:
         ax = axes[row, col]
         ax.axis('off')  # Hide the main axis
 
-        img = logo_cache.get(team_name)
+        img = team_logos[team_name]
         ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
 
         text_ax = ax.inset_axes([0, 0, 1, 1])
@@ -3609,15 +3626,19 @@ try:
         # Count how many times team appears in PEAR column
         count_in_pear = team_schedule['PEAR'].str.startswith(team).sum()
         
-        results.append([team, count_in_pear])
+        results.append([team, count_in_pear, len(team_schedule)])
 
-    pear_df = pd.DataFrame(results, columns=['team', 'PEAR_Count'])
+    pear_df = pd.DataFrame(results, columns=['team', 'PEAR_Count', 'games_remaining'])
 
     mulligans = all_data[['team', 'avg_expected_wins', 'power_rating']]
     mulligans = pd.merge(mulligans, records[['team', 'wins']])
     mulligans = mulligans.merge(pear_df, on='team', how='left')
     mulligans['at_large_wins'] = np.ceil(mulligans['avg_expected_wins']).astype(int)
     mulligans['mulligans'] = mulligans['wins'] + mulligans['PEAR_Count'] - mulligans['at_large_wins']
+    mulligans['mulligans'] = mulligans['mulligans'].where(
+        mulligans['mulligans'].abs() < mulligans['games_remaining'],
+        -15
+    )
     mulligans = mulligans.sort_values(['mulligans', 'power_rating'], ascending=[False, False]).reset_index(drop=True)
     from matplotlib.colors import ListedColormap
     n_teams = len(mulligans)
@@ -3655,7 +3676,7 @@ try:
         ax = axes[row, col]
         ax.axis('off')  # Hide the main axis
 
-        img = logo_cache.get(team_name)
+        img = team_logos[team_name]
         ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
 
         text_ax = ax.inset_axes([0, 0, 1, 1])
@@ -3664,7 +3685,11 @@ try:
         box_color = get_color(power_rating)
         # numbers go: bottom left x, bottom left y, how wide the box is, how tall the box is
         text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
-        text_ax.text(1.8, 0.5, f"{power_rating}", ha='center', va='center',
+        if power_rating == -15:
+            text_ax.text(1.8, 0.5, f"N/A", ha='center', va='center',
+                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
+        else:
+            text_ax.text(1.8, 0.5, f"{power_rating}", ha='center', va='center',
                     fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
 
     if n_teams % 20 != 0:
