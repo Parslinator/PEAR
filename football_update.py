@@ -631,6 +631,36 @@ team_data['adj_defense_ppo'] = (
     team_data['Defense_pointsPerOpportunity'] - team_data['avg_opp_offense_ppo']
 )
 
+team_sr = metrics.set_index('team')[['Offense_successRate', 'Defense_successRate']]
+adjusted_sr_list = []
+for _, row in opponent_adjustment_schedule.iterrows():
+    home = row['home_team']
+    away = row['away_team']
+    if home not in team_sr.index or away not in team_sr.index:
+        continue
+    adjusted_sr_list.append({
+        'team': home,
+        'opp_offense_sr': team_sr.loc[away, 'Offense_successRate'],
+        'opp_defense_sr': team_sr.loc[away, 'Defense_successRate']
+    })
+    adjusted_sr_list.append({
+        'team': away,
+        'opp_offense_sr': team_sr.loc[home, 'Offense_successRate'],
+        'opp_defense_sr': team_sr.loc[home, 'Defense_successRate']
+    })
+adjusted_sr_df = pd.DataFrame(adjusted_sr_list)
+opp_sr_summary = adjusted_sr_df.groupby('team').agg(
+    avg_opp_offense_sr = ('opp_offense_sr', 'mean'),
+    avg_opp_defense_sr = ('opp_defense_sr', 'mean')
+).reset_index()
+team_data = pd.merge(team_data, opp_sr_summary, on='team', how='left')
+team_data['adj_offense_sr'] = (
+    team_data['Offense_successRate'] - team_data['avg_opp_defense_sr']
+)
+team_data['adj_defense_sr'] = (
+    team_data['Defense_successRate'] - team_data['avg_opp_offense_sr']
+)
+
 # For military schools and new FBS schools, use recruiting points instead of team talent
 # New FBS Schools - you get on here for 3 years
 target_teams = ['Air Force', 'Army', 'Navy', 'Kennesaw State', 'Jacksonville State', 'Sam Houston', 'Delaware', 'Missouri State']
@@ -650,13 +680,15 @@ from scipy.optimize import differential_evolution
 import numpy as np
 import pandas as pd
 
-if current_week <= 3:
+if current_week <= 4:
     team_data = team_data.dropna(subset=['offense_drive_quality']).reset_index(drop=True)
     results = {
         "off_ppa": team_data['Offense_ppa'],
         "def_ppa": -team_data['Defense_ppa'],
         "off_ppo": team_data['Offense_pointsPerOpportunity'],
         "def_ppo": -team_data['Defense_pointsPerOpportunity'],
+        "off_sr": team_data['Offense_successRate'],
+        "def_sr": -team_data['Defense_successRate'],
         "off_dq": team_data['offense_drive_quality'],
         "def_dq": -team_data['defense_drive_quality'],
     }
@@ -666,14 +698,16 @@ else:
         "def_ppa": -team_data['adj_defense_ppa'],
         "off_ppo": team_data['adj_offense_ppo'],
         "def_ppo": -team_data['adj_defense_ppo'],
+        "off_sr": team_data['adj_offense_sr'],
+        "def_sr": -team_data['adj_defense_sr'],
         "off_dq": team_data['adj_offense_drive_quality'],
         "def_dq": -team_data['adj_defense_drive_quality'],
     }
 
-
 # unpack into variables if you want
 off_ppa, def_ppa = results["off_ppa"], results["def_ppa"]
 off_ppo, def_ppo = results["off_ppo"], results["def_ppo"]
+off_sr, def_sr = results["off_sr"], results["def_sr"]
 off_dq, def_dq = results["off_dq"], results["def_dq"]
 
 turnover_margin = (team_data['turnovers'] - team_data['turnoversOpponent']) / team_data['games_played']
@@ -685,8 +719,11 @@ metrics = pd.DataFrame({
     'def_ppa': def_ppa,
     'off_ppo': off_ppo,
     'def_ppo': def_ppo,
+    'off_sr': off_sr,
+    'def_sr': def_sr,
     'off_dq': off_dq,
     'def_dq': def_dq,
+    'turnover_margin': turnover_margin,
     'talent': talent
 })
 
@@ -698,6 +735,8 @@ fpi_ranks = rankdata(-team_data['fpi'].values, method='ordinal')  # negative bec
 
 if current_week <= 3:
     fixed_scale = 18
+elif current_week <= 4:
+    fixed_scale = 16
 else:
     fixed_scale = 14
 lambda_reg = 0.01  # Try 0.05, 0.1, 0.2 etc.
@@ -706,7 +745,7 @@ def objective(weights):
     weights = np.array(weights)
     weights = weights / weights.sum()
     
-    if weights[-1] > 0.5:  
+    if weights[-1] > 0.4:  
         return 1e6  # big penalty
     
     model_output = z_metrics.values @ weights * fixed_scale
@@ -718,7 +757,7 @@ def objective(weights):
     return rank_diff.mean() + l1_penalty
 
 # Optimize weights (no scale)
-bounds = [(0, 1)] * 7
+bounds = [(0, 1)] * 10
 result = differential_evolution(objective, bounds, strategy='best1bin', maxiter=1000, seed=42)
 
 # Get best weights
