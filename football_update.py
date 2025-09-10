@@ -3254,7 +3254,10 @@ try:
     plt.suptitle(f"PEAR's Week {current_week} Power Ratings", fontsize=20, y=0.905, x=0.52, fontweight='bold')
     min_rating = all_data['power_rating'].min()
     max_rating = all_data['power_rating'].max()
-    cmap = plt.get_cmap('RdYlGn')  # green = high, red = low
+    base_cmap = plt.get_cmap('RdYlGn')
+    colors = base_cmap(np.linspace(0, 1, 256))
+    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
+    cmap = ListedColormap(colors)
     def get_color(value):
         """Return a color based on the normalized win_total."""
         norm_value = (value - min_rating) / (max_rating - min_rating)
@@ -3675,15 +3678,22 @@ try:
 
     pear_df = pd.DataFrame(results, columns=['team', 'PEAR_Count', 'games_remaining'])
 
-    mulligans = all_data[['team', 'avg_expected_wins', 'power_rating']]
-    mulligans = pd.merge(mulligans, records[['team', 'wins']])
+    mulligans = all_data[['team', 'avg_expected_wins', 'power_rating', 'conference']]
+    mulligans = pd.merge(mulligans, records[['team', 'wins', 'losses']])
     mulligans = mulligans.merge(pear_df, on='team', how='left')
-    mulligans['at_large_wins'] = np.ceil(mulligans['avg_expected_wins']).astype(int)
+    mulligans['at_large_wins'] = np.ceil(mulligans['avg_expected_wins']-0.5).astype(int)
     mulligans['mulligans'] = mulligans['wins'] + mulligans['PEAR_Count'] - mulligans['at_large_wins']
     mulligans['mulligans'] = mulligans['mulligans'].where(
         mulligans['mulligans'].abs() < mulligans['games_remaining'],
         -15
     )
+    power_confs = ['Big Ten', 'Big 12', 'ACC', 'SEC']
+    mulligans.loc[
+        (~mulligans['conference'].isin(power_confs)) & 
+        (mulligans['team'] != 'Notre Dame') & 
+        (mulligans['losses'] >= 1), 
+        'mulligans'
+    ] = -15
     mulligans = mulligans.sort_values(['mulligans', 'power_rating'], ascending=[False, False]).reset_index(drop=True)
     from matplotlib.colors import ListedColormap
     n_teams = len(mulligans)
