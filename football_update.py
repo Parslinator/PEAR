@@ -3762,6 +3762,112 @@ except Exception as e:
     print(f"Error in code chunk: Mulligans vs. Upset. Error: {e}")
 
 try:
+    from matplotlib.colors import ListedColormap
+    import pandas as pd
+    import numpy as np
+    from scipy.stats import binom
+    from math import comb
+
+    def prob_win_at_least_x(team, wins_needed, uncompleted_games):
+        team_games = uncompleted_games[
+            (uncompleted_games['home_team'] == team) |
+            (uncompleted_games['away_team'] == team)
+        ].copy()
+
+        probs = []
+        for _, row in team_games.iterrows():
+            if row['home_team'] == team:
+                p = row['PEAR_win_prob']  # already home win prob
+            else:
+                p = 1 - row['PEAR_win_prob']  # away team win prob
+            probs.append(p)
+
+        n = len(probs)
+        dp = np.zeros(n + 1)  # dp[k] = probability of k wins
+        dp[0] = 1.0
+
+        for p in probs:
+            new_dp = np.zeros(n + 1)
+            for k in range(n):
+                new_dp[k] += dp[k] * (1 - p)     # lose this game
+                new_dp[k + 1] += dp[k] * p       # win this game
+            dp = new_dp
+
+        return dp[wins_needed:].sum()
+
+    mulligans['wins_needed'] = mulligans['at_large_wins'] - mulligans['wins']
+    mulligans['prob_reach_wins'] = mulligans.apply(
+        lambda row: 100*prob_win_at_least_x(row['team'], row['wins_needed'], uncompleted_games).round(2),
+        axis=1
+    )
+    mulligans = mulligans.sort_values(['prob_reach_wins', 'power_rating'], ascending=[False, False]).reset_index(drop=True)
+    n_teams = len(mulligans)
+    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
+
+    # Plot configuration
+    fig_width = n_columns * 2.5
+    fig_height = 20 * 0.9
+    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
+    plt.subplots_adjust(hspace=0.3, wspace=0.1)
+
+    fig.patch.set_facecolor('#CECEB2')
+    plt.suptitle(f"Week {current_week} At-Large Playoff Discussion Chances", fontsize=20, y=0.905, x=0.52, fontweight='bold')
+
+    # Define colormap and normalization
+    min_rating = mulligans['prob_reach_wins'].min()
+    max_rating = mulligans['prob_reach_wins'].max()
+    base_cmap = plt.get_cmap('RdYlGn')
+    colors = base_cmap(np.linspace(0, 1, 256))
+    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
+    cmap = ListedColormap(colors)
+
+    def get_color(value):
+        """Return a color based on the normalized win_total."""
+        norm_value = (value - min_rating) / (max_rating - min_rating)
+        return cmap(norm_value)
+
+    # Iterate through the data to plot
+    for idx, team in mulligans.iterrows():
+        power_rating = team['prob_reach_wins']
+        team_name = team['team']
+        
+        row = idx % 20
+        col = idx // 20
+        ax = axes[row, col]
+        ax.axis('off')  # Hide the main axis
+
+        img = team_logos[team_name]
+        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
+
+        text_ax = ax.inset_axes([0, 0, 1, 1])
+        text_ax.axis('off')
+        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
+        box_color = get_color(power_rating)
+        # numbers go: bottom left x, bottom left y, how wide the box is, how tall the box is
+        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
+        if power_rating == 0.0:
+            text_ax.text(1.8, 0.5, f"<1%", ha='center', va='center',
+                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
+        else:
+            text_ax.text(1.8, 0.5, f"{round(power_rating)}%", ha='center', va='center',
+                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
+
+    if n_teams % 20 != 0:
+        for empty_row in range(n_teams % 20, 20):
+            axes[empty_row, n_columns - 1].axis('off')
+
+    pear_img = Image.open('./PEAR/pear_logo.jpg')
+    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
+    logo_ax.imshow(pear_img)
+    logo_ax.axis('off')
+    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
+    fig.text(0.52,0.097, "Probability each team reaches the win total needed to stay in at-large contention - this is NOT Playoff Probability", ha='center', va='center', fontsize=14)
+    file_path = os.path.join(folder_path, "at_large_playoff_chances")
+    plt.savefig(file_path, dpi = 300, bbox_inches='tight')
+except Exception as e:
+    print(f"Error in code chunk: At Large Playoff Chances. Error: {e}")
+
+try:
     all_sos = all_data[['team', 'avg_expected_wins']].sort_values('avg_expected_wins').reset_index(drop=True)
     n_teams = len(all_sos)
     n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
