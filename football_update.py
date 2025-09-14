@@ -680,6 +680,18 @@ from scipy.optimize import differential_evolution
 import numpy as np
 import pandas as pd
 
+last_week = opponent_adjustment_schedule[opponent_adjustment_schedule['week'] == current_week-1]
+team_data['last_week'] = 0
+home_results = pd.Series(np.where(
+    last_week['home_points'] > last_week['away_points'], 1, -1
+), index=last_week['home_team'])
+away_results = pd.Series(np.where(
+    last_week['away_points'] > last_week['home_points'], 1, -1
+), index=last_week['away_team'])
+results = pd.concat([home_results, away_results])
+team_data['last_week'] = team_data['team'].map(results).fillna(0).astype(int)
+
+# --- Step 1: Preprocess inputs ---
 if current_week <= 4:
     team_data = team_data.dropna(subset=['offense_drive_quality']).reset_index(drop=True)
     results = {
@@ -691,6 +703,7 @@ if current_week <= 4:
         "def_sr": -team_data['Defense_successRate'],
         "off_dq": team_data['offense_drive_quality'],
         "def_dq": -team_data['defense_drive_quality'],
+        "last_week": team_data['last_week'],  # Add indicator here
     }
 else:
     results = {
@@ -702,18 +715,19 @@ else:
         "def_sr": -team_data['adj_defense_sr'],
         "off_dq": team_data['adj_offense_drive_quality'],
         "def_dq": -team_data['adj_defense_drive_quality'],
+        "last_week": team_data['last_week'],  # Add indicator here
     }
 
 metrics = pd.DataFrame(results)
 metrics['talent'] = team_data['avg_talent']
 
-# Z-score
+# --- Step 2: Z-score (or replace with rank-power scaling if desired) ---
 z_metrics = metrics.apply(lambda col: zscore(col, nan_policy='omit')).fillna(0)
 
-# FPI target
+# --- Step 3: FPI ranks ---
 fpi_ranks = rankdata(-team_data['fpi'].values, method='ordinal')
 
-# Fixed scale
+# --- Step 4: Fixed scale ---
 if current_week <= 3:
     fixed_scale = 18
 elif current_week <= 4:
@@ -734,10 +748,6 @@ actual_margin = schedule['home_points'].values - schedule['away_points'].values
 hfa = np.where(schedule['neutral'] == False, 4.5, 0)
 
 def game_abs_error(ratings):
-    """
-    Compute the mean absolute error between predicted and actual game margins,
-    vectorized for all FBS games.
-    """
     pred_margin = ratings[h_idx] + hfa - ratings[a_idx]
     return np.mean(np.abs(pred_margin - actual_margin)) if len(pred_margin) > 0 else 0
 
@@ -745,7 +755,7 @@ def objective(weights):
     weights = np.array(weights)
     weights = weights / weights.sum()
     
-    if weights[-1] > 0.3:  # penalty if talent dominates
+    if weights[-1] > 0.5:  # penalty if talent dominates
         return 1e6
     
     ratings = (z_metrics.values @ weights) * fixed_scale
@@ -763,7 +773,8 @@ opt_weights = result.x / sum(result.x)
 team_data['power_rating'] = (z_metrics @ opt_weights) * fixed_scale
 team_data['power_rating'] = team_data['power_rating'].round(1)
 
-print("Best weights:", dict(zip(z_metrics.columns, opt_weights)))
+for col, w in zip(z_metrics.columns, opt_weights):
+    print(f"{col}: {w:.4f}")
 
 if current_week < 6:
     preseason = pd.read_csv("./PEAR/PEAR Football/y2025/Ratings/PEAR_week1.csv")
@@ -773,6 +784,9 @@ if current_week < 6:
     preseason.loc[preseason['team'] == 'Arkansas State', 'power_rating'] = -15.0
     preseason.loc[preseason['team'] == 'Tulsa', 'power_rating'] = -17.0
     preseason.loc[preseason['team'] == 'Massachusetts', 'power_rating'] = -25.0
+    preseason.loc[preseason['team'] == 'Liberty', 'power_rating'] = -10.0
+    preseason.loc[preseason['team'] == 'James Madison', 'power_rating'] = 5.0
+    preseason.loc[preseason['team'] == 'UAB', 'power_rating'] = -20.0
     merged = preseason.merge(
         team_data[['team', 'power_rating', 'games_played']],
         on='team',
@@ -3238,6 +3252,7 @@ except Exception as e:
     print(f"Error in code chunk: GO5 Ratings. Error: {e}")
 
 try:
+    from matplotlib.colors import ListedColormap
     all_data = all_data.sort_values('power_rating', ascending=False).reset_index(drop=True)
     n_teams = len(all_data)
     n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
