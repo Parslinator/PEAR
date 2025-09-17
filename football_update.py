@@ -3172,6 +3172,553 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
 
     plt.savefig(file_path, bbox_inches='tight', dpi = 300)
 
+import numpy as np
+
+def prob_win_at_least_x(team, wins_needed, uncompleted_games):
+    """
+    Calculate the probability a team wins at least `wins_needed` games
+    given their uncompleted games and PEAR win probabilities.
+    
+    Args:
+        team (str): Team name
+        wins_needed (int): Minimum number of wins to calculate probability for
+        uncompleted_games (DataFrame): DataFrame with columns 'home_team', 'away_team', 'PEAR_win_prob'
+    
+    Returns:
+        float: Probability of winning at least `wins_needed` games
+    """
+    # Filter for this team's remaining games
+    team_games = uncompleted_games[
+        (uncompleted_games['home_team'] == team) |
+        (uncompleted_games['away_team'] == team)
+    ].copy()
+    
+    # Probability of winning each game from the team's perspective
+    probs = []
+    for _, row in team_games.iterrows():
+        if row['home_team'] == team:
+            p = row['PEAR_win_prob']
+        else:
+            p = 1 - row['PEAR_win_prob']
+        probs.append(p)
+    
+    n = len(probs)
+    if n == 0:
+        # No remaining games: team wins 0 games from here
+        return 1.0 if wins_needed <= 0 else 0.0
+
+    # Dynamic programming: dp[k] = probability of winning exactly k games
+    dp = np.zeros(n + 1)
+    dp[0] = 1.0  # probability of 0 wins initially
+
+    for p in probs:
+        new_dp = np.zeros(n + 1)
+        for k in range(n):
+            new_dp[k] += dp[k] * (1 - p)  # lose this game
+            new_dp[k + 1] += dp[k] * p    # win this game
+        dp = new_dp
+
+    # Probability of winning at least `wins_needed` games
+    wins_needed = max(0, min(wins_needed, n))  # clamp to [0, n]
+    return dp[wins_needed:].sum()
+
+def prob_win_exactly_x(team, wins_needed, uncompleted_games):
+    """
+    Calculate the probability a team wins exactly `wins_needed` games
+    given their uncompleted games and PEAR win probabilities.
+    
+    Args:
+        team (str): Team name
+        wins_needed (int): Exact number of wins to calculate probability for
+        uncompleted_games (DataFrame): DataFrame with columns 'home_team', 'away_team', 'PEAR_win_prob'
+    
+    Returns:
+        float: Probability of winning exactly `wins_needed` games
+    """
+    # Filter for this team's remaining games
+    team_games = uncompleted_games[
+        (uncompleted_games['home_team'] == team) |
+        (uncompleted_games['away_team'] == team)
+    ].copy()
+    
+    # Probability of winning each game from the team's perspective
+    probs = []
+    for _, row in team_games.iterrows():
+        p = row['PEAR_win_prob'] if row['home_team'] == team else 1 - row['PEAR_win_prob']
+        probs.append(p)
+    
+    n = len(probs)
+    if n == 0:
+        return 1.0 if wins_needed == 0 else 0.0
+
+    # Dynamic programming: dp[k] = probability of winning exactly k games
+    dp = np.zeros(n + 1)
+    dp[0] = 1.0
+
+    for p in probs:
+        new_dp = np.zeros(n + 1)
+        for k in range(n):
+            new_dp[k] += dp[k] * (1 - p)
+            new_dp[k + 1] += dp[k] * p
+        dp = new_dp
+
+    # Clamp wins_needed to [0, n]
+    wins_needed = max(0, min(wins_needed, n))
+    return dp[wins_needed]
+
+
+def team_exact_win_probs(team, current_wins, uncompleted_games):
+    """
+    Returns a dictionary mapping exact wins to probabilities for all possible outcomes.
+    
+    Args:
+        team (str): Team name
+        uncompleted_games (DataFrame): DataFrame with 'home_team', 'away_team', 'PEAR_win_prob'
+    
+    Returns:
+        dict: {wins: probability of winning exactly that many games}
+    """
+    team_games = uncompleted_games[
+        (uncompleted_games['home_team'] == team) |
+        (uncompleted_games['away_team'] == team)
+    ].copy()
+    n = len(team_games)
+    
+    probs = {}
+    for wins_needed in range(0, n + 1):
+        probs[wins_needed+current_wins] = prob_win_exactly_x(team, wins_needed, uncompleted_games)
+    
+    return probs
+
+def team_win_probs(team, current_wins, uncompleted_games, max_wins):
+    """
+    Returns probability a team wins at least X total games, 
+    starting from current_wins up to max_wins.
+    """
+    results = {}
+    remaining_games = uncompleted_games[
+        (uncompleted_games['home_team'] == team) |
+        (uncompleted_games['away_team'] == team)
+    ].copy()
+    
+    for wins_needed in range(current_wins, len(remaining_games) + current_wins + 1):
+        # Calculate number of additional wins needed in remaining games
+        additional_wins_needed = wins_needed - current_wins
+        prob = prob_win_at_least_x(team, additional_wins_needed, remaining_games)
+        results[wins_needed] = prob
+        
+    return results
+
+
+def format_prob(value):
+    """
+    Format a probability for display.
+    Args:
+        value (float): probability between 0 and 1
+    Returns:
+        str: formatted string like '23%', '>99%', '<1%', or '' if 0
+    """
+    if value == 0:
+        return ""
+    elif value == 1.0:
+        return "100%"
+    elif value >= 0.99:
+        return ">99%"
+    elif value <= 0.01:
+        return "<1%"
+    else:
+        return f"{int(round(value * 100))}%"
+    
+def transform_schedule(team_schedule: pd.DataFrame, team_name: str) -> pd.DataFrame:
+    records = []
+
+    for _, row in team_schedule.iterrows():
+        home_team = row["home_team"]
+        away_team = row["away_team"]
+        home_points = row["home_points"]
+        away_points = row["away_points"]
+        neutral = row["neutral"]
+        win_prob_home = row["PEAR_win_prob"]
+        week = row["week"]
+        GQI = row['GQI']
+        pear = row['PEAR']
+
+        # Skip games that don't involve the target team
+        if team_name not in [home_team, away_team]:
+            continue
+
+        # completed flag
+        completed = not (pd.isna(home_points) or pd.isna(away_points))
+
+        if completed:
+            winning_score = max(home_points, away_points)
+            losing_score = min(home_points, away_points)
+            score_str = f"{int(winning_score)}-{int(losing_score)}"
+
+            if team_name == home_team:
+                win = home_points > away_points
+            else:
+                win = away_points > home_points
+        else:
+            score_str = None
+            win = None
+
+        # Location + win prob
+        if neutral:
+            location = "(N)"
+            team_win_prob = win_prob_home if team_name == home_team else 1 - win_prob_home
+        else:
+            if team_name == home_team:
+                location = ""
+                team_win_prob = win_prob_home
+            else:
+                location = "AT"
+                team_win_prob = 1 - win_prob_home
+
+        records.append({
+            "team": team_name,
+            "opponent": away_team if team_name == home_team else home_team,
+            "week": week,
+            "score": score_str,
+            "completed": completed,
+            "win": win,
+            "location": location,
+            "team_win_prob": team_win_prob,
+            "PEAR":pear,
+            "GQI":GQI
+        })
+
+    return pd.DataFrame(records)
+
+import matplotlib.pyplot as plt
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+
+def get_team_column_value(df, team, column):
+    """
+    Returns the value of `column` for the row where df['team'] == team.
+    Returns '' if the team does not exist.
+    """
+    match = df[df['team'] == team]
+    if not match.empty:
+        return match.iloc[0][column]
+    return ""
+
+def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_conference_games, logo_cache, logos):
+    team_data = all_data[all_data['team'] == team_name].reset_index(drop=True)
+    team_idx = all_data[all_data['team'] == team_name].index[0] + 1
+    team_uncompleted_conf_games = uncompleted_conference_games[(uncompleted_conference_games['home_team'] == team_name) | (uncompleted_conference_games['away_team'] == team_name)]
+    current_wins = team_data['wins'][0]
+    current_losses = team_data['losses'][0]
+    current_conf_wins = team_data['conference_wins'][0]
+    current_conf_losses = team_data['conference_losses'][0]
+    conference_games = len(team_uncompleted_conf_games)+current_conf_wins+current_conf_losses
+    team_probs = team_win_probs(team_name, current_wins, uncompleted_games, 12)
+    team_exact_probs = team_exact_win_probs(team_name, current_wins, uncompleted_games)
+    expected_wins = round(sum(wins * prob for wins, prob in team_exact_probs.items()),1)
+    team_conf_probs = team_win_probs(team_name, current_conf_wins, uncompleted_conference_games, conference_games)
+    team_exact_conf_probs = team_exact_win_probs(team_name, current_conf_wins, uncompleted_conference_games)
+    conference_expected_wins = round(sum(wins * prob for wins, prob in team_exact_conf_probs.items()),1)
+    team_schedule = full_display_schedule[(full_display_schedule['home_team'] == team_name) | (full_display_schedule['away_team'] == team_name)]
+    display_schedule = transform_schedule(team_schedule, team_name)
+    opp_col="opponent"
+    figsize=(20,10)
+    zoom=0.1
+    fig, ax = plt.subplots(figsize=figsize, dpi=300)
+    fig.patch.set_facecolor("#CECEB2")
+
+    # ------------------------------------------------------------
+    # Columns for schedule
+    # ------------------------------------------------------------
+    x = 0.05  # fixed column
+    y_start = len(display_schedule)  # top row
+    y = y_start
+    max_box=0.655 
+    ax.text(0.017, y_start+0.7, f'WK', fontsize=16, ha='center', va='center', fontweight='bold')
+    ax.text(x+0.03, y_start+0.7, f'LOC', fontsize=16, ha='left', va='center', fontweight='bold')
+    ax.text(x+0.09, y_start+0.7, f"RK", fontsize=16, ha='right', va='center', fontweight='bold')
+    ax.text(x+0.105, y_start+0.7, f"OPPONENT", fontsize=16, ha='left', va='center', fontweight='bold')
+    ax.text(x+0.28, y_start+0.7, f"OFF", fontsize=16, ha='left', va='center', fontweight='bold')
+    ax.text(x+0.32, y_start+0.7, f"DEF", fontsize=16, ha='left', va='center', fontweight='bold')
+    ax.text(x+0.57, y_start+0.7, f"GQI", fontsize=16, ha='left', va='center', fontweight='bold')
+
+    # ------------------------------------------------------------
+    # displaying the schedule
+    # ------------------------------------------------------------
+    for _, row in display_schedule.iterrows():
+        opp = row[opp_col]
+        if opp in all_data['team'].values:
+            opp_idx = all_data[all_data['team'] == opp].index[0] + 1
+        else:
+            opp_idx = ""
+        week = row['week']
+        location = row["location"]
+        opp_off = get_team_column_value(all_data, opp, "offensive_rank")
+        opp_def = get_team_column_value(all_data, opp, "defensive_rank")
+        completed = row['completed']
+        won = row['win']
+        if completed and won:
+            row_color = "palegreen"
+        elif completed and not won:
+            row_color = "lightcoral"
+        else:
+            if location == "":
+                row_color = "whitesmoke"
+            elif location == "AT":
+                row_color = "lightblue"
+            else:
+                row_color = "lightgoldenrodyellow"
+        img = logo_cache.get(opp)
+        rect = patches.Rectangle(
+            (0, y - 0.5),  # left-bottom corner of row
+            max_box,             # width
+            0.96,               # height of row
+            linewidth=0,
+            facecolor=row_color,
+            zorder=0
+        )
+        ax.add_patch(rect)
+
+        if img is not None:
+            im = OffsetImage(img, zoom=zoom)
+            ab = AnnotationBbox(im, (x, y), frameon=False)
+            ax.add_artist(ab)
+        else:
+            ax.text(x, y, opp, ha="center", va="center")
+
+        ax.text(0.022, y, f'{week}', fontsize=20, ha='right', va='center', fontweight='bold')
+        ax.text(x+0.03, y, f'{location}', fontsize=20, ha='left', va='center', fontweight='bold')
+        ax.text(x+0.09, y, f"{opp_idx}", fontsize=20, ha='right', va='center', fontweight='bold')
+        ax.text(x+0.105, y, f"{opp}", fontsize=20, ha='left', va='center', fontweight='bold')
+        ax.text(x+0.28, y, f"{opp_off}", fontsize=20, ha='left', va='center', fontweight='bold')
+        ax.text(x+0.32, y, f"{opp_def}", fontsize=20, ha='left', va='center', fontweight='bold')
+        if completed:
+            ax.text(x+0.36, y, f"{row['score']}", fontsize=20, ha='left', va='center', fontweight='bold')
+        else:
+            text_value = row['PEAR']
+            fontsize = 20  # default size
+            if "Florida International" in text_value:
+                fontsize = 18
+            ax.text(x + 0.36, y,text_value,fontsize=fontsize,ha="left",va="center",fontweight="bold")
+            ax.text(x+0.57, y, f"{row['GQI']}", fontsize=20, ha='left', va='center', fontweight='bold')
+
+        y -= 1
+
+    # ------------------------------------------------------------
+    # displaying team name
+    # ------------------------------------------------------------
+    rect = patches.Rectangle((0.0, 0.48), max_box,y_start - y + 0,linewidth=2,edgecolor='black',facecolor='none')
+    ax.add_patch(rect)
+    logo_color = logos[logos['team'] == team_name]['color'].values[0]
+    alt_color = logos[logos['team'] == team_name]['alt_color'].values[0]
+    rect_width = 0.34
+    rect_height = 1
+    rect_x = 1 - rect_width  # small right margin
+    rect_y = len(display_schedule) + 0.48 - rect_height  # slightly below top edge
+    color_rect = patches.Rectangle((rect_x, rect_y),rect_width,rect_height,linewidth=2,edgecolor="black",facecolor=logo_color,zorder=4)
+    ax.add_patch(color_rect)
+    ax.text(rect_x + rect_width/2,rect_y + rect_height/2,f'{team_name}', color="white", ha='center', va='center', fontsize=32, fontweight='bold',zorder=5)
+
+    # ------------------------------------------------------------
+    # rectangles for overall win percentage win percentage
+    # ------------------------------------------------------------
+    gap_y = 1            # vertical gap between color_rect and down boxes
+    center_gap = 0.01       # horizontal gap in the middle
+    down_height = 6.9
+    down_rect_y = rect_y - down_height - gap_y  # below color_rect with gap
+    left_rect = patches.Rectangle(
+        (rect_x, down_rect_y),                      # left starts at rect_x
+        rect_width / 2 - center_gap / 2,            # shrink to leave center gap
+        down_height,
+        linewidth=2,
+        edgecolor="black",
+        facecolor="#A8A89A",
+        zorder=5
+    )
+    ax.add_patch(left_rect)
+    numbers = ["WINS"] + list(range(13, -1, -1))
+    left_x = rect_x
+    left_y = down_rect_y
+    left_w = rect_width / 2 - center_gap / 2
+    left_h = down_height
+    padding = left_h / (2 * len(numbers))  # small vertical inset
+    y_positions = np.linspace(
+        left_y + left_h - padding, 
+        left_y + padding, 
+        len(numbers)
+    )
+    for num, y in zip(numbers, y_positions):
+        value = team_probs.get(num, 0)
+        exact = team_exact_probs.get(num,0)
+        display_prob = format_prob(value)
+        exact_prob = format_prob(exact)
+        ax.text(left_x+0.025,y,str(num),ha="center",va="center",fontsize=16,color="black",fontweight='bold',zorder=6)
+        ax.text(left_x + left_w / 2,y,str(display_prob),ha="center",va="center",fontsize=16,color="black",fontweight='bold',zorder=6)
+        ax.text(left_x+0.14,y,str(exact_prob),ha="center",va="center",fontsize=16,color="black",fontweight='bold',zorder=6)
+        if num == "WINS":
+            ax.text(left_x + left_w / 2,y,">=",ha="center",va="center",fontsize=16,color="black",fontweight='bold',zorder=6)
+            ax.text(left_x+0.14,y,"=",ha="center",va="center",fontsize=16,color="black",fontweight='bold',zorder=6)
+
+    # ------------------------------------------------------------
+    # rectangles for overall expected record
+    # ------------------------------------------------------------
+    intermediate_height = gap_y - 0.1  # height of new boxes (slightly smaller than gap)
+    intermediate_y = down_rect_y + down_height + 0.05  # just below color_rect, leaving small margin
+    # Left intermediate box
+    left_intermediate = patches.Rectangle(
+        (rect_x, intermediate_y),                        # same left x
+        rect_width / 2 - center_gap / 2,                # width same as left box
+        intermediate_height,                             # height smaller than gap
+        linewidth=2,
+        edgecolor="black",
+        facecolor="#D6D6C2",                             # choose a neutral fill or highlight
+        zorder=5
+    )
+    ax.add_patch(left_intermediate)
+    left_x = rect_x
+    left_w = rect_width / 2 - center_gap / 2
+    col_offsets = [0.025, left_w / 2, 0.11, 0.14]  # "OVR", expected wins, 12-expected
+    texts = ["OVR", f"{expected_wins:.1f}", "-", f"{12 - expected_wins:.1f}"]
+    y_center = intermediate_y + intermediate_height / 2
+    for text, offset in zip(texts, col_offsets):
+        ax.text(left_x + offset, y_center, text, ha="center", va="center",
+                fontsize=20, fontweight="bold", color="black", zorder=6)
+
+    # ------------------------------------------------------------
+    # rectangles for conference win percentages
+    # ------------------------------------------------------------
+    right_down_height = 5.2  # desired height
+    right_rect_top = down_rect_y + down_height - right_down_height  # align top with left
+    right_rect = patches.Rectangle(
+        (rect_x + rect_width / 2 + center_gap / 2, right_rect_top),  # bottom-left corner
+        rect_width / 2 - center_gap / 2,                              # width
+        right_down_height,                                            # height
+        linewidth=2,
+        edgecolor="black",
+        facecolor="#A8A89A",
+        zorder=5
+    )
+    ax.add_patch(right_rect)
+    numbers = ["WINS"] + list(range(9, -1, -1))
+    right_x = rect_x + rect_width / 2 + center_gap / 2
+    right_w = rect_width / 2 - center_gap / 2
+    right_h = right_down_height
+    right_rect_bottom = down_rect_y + down_height - right_h  # top aligned with left
+    padding = right_h / (2 * len(numbers))  # small vertical inset
+    # Evenly space numbers vertically
+    y_positions = np.linspace(
+        right_rect_bottom + right_h - padding,  # top of rectangle minus small padding
+        right_rect_bottom + padding,            # bottom of rectangle plus small padding
+        len(numbers)
+    )
+    for num, y in zip(numbers, y_positions):
+        # Grab probability values
+        value = team_conf_probs.get(num, 0)           # probability >= X conf wins
+        exact = team_exact_conf_probs.get(num, 0)     # probability = X conf wins
+        display_prob = format_prob(value)
+        exact_prob = format_prob(exact)
+        # Column headers
+        ax.text(right_x + 0.025, y, str(num), ha="center", va="center", fontsize=16, color="black", fontweight='bold', zorder=6)
+        ax.text(right_x + right_w / 2, y, str(display_prob), ha="center", va="center", fontsize=16, color="black", fontweight='bold', zorder=6)
+        ax.text(right_x + 0.14, y, str(exact_prob), ha="center", va="center", fontsize=16, color="black", fontweight='bold', zorder=6)
+        # Add symbols for header row
+        if num == "WINS":
+            ax.text(right_x + right_w / 2, y, ">=", ha="center", va="center", fontsize=16, color="black", fontweight='bold', zorder=6)
+            ax.text(right_x + 0.14, y, "=", ha="center", va="center", fontsize=16, color="black", fontweight='bold', zorder=6)
+
+    # ------------------------------------------------------------
+    # rectangles for expected conference record
+    # ------------------------------------------------------------
+    right_intermediate = patches.Rectangle(
+        (rect_x + rect_width / 2 + center_gap / 2, intermediate_y),  # start after center gap
+        rect_width / 2 - center_gap / 2,                              # width same as right box
+        intermediate_height,
+        linewidth=2,
+        edgecolor="black",
+        facecolor="#D6D6C2",
+        zorder=5
+    )
+    ax.add_patch(right_intermediate)
+    right_x = rect_x + rect_width / 2 + center_gap / 2
+    right_w = rect_width / 2 - center_gap / 2
+    col_offsets = [0.025, right_w / 2, 0.11, 0.14]  # "CONF", expected wins, "-", losses
+    texts = ["CONF", f"{conference_expected_wins:.1f}", "-", f"{conference_games - conference_expected_wins:.1f}"]
+    y_center = intermediate_y + intermediate_height / 2
+    for text, offset in zip(texts, col_offsets):
+        ax.text(right_x + offset, y_center, text, ha="center", va="center",
+                fontsize=20, fontweight="bold", color="black", zorder=6)
+        
+    new_rect_height = 3.0        # height of the new rectangle
+    new_rect_y = down_rect_y - new_rect_height - 0.1  # slightly below left rectangle, with small gap
+    new_rect_color = "#FFF8E1"   # choose color
+
+    # ------------------------------------------------------------
+    # rectangles and data for ranking information
+    # ------------------------------------------------------------
+    left_new_rect = patches.Rectangle(
+        (rect_x, new_rect_y),                 # same x as left rectangle
+        rect_width / 2 - center_gap / 2,      # same width as left rectangle
+        new_rect_height,
+        linewidth=2,
+        edgecolor="black",
+        facecolor=new_rect_color,
+        zorder=5
+    )
+    ax.add_patch(left_new_rect)
+    offensive = get_team_column_value(all_data, team_name, "offensive_rank")
+    defensive = get_team_column_value(all_data, team_name, "defensive_rank")
+    offensive_total = round(get_team_column_value(all_data, team_name, "offensive_total"),1)
+    defensive_total = round(get_team_column_value(all_data, team_name, "defensive_total"),1)
+    power_rating = get_team_column_value(all_data, team_name, "power_rating")
+    most_deserving = get_team_column_value(all_data, team_name, "most_deserving")
+    SOS = get_team_column_value(all_data, team_name, "SOS")
+    left_x = rect_x
+    left_w = rect_width / 2 - center_gap / 2
+    y_top = new_rect_y + new_rect_height
+    col_offsets = [0.04, left_w / 2, left_w-0.04]
+    column_names = ["PEAR", "RTG", "RK"]
+    y_header = y_top - 0.27  # slightly below top of rectangle
+    for name, offset in zip(column_names, col_offsets):
+        ax.text(left_x + offset, y_header, name, ha="center", va="center",
+                fontsize=14, fontweight="bold", color="black", zorder=6)
+    row_labels = ["OVR", "OFF", "DEF", "MD", "SOS"]
+    row_values = [
+        [power_rating, team_idx],
+        [offensive_total, offensive],
+        [defensive_total, defensive],
+        ["",most_deserving],
+        ["", SOS]
+    ]
+    y_positions = [y_header-0.5, y_header-1, y_header-1.5, y_header-2.0, y_header-2.5]
+    for y, label, vals in zip(y_positions, row_labels, row_values):
+        ax.text(left_x + col_offsets[0], y, label, ha="center", va="center",
+                fontsize=14, fontweight="bold", color="black", zorder=6)
+        for val, offset in zip(vals, col_offsets[1:]):
+            ax.text(left_x + offset, y, f"{val}", ha="center", va="center",
+                    fontsize=14, fontweight="bold", color="black", zorder=6)
+
+    img = fbs_fcs_logos[team_name]
+    zoom = 0.4  # adjust as needed
+    x_img = rect_x + rect_width - 0.0115 # right edge of left rectangle
+    y_img = new_rect_y  # bottom of rectangle
+    im = OffsetImage(img, zoom=zoom)
+    ab = AnnotationBbox(im, (x_img, y_img), frameon=False,
+                        xycoords='data', box_alignment=(1, 0))  # align bottom-right
+    ax.add_artist(ab)
+
+    ax.text(0.005, 0.15, "Graphic by @PEARatings | Inspired by @KFordRatings | Underlying Data from @CFB_Data", fontsize=14, ha='left', va='center', fontweight='bold')
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, len(display_schedule) + 1)
+    ax.axis("off")
+    plt.tight_layout()
+    folder_path = f"./PEAR/PEAR Football/y{current_year}/Visuals/week_{current_week}/Stat Profiles"
+    os.makedirs(folder_path, exist_ok=True)
+    file_path = os.path.join(folder_path, f"{team}")
+    plt.savefig(file_path, dpi = 300)
+    # return fig, ax
+
 try:
     top_25 = all_data.head(25).reset_index(drop=True)
     comparison = top_25.merge(
@@ -4810,11 +5357,152 @@ year_long_schedule['PEAR_win_prob'] = year_long_schedule.apply(
 year_long_schedule['home_win_prob'] = round((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) / ((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) + 1)*100,2)
 
 try:
+    start_week = current_week
+    end_week = 16
+    games_list = []
+    for week in range(start_week,end_week):
+        response = games_api.get_games(year=2025, week=week,classification = 'fbs')
+        games_list = [*games_list, *response]
+    games = [dict(
+                id=g.id,
+                season=g.season,
+                week=g.week,
+                start_date=g.start_date,
+                home_team=g.home_team,
+                home_elo=g.home_pregame_elo,
+                away_team=g.away_team,
+                away_elo=g.away_pregame_elo,
+                home_points = g.home_points,
+                away_points = g.away_points,
+                neutral = g.neutral_site,
+                conference_game = g.conference_game
+                ) for g in games_list]
+    uncompleted_games = pd.DataFrame(games)
+    uncompleted_games = uncompleted_games.merge(team_data[['team', 'power_rating']], 
+                                        left_on='home_team', 
+                                        right_on='team', 
+                                        how='left').rename(columns={'power_rating': 'home_pr'})
+    uncompleted_games = uncompleted_games.drop(columns=['team'])
+    uncompleted_games = uncompleted_games.merge(team_data[['team', 'power_rating']], 
+                                        left_on='away_team', 
+                                        right_on='team', 
+                                        how='left').rename(columns={'power_rating': 'away_pr'})
+    uncompleted_games = uncompleted_games.drop(columns=['team'])
+    missing_rating =round(team_data['power_rating'].mean() - 2.25*team_data['power_rating'].std(),2)
+    uncompleted_games['home_pr'].fillna(missing_rating, inplace=True)
+    uncompleted_games['away_pr'].fillna(missing_rating, inplace=True)
+    uncompleted_games['PEAR_win_prob'] = uncompleted_games.apply(
+        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
+    )
+    uncompleted_games['home_win_prob'] = round((10**((uncompleted_games['home_elo'] - uncompleted_games['away_elo']) / 400)) / ((10**((uncompleted_games['home_elo'] - uncompleted_games['away_elo']) / 400)) + 1)*100,2)
+
+    uncompleted_games['pr_spread'] = (4.5 + uncompleted_games['home_pr'] + (uncompleted_games['home_win_prob'].apply(adjust_home_pr)) - uncompleted_games['away_pr']).round(1)
+    uncompleted_games['pr_spread'] = np.where(uncompleted_games['neutral'], uncompleted_games['pr_spread'] - 4.5, uncompleted_games['pr_spread']).round(1)
+    uncompleted_games['PEAR'] = uncompleted_games.apply(
+        lambda row: f"{row['away_team']} {-abs(row['pr_spread'])}" if ((row['pr_spread'] <= 0)) 
+        else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1)
+    uncompleted_conference_games = uncompleted_games[uncompleted_games['conference_game'] == True].reset_index(drop=True)
+    start_week = 1
+    end_week = 16
+    games_list = []
+    for week in range(start_week,end_week):
+        response = games_api.get_games(year=current_year, week=week,classification = 'fbs')
+        games_list = [*games_list, *response]
+    if postseason:
+        response = games_api.get_games(year=current_year, division = 'fbs', season_type='postseason')
+        games_list = [*games_list, *response]
+    games = [dict(
+                id=g.id,
+                season=g.season,
+                week=g.week,
+                start_date=g.start_date,
+                home_team=g.home_team,
+                home_elo=g.home_pregame_elo,
+                away_team=g.away_team,
+                away_elo=g.away_pregame_elo,
+                home_points = g.home_points,
+                away_points = g.away_points,
+                neutral = g.neutral_site
+                ) for g in games_list]
+    full_display_schedule = pd.DataFrame(games)
+    full_display_schedule = full_display_schedule.merge(team_data[['team', 'power_rating']], 
+                                        left_on='home_team', 
+                                        right_on='team', 
+                                        how='left').rename(columns={'power_rating': 'home_pr'})
+    full_display_schedule = full_display_schedule.drop(columns=['team'])
+    full_display_schedule = full_display_schedule.merge(team_data[['team', 'power_rating']], 
+                                        left_on='away_team', 
+                                        right_on='team', 
+                                        how='left').rename(columns={'power_rating': 'away_pr'})
+    full_display_schedule = full_display_schedule.drop(columns=['team'])
+    fallback_value = team_data['power_rating'].mean() - 2 * team_data['power_rating'].std()
+    full_display_schedule['home_pr'] = full_display_schedule['home_pr'].fillna(fallback_value)
+    full_display_schedule['away_pr'] = full_display_schedule['away_pr'].fillna(fallback_value)
+
+    full_display_schedule['PEAR_win_prob'] = full_display_schedule.apply(
+        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
+    )
+    full_display_schedule['home_win_prob'] = (
+        10 ** ((full_display_schedule['home_elo'] - full_display_schedule['away_elo']) / 400)
+        / (10 ** ((full_display_schedule['home_elo'] - full_display_schedule['away_elo']) / 400) + 1)
+        * 100
+    ).round(2)
+
+    # fill missing with rule
+    full_display_schedule['home_win_prob'] = full_display_schedule.apply(
+        lambda row: 1 if pd.isna(row['home_win_prob']) and row['home_team'] in team_data['team'].values
+        else 0 if pd.isna(row['home_win_prob'])
+        else row['home_win_prob'],
+        axis=1
+    )
+
+    full_display_schedule['pr_spread'] = (4.5 + full_display_schedule['home_pr'] + (full_display_schedule['home_win_prob'].apply(adjust_home_pr)) - full_display_schedule['away_pr']).round(1)
+    full_display_schedule['pr_spread'] = np.where(full_display_schedule['neutral'], full_display_schedule['pr_spread'] - 4.5, full_display_schedule['pr_spread']).round(1)
+    full_display_schedule['PEAR'] = full_display_schedule.apply(
+        lambda row: f"{row['away_team']} {-abs(row['pr_spread'])}" if ((row['pr_spread'] <= 0)) 
+        else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1)
+
+    pr_min = team_data['power_rating'].min()
+    pr_max = team_data['power_rating'].max()
+
+    # Calculate game quality
+    full_display_schedule['GQI'] = calculate_game_quality(
+        full_display_schedule,
+        pr_min=pr_min,
+        pr_max=pr_max,
+        spread_cap=30
+    )
+    logos_info_list = []
+    response = teams_api.get_teams()
+    logos_info_list = [*logos_info_list, *response]
+    logos_info_dict = [dict(
+        team = l.school,
+        color = l.color,
+        alt_color = l.alternate_color,
+        logo = l.logos,
+        classification = l.classification
+    ) for l in logos_info_list]
+    logos = pd.DataFrame(logos_info_dict)
+    fbs_fcs = logos[(logos['classification'] == 'fbs') | (logos['classification'] == 'fcs')].reset_index(drop=True)
+
+    fbs_fcs_logos = {}
+
+    for _, row in fbs_fcs.iterrows():
+        team_name = row['team']
+        logo_url = row['logo'][0]  # Assuming logo is a list with URL at index 0
+        try:
+            response = requests.get(logo_url)
+            img = Image.open(BytesIO(response.content))  # Ensure transparency support
+            fbs_fcs_logos[team_name] = img
+        except Exception as e:
+            print(f"Error loading logo for {team_name}: {e}")
+            fbs_fcs_logos[team_name] = None  # Placeholder if something fails
+
     i = 1
     for team in all_data['team']:
         if i % 10 == 0:
             print(i)
-        team_stats_visual(all_data, records, year_long_schedule, logos, team)
+        display_schedule_visual(team, all_data, uncompleted_games, uncompleted_conference_games, fbs_fcs_logos, fbs_fcs)
         i = i+1
     print("Stat Profiles Done!")
 except Exception as e:
