@@ -3407,6 +3407,81 @@ def get_team_column_value(df, team, column):
     return ""
 
 def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_conference_games, logo_cache, logos):
+
+    import matplotlib.colors as mcolors
+
+    dark_green = '#1D4D00'
+    medium_green = '#3C7300'
+    orange = '#D2691E'
+    black = '#000000'
+
+    def interpolate_color(c1, c2, factor):
+        """Interpolate between two hex colors based on factor (0 to 1)."""
+        color1 = mcolors.hex2color(c1)
+        color2 = mcolors.hex2color(c2)
+        return mcolors.rgb2hex([(1 - factor) * a + factor * b for a, b in zip(color1, color2)])
+
+    def at_least_color(team_probs):
+        """
+        Map team probabilities to hex colors.
+        Values near 0.50 are green; further away become orange → black.
+        Returns dict with same keys as team_probs.
+        """
+        result = {}
+        for team, prob in team_probs.items():
+            if prob < 0:
+                prob = 0
+            if prob > 1:
+                prob = 1
+            # Distance from 0.5, normalized to [0, 1]
+            dist = abs(prob - 0.5) / 0.5  
+
+            if dist <= 0.25:  
+                # 0 → 0.25 : dark green → medium green
+                factor = dist / 0.25
+                color = interpolate_color(dark_green, medium_green, factor)
+            elif dist <= 0.6:  
+                # 0.25 → 0.6 : medium green → orange
+                factor = (dist - 0.25) / (0.6 - 0.25)
+                color = interpolate_color(medium_green, orange, factor)
+            else:  
+                # 0.6 → 1.0 : orange → black
+                factor = (dist - 0.6) / (1.0 - 0.6)
+                color = interpolate_color(orange, black, factor)
+
+            result[team] = color
+        return result
+    
+    def exact_color(team_probs):
+        """
+        Map team probabilities to hex colors.
+        The highest probability is pinned at dark green, and others scale away
+        toward medium green → orange → black as they get lower.
+        Returns dict with same keys as team_probs.
+        """
+        result = {}
+        max_prob = max(team_probs.values())
+
+        for team, prob in team_probs.items():
+            # Scale relative to max (so max=0, worst=1)
+            dist = (max_prob - prob) / max_prob  
+
+            if dist <= 0.25:
+                # dark green → medium green
+                factor = dist / 0.25
+                color = interpolate_color(dark_green, medium_green, factor)
+            elif dist <= 0.6:
+                # medium green → orange
+                factor = (dist - 0.25) / (0.6 - 0.25)
+                color = interpolate_color(medium_green, orange, factor)
+            else:
+                # orange → black
+                factor = (dist - 0.6) / (1.0 - 0.6)
+                color = interpolate_color(orange, black, factor)
+
+            result[team] = color
+        return result
+
     team_data = all_data[all_data['team'] == team_name].reset_index(drop=True)
     team_idx = all_data[all_data['team'] == team_name].index[0] + 1
     team_uncompleted_conf_games = uncompleted_conference_games[(uncompleted_conference_games['home_team'] == team_name) | (uncompleted_conference_games['away_team'] == team_name)]
@@ -3524,9 +3599,9 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
     # ------------------------------------------------------------
     # rectangles for overall win percentage win percentage
     # ------------------------------------------------------------
-    gap_y = 1            # vertical gap between color_rect and down boxes
-    center_gap = 0.01       # horizontal gap in the middle
-    down_height = 6.9
+    gap_y = 0.8            # vertical gap between color_rect and down boxes
+    center_gap = 0.005       # horizontal gap in the middle
+    down_height = 7.9
     down_rect_y = rect_y - down_height - gap_y  # below color_rect with gap
     left_rect = patches.Rectangle(
         (rect_x, down_rect_y),                      # left starts at rect_x
@@ -3534,7 +3609,7 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
         down_height,
         linewidth=2,
         edgecolor="black",
-        facecolor="#A8A89A",
+        facecolor="#D8E6F3",
         zorder=5
     )
     ax.add_patch(left_rect)
@@ -3549,17 +3624,25 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
         left_y + padding, 
         len(numbers)
     )
+
+    colors = at_least_color(team_probs)
+    exact_colors_dict = exact_color(team_exact_probs)
+
     for num, y in zip(numbers, y_positions):
         value = team_probs.get(num, 0)
+        color = colors.get(num, 'black')
         exact = team_exact_probs.get(num,0)
+        this_exact_color = exact_colors_dict.get(num, 'black')
         display_prob = format_prob(value)
+        if str(num) == str(current_wins):
+            display_prob = '100%'
         exact_prob = format_prob(exact)
-        ax.text(left_x+0.025,y,str(num),ha="center",va="center",fontsize=16,color="black",fontweight='bold',zorder=6)
-        ax.text(left_x + left_w / 2,y,str(display_prob),ha="center",va="center",fontsize=16,color="black",fontweight='bold',zorder=6)
-        ax.text(left_x+0.14,y,str(exact_prob),ha="center",va="center",fontsize=16,color="black",fontweight='bold',zorder=6)
+        ax.text(left_x+0.03,y,str(num),ha="center",va="center",fontsize=24,color="black",fontweight='bold',zorder=6)
+        ax.text(left_x + left_w / 2,y,str(display_prob),ha="center",va="center",fontsize=24,color=color,fontweight='bold',zorder=6)
+        ax.text(left_x+0.14,y,str(exact_prob),ha="center",va="center",fontsize=24,color=this_exact_color,fontweight='bold',zorder=6)
         if num == "WINS":
-            ax.text(left_x + left_w / 2,y,">=",ha="center",va="center",fontsize=16,color="black",fontweight='bold',zorder=6)
-            ax.text(left_x+0.14,y,"=",ha="center",va="center",fontsize=16,color="black",fontweight='bold',zorder=6)
+            ax.text(left_x + left_w / 2,y,">=",ha="center",va="center",fontsize=24,color="black",fontweight='bold',zorder=6)
+            ax.text(left_x+0.14,y,"=",ha="center",va="center",fontsize=24,color="black",fontweight='bold',zorder=6)
 
     # ------------------------------------------------------------
     # rectangles for overall expected record
@@ -3573,23 +3656,23 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
         intermediate_height,                             # height smaller than gap
         linewidth=2,
         edgecolor="black",
-        facecolor="#D6D6C2",                             # choose a neutral fill or highlight
+        facecolor="black",                             # choose a neutral fill or highlight
         zorder=5
     )
     ax.add_patch(left_intermediate)
     left_x = rect_x
     left_w = rect_width / 2 - center_gap / 2
-    col_offsets = [0.025, left_w / 2, 0.11, 0.14]  # "OVR", expected wins, 12-expected
+    col_offsets = [0.03, left_w / 2, 0.11, 0.14]  # "OVR", expected wins, 12-expected
     texts = ["OVR", f"{expected_wins:.1f}", "-", f"{12 - expected_wins:.1f}"]
     y_center = intermediate_y + intermediate_height / 2
     for text, offset in zip(texts, col_offsets):
         ax.text(left_x + offset, y_center, text, ha="center", va="center",
-                fontsize=20, fontweight="bold", color="black", zorder=6)
+                fontsize=24, fontweight="bold", color="white", zorder=6)
 
     # ------------------------------------------------------------
     # rectangles for conference win percentages
     # ------------------------------------------------------------
-    right_down_height = 5.2  # desired height
+    right_down_height = 6.3  # desired height
     right_rect_top = down_rect_y + down_height - right_down_height  # align top with left
     right_rect = patches.Rectangle(
         (rect_x + rect_width / 2 + center_gap / 2, right_rect_top),  # bottom-left corner
@@ -3597,7 +3680,7 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
         right_down_height,                                            # height
         linewidth=2,
         edgecolor="black",
-        facecolor="#A8A89A",
+        facecolor="#D8E6F3",
         zorder=5
     )
     ax.add_patch(right_rect)
@@ -3613,20 +3696,26 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
         right_rect_bottom + padding,            # bottom of rectangle plus small padding
         len(numbers)
     )
+    colors = at_least_color(team_conf_probs)
+    exact_colors_dict = exact_color(team_exact_conf_probs)
     for num, y in zip(numbers, y_positions):
         # Grab probability values
         value = team_conf_probs.get(num, 0)           # probability >= X conf wins
+        color = colors.get(num, 'black')
         exact = team_exact_conf_probs.get(num, 0)     # probability = X conf wins
+        this_exact_color = exact_colors_dict.get(num, 'black')
         display_prob = format_prob(value)
+        if str(num) == str(current_conf_wins):
+            display_prob = '100%'
         exact_prob = format_prob(exact)
         # Column headers
-        ax.text(right_x + 0.025, y, str(num), ha="center", va="center", fontsize=16, color="black", fontweight='bold', zorder=6)
-        ax.text(right_x + right_w / 2, y, str(display_prob), ha="center", va="center", fontsize=16, color="black", fontweight='bold', zorder=6)
-        ax.text(right_x + 0.14, y, str(exact_prob), ha="center", va="center", fontsize=16, color="black", fontweight='bold', zorder=6)
+        ax.text(right_x + 0.03, y, str(num), ha="center", va="center", fontsize=24, color="black", fontweight='bold', zorder=6)
+        ax.text(right_x + right_w / 2, y, str(display_prob), ha="center", va="center", fontsize=24, color=color, fontweight='bold', zorder=6)
+        ax.text(right_x + 0.14, y, str(exact_prob), ha="center", va="center", fontsize=24, color=this_exact_color, fontweight='bold', zorder=6)
         # Add symbols for header row
         if num == "WINS":
-            ax.text(right_x + right_w / 2, y, ">=", ha="center", va="center", fontsize=16, color="black", fontweight='bold', zorder=6)
-            ax.text(right_x + 0.14, y, "=", ha="center", va="center", fontsize=16, color="black", fontweight='bold', zorder=6)
+            ax.text(right_x + right_w / 2, y, ">=", ha="center", va="center", fontsize=24, color="black", fontweight='bold', zorder=6)
+            ax.text(right_x + 0.14, y, "=", ha="center", va="center", fontsize=24, color="black", fontweight='bold', zorder=6)
 
     # ------------------------------------------------------------
     # rectangles for expected conference record
@@ -3637,71 +3726,88 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
         intermediate_height,
         linewidth=2,
         edgecolor="black",
-        facecolor="#D6D6C2",
+        facecolor="black",
         zorder=5
     )
     ax.add_patch(right_intermediate)
     right_x = rect_x + rect_width / 2 + center_gap / 2
     right_w = rect_width / 2 - center_gap / 2
-    col_offsets = [0.025, right_w / 2, 0.11, 0.14]  # "CONF", expected wins, "-", losses
+    col_offsets = [0.03, right_w / 2, 0.11, 0.14]  # "CONF", expected wins, "-", losses
     texts = ["CONF", f"{conference_expected_wins:.1f}", "-", f"{conference_games - conference_expected_wins:.1f}"]
     y_center = intermediate_y + intermediate_height / 2
     for text, offset in zip(texts, col_offsets):
         ax.text(right_x + offset, y_center, text, ha="center", va="center",
-                fontsize=20, fontweight="bold", color="black", zorder=6)
+                fontsize=24, fontweight="bold", color="white", zorder=6)
         
-    new_rect_height = 3.0        # height of the new rectangle
-    new_rect_y = down_rect_y - new_rect_height - 0.1  # slightly below left rectangle, with small gap
-    new_rect_color = "#FFF8E1"   # choose color
 
     # ------------------------------------------------------------
     # rectangles and data for ranking information
     # ------------------------------------------------------------
-    left_new_rect = patches.Rectangle(
-        (rect_x, new_rect_y),                 # same x as left rectangle
-        rect_width / 2 - center_gap / 2,      # same width as left rectangle
+    right_rect_y = right_rect_top
+    right_rect_height = 4
+    right_rect_x = rect_x + rect_width / 2 + center_gap / 2
+
+    # Place new rectangle below it
+    new_rect_height = 4.0
+    new_rect_y = right_rect_y - right_rect_height - 0.05   # just below right rect
+    new_rect_color = "#FFF8E1"
+
+    right_new_rect = patches.Rectangle(
+        (right_rect_x, new_rect_y),
+        rect_width / 2 - center_gap / 2,   # same width as right rect
         new_rect_height,
         linewidth=2,
         edgecolor="black",
         facecolor=new_rect_color,
         zorder=5
     )
-    ax.add_patch(left_new_rect)
+    ax.add_patch(right_new_rect)
+
+    # Data values
     offensive = get_team_column_value(all_data, team_name, "offensive_rank")
     defensive = get_team_column_value(all_data, team_name, "defensive_rank")
-    offensive_total = round(get_team_column_value(all_data, team_name, "offensive_total"),1)
-    defensive_total = -1*round(get_team_column_value(all_data, team_name, "defensive_total"),1)
+    offensive_total = round(get_team_column_value(all_data, team_name, "offensive_total"), 1)
+    defensive_total = -1 * round(get_team_column_value(all_data, team_name, "defensive_total"), 1)
     power_rating = get_team_column_value(all_data, team_name, "power_rating")
     most_deserving = get_team_column_value(all_data, team_name, "most_deserving")
     SOS = get_team_column_value(all_data, team_name, "SOS")
-    left_x = rect_x
-    left_w = rect_width / 2 - center_gap / 2
+
+    # Geometry for right side
+    right_x = rect_x + rect_width / 2 + center_gap / 2
+    right_w = rect_width / 2 - center_gap / 2
     y_top = new_rect_y + new_rect_height
-    col_offsets = [0.04, left_w / 2, left_w-0.04]
-    column_names = ["PEAR", "RTG", "RK"]
-    y_header = y_top - 0.27  # slightly below top of rectangle
+
+    # Column layout
+    col_offsets = [0.03, right_w / 2, right_w - 0.03]
+    column_names = ["", "RK", "RTG"]
+
+    # Header row
+    y_header = y_top - 0.5
     for name, offset in zip(column_names, col_offsets):
-        ax.text(left_x + offset, y_header, name, ha="center", va="center",
-                fontsize=14, fontweight="bold", color="black", zorder=6)
+        ax.text(right_x + offset, y_header, name, ha="center", va="center",
+                fontsize=24, fontweight="bold", color="black", zorder=6)
+
+    # Data rows
     row_labels = ["OVR", "OFF", "DEF", "MD", "SOS"]
     row_values = [
-        [power_rating, team_idx],
-        [offensive_total, offensive],
-        [defensive_total, defensive],
-        ["",most_deserving],
-        ["", SOS]
+        [team_idx, power_rating],
+        [offensive, offensive_total],
+        [defensive, defensive_total],
+        [most_deserving, ""],
+        [SOS, ""]
     ]
-    y_positions = [y_header-0.5, y_header-1, y_header-1.5, y_header-2.0, y_header-2.5]
+    y_positions = [y_header-0.6, y_header-1.2, y_header-1.8, y_header-2.4, y_header-3]
+
     for y, label, vals in zip(y_positions, row_labels, row_values):
-        ax.text(left_x + col_offsets[0], y, label, ha="center", va="center",
-                fontsize=14, fontweight="bold", color="black", zorder=6)
+        ax.text(right_x + col_offsets[0], y, label, ha="center", va="center",
+                fontsize=24, fontweight="bold", color="black", zorder=6)
         for val, offset in zip(vals, col_offsets[1:]):
-            ax.text(left_x + offset, y, f"{val}", ha="center", va="center",
-                    fontsize=14, fontweight="bold", color="black", zorder=6)
+            ax.text(right_x + offset, y, f"{val}", ha="center", va="center",
+                    fontsize=24, fontweight="bold", color="black", zorder=6)
 
     img = fbs_fcs_logos[team_name]
-    zoom = 0.4  # adjust as needed
-    x_img = rect_x + rect_width - 0.0115 # right edge of left rectangle
+    zoom = 0.25  # adjust as needed
+    x_img = rect_x + 0.1248 # right edge of left rectangle
     y_img = new_rect_y  # bottom of rectangle
     im = OffsetImage(img, zoom=zoom)
     ab = AnnotationBbox(im, (x_img, y_img), frameon=False,
