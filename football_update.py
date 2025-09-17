@@ -5398,8 +5398,8 @@ try:
             'Big Ten':9,
             'ACC':8,
             'Big 12':9,
-            'Mountain West':7,
-            'American Athletic':9,
+            'Mountain West':8,
+            'American Athletic':8,
             'Pac-12':1,
             'Sun Belt':8,
             'Mid-American':8,
@@ -5484,7 +5484,7 @@ try:
                     elif round(cumulative_probs[j]) == 100:
                         continue
                     elif round(cumulative_probs[j]) == 0:
-                        ax.text(15 + 2 * (num_conference_games[this_conference] - j), 0.5, f"<1%", transform=ax.transAxes, fontsize=12, ha='center', va='center', fontweight='bold')
+                        ax.text(15 + 2 * (num_conference_games[this_conference] - j), 0.5, f"", transform=ax.transAxes, fontsize=12, ha='center', va='center', fontweight='bold')
                     else:
                         ax.text(15 + 2 * (num_conference_games[this_conference] - j), 0.5, f"{round(cumulative_probs[j])}%", transform=ax.transAxes, fontweight='bold', fontsize=12, ha='center', va='center', color = get_color_percentage(cumulative_probs[j]))
 
