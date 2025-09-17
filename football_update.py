@@ -1696,7 +1696,54 @@ def analyze_simulation_conference(win_results, loss_results, schedules, records)
 
     return win_thresholds
 
-def plot_matchup(wins_df, all_conference_wins, logos_df, team_data, last_week_data, last_month_data, start_season_data, all_data, schedule_info, records, SOS, SOR, most_deserving, home_team, away_team, neutrality=False):
+import pandas as pd
+import numpy as np
+
+def create_conference_projection(all_data, uncompleted_conference_games):
+    teams = pd.unique(
+        uncompleted_conference_games[['home_team', 'away_team']].values.ravel()
+    )
+    
+    rows = []
+    all_columns = set()  # to track all columns across teams
+    
+    for team in teams:
+        team_row = {'team': team}
+        team_games = uncompleted_conference_games[
+            (uncompleted_conference_games['home_team'] == team) |
+            (uncompleted_conference_games['away_team'] == team)
+        ]
+        conf_game_wins = all_data.loc[all_data['team'] == team, 'conference_wins'].values[0]
+        conf_game_losses = all_data.loc[all_data['team'] == team, 'conference_losses'].values[0]
+        n_remaining = len(team_games)
+        
+        # Probabilities for at least 0 to n_remaining games (added to current wins)
+        for i in range(n_remaining + 1):
+            col_name = f'win_{conf_game_wins + i}'
+            prob = prob_win_at_least_x(team, i, uncompleted_conference_games)
+            team_row[col_name] = prob
+            all_columns.add(col_name)
+        
+        # Expected wins = current wins + expected from remaining games
+        expected_wins = conf_game_wins + sum(
+            row['PEAR_win_prob'] if row['home_team'] == team else 1 - row['PEAR_win_prob']
+            for _, row in team_games.iterrows()
+        )
+        team_row['expected_wins'] = expected_wins
+        team_row['expected_loss'] = n_remaining+conf_game_losses+conf_game_wins - expected_wins
+        all_columns.add('expected_wins')
+        all_columns.add('expected_loss')
+        
+        rows.append(team_row)
+    
+    # Create DataFrame (some NaNs will appear for teams with fewer columns)
+    df = pd.DataFrame(rows)
+    cols = ['team'] + sorted(c for c in all_columns if c.startswith('win_')) + ['expected_wins', 'expected_loss']
+    df = df[cols].fillna(0)
+    df = pd.merge(df, all_data[['team', 'conference']], how='left', on='team')
+    return df
+
+def plot_matchup(wins_df, logos_df, team_data, last_week_data, last_month_data, start_season_data, all_data, schedule_info, records, SOS, SOR, most_deserving, home_team, away_team, neutrality=False):
     sns.set(style='whitegrid')
     ################################# HELPER FUNCTIONS #################################
 
@@ -3342,6 +3389,7 @@ def transform_schedule(team_schedule: pd.DataFrame, team_name: str) -> pd.DataFr
         week = row["week"]
         GQI = row['GQI']
         pear = row['PEAR']
+        conf_game = row['conference_game']
 
         # Skip games that don't involve the target team
         if team_name not in [home_team, away_team]:
@@ -3383,6 +3431,7 @@ def transform_schedule(team_schedule: pd.DataFrame, team_name: str) -> pd.DataFr
             "completed": completed,
             "win": win,
             "location": location,
+            "conference_game": conf_game,
             "team_win_prob": team_win_prob,
             "PEAR":pear,
             "GQI":GQI
@@ -3573,10 +3622,14 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
             ax.text(x+0.36, y, f"{row['score']}", fontsize=20, ha='left', va='center', fontweight='bold')
         else:
             text_value = row['PEAR']
+            if team_name in text_value:
+                pear_color = "#267326"
+            else:
+                pear_color = "#993d3d"
             fontsize = 20  # default size
             if "Florida International" in text_value:
                 fontsize = 18
-            ax.text(x + 0.36, y,text_value,fontsize=fontsize,ha="left",va="center",fontweight="bold")
+            ax.text(x + 0.36, y,text_value,fontsize=fontsize,ha="left",va="center",fontweight="bold", color=pear_color)
             ax.text(x+0.57, y, f"{row['GQI']}", fontsize=20, ha='left', va='center', fontweight='bold')
 
         y -= 1
@@ -3609,7 +3662,7 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
         down_height,
         linewidth=2,
         edgecolor="black",
-        facecolor="#D8E6F3",
+        facecolor="#E2CDE2",
         zorder=5
     )
     ax.add_patch(left_rect)
@@ -3680,7 +3733,7 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
         right_down_height,                                            # height
         linewidth=2,
         edgecolor="black",
-        facecolor="#D8E6F3",
+        facecolor="#E2CDE2",
         zorder=5
     )
     ax.add_patch(right_rect)
@@ -3814,7 +3867,15 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
                         xycoords='data', box_alignment=(1, 0))  # align bottom-right
     ax.add_artist(ab)
 
-    ax.text(0.005, 0.15, "Graphic by @PEARatings | Inspired by @KFordRatings | Underlying Data from @CFB_Data", fontsize=14, ha='left', va='center', fontweight='bold')
+    conference_games = display_schedule[display_schedule['conference_game'] == True]
+    xWins = display_schedule[display_schedule['completed'] == True]['team_win_prob'].sum().round(1)
+    xLosses = round(len(display_schedule[display_schedule['completed'] == True]) - xWins,1)
+    xConfWins = conference_games[conference_games['completed'] == True]['team_win_prob'].sum().round(1)
+    xConfLosses = round(len(conference_games[conference_games['completed'] == True]) - xConfWins, 1)
+
+    ax.text(0.67, y_start+0.7, f"R: {current_wins} - {current_losses} ({current_conf_wins} - {current_conf_losses})", ha='left', va='center', fontsize=16, fontweight='bold')
+    ax.text(0.99, y_start+0.7, f"xR: {xWins} - {xLosses} ({xConfWins} - {xConfLosses})", ha='right', va='center', fontsize=16, fontweight='bold')
+    ax.text(0.005, 0.15, "Graphic by @PEARatings | Inspired by @KFordRatings | Underlying Data from @CFB_Data", fontsize=16, ha='left', va='center', fontweight='bold')
     ax.set_xlim(0, 1)
     ax.set_ylim(0, len(display_schedule) + 1)
     ax.axis("off")
@@ -5281,26 +5342,55 @@ except Exception as e:
     print(f"Error occurred while drawing Production Vs Talent: {e}")
 
 try:
-    team_conference_map = team_data.set_index('team')['conference'].to_dict()
-    year_long_schedule['home_conference'] = year_long_schedule['home_team'].map(team_conference_map)
-    year_long_schedule['away_conference'] = year_long_schedule['away_team'].map(team_conference_map)
-    conference_list = list(team_data['conference'].unique())
-    all_conference_wins = pd.DataFrame()
-    # Filter year_long_schedule where both home_conference and away_conference match conference_list[0]
-    for i in range(len(conference_list)):
-        conference_schedule = year_long_schedule[
-            (year_long_schedule['home_conference'] == conference_list[i]) &
-            (year_long_schedule['away_conference'] == conference_list[i])
-        ]
-        conference_team_data = team_data[team_data['conference'] == conference_list[i]]
-        uncompleted_conference_games = conference_schedule[conference_schedule['home_points'].isna()]
-        wins, losses = monte_carlo_simulation_conference(1000, uncompleted_conference_games, conference_team_data)
-        conference_wins = analyze_simulation_conference(wins, losses, uncompleted_conference_games, records)
-        conference_wins['conference'] = conference_list[i]
-        conference_wins = conference_wins.sort_values('expected_wins', ascending=False).reset_index(drop=True)
-        all_conference_wins = pd.concat([all_conference_wins, conference_wins])
+    # img = team_logos[this_conference_wins.loc[i, 'team']]
+    start_week = current_week
+    end_week = 16
+    games_list = []
+    for week in range(start_week,end_week):
+        response = games_api.get_games(year=2025, week=week,classification = 'fbs')
+        games_list = [*games_list, *response]
+    games = [dict(
+                id=g.id,
+                season=g.season,
+                week=g.week,
+                start_date=g.start_date,
+                home_team=g.home_team,
+                home_elo=g.home_pregame_elo,
+                away_team=g.away_team,
+                away_elo=g.away_pregame_elo,
+                home_points = g.home_points,
+                away_points = g.away_points,
+                neutral = g.neutral_site,
+                conference_game = g.conference_game
+                ) for g in games_list]
+    uncompleted_games = pd.DataFrame(games)
+    uncompleted_games = uncompleted_games.merge(team_data[['team', 'power_rating']], 
+                                        left_on='home_team', 
+                                        right_on='team', 
+                                        how='left').rename(columns={'power_rating': 'home_pr'})
+    uncompleted_games = uncompleted_games.drop(columns=['team'])
+    uncompleted_games = uncompleted_games.merge(team_data[['team', 'power_rating']], 
+                                        left_on='away_team', 
+                                        right_on='team', 
+                                        how='left').rename(columns={'power_rating': 'away_pr'})
+    uncompleted_games = uncompleted_games.drop(columns=['team'])
+    missing_rating =round(team_data['power_rating'].mean() - 2.25*team_data['power_rating'].std(),2)
+    uncompleted_games['home_pr'].fillna(missing_rating, inplace=True)
+    uncompleted_games['away_pr'].fillna(missing_rating, inplace=True)
+    uncompleted_games['PEAR_win_prob'] = uncompleted_games.apply(
+        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
+    )
+    uncompleted_games['home_win_prob'] = round((10**((uncompleted_games['home_elo'] - uncompleted_games['away_elo']) / 400)) / ((10**((uncompleted_games['home_elo'] - uncompleted_games['away_elo']) / 400)) + 1)*100,2)
 
-    def conference_standings():
+    uncompleted_games['pr_spread'] = (4.5 + uncompleted_games['home_pr'] + (uncompleted_games['home_win_prob'].apply(adjust_home_pr)) - uncompleted_games['away_pr']).round(1)
+    uncompleted_games['pr_spread'] = np.where(uncompleted_games['neutral'], uncompleted_games['pr_spread'] - 4.5, uncompleted_games['pr_spread']).round(1)
+    uncompleted_games['PEAR'] = uncompleted_games.apply(
+        lambda row: f"{row['away_team']} {-abs(row['pr_spread'])}" if ((row['pr_spread'] <= 0)) 
+        else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1)
+    uncompleted_conference_games = uncompleted_games[uncompleted_games['conference_game'] == True].reset_index(drop=True)
+    projection_dataframe = create_conference_projection(all_data, uncompleted_conference_games)
+
+    def conference_standings(projection_dataframe):
         conference_list = list(team_data['conference'].unique())
         all_figs = []
         num_conference_games = {
@@ -5315,6 +5405,8 @@ try:
             'Mid-American':8,
             'Conference USA':8
         }
+
+        import matplotlib.colors as mcolors
 
         dark_green = '#1D4D00'
         medium_green = '#3C7300'
@@ -5354,7 +5446,7 @@ try:
         for conference in conference_list:
             if (conference == 'FBS Independents') | (conference == 'Pac-12'):
                 continue
-            this_conference_wins = all_conference_wins[all_conference_wins['conference'] == conference]
+            this_conference_wins = projection_dataframe[projection_dataframe['conference'] == conference].sort_values('expected_wins', ascending=False).reset_index()
 
             this_conference = conference
             this_conference_games = num_conference_games[this_conference]
@@ -5366,6 +5458,8 @@ try:
             for i, ax in enumerate(axs.ravel()):
                 # Get the team logo URL
                 img = team_logos[this_conference_wins.loc[i, 'team']]
+                response = requests.get(logo_url)
+                img = Image.open(BytesIO(response.content))
                 
                 # Display the team logo with smaller size
                 ax.imshow(img, extent=(1,1.01,1.01,1), alpha=0.9)  # Adjust extent for smaller logo
@@ -5379,7 +5473,7 @@ try:
 
                 # Calculate cumulative probabilities of winning at least X games
                 win_columns = [f'win_{j}' for j in range(10)]  # win_0 to win_9
-                cumulative_probs = this_conference_wins.loc[i, win_columns].values[::-1].cumsum()[::-1] * 100  # Reverse, cumulative sum, and multiply by 100
+                cumulative_probs = this_conference_wins.loc[i, win_columns].values * 100  # Just grab the values and multiply by 100
                 
                 # Display cumulative win probabilities (at least X games)
                 for j in range(this_conference_games, games_won - 1, -1):  # Only for win totals >= games_won
@@ -5411,10 +5505,9 @@ try:
                 j+=1
             fig.text(0.38, 0.98, f"PEAR PROJECTED {this_conference.upper()} STANDINGS", fontsize=16, fontweight='bold', ha='left')
             fig.text(0.38, 0.95, "PERCENT CHANCE TO WIN AT LEAST _ CONFERENCE GAMES", fontsize =10, ha='left')
-
             file_path = os.path.join(conf_folder_path, f"{this_conference}")
             plt.savefig(file_path, bbox_inches='tight')
-    conference_standings()
+    conference_standings(projection_dataframe)
     print("Conference Projections Done!")
 except Exception as e:
     print(f"Error occurred while drawing Conference Projections: {e}")
@@ -5528,7 +5621,8 @@ try:
                 away_elo=g.away_pregame_elo,
                 home_points = g.home_points,
                 away_points = g.away_points,
-                neutral = g.neutral_site
+                neutral = g.neutral_site,
+                conference_game = g.conference_game
                 ) for g in games_list]
     full_display_schedule = pd.DataFrame(games)
     full_display_schedule = full_display_schedule.merge(team_data[['team', 'power_rating']], 
@@ -5654,7 +5748,7 @@ try:
         home_team = game['home_team'].strip()
         neutral = game['neutral']
         print(f"{home_team} vs. {away_team} - {i+1}/{len(week_games)}")
-        plot_matchup(win_thresholds_in_season, all_conference_wins, 
+        plot_matchup(win_thresholds_in_season, 
                             logos, team_data, last_week_data, last_month_data, 
                             start_season_data, all_data, year_long_schedule, records, SOS, SOR, most_deserving, home_team, away_team, neutral)
     print("Matchup Visuals Done!")
