@@ -3670,7 +3670,7 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
     offensive = get_team_column_value(all_data, team_name, "offensive_rank")
     defensive = get_team_column_value(all_data, team_name, "defensive_rank")
     offensive_total = round(get_team_column_value(all_data, team_name, "offensive_total"),1)
-    defensive_total = round(get_team_column_value(all_data, team_name, "defensive_total"),1)
+    defensive_total = -1*round(get_team_column_value(all_data, team_name, "defensive_total"),1)
     power_rating = get_team_column_value(all_data, team_name, "power_rating")
     most_deserving = get_team_column_value(all_data, team_name, "most_deserving")
     SOS = get_team_column_value(all_data, team_name, "SOS")
