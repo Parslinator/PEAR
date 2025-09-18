@@ -413,8 +413,8 @@ else:
 
     all_data.index = all_data.index + 1
     with st.container(border=True, height=440):
-        st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
-    st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
+        st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
+    st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
     # , MD - Most Deserving Rankings
 
 st.divider()
