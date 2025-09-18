@@ -130,87 +130,44 @@ def PEAR_Win_Prob(home_power_rating, away_power_rating):
     return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
 
 def average_team_distribution(num_simulations, schedules, average, team_name):
+    # Precompute opponent probabilities
+    is_home = schedules['home_team'] == team_name
+    win_probs = np.where(
+        is_home,
+        schedules['away_pr'].apply(lambda opp_pr: PEAR_Win_Prob(average, opp_pr)),
+        100 - schedules['home_pr'].apply(lambda opp_pr: PEAR_Win_Prob(opp_pr, average))
+    )  # <-- remove .to_numpy()
 
-    def simulate_game_average(win_prob):
-        random_outcome = np.random.random() * 100  # Generates a number between 0 and 100
-        if random_outcome < win_prob:
-            return "W"  # Home team wins, Away team loses
-        else:
-            return "L"  # Away team wins, Home team loses
-        
-    def simulate_season_average(schedules, team_name, average):
-        wins = 0
-        losses = 0
-        for _, game in schedules.iterrows():
-            if game['home_team'] == team_name:
-                opponent_team = game['away_team']
-                opponent_pr = game['away_pr']
-                win_prob = PEAR_Win_Prob(average, opponent_pr)
+    games_played = len(schedules)
 
-                # opponent_elo = game['away_elo']
-                # win_prob = round((10**((average-opponent_elo) / 400)) / ((10**((average-opponent_elo) / 400)) + 1)*100, 2)
-            else:
-                opponent_team = game['home_team']
-                opponent_pr = game['home_pr']
-                win_prob = 100 - PEAR_Win_Prob(opponent_pr, average)
+    # Monte Carlo simulation
+    random_matrix = np.random.rand(num_simulations, games_played) * 100
+    wins_matrix = random_matrix < win_probs  # True = win, False = loss
+    win_counts = wins_matrix.sum(axis=1)
+    loss_counts = games_played - win_counts
 
-                # opponent_elo = game['home_elo']
-                # win_prob = 100 - round((10**((opponent_elo-average) / 400)) / ((10**((opponent_elo-average) / 400)) + 1)*100, 2)
-            
-            outcome = simulate_game_average(win_prob)
-            if outcome == "W":
-                wins += 1
-            else:
-                losses += 1
+    # Adjust for 10 or 11 game schedules
+    if games_played == 11:
+        win_counts = win_counts + 0.948
+    elif games_played == 10:
+        win_counts = win_counts + 2 * 0.948
 
-        return wins, losses
-        
-    def monte_carlo_simulation_average(num_simulations, schedules, average, team_name):
-        """Runs a Monte Carlo simulation for an average team over multiple seasons."""
-        win_results = []
-        loss_results = []
+    avg_wins = np.mean(win_counts)
+    avg_losses = np.mean(loss_counts)
+    projected_wins = np.bincount(win_counts.astype(int)).argmax()
+    projected_losses = np.bincount(loss_counts.astype(int)).argmax()
 
-        for _ in range(num_simulations):
-            wins, losses = simulate_season_average(schedules, team_name, average)
-            win_results.append(wins)
-            loss_results.append(losses)
-        
-        return win_results, loss_results
+    # Compute win thresholds
+    win_distribution = np.bincount(win_counts.astype(int), minlength=13) / num_simulations
+    win_thresholds = pd.DataFrame([{
+        **{f'win_{i}': win_distribution[i] for i in range(13)},
+        'WIN6%': win_distribution[6:13].sum(),
+        'expected_wins': avg_wins,
+        'expected_losses': avg_losses,
+        'projected_wins': projected_wins,
+        'projected_losses': projected_losses
+    }])
 
-    import statistics
-    from collections import Counter
-    def analyze_simulation_average(win_results, loss_results, schedules):
-        games_played = len(schedules)
-        if games_played == 11:
-            win_results = [x + .948 for x in win_results]
-        elif games_played == 10:
-            win_results = [x + (2 * .948) for x in win_results]
-    
-        avg_wins = statistics.mean(win_results)
-        avg_loss = statistics.mean(loss_results)
-        most_common_win = statistics.mode(win_results)
-        most_common_loss = statistics.mode(loss_results)
-
-
-        win_counts = Counter(win_results)    
-        total_simulations = len(win_results)
-        win_percentages = {f"win_{wins}": (win_counts[wins] / total_simulations) for wins in range(13)}
-        win_thresholds = pd.DataFrame([win_percentages])
-        
-        # win_thresholds = {}
-        # for wins in range(13):  # 0 to 12 wins
-        #     win_thresholds[f'win_{wins}'] = win_df.apply(lambda x: (x == wins).sum() / len(x), axis=0)
-
-        win_thresholds['WIN6%'] = win_thresholds.loc[:, 'win_6':'win_12'].sum(axis=1)
-        win_thresholds['expected_wins'] = avg_wins
-        win_thresholds['expected_losses'] = avg_loss
-        win_thresholds['projected_wins'] = most_common_win
-        win_thresholds['projected_losses'] = most_common_loss
-
-        return win_thresholds
-    
-    avg_win, avg_loss = monte_carlo_simulation_average(num_simulations, schedules, average, team_name)
-    win_thresholds = analyze_simulation_average(avg_win, avg_loss,schedules)
     return win_thresholds
 
 if postseason:
@@ -3455,7 +3412,7 @@ def get_team_column_value(df, team, column):
         return match.iloc[0][column]
     return ""
 
-def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_conference_games, logo_cache, logos):
+def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_conference_games, cSOS, logo_cache, logos):
 
     import matplotlib.colors as mcolors
 
@@ -3532,6 +3489,7 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
         return result
 
     team_data = all_data[all_data['team'] == team_name].reset_index(drop=True)
+    team_conference = get_team_column_value(all_data, team_name, "conference")
     team_idx = all_data[all_data['team'] == team_name].index[0] + 1
     team_uncompleted_conf_games = uncompleted_conference_games[(uncompleted_conference_games['home_team'] == team_name) | (uncompleted_conference_games['away_team'] == team_name)]
     current_wins = team_data['wins'][0]
@@ -3547,6 +3505,17 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
     conference_expected_wins = round(sum(wins * prob for wins, prob in team_exact_conf_probs.items()),1)
     team_schedule = full_display_schedule[(full_display_schedule['home_team'] == team_name) | (full_display_schedule['away_team'] == team_name)]
     display_schedule = transform_schedule(team_schedule, team_name)
+
+    conf_exp_wins = {}
+    for other_team in all_data.loc[all_data['conference'] == team_conference, 'team']:
+        current_conf_wins_everyone = all_data.loc[all_data['team'] == other_team, 'conference_wins'].iloc[0]
+        probs_other = team_exact_win_probs(other_team, current_conf_wins_everyone, uncompleted_conference_games)
+        exp_wins = round(sum(w * p for w, p in probs_other.items()), 1)
+        conf_exp_wins[other_team] = exp_wins
+    conf_df = pd.DataFrame(list(conf_exp_wins.items()), columns=['team', 'expected_wins'])
+    conf_df['rank'] = conf_df['expected_wins'].rank(method='min', ascending=False).astype(int)
+    team_conf_rank = conf_df.loc[conf_df['team'] == team_name, 'rank'].iloc[0]
+
     opp_col="opponent"
     figsize=(20,10)
     zoom=0.1
@@ -3725,7 +3694,7 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
     # ------------------------------------------------------------
     # rectangles for conference win percentages
     # ------------------------------------------------------------
-    right_down_height = 6.3  # desired height
+    right_down_height = 6  # desired height
     right_rect_top = down_rect_y + down_height - right_down_height  # align top with left
     right_rect = patches.Rectangle(
         (rect_x + rect_width / 2 + center_gap / 2, right_rect_top),  # bottom-left corner
@@ -3824,6 +3793,11 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
     power_rating = get_team_column_value(all_data, team_name, "power_rating")
     most_deserving = get_team_column_value(all_data, team_name, "most_deserving")
     SOS = get_team_column_value(all_data, team_name, "SOS")
+    SOS_wins = round(get_team_column_value(all_data, team_name, "avg_expected_wins"),2)
+    playoff_prob = round(get_team_column_value(all_data, team_name, "prob_reach_wins"))
+    playoff_rank = round(get_team_column_value(all_data, team_name, "playoff_rank"))
+    cSOS_value = get_team_column_value(cSOS, team_name, 'cSOS')
+    cSOS_wins = round(get_team_column_value(cSOS, team_name, 'avg_expected_wins'),2)
 
     # Geometry for right side
     right_x = rect_x + rect_width / 2 + center_gap / 2
@@ -3835,33 +3809,38 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
     column_names = ["", "RK", "RTG"]
 
     # Header row
-    y_header = y_top - 0.5
+    y_header = y_top - 0.35
     for name, offset in zip(column_names, col_offsets):
         ax.text(right_x + offset, y_header, name, ha="center", va="center",
-                fontsize=24, fontweight="bold", color="black", zorder=6)
+                fontsize=18, fontweight="bold", color="black", zorder=6)
 
     # Data rows
-    row_labels = ["OVR", "OFF", "DEF", "MD", "SOS"]
+    row_labels = ["OVR", "OFF", "DEF", "SOS", "cSOS", "POF", "MD", "cFIN"]
     row_values = [
         [team_idx, power_rating],
         [offensive, offensive_total],
         [defensive, defensive_total],
+        [SOS, SOS_wins],
+        [cSOS_value, cSOS_wins],
+        [playoff_rank, f'{playoff_prob}%'],
         [most_deserving, ""],
-        [SOS, ""]
+        [team_conf_rank, ""]
     ]
-    y_positions = [y_header-0.6, y_header-1.2, y_header-1.8, y_header-2.4, y_header-3]
+    num_items = 8
+    spacing = 0.42
+    y_positions = [y_header - spacing - i * spacing for i in range(num_items)]
 
     for y, label, vals in zip(y_positions, row_labels, row_values):
         ax.text(right_x + col_offsets[0], y, label, ha="center", va="center",
-                fontsize=24, fontweight="bold", color="black", zorder=6)
+                fontsize=18, fontweight="bold", color="black", zorder=6)
         for val, offset in zip(vals, col_offsets[1:]):
             ax.text(right_x + offset, y, f"{val}", ha="center", va="center",
-                    fontsize=24, fontweight="bold", color="black", zorder=6)
+                    fontsize=18, fontweight="bold", color="black", zorder=6)
 
     img = fbs_fcs_logos[team_name]
     zoom = 0.25  # adjust as needed
-    x_img = rect_x + 0.1248 # right edge of left rectangle
-    y_img = new_rect_y  # bottom of rectangle
+    x_img = rect_x + 0.125 # right edge of left rectangle
+    y_img = new_rect_y - 0.35 # bottom of rectangle
     im = OffsetImage(img, zoom=zoom)
     ab = AnnotationBbox(im, (x_img, y_img), frameon=False,
                         xycoords='data', box_alignment=(1, 0))  # align bottom-right
@@ -4022,7 +4001,7 @@ except Exception as e:
 try:
     from matplotlib.colors import ListedColormap
     start_week = 1
-    end_week = 16
+    end_week = 17
     games_list = []
     for week in range(start_week,end_week):
         response = games_api.get_games(year=current_year, week=week,classification = 'fbs')
@@ -4344,7 +4323,7 @@ except Exception as e:
 
 try:
     start_week = current_week
-    end_week = 16
+    end_week = 17
     games_list = []
     for week in range(start_week,end_week):
         response = games_api.get_games(year=2025, week=week,classification = 'fbs')
@@ -5344,7 +5323,7 @@ except Exception as e:
 try:
     # img = team_logos[this_conference_wins.loc[i, 'team']]
     start_week = current_week
-    end_week = 16
+    end_week = 17
     games_list = []
     for week in range(start_week,end_week):
         response = games_api.get_games(year=2025, week=week,classification = 'fbs')
@@ -5513,7 +5492,7 @@ except Exception as e:
     print(f"Error occurred while drawing Conference Projections: {e}")
 
 start_week = 1
-end_week = 16
+end_week = 17
 games_list = []
 for week in range(start_week,end_week):
     response = games_api.get_games(year=current_year, week=week,classification = 'fbs')
@@ -5557,7 +5536,7 @@ year_long_schedule['home_win_prob'] = round((10**((year_long_schedule['home_elo'
 
 try:
     start_week = current_week
-    end_week = 16
+    end_week = 17
     games_list = []
     for week in range(start_week,end_week):
         response = games_api.get_games(year=2025, week=week,classification = 'fbs')
@@ -5602,7 +5581,7 @@ try:
         else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1)
     uncompleted_conference_games = uncompleted_games[uncompleted_games['conference_game'] == True].reset_index(drop=True)
     start_week = 1
-    end_week = 16
+    end_week = 17
     games_list = []
     for week in range(start_week,end_week):
         response = games_api.get_games(year=current_year, week=week,classification = 'fbs')
@@ -5698,11 +5677,48 @@ try:
             print(f"Error loading logo for {team_name}: {e}")
             fbs_fcs_logos[team_name] = None  # Placeholder if something fails
 
+    all_data['at_large_wins'] = np.ceil(all_data['avg_expected_wins']-0.5).astype(int)
+    all_data['wins_needed'] = all_data['at_large_wins'] - all_data['wins']
+    all_data['prob_reach_wins'] = all_data.apply(
+        lambda row: 100*prob_win_at_least_x(row['team'], row['wins_needed'], uncompleted_games).round(2),
+        axis=1
+    )
+    all_data['playoff_rank'] = (
+        all_data[['prob_reach_wins', 'power_rating']]
+        .apply(tuple, axis=1)                       # make row-wise tuples
+        .rank(method='min', ascending=False)        # rank higher = better
+        .astype(int)
+    )
+
+    average_elo = elo_ratings['elo'].mean()
+    average_pr = round(team_data['power_rating'].mean(), 2)
+    good_team_pr = round(team_data['power_rating'].std() + team_data['power_rating'].mean(),2)
+    elite_team_pr = round(2*team_data['power_rating'].std() + team_data['power_rating'].mean(),2)
+    expected_wins_list = []
+    conference_list = []
+    for team in team_data['team']:
+        this_conference = team_data[team_data['team'] == team]['conference'].values[0]
+        schedule = full_display_schedule[
+            (
+                (full_display_schedule['home_team'] == team) | 
+                (full_display_schedule['away_team'] == team)
+            ) &
+            (full_display_schedule['conference_game'] == True)
+        ]
+        df = average_team_distribution(1000, schedule, elite_team_pr, team)
+        expected_wins = df['expected_wins'].values[0]
+        expected_wins_list.append(expected_wins)
+        conference_list.append(this_conference)
+    cSOS = pd.DataFrame(zip(team_data['team'], expected_wins_list, conference_list), columns=['team', 'avg_expected_wins', 'conference'])
+    cSOS = cSOS.sort_values('avg_expected_wins').reset_index(drop = True)
+    cSOS['cSOS'] = cSOS.groupby('conference')['avg_expected_wins'] \
+                    .rank(method='min', ascending=True).astype(int)
+
     i = 1
     for team in all_data['team']:
         if i % 10 == 0:
             print(i)
-        display_schedule_visual(team, all_data, uncompleted_games, uncompleted_conference_games, fbs_fcs_logos, fbs_fcs)
+        display_schedule_visual(team, all_data, uncompleted_games, uncompleted_conference_games, cSOS, fbs_fcs_logos, fbs_fcs)
         i = i+1
     print("Stat Profiles Done!")
 except Exception as e:
