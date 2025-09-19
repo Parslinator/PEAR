@@ -3529,7 +3529,7 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
     y_start = len(display_schedule)  # top row
     y = y_start
     max_box=0.655 
-    ax.text(0.017, y_start+0.7, f'WK', fontsize=16, ha='center', va='center', fontweight='bold')
+    ax.text(0.015, y_start+0.7, f'WK', fontsize=16, ha='center', va='center', fontweight='bold')
     ax.text(x+0.03, y_start+0.7, f'LOC', fontsize=16, ha='left', va='center', fontweight='bold')
     ax.text(x+0.09, y_start+0.7, f"RK", fontsize=16, ha='right', va='center', fontweight='bold')
     ax.text(x+0.105, y_start+0.7, f"OPPONENT", fontsize=16, ha='left', va='center', fontweight='bold')
@@ -3542,6 +3542,7 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
     # ------------------------------------------------------------
     for _, row in display_schedule.iterrows():
         opp = row[opp_col]
+        conf_game = row['conference_game']
         if opp in all_data['team'].values:
             opp_idx = all_data[all_data['team'] == opp].index[0] + 1
         else:
@@ -3574,21 +3575,40 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
         )
         ax.add_patch(rect)
 
-        if img is not None:
+        if img is not None and opp != "Alcorn State":
             im = OffsetImage(img, zoom=zoom)
-            ab = AnnotationBbox(im, (x, y), frameon=False)
+            ab = AnnotationBbox(im, (x, y-0.02), frameon=False)
             ax.add_artist(ab)
-        else:
+        if img is None:
             ax.text(x, y, opp, ha="center", va="center")
 
-        ax.text(0.022, y, f'{week}', fontsize=20, ha='right', va='center', fontweight='bold')
-        ax.text(x+0.03, y, f'{location}', fontsize=20, ha='left', va='center', fontweight='bold')
-        ax.text(x+0.09, y, f"{opp_idx}", fontsize=20, ha='right', va='center', fontweight='bold')
-        ax.text(x+0.105, y, f"{opp}", fontsize=20, ha='left', va='center', fontweight='bold')
-        ax.text(x+0.28, y, f"{opp_off}", fontsize=20, ha='left', va='center', fontweight='bold')
-        ax.text(x+0.32, y, f"{opp_def}", fontsize=20, ha='left', va='center', fontweight='bold')
+        loc_x, rank_x = x+0.04, x+0.09
+        ax.text(0.024, y-0.04, f'{week}', fontsize=20, ha='right', va='center', fontweight='bold')
+        ax.text(loc_x, y-0.04, f'{location}', fontsize=20, ha='center', va='center', fontweight='bold')
+        ax.text(rank_x, y-0.04, f"{opp_idx}", fontsize=20, ha='right', va='center', fontweight='bold')
+
+        ax.text(x+0.105, y-0.04, f"{opp}", fontsize=20, ha='left', va='center', fontweight='bold')
+        ax.text(x+0.28, y-0.04, f"{opp_off}", fontsize=20, ha='left', va='center', fontweight='bold')
+        ax.text(x+0.32, y-0.04, f"{opp_def}", fontsize=20, ha='left', va='center', fontweight='bold')
+
+        if conf_game:
+            box_x = loc_x - 0.015     # small padding to the left
+            box_y = y - 0.321         # adjust vertical alignment
+            box_width = (rank_x - loc_x) - 0.02
+            box_height = 0.6
+            conf_rect = patches.Rectangle(
+                (box_x, box_y),
+                box_width,
+                box_height,
+                linewidth=2,
+                edgecolor="black",
+                facecolor="#DDA0DD",
+                zorder=2
+            )
+            ax.add_patch(conf_rect)
+
         if completed:
-            ax.text(x+0.36, y, f"{row['score']}", fontsize=20, ha='left', va='center', fontweight='bold')
+            ax.text(x+0.36, y-0.04, f"{row['score']}", fontsize=20, ha='left', va='center', fontweight='bold')
         else:
             text_value = row['PEAR']
             if team_name in text_value:
@@ -3598,8 +3618,8 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
             fontsize = 20  # default size
             if "Florida International" in text_value:
                 fontsize = 18
-            ax.text(x + 0.36, y,text_value,fontsize=fontsize,ha="left",va="center",fontweight="bold", color=pear_color)
-            ax.text(x+0.57, y, f"{row['GQI']}", fontsize=20, ha='left', va='center', fontweight='bold')
+            ax.text(x + 0.36, y-0.04,text_value,fontsize=fontsize,ha="left",va="center",fontweight="bold", color=pear_color)
+            ax.text(x+0.57, y-0.04, f"{row['GQI']}", fontsize=20, ha='left', va='center', fontweight='bold')
 
         y -= 1
 
