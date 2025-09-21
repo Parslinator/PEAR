@@ -4,11 +4,6 @@ from tqdm import tqdm # type: ignore
 import matplotlib.pyplot as plt # type: ignore
 import requests # type: ignore
 from PIL import Image # type: ignore
-from scipy.stats import norm # type: ignore
-import requests
-from PIL import Image
-from io import BytesIO
-from concurrent.futures import ThreadPoolExecutor, as_completed # type: ignore
 from io import BytesIO # type: ignore
 from matplotlib.lines import Line2D # type: ignore
 import cfbd # type: ignore
@@ -29,7 +24,6 @@ import math # type: ignore
 import matplotlib.patches as patches # type: ignore
 from unittest import result
 import datetime
-from datetime import timedelta
 import numpy as np # type: ignore
 from PIL import ImageGrab # type: ignore
 from base64 import b64decode # type: ignore
@@ -61,6 +55,7 @@ metrics_api = cfbd.MetricsApi(api_client)
 players_api = cfbd.PlayersApi(api_client)
 recruiting_api = cfbd.RecruitingApi(api_client)
 drives_api = cfbd.DrivesApi(api_client)
+GLOBAL_HFA = 3
 
 current_time = datetime.datetime.now(pytz.UTC)
 if current_time.month < 6:
@@ -82,12 +77,12 @@ current_year = int(calendar.loc[0, 'season'])
 
 first_game_start = calendar['first_game_start'].iloc[0]
 last_game_start = calendar['last_game_start'].iloc[-1]
-# current_week = None
+current_week = None
 if current_time < first_game_start:
-    # current_week = 1
+    current_week = 1
     postseason = False
 elif current_time > last_game_start:
-    # current_week = calendar.iloc[-2, -1] + 1
+    current_week = calendar.iloc[-2, -1] + 1
     postseason = True
 else:
     condition_1 = (calendar['first_game_start'] <= current_time) & (calendar['last_game_start'] >= current_time)
@@ -96,30 +91,16 @@ else:
     # Combine conditions
     result = calendar[condition_1 | condition_2].reset_index(drop=True)
     if result['season_type'][0] == 'regular':
-        # current_week = result['week'][0]
+        current_week = result['week'][0]
         postseason = False
     else:
-        # current_week = calendar.iloc[-2, -1] + 1
+        current_week = calendar.iloc[-2, -1] + 1
         postseason = True
 
-central = pytz.timezone("US/Central")
-now_ct = datetime.datetime.now(central)
-start_dt = central.localize(datetime.datetime(2025, 9, 2, 9, 0, 0))
-
-if now_ct < start_dt:
-    current_week = 1
-else:
-    current_week = 2
-    first_sunday = start_dt + timedelta(days=(6 - start_dt.weekday()))  # weekday: Mon=0, Sun=6
-    first_sunday = first_sunday.replace(hour=12, minute=0, second=0, microsecond=0)
-    if first_sunday <= start_dt:
-        first_sunday += timedelta(weeks=1)
-    if now_ct >= first_sunday:
-        weeks_since = ((now_ct - first_sunday).days // 7) + 1
-        current_week += weeks_since
-
+current_week=5
 current_year = int(current_year)
 current_week = int(current_week)
+
 print(f"Current Week: {current_week}, Current Year: {current_year}")
 print("Double Check The Current Week To Make Sure It Is Correct")
 
@@ -179,12 +160,6 @@ elo_ratings_dict = [dict(
     elo = e.elo
 ) for e in elo_ratings_list]
 elo_ratings = pd.DataFrame(elo_ratings_dict)
-if current_week == 1:
-    new_teams = pd.DataFrame({
-        "team": ["Missouri State", "Delaware"],
-        "elo": [1500, 1500]
-    })
-    elo_ratings = pd.concat([elo_ratings, new_teams], ignore_index=True)
 
 # team records
 records_list = []
@@ -244,15 +219,22 @@ team_fpi_dict = [dict(
 team_fpi = pd.DataFrame(team_fpi_dict)
 
 # sp ranks
-team_sp_list = []
-response = ratings_api.get_sp(year=current_year)
-team_sp_list = [*team_sp_list, *response]
-team_sp_dict = [dict(
-    team = t.team,
-    ranking = t.ranking,
-    sp_rating = t.rating
-) for t in team_sp_list]
-team_sp = pd.DataFrame(team_sp_dict).dropna()
+team_sp_list = ratings_api.get_sp(year=current_year)
+team_sp_dict = [
+    dict(
+        team=t.team,
+        ranking=t.ranking,
+        sp_rating=t.rating,
+        sp_offense_rating=t.offense.rating if t.offense else None,
+        sp_defense_rating=t.defense.rating if t.defense else None,
+        sp_special_teams_rating=t.special_teams.rating if t.special_teams else None,
+        offense_rank=t.offense.ranking if t.offense else None,
+        defense_rank=t.defense.ranking if t.defense else None
+    )
+    for t in team_sp_list
+]
+team_sp = pd.DataFrame(team_sp_dict).dropna(subset=["team"])
+
 
 # logo info
 logos_info_list = []
@@ -267,7 +249,6 @@ logos_info_dict = [dict(
 logos_info = pd.DataFrame(logos_info_dict)
 logos_info = logos_info.dropna(subset=['logo', 'color'])
 
-# advanced metrics
 advanced_metrics_response = []
 response = advanced_instance.get_advanced_season_stats(year = current_year)
 advanced_metrics_response = [*advanced_metrics_response, *response]
@@ -298,7 +279,76 @@ columns_to_keep = ['team', 'Offense_explosiveness', 'Defense_explosiveness', 'Of
                    'Offense_stuffRate','Defense_stuffRate','Offense_pointsPerOpportunity','Defense_pointsPerOpportunity',
                    'Offense_fieldPosition_averagePredictedPoints','Defense_fieldPosition_averagePredictedPoints',
                    'Offense_fieldPosition_averageStart','Defense_fieldPosition_averageStart']
+season_metrics = advanced_metrics[columns_to_keep]
+
+# advanced metrics
+advanced_metrics_response = []
+response = advanced_instance.get_advanced_game_stats(year = current_year)
+advanced_metrics_response = [*advanced_metrics_response, *response]
+advanced_metrics = pd.DataFrame()
+def flatten_dict(d, parent_key='', sep='_'):
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+for i in range(len(advanced_metrics_response)):
+    data = advanced_metrics_response[i].to_dict() if hasattr(advanced_metrics_response[i], 'to_dict') else vars(advanced_metrics_response[i])
+
+    offense_stats = flatten_dict(data['offense'], parent_key='Offense')
+    defense_stats = flatten_dict(data['defense'], parent_key='Defense')
+    combined_data = {
+        'team':data['team'],
+        'opponent':data['opponent'],
+        'week':data['week'],
+        **offense_stats,
+        **defense_stats
+    }
+    df = pd.DataFrame([combined_data])
+    advanced_metrics = pd.concat([advanced_metrics, df], ignore_index=True)
+columns_to_keep = ['team', 'opponent', 'week', 'Offense_drives', 'Offense_plays', 'Defense_drives', 'Defense_plays', 'Offense_explosiveness', 'Defense_explosiveness', 'Offense_ppa', 'Defense_ppa',
+                   'Offense_successRate','Defense_successRate','Offense_powerSuccess','Defense_powerSuccess',
+                   'Offense_stuffRate','Defense_stuffRate']
 metrics = advanced_metrics[columns_to_keep]
+
+ppa_response = []
+response = metrics_api.get_predicted_points_added_by_game(year = current_year)
+ppa_response = [*ppa_response, *response]
+ppa_metrics = pd.DataFrame()
+def flatten_dict(d, parent_key='', sep='_'):
+    items = []
+    for k, v in d.items():
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        if isinstance(v, dict):
+            items.extend(flatten_dict(v, new_key, sep=sep).items())
+        else:
+            items.append((new_key, v))
+    return dict(items)
+for i in range(len(ppa_response)):
+    data = ppa_response[i].to_dict() if hasattr(ppa_response[i], 'to_dict') else vars(ppa_response[i])
+
+    offense_stats = flatten_dict(data['offense'], parent_key='Offense')
+    defense_stats = flatten_dict(data['defense'], parent_key='Defense')
+    combined_data = {
+        'team':data['team'],
+        'opponent':data['opponent'],
+        'week':data['week'],
+        **offense_stats,
+        **defense_stats
+    }
+    df = pd.DataFrame([combined_data])
+    ppa_metrics = pd.concat([ppa_metrics, df], ignore_index=True)
+
+merged_metrics = pd.merge(
+    metrics,
+    ppa_metrics,
+    how='left',        # keep all rows from metrics, bring in matching ppa_metrics
+    on=['team', 'opponent', 'week'],
+    suffixes=('', '_ppa')  # optional, to differentiate overlapping columns
+)
 
 # conference sp
 conference_sp = []
@@ -365,7 +415,7 @@ recruiting = pd.DataFrame(recruiting_info_dict)
 start_week = 1
 end_week = current_week
 games_list = []
-for week in range(start_week,end_week+1):
+for week in range(start_week,end_week):
     response = games_api.get_games(year=current_year, week=week,classification = 'fbs')
     games_list = [*games_list, *response]
 games = [dict(
@@ -384,141 +434,248 @@ games = [dict(
 games.sort(key=date_sort)
 opponent_adjustment_schedule = pd.DataFrame(games)
 opponent_adjustment_schedule = opponent_adjustment_schedule.dropna(subset=['home_elo', 'away_elo']).reset_index(drop=True)
+updated_metrics = merged_metrics[(merged_metrics['team'].isin(team_info['team']))].reset_index(drop=True)
 
 print("Data Load Done")
 
+import pandas as pd
+import numpy as np
+
+# --- Step 1: Fix end_yards_to_goal for non-TD drives ---
 drives["end_yards_to_goal"] = np.where(
     (~drives["drive_result"].str.contains("TD")) & (drives["end_yards_to_goal"] == 0),
     drives["start_yards_to_goal"] - drives["yards"],
     drives["end_yards_to_goal"]
 )
 
-offense_stats = (
-    drives.groupby("offense")
+# --- Helper: summarize drives for offense/defense ---
+def summarize_drives(df, side):
+    return (
+        df.groupby(side)
           .apply(lambda g: pd.Series({
-              "offense_total_drives": len(g),
-              "offense_drives_40_or_less": (g["end_yards_to_goal"] <= 40).sum(),
-              "offense_3_and_outs": (((g["plays"] <= 3) & (g["drive_result"] == "PUNT")) | (g["end_yards_to_goal"] > 75)).sum()
+              f"{side}_total_drives": len(g),
+              f"{side}_drives_40_or_less": (g["end_yards_to_goal"] <= 40).sum(),
+              f"{side}_3_and_outs": (((g["plays"] <= 3) & (g["drive_result"] == "PUNT")) | 
+                                     (g["end_yards_to_goal"] > 75)).sum()
           }))
           .reset_index()
-          .rename(columns={"offense": "team"})
-)
+          .rename(columns={side: "team"})
+    )
 
-offense_stats["offense_pct_drives_40_or_less"] = (
-    offense_stats["offense_drives_40_or_less"] / offense_stats["offense_total_drives"] * 100
-)
-offense_stats["offense_pct_3_and_out"] = (
-    offense_stats["offense_3_and_outs"] / offense_stats["offense_total_drives"] * 100
-)
-defense_stats = (
-    drives.groupby("defense")
-          .apply(lambda g: pd.Series({
-              "defense_total_drives": len(g),
-              "defense_drives_40_or_less": (g["end_yards_to_goal"] <= 40).sum(),
-              "defense_3_and_outs": (((g["plays"] <= 3) & (g["drive_result"] == "PUNT")) | (g["end_yards_to_goal"] > 75)).sum()
-          }))
-          .reset_index()
-          .rename(columns={"defense": "team"})
-)
+# --- Step 2: Build offense/defense stats ---
+offense_stats = summarize_drives(drives, "offense")
+defense_stats = summarize_drives(drives, "defense")
 
-defense_stats["defense_pct_drives_40_or_less"] = (
-    defense_stats["defense_drives_40_or_less"] / defense_stats["defense_total_drives"] * 100
-)
-defense_stats["defense_pct_3_and_out"] = (
-    defense_stats["defense_3_and_outs"] / defense_stats["defense_total_drives"] * 100
-)
-combined = pd.merge(offense_stats, defense_stats, on="team", how="outer")
+# Percentage + quality scores
+for df, prefix in [(offense_stats, "offense"), (defense_stats, "defense")]:
+    df[f"{prefix}_pct_drives_40_or_less"] = (
+        df[f"{prefix}_drives_40_or_less"] / df[f"{prefix}_total_drives"] * 100
+    )
+    df[f"{prefix}_pct_3_and_out"] = (
+        df[f"{prefix}_3_and_outs"] / df[f"{prefix}_total_drives"] * 100
+    )
+
+combined = offense_stats.merge(defense_stats, on="team", how="outer")
 combined["offense_drive_quality"] = (
     combined["offense_pct_drives_40_or_less"] - combined["offense_pct_3_and_out"]
 )
 combined["defense_drive_quality"] = (
     combined["defense_pct_drives_40_or_less"] - combined["defense_pct_3_and_out"]
 )
-combined["offense_drive_quality_count"] = (
-    combined["offense_drives_40_or_less"] - combined["offense_3_and_outs"]
-)
-combined["defense_drive_quality_count"] = (
-    combined["defense_drives_40_or_less"] - combined["defense_3_and_outs"]
-)
+
+# Counts
+for side in ["offense", "defense"]:
+    combined[f"{side}_drive_quality_count"] = (
+        combined[f"{side}_drives_40_or_less"] - combined[f"{side}_3_and_outs"]
+    )
+
+# Round pct/quality columns
 for col in combined.filter(like="pct").columns.tolist() + [
     "offense_drive_quality", "defense_drive_quality"
 ]:
     combined[col] = combined[col].round(1)
 
-# Create dictionary for quick lookup of counts
-team_drive_stats = combined.set_index('team')[[
-    'offense_drive_quality_count', 'offense_total_drives',
-    'defense_drive_quality_count', 'defense_total_drives'
+# --- Step 3: Opponent adjustment helper ---
+def build_opponent_summary(schedule, base_df, metrics_map):
+    """
+    schedule: DataFrame with home_team, away_team
+    base_df: team-level stats (indexed by team)
+    metrics_map: dict mapping stat -> opp_stat name
+    """
+    opp_list = []
+    for _, row in schedule.iterrows():
+        h, a = row["home_team"], row["away_team"]
+        if h not in base_df.index or a not in base_df.index:
+            continue
+        for team, opp in [(h, a), (a, h)]:
+            opp_list.append({"team": team, **{
+                f"opp_{k}": base_df.loc[opp, k] for k in metrics_map
+            }})
+    opp_df = pd.DataFrame(opp_list)
+    return opp_df.groupby("team").mean().reset_index().rename(
+        columns={f"opp_{k}": f"avg_opp_{metrics_map[k]}" for k in metrics_map}
+    )
+
+# --- Step 4: Opponent adjustment for drive quality ---
+drive_map = {
+    "offense_drive_quality_count": "offense_drive_quality_pct",
+    "offense_total_drives": "offense_drive_quality_pct",  # denom
+    "defense_drive_quality_count": "defense_drive_quality_pct",
+    "defense_total_drives": "defense_drive_quality_pct"
+}
+
+team_drive_stats = combined.set_index("team")[
+    ["offense_drive_quality_count", "offense_total_drives",
+     "defense_drive_quality_count", "defense_total_drives"]
+]
+
+# Same process but condensed into groupby mean (instead of separate loop/agg)
+opp_drive_summary = build_opponent_summary(
+    opponent_adjustment_schedule,
+    team_drive_stats,
+    {
+        "offense_drive_quality_count": "offense_drive_quality_count",
+        "offense_total_drives": "offense_total_drives",
+        "defense_drive_quality_count": "defense_drive_quality_count",
+        "defense_total_drives": "defense_total_drives"
+    }
+)
+
+# Convert counts → percentages
+opp_drive_summary["avg_opp_offense_drive_quality_pct"] = (
+    opp_drive_summary["avg_opp_offense_drive_quality_count"] /
+    opp_drive_summary["avg_opp_offense_total_drives"] * 100
+)
+opp_drive_summary["avg_opp_defense_drive_quality_pct"] = (
+    opp_drive_summary["avg_opp_defense_drive_quality_count"] /
+    opp_drive_summary["avg_opp_defense_total_drives"] * 100
+)
+
+# --- Step 5: Merge back and compute adjusted drive quality ---
+combined = combined.merge(
+    opp_drive_summary[["team", "avg_opp_offense_drive_quality_pct", "avg_opp_defense_drive_quality_pct"]],
+    on="team", how="left"
+)
+combined["adj_offense_drive_quality"] = (
+    combined["offense_drive_quality"] - combined["avg_opp_defense_drive_quality_pct"]
+).round(1)
+combined["adj_defense_drive_quality"] = (
+    combined["defense_drive_quality"] - combined["avg_opp_offense_drive_quality_pct"]
+).round(1)
+
+drive_quality = combined[[
+    "team", "offense_drive_quality", "defense_drive_quality",
+    "avg_opp_offense_drive_quality_pct", "avg_opp_defense_drive_quality_pct",
+    "adj_offense_drive_quality", "adj_defense_drive_quality"
 ]]
 
-opp_drive_list = []
+# --- Step 6: Opponent adjustment for PPA & advanced stats ---
+team_ppa = season_metrics.set_index("team")[[
+    "Offense_ppa", "Defense_ppa",
+    "Offense_pointsPerOpportunity", "Defense_pointsPerOpportunity",
+    "Offense_explosiveness", "Defense_explosiveness",
+    "Offense_successRate", "Defense_successRate"
+]]
 
-for _, row in opponent_adjustment_schedule.iterrows():
-    home = row['home_team']
-    away = row['away_team']
-    if home not in team_drive_stats.index or away not in team_drive_stats.index:
-        continue
+metrics_map = {
+    "Offense_ppa": "offense_ppa",
+    "Defense_ppa": "defense_ppa",
+    "Offense_pointsPerOpportunity": "offense_ppo",
+    "Defense_pointsPerOpportunity": "defense_ppo",
+    "Offense_explosiveness": "offense_exp",
+    "Defense_explosiveness": "defense_exp",
+    "Offense_successRate": "offense_sr",
+    "Defense_successRate": "defense_sr"
+}
+
+opp_ppa_summary = build_opponent_summary(
+    opponent_adjustment_schedule, team_ppa, metrics_map
+)
+
+# Merge and compute adjusted values
+season_metrics = season_metrics.merge(opp_ppa_summary, on="team", how="left")
+season_metrics["adj_offense_ppa"] = season_metrics["Offense_ppa"] - season_metrics["avg_opp_defense_ppa"]
+season_metrics["adj_defense_ppa"] = season_metrics["Defense_ppa"] - season_metrics["avg_opp_offense_ppa"]
+season_metrics["adj_offense_ppo"] = season_metrics["Offense_pointsPerOpportunity"] - season_metrics["avg_opp_defense_ppo"]
+season_metrics["adj_defense_ppo"] = season_metrics["Defense_pointsPerOpportunity"] - season_metrics["avg_opp_offense_ppo"]
+season_metrics["adj_offense_exp"] = season_metrics["Offense_explosiveness"] - season_metrics["avg_opp_defense_exp"]
+season_metrics["adj_defense_exp"] = season_metrics["Defense_explosiveness"] - season_metrics["avg_opp_offense_exp"]
+season_metrics["adj_offense_sr"] = season_metrics["Offense_successRate"] - season_metrics["avg_opp_defense_sr"]
+season_metrics["adj_defense_sr"] = season_metrics["Defense_successRate"] - season_metrics["avg_opp_offense_sr"]
+season_metrics = season_metrics.merge(drive_quality, on="team", how="left")
+
+import pandas as pd
+
+# Assuming updated_metrics is your DataFrame
+exclude_cols = ['team', 'opponent', 'week']
+
+team_metrics_avg = (
+    updated_metrics
+    .drop(columns=exclude_cols)
+    .groupby(updated_metrics['team'])
+    .mean()
+    .reset_index()
+)
+
+import pandas as pd
+
+# Split offense and defense columns
+offense_cols = [c for c in team_metrics_avg.columns if c.startswith("Offense_")]
+defense_cols = [c for c in team_metrics_avg.columns if c.startswith("Defense_")]
+
+# Prepare opponent metrics for merging
+opponent_metrics = team_metrics_avg.rename(
+    columns={c: c + "_opp" for c in offense_cols + defense_cols}
+)[['team'] + [c + "_opp" for c in offense_cols + defense_cols]]
+
+# Merge opponent metrics
+metrics_adj = updated_metrics.merge(opponent_metrics, left_on='opponent', right_on='team', suffixes=('', '_opp'))
+
+# Compute adjusted stats safely
+adjusted_cols = []
+
+# Offense - Opponent Defense
+for col in offense_cols:
+    opp_def_col = col.replace("Offense", "Defense") + "_opp"
+    if opp_def_col in metrics_adj.columns:
+        new_col = col + "_adj"
+        metrics_adj[new_col] = metrics_adj[col] - metrics_adj[opp_def_col]
+        adjusted_cols.append(new_col)
+
+# Defense - Opponent Offense
+for col in defense_cols:
+    opp_off_col = col.replace("Defense", "Offense") + "_opp"
+    if opp_off_col in metrics_adj.columns:
+        new_col = col + "_adj"
+        metrics_adj[new_col] = metrics_adj[col] - metrics_adj[opp_off_col]
+        adjusted_cols.append(new_col)
+
+# Keep only relevant columns
+metrics_adj = metrics_adj[['team', 'opponent', 'week'] + adjusted_cols]
+
+import pandas as pd
+
+# Identify adjusted columns
+adj_cols = [c for c in metrics_adj.columns if c.endswith('_adj')]
+
+weighted_metrics_list = []
+
+# Compute EWMA for each team individually
+for team, df in metrics_adj.groupby('team'):
+    # Sort by week just to be safe
+    df = df.sort_values('week').reset_index(drop=True)
     
-    # Home perspective: opponent = away
-    opp_drive_list.append({
-        'team': home,
-        'opp_offense_quality_count': team_drive_stats.loc[away, 'offense_drive_quality_count'],
-        'opp_offense_total_drives': team_drive_stats.loc[away, 'offense_total_drives'],
-        'opp_defense_quality_count': team_drive_stats.loc[away, 'defense_drive_quality_count'],
-        'opp_defense_total_drives': team_drive_stats.loc[away, 'defense_total_drives']
-    })
+    # Apply EWMA per column; span controls how much recent games are weighted
+    span = 5  # you can tune this; higher = more weight to recent games
+    ewma_df = df[adj_cols].ewm(span=span, adjust=False).mean()
     
-    # Away perspective: opponent = home
-    opp_drive_list.append({
-        'team': away,
-        'opp_offense_quality_count': team_drive_stats.loc[home, 'offense_drive_quality_count'],
-        'opp_offense_total_drives': team_drive_stats.loc[home, 'offense_total_drives'],
-        'opp_defense_quality_count': team_drive_stats.loc[home, 'defense_drive_quality_count'],
-        'opp_defense_total_drives': team_drive_stats.loc[home, 'defense_total_drives']
-    })
+    # Take the last row (most recent EWMA) as the weighted metrics for the team
+    last_ewma = ewma_df.iloc[-1].to_dict()
+    last_ewma['team'] = team
+    weighted_metrics_list.append(last_ewma)
 
-# Build dataframe
-opp_drive_df = pd.DataFrame(opp_drive_list)
-
-# Aggregate: sum counts and total drives per team
-opp_drive_summary = opp_drive_df.groupby('team').agg(
-    sum_opp_offense_quality_count = ('opp_offense_quality_count', 'sum'),
-    sum_opp_offense_total_drives = ('opp_offense_total_drives', 'sum'),
-    sum_opp_defense_quality_count = ('opp_defense_quality_count', 'sum'),
-    sum_opp_defense_total_drives = ('opp_defense_total_drives', 'sum')
-).reset_index()
-
-# Compute opponent average drive quality percentages
-opp_drive_summary['avg_opp_offense_drive_quality_pct'] = (
-    opp_drive_summary['sum_opp_offense_quality_count'] / opp_drive_summary['sum_opp_offense_total_drives'] * 100
-)
-opp_drive_summary['avg_opp_defense_drive_quality_pct'] = (
-    opp_drive_summary['sum_opp_defense_quality_count'] / opp_drive_summary['sum_opp_defense_total_drives'] * 100
-)
-
-# Optional: round percentages
-opp_drive_summary[['avg_opp_offense_drive_quality_pct', 'avg_opp_defense_drive_quality_pct']] = \
-    opp_drive_summary[['avg_opp_offense_drive_quality_pct', 'avg_opp_defense_drive_quality_pct']].round(1)
-
-combined_with_adj = combined.merge(
-    opp_drive_summary[['team', 'avg_opp_offense_drive_quality_pct', 'avg_opp_defense_drive_quality_pct']],
-    on='team',
-    how='left'
-)
-
-combined_with_adj['adj_offense_drive_quality'] = (
-    combined_with_adj['offense_drive_quality'] - combined_with_adj['avg_opp_defense_drive_quality_pct']
-)
-
-combined_with_adj['adj_defense_drive_quality'] = (
-    combined_with_adj['defense_drive_quality'] - combined_with_adj['avg_opp_offense_drive_quality_pct']
-)
-
-# Optional: round percentages
-combined_with_adj[['adj_offense_drive_quality', 'adj_defense_drive_quality']] = \
-    combined_with_adj[['adj_offense_drive_quality', 'adj_defense_drive_quality']].round(1)
-
-drive_quality = combined_with_adj[['team', 'offense_drive_quality', 'defense_drive_quality', 'avg_opp_offense_drive_quality_pct', 'avg_opp_defense_drive_quality_pct', 'adj_offense_drive_quality', 'adj_defense_drive_quality']]
+# Combine into DataFrame
+weighted_metrics = pd.DataFrame(weighted_metrics_list)
 
 # entire talent profile for the team over the last three years
 last_three_rows = talent.groupby('team').tail(3)
@@ -537,86 +694,10 @@ intermediate_3 = pd.merge(intermediate_2, team_stats, how='left', on='team')
 intermediate_4 = pd.merge(intermediate_3, logos_info, how='left', on='team')
 intermediate_6 = pd.merge(intermediate_4, team_fpi, how='left', on='team')
 intermediate_7 = pd.merge(intermediate_6, records, how='left', on='team')
-team_data = pd.merge(intermediate_7, metrics, how='left', on='team')
-team_data = pd.merge(team_data, drive_quality, on='team', how='left')
+team_data = pd.merge(intermediate_7, weighted_metrics, how='left', on='team')
+team_data = pd.merge(team_data, season_metrics, on='team', how='left')
+team_data = pd.merge(team_data, team_sp, on='team', how='left')
 team_data = pd.merge(team_data, elo_ratings, on='team', how='left')
-
-# Step 1: Create a dictionary for quick PPA lookup
-team_ppa = metrics.set_index('team')[['Offense_ppa', 'Defense_ppa', 'Offense_pointsPerOpportunity', 'Defense_pointsPerOpportunity']]
-adjusted_ppa_list = []
-for _, row in opponent_adjustment_schedule.iterrows():
-    home = row['home_team']
-    away = row['away_team']
-    if home not in team_ppa.index or away not in team_ppa.index:
-        continue
-    adjusted_ppa_list.append({
-        'team': home,
-        'opp_offense_ppa': team_ppa.loc[away, 'Offense_ppa'],
-        'opp_defense_ppa': team_ppa.loc[away, 'Defense_ppa'],
-        'opp_offense_ppo': team_ppa.loc[away, 'Offense_pointsPerOpportunity'],
-        'opp_defense_ppo': team_ppa.loc[away, 'Defense_pointsPerOpportunity']
-    })
-    adjusted_ppa_list.append({
-        'team': away,
-        'opp_offense_ppa': team_ppa.loc[home, 'Offense_ppa'],
-        'opp_defense_ppa': team_ppa.loc[home, 'Defense_ppa'],
-        'opp_offense_ppo': team_ppa.loc[home, 'Offense_pointsPerOpportunity'],
-        'opp_defense_ppo': team_ppa.loc[home, 'Defense_pointsPerOpportunity']
-    })
-adjusted_df = pd.DataFrame(adjusted_ppa_list)
-opp_ppa_summary = adjusted_df.groupby('team').agg(
-    avg_opp_offense_ppa = ('opp_offense_ppa', 'mean'),
-    avg_opp_defense_ppa = ('opp_defense_ppa', 'mean'),
-    avg_opp_offense_ppo = ('opp_offense_ppo', 'mean'),
-    avg_opp_defense_ppo = ('opp_defense_ppo', 'mean')
-).reset_index()
-
-team_data = pd.merge(team_data, opp_ppa_summary, on='team', how='left')
-team_data['adj_offense_ppa'] = (
-    team_data['Offense_ppa'] - team_data['avg_opp_defense_ppa']
-)
-
-team_data['adj_defense_ppa'] = (
-    team_data['Defense_ppa'] - team_data['avg_opp_offense_ppa']
-)
-
-team_data['adj_offense_ppo'] = (
-    team_data['Offense_pointsPerOpportunity'] - team_data['avg_opp_defense_ppo']
-)
-
-team_data['adj_defense_ppo'] = (
-    team_data['Defense_pointsPerOpportunity'] - team_data['avg_opp_offense_ppo']
-)
-
-team_sr = metrics.set_index('team')[['Offense_successRate', 'Defense_successRate']]
-adjusted_sr_list = []
-for _, row in opponent_adjustment_schedule.iterrows():
-    home = row['home_team']
-    away = row['away_team']
-    if home not in team_sr.index or away not in team_sr.index:
-        continue
-    adjusted_sr_list.append({
-        'team': home,
-        'opp_offense_sr': team_sr.loc[away, 'Offense_successRate'],
-        'opp_defense_sr': team_sr.loc[away, 'Defense_successRate']
-    })
-    adjusted_sr_list.append({
-        'team': away,
-        'opp_offense_sr': team_sr.loc[home, 'Offense_successRate'],
-        'opp_defense_sr': team_sr.loc[home, 'Defense_successRate']
-    })
-adjusted_sr_df = pd.DataFrame(adjusted_sr_list)
-opp_sr_summary = adjusted_sr_df.groupby('team').agg(
-    avg_opp_offense_sr = ('opp_offense_sr', 'mean'),
-    avg_opp_defense_sr = ('opp_defense_sr', 'mean')
-).reset_index()
-team_data = pd.merge(team_data, opp_sr_summary, on='team', how='left')
-team_data['adj_offense_sr'] = (
-    team_data['Offense_successRate'] - team_data['avg_opp_defense_sr']
-)
-team_data['adj_defense_sr'] = (
-    team_data['Defense_successRate'] - team_data['avg_opp_offense_sr']
-)
 
 # For military schools and new FBS schools, use recruiting points instead of team talent
 # New FBS Schools - you get on here for 3 years
@@ -630,12 +711,46 @@ team_data = team_data.drop_duplicates(subset=["team"]).reset_index(drop=True)
 print("Data Formatting Done")
 print("Starting Optimization")
 
-############ IN HOUSE PR #################
-
-from scipy.stats import zscore, rankdata, spearmanr
-from scipy.optimize import differential_evolution
-import numpy as np
 import pandas as pd
+from scipy.stats import zscore
+
+off_def_metrics = season_metrics[[
+    "team",
+    "adj_offense_ppo",
+    "adj_offense_ppa",
+    "adj_offense_drive_quality",
+    "adj_defense_ppo",
+    "adj_defense_ppa",
+    "adj_defense_drive_quality"
+]].copy()
+raw_z = {
+    "off_ppa": zscore(off_def_metrics["adj_offense_ppa"], nan_policy="omit"),
+    "off_ppo": zscore(off_def_metrics["adj_offense_ppo"], nan_policy="omit"),
+    "off_dq": zscore(off_def_metrics["adj_offense_drive_quality"], nan_policy="omit"),
+    "def_ppa": zscore(off_def_metrics["adj_defense_ppa"], nan_policy="omit"),
+    "def_ppo": zscore(off_def_metrics["adj_defense_ppo"], nan_policy="omit"),
+    "def_dq": zscore(off_def_metrics["adj_defense_drive_quality"], nan_policy="omit"),
+}
+results_z = {
+    "off_ppa": raw_z["off_ppa"],
+    "off_ppo": raw_z["off_ppo"],
+    "off_dq": raw_z["off_dq"],
+    "def_ppa": -raw_z["def_ppa"],
+    "def_ppo": -raw_z["def_ppo"],
+    "def_dq": -raw_z["def_dq"],
+}
+team_data["offensive_total"] = (
+    results_z["off_ppa"] + results_z["off_ppo"] + results_z["off_dq"]
+)
+team_data["defensive_total"] = (
+    results_z["def_ppa"] + results_z["def_ppo"] + results_z["def_dq"]
+)
+team_data["offensive_rank"] = team_data["offensive_total"].rank(
+    ascending=False, method="dense"
+).astype(int)
+team_data["defensive_rank"] = team_data["defensive_total"].rank(
+    ascending=False, method="dense"  # higher defensive_total = better defense
+).astype(int)
 
 last_week = opponent_adjustment_schedule[opponent_adjustment_schedule['week'] == current_week-1]
 team_data['last_week'] = 0
@@ -648,90 +763,104 @@ away_results = pd.Series(np.where(
 results = pd.concat([home_results, away_results])
 team_data['last_week'] = team_data['team'].map(results).fillna(0).astype(int)
 
-# --- Step 1: Preprocess inputs ---
-if current_week <= 4:
-    team_data = team_data.dropna(subset=['offense_drive_quality']).reset_index(drop=True)
-    results = {
-        "off_ppa": team_data['Offense_ppa'],
-        "def_ppa": -team_data['Defense_ppa'],
-        "off_ppo": team_data['Offense_pointsPerOpportunity'],
-        "def_ppo": -team_data['Defense_pointsPerOpportunity'],
-        "off_sr": team_data['Offense_successRate'],
-        "def_sr": -team_data['Defense_successRate'],
-        "off_dq": team_data['offense_drive_quality'],
-        "def_dq": -team_data['defense_drive_quality'],
-        "last_week": team_data['last_week'],  # Add indicator here
-    }
-else:
-    results = {
-        "off_ppa": team_data['adj_offense_ppa'],
-        "def_ppa": -team_data['adj_defense_ppa'],
-        "off_ppo": team_data['adj_offense_ppo'],
-        "def_ppo": -team_data['adj_defense_ppo'],
-        "off_sr": team_data['adj_offense_sr'],
-        "def_sr": -team_data['adj_defense_sr'],
-        "off_dq": team_data['adj_offense_drive_quality'],
-        "def_dq": -team_data['adj_defense_drive_quality'],
-        "last_week": team_data['last_week'],  # Add indicator here
-    }
+import numpy as np
+from scipy.stats import rankdata, zscore
+from scipy.optimize import differential_evolution
+from scipy.stats import spearmanr
 
-metrics = pd.DataFrame(results)
-metrics['talent'] = team_data['avg_talent']
+# --- Step 0: Select modeling features ---
+core_metrics = [
+    'Offense_ppa_adj',
+    'Defense_ppa_adj',
+    'Offense_explosiveness_adj',
+    'Defense_explosiveness_adj',
+    'Offense_successRate_adj',
+    'Defense_successRate_adj',
+    'Offense_rushing_adj',
+    'Defense_rushing_adj',
+    'Offense_passing_adj',
+    'Defense_passing_adj'
+]
 
-# --- Step 2: Z-score (or replace with rank-power scaling if desired) ---
-z_metrics = metrics.apply(lambda col: zscore(col, nan_policy='omit')).fillna(0)
+defense_cols = [c for c in core_metrics if c.startswith('Defense')]
+offense_cols = [c for c in core_metrics if c.startswith('Offense')]
 
-# --- Step 3: FPI ranks ---
+# --- Step 1: Prepare modeling input ---
+model_input = team_data.copy()
+model_input[defense_cols] = model_input[defense_cols] * -1  # negate defense
+model_features = offense_cols + defense_cols + ['last_week', 'avg_talent']
+
+# Z-score features
+z_metrics = model_input[model_features].apply(lambda x: zscore(x, nan_policy='omit')).fillna(0)
+
+# FPI target ranks
 fpi_ranks = rankdata(-team_data['fpi'].values, method='ordinal')
 
-# --- Step 4: Fixed scale ---
-if current_week <= 3:
-    fixed_scale = 18
-elif current_week <= 4:
-    fixed_scale = 16
-else:
-    fixed_scale = 14
-
-lambda_reg = 0.01
-alpha = 0.8  # rank vs game spread balance
-
+# --- Step 2: Game schedule for margin loss ---
 team_to_idx = {t: i for i, t in enumerate(team_data['team'])}
 mask = opponent_adjustment_schedule['home_team'].isin(team_to_idx) & \
        opponent_adjustment_schedule['away_team'].isin(team_to_idx)
 schedule = opponent_adjustment_schedule.loc[mask].copy()
+
 h_idx = schedule['home_team'].map(team_to_idx).values
 a_idx = schedule['away_team'].map(team_to_idx).values
 actual_margin = schedule['home_points'].values - schedule['away_points'].values
-hfa = np.where(schedule['neutral'] == False, 4.5, 0)
+hfa = np.where(schedule['neutral'] == False, GLOBAL_HFA, 0)
 
 def game_abs_error(ratings):
     pred_margin = ratings[h_idx] + hfa - ratings[a_idx]
-    return np.mean(np.abs(pred_margin - actual_margin)) if len(pred_margin) > 0 else 0
+    return 2*np.mean(np.abs(pred_margin - actual_margin)) if len(pred_margin) > 0 else 0
 
-def objective(weights):
-    weights = np.array(weights)
+# --- Step 3: Identify offense and defense indices ---
+off_cols_idx = [i for i, c in enumerate(z_metrics.columns) if 'off' in c.lower()]
+def_cols_idx = [i for i, c in enumerate(z_metrics.columns) if 'def' in c.lower()]
+
+lambda_reg = 0.01
+alpha = 0.5  # rank vs game spread balance
+fixed_scale = 16
+
+# --- Step 4: Objective function with fixed scale and off/def penalty ---
+def objective(x):
+    weights = np.array(x)
     weights = weights / weights.sum()
     
-    if weights[-1] > 0.5:  # penalty if talent dominates
+    # Penalties on individual weights
+    if weights[-1] > 0.4:  # talent
         return 1e6
-    
+    if np.any(weights[:-1] > 0.15):
+        return 1e6
+
     ratings = (z_metrics.values @ weights) * fixed_scale
     model_ranks = rankdata(-ratings, method='ordinal')
-
+    
     rank_loss = np.abs(model_ranks - fpi_ranks).mean()
     game_loss = game_abs_error(ratings)
     l1_penalty = lambda_reg * np.sum(np.abs(weights))
     
-    return alpha * rank_loss + (1 - alpha) * game_loss + l1_penalty
+    # Offense vs defense sum penalty
+    off_sum = np.sum(weights[off_cols_idx])
+    def_sum = np.sum(weights[def_cols_idx])
+    off_def_penalty = 100 * abs(off_sum - def_sum)
+    
+    return alpha * rank_loss + (1 - alpha) * game_loss + l1_penalty + off_def_penalty
 
-bounds = [(0, 1)] * z_metrics.shape[1]
+# --- Step 5: Run differential evolution optimizer ---
+bounds = [(0, 1)] * (len(model_features))
 result = differential_evolution(objective, bounds, strategy='best1bin', maxiter=500, seed=42)
+
 opt_weights = result.x / sum(result.x)
-team_data['power_rating'] = (z_metrics @ opt_weights) * fixed_scale
+
+# --- Step 6: Compute final power ratings ---
+team_data['power_rating'] = (z_metrics.values @ opt_weights) * fixed_scale
 team_data['power_rating'] = team_data['power_rating'].round(1)
 
-for col, w in zip(z_metrics.columns, opt_weights):
+# --- Step 7: Output ---
+for col, w in zip(model_features, opt_weights):
     print(f"{col}: {w:.4f}")
+
+# --- Step 8: Final Spearman correlation ---
+corr, pval = spearmanr(team_data['power_rating'], team_data['fpi'])
+print(f"\nFinal Spearman correlation with FPI: {corr:.4f}")
 
 if current_week < 6:
     preseason = pd.read_csv("./PEAR/PEAR Football/y2025/Ratings/PEAR_week1.csv")
@@ -743,7 +872,7 @@ if current_week < 6:
     preseason.loc[preseason['team'] == 'Massachusetts', 'power_rating'] = -25.0
     preseason.loc[preseason['team'] == 'Liberty', 'power_rating'] = -10.0
     preseason.loc[preseason['team'] == 'James Madison', 'power_rating'] = 5.0
-    preseason.loc[preseason['team'] == 'UAB', 'power_rating'] = -20.0
+    preseason.loc[preseason['team'] == 'UAB', 'power_rating'] = -10.0
     merged = preseason.merge(
         team_data[['team', 'power_rating', 'games_played']],
         on='team',
@@ -775,8 +904,310 @@ if current_week < 6:
         on='team',
         how='left'
     )
-    team_data['power_rating'] = team_data['weighted_power']
+    team_data['in_house'] = team_data['weighted_power']
     team_data = team_data.drop(columns=['weighted_power'])
+
+# Requires: numpy, pandas, scipy, scikit-learn
+# Optional (faster/better): xgboost or lightgbm (code falls back to sklearn's GradientBoostingRegressor)
+
+import numpy as np
+import pandas as pd
+from scipy.stats import spearmanr
+from scipy.optimize import minimize_scalar
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+
+# Try to use xgboost if available (recommended). Falls back otherwise.
+try:
+    import xgboost as xgb
+    has_xgb = True
+except Exception:
+    has_xgb = False
+
+# ---------------------------
+# User inputs (expected variables)
+# ---------------------------
+# team_data: DataFrame with one row per team and columns:
+#   - 'team' (string) and 'fpi' (numeric)
+#   - model feature columns matching `model_features`
+# opponent_adjustment_schedule (or schedule): DataFrame with rows per game:
+#   - 'home_team', 'away_team', 'home_points', 'away_points', 'neutral' (bool)
+# model_features: list of columns in team_data to use as inputs (like your core_metrics plus extras)
+#
+# Example names used in this code: `team_data`, `opponent_adjustment_schedule`, `model_features`.
+# ---------------------------
+
+def fit_regressor(X, y, use_xgb=has_xgb):
+    """Fit a regressor. Use XGBoost if available, else sklearn's GradientBoostingRegressor."""
+    if use_xgb:
+        model = xgb.XGBRegressor(objective='reg:squarederror', n_estimators=300, max_depth=4, learning_rate=0.05, random_state=42)
+        model.fit(X, y)
+        return model
+    else:
+        model = GradientBoostingRegressor(n_estimators=400, max_depth=4, learning_rate=0.05, random_state=42)
+        model.fit(X, y)
+        return model
+
+def build_game_arrays(team_features_df, schedule_df, team_col='team'):
+    """Construct arrays for game-level training and evaluation. Returns indices + arrays."""
+    # map team -> index aligned to team_features_df
+    team_to_idx = {t: i for i, t in enumerate(team_features_df.index)}
+    # Keep only games with both teams present
+    mask = schedule_df['home_team'].isin(team_to_idx) & schedule_df['away_team'].isin(team_to_idx)
+    sched = schedule_df.loc[mask].reset_index(drop=True).copy()
+    h_idx = sched['home_team'].map(team_to_idx).values
+    a_idx = sched['away_team'].map(team_to_idx).values
+    actual_margin = sched['home_points'].values - sched['away_points'].values
+    # home field advantage in points (you can change GLOBAL_HFA)
+    hfa = np.where(sched['neutral'] == False, GLOBAL_HFA, 0.0)
+    return sched, h_idx, a_idx, actual_margin, hfa
+
+from sklearn.preprocessing import StandardScaler
+def train_fpi_model(team_data, model_features, sp_weight, scaler=None):
+    """
+    Train a team-level model with target as a combination of 'fpi' and 'sp_rating'.
+    
+    sp_weight: weight given to 'sp_rating' in target; 0.0 = use only FPI, 1.0 = use only SP rating
+    """
+    X = team_data[model_features].values.astype(float)
+
+    # Combine targets
+    y = (1.0 - sp_weight) * team_data['fpi'].values + sp_weight * team_data['sp_rating'].values
+
+    # Always fit a fresh scaler
+    scaler = StandardScaler()
+    Xs = scaler.fit_transform(X)
+
+    reg = fit_regressor(Xs, y)
+    return reg, scaler
+
+def train_margin_model(team_df, sched, h_idx, a_idx, actual_margin, hfa, model_features, scaler=None):
+    HF = team_df[model_features].values.astype(float)
+    diffs = HF[h_idx, :] - HF[a_idx, :]
+
+    # Scale only diffs
+    scaler = StandardScaler()
+    diffs_scaled = scaler.fit_transform(diffs)
+
+    # Append raw hfa (not scaled with team features)
+    X_games = np.hstack([diffs_scaled, hfa.reshape(-1, 1)])
+    y_games = actual_margin
+
+    reg = fit_regressor(X_games, y_games)
+    return reg, scaler
+
+def compute_team_ratings_from_margin_model(margin_model, team_df, model_features, scaler):
+    X = team_df[model_features].values.astype(float)
+    Xs = scaler.transform(X)  # matches feature count (no hfa here)
+    ratings = margin_model.predict(np.hstack([Xs, np.zeros((Xs.shape[0], 1))]))  
+    return ratings
+
+def calibrate_fpi_to_points(rating_fpi_raw, h_idx, a_idx, actual_margin):
+    """Find scalar s such that s*(rating_fpi[h] - rating_fpi[a]) ≈ actual_margin in least squares sense.
+       Returns scaling s (float). If denominator is near-zero, returns s=1. """
+    d = rating_fpi_raw[h_idx] - rating_fpi_raw[a_idx]
+    denom = np.sum(d * d)
+    if denom <= 1e-8:
+        return 1.0
+    s = np.sum(d * actual_margin) / denom
+    return float(s)
+
+def game_abs_error_from_ratings(ratings, h_idx, a_idx, actual_margin, hfa):
+    preds = ratings[h_idx] + hfa - ratings[a_idx]
+    return np.mean(np.abs(preds - actual_margin))
+
+def build_off_def_ratings(team_data, model_features):
+    """
+    Optimizes offense and defense ratings using differential evolution to
+    match SP+ ratings, then returns only offense_rating and defense_rating.
+    Prints learned weights for transparency.
+    """
+    # Identify offense and defense columns
+    offense_feats = [f for f in model_features if f.startswith("Offense_")]
+    defense_feats = [f for f in model_features if f.startswith("Defense_")]
+
+    # Normalize selected features
+    normed = team_data.copy()
+    for col in offense_feats + defense_feats:
+        normed[col] = zscore(normed[col].astype(float))
+
+    # Objective functions
+    def loss_off(weights):
+        score = np.dot(normed[offense_feats].values, weights)
+        return -spearmanr(score, normed["sp_offense_rating"])[0]
+
+    def loss_def(weights):
+        score = np.dot(normed[defense_feats].values, weights)
+        return -spearmanr(score, normed["sp_defense_rating"])[0]
+
+    # Bounds for weights
+    bounds_off = [(-2, 2)] * len(offense_feats)
+    bounds_def = [(-2, 2)] * len(defense_feats)
+
+    # Run differential evolution
+    result_off = differential_evolution(loss_off, bounds_off, maxiter=500, polish=True)
+    result_def = differential_evolution(loss_def, bounds_def, maxiter=500, polish=True)
+
+    # Extract weights and compute ratings
+    off_weights = result_off.x
+    def_weights = result_def.x
+
+    normed["offense_rating"] = np.dot(normed[offense_feats].values, off_weights)
+    normed["defense_rating"] = np.dot(normed[defense_feats].values, def_weights)
+
+    # Print learned weights
+    print("\n[Offense Weights]")
+    for f, w in zip(offense_feats, off_weights):
+        print(f"{f}: {w:.4f}")
+    print(f"Spearman(optimized_offense, sp_offense_rating) = {spearmanr(normed['offense_rating'], normed['sp_offense_rating'])[0]:.4f}")
+
+    print("\n[Defense Weights]")
+    for f, w in zip(defense_feats, def_weights):
+        print(f"{f}: {w:.4f}")
+    print(f"Spearman(optimized_defense, sp_defense_rating) = {spearmanr(normed['defense_rating'], normed['sp_defense_rating'])[0]:.4f}")
+
+    return normed[["team", "offense_rating", "defense_rating"]]
+
+# ---------------------------
+# Full pipeline function
+# ---------------------------
+def build_power_ratings(team_data, opponent_adjustment_schedule, model_features,
+                        use_scaler=True, beta=0.8, sp_weight=0.3, verbose=True):
+    """
+    Main pipeline:
+      - train team-level regressor to a combination of 'fpi' and 'sp_rating'
+      - train game-level regressor to margin
+      - calibrate team-level predictions into points units
+      - find ensemble weight w to prioritize game accuracy with optional correlation to FPI
+    Returns updated team_data with 'power_rating' + diagnostics
+    """
+    # Keep index aligned by team
+    team_df = team_data.set_index('team', drop=False).copy()
+    teams = team_df['team'].tolist()
+
+    # optional scaler (StandardScaler over team features)
+    scaler = StandardScaler() if use_scaler else None
+
+    # --- Train fpi model using combined target ---
+    X_team = team_df[model_features].values.astype(float)
+    y_combined = (1 - sp_weight) * team_df['fpi'].values + sp_weight * team_df['sp_rating'].values
+
+    # Always refit scaler
+    scaler = StandardScaler()
+    X_team_scaled = scaler.fit_transform(X_team)
+
+    fpi_model = fit_regressor(X_team_scaled, y_combined)
+
+    # Predict raw team-level estimates
+    rating_fpi_raw = fpi_model.predict(X_team_scaled)
+
+    # Build game arrays
+    sched, h_idx, a_idx, actual_margin, hfa = build_game_arrays(team_df, opponent_adjustment_schedule, team_col='team')
+
+    # Train margin model (uses diffs and hfa)
+    margin_model, scaler_margin = train_margin_model(
+        team_df,
+        sched,
+        h_idx,
+        a_idx,
+        actual_margin,
+        hfa,
+        model_features=model_features
+    )
+
+    # Derive per-team margin-based ratings
+    ratings_margin = compute_team_ratings_from_margin_model(
+        margin_model, team_df, model_features, scaler=scaler_margin
+    )
+
+    # Calibrate fpi-predictions into points
+    s = calibrate_fpi_to_points(rating_fpi_raw, h_idx, a_idx, actual_margin)
+    rating_fpi_points = s * rating_fpi_raw
+
+    # baseline diagnostics
+    spearman_fpi_only = spearmanr(rating_fpi_raw, team_df['fpi']).correlation
+    spearman_margin_only = spearmanr(ratings_margin, team_df['fpi']).correlation
+    baseline_margin_mae = np.mean(np.abs(actual_margin)) if len(actual_margin) > 0 else 1.0
+
+    if verbose:
+        print(f"[diagnostic] Spearman(raw_fpi_pred, fpi): {spearman_fpi_only:.4f}")
+        print(f"[diagnostic] Spearman(margin_rating, fpi): {spearman_margin_only:.4f}")
+        print(f"[diagnostic] Calibration scalar s (fpi -> points): {s:.4f}")
+
+    # Optimize ensemble weight w prioritizing MAE first
+    def objective_w(w):
+        ensemble = w * rating_fpi_points + (1 - w) * ratings_margin
+
+        # Compute Spearman vs combined target
+        combined_target = (1 - sp_weight) * team_df['fpi'].values + sp_weight * team_df['sp_rating'].values
+        sp = spearmanr(ensemble, combined_target).correlation
+        if np.isnan(sp):
+            sp = 0.0
+
+        # Game-level MAE penalty (secondary)
+        mae = game_abs_error_from_ratings(ensemble, h_idx, a_idx, actual_margin, hfa)
+        loss = -float(sp) + beta * float(mae / baseline_margin_mae)
+        return loss
+
+    res = minimize_scalar(objective_w, bounds=(0.0, 1.0), method='bounded', options={'xatol':1e-4})
+    w_opt = float(res.x)
+
+    # Final ensemble
+    ensemble_points = w_opt * rating_fpi_points + (1 - w_opt) * ratings_margin + 0.5 * team_df['in_house'].values
+    scale_factor = 1.0 / (s+0.35)
+    team_df['power_rating'] = np.round(scale_factor * ensemble_points, 1)
+    team_df['power_rating'] = np.round(team_df['power_rating'] - team_df['power_rating'].mean(), 1)
+    ensemble_points = team_df['power_rating'].values
+
+    # Final diagnostics
+    final_spearman = spearmanr(ensemble_points, team_df['fpi']).correlation
+    final_mae = game_abs_error_from_ratings(ensemble_points, h_idx, a_idx, actual_margin, hfa)
+
+    if verbose:
+        print(f"[result] Optimized ensemble weight w = {w_opt:.4f}")
+        print(f"[result] Final Spearman(ensemble, fpi) = {final_spearman:.4f}")
+        print(f"[result] Final game MAE = {final_mae:.3f} (baseline mean-abs-margin = {baseline_margin_mae:.3f})")
+
+    # Return updated team_data and diagnostics
+    out_team_data = team_df.reset_index(drop=True)
+    diagnostics = {
+        'w_opt': w_opt,
+        'calibration_s': s,
+        'spearman_fpi_only': spearman_fpi_only,
+        'spearman_margin_only': spearman_margin_only,
+        'final_spearman': final_spearman,
+        'final_game_mae': final_mae,
+        'baseline_mean_abs_margin': baseline_margin_mae,
+        'fpi_model': fpi_model,
+        'margin_model': margin_model,
+        'scaler': scaler
+    }
+    return out_team_data, diagnostics
+
+# ---------------------------
+# Example usage:
+# ---------------------------
+# team_data, opponent_adjustment_schedule, model_features must exist in your environment.
+# team_data_out, diag = build_power_ratings(team_data, opponent_adjustment_schedule, model_features)
+# print(team_data_out[['team','power_rating']].sort_values('power_rating', ascending=False).head(20))
+
+model_features = [
+    'Offense_ppa_adj',
+    'Defense_ppa_adj',
+    'Offense_explosiveness_adj',
+    'Defense_explosiveness_adj',
+    'Offense_successRate_adj',
+    'Defense_successRate_adj',
+    'Offense_rushing_adj',
+    'Defense_rushing_adj',
+    'Offense_passing_adj',
+    'Defense_passing_adj',
+    'last_week',
+    'avg_talent',
+    'in_house'
+]
+team_data, diagnostics = build_power_ratings(team_data, opponent_adjustment_schedule, model_features)
 
 ######################################## TEAM STATS AND RANKINGS #################################################
 
@@ -857,28 +1288,6 @@ team_data['DDE'] = (
     (1.6 * team_data['sacks'])
 )
 team_data['DDE_rank'] = team_data['DDE'].rank(method='min', ascending=False)
-
-raw_z = {k: zscore(v, nan_policy="omit") for k, v in results.items()}
-results_z = {
-    "off_ppa": raw_z["off_ppa"],
-    "off_ppo": raw_z["off_ppo"],
-    "off_dq": raw_z["off_dq"],
-    "def_ppa": -raw_z["def_ppa"],
-    "def_ppo": -raw_z["def_ppo"],
-    "def_dq": -raw_z["def_dq"],
-}
-team_data["offensive_total"] = (
-    results_z["off_ppa"] + results_z["off_ppo"] + results_z["off_dq"]
-)
-team_data["defensive_total"] = (
-    results_z["def_ppa"] + results_z["def_ppo"] + results_z["def_dq"]
-)
-team_data["offensive_rank"] = team_data["offensive_total"].rank(
-    ascending=False, method="dense"
-).astype(int)
-team_data["defensive_rank"] = team_data["defensive_total"].rank(
-    ascending=True, method="dense"
-).astype(int)
 
 team_data['talent_scaled_rank'] = team_data['talent_scaled'].rank(method='min', ascending=False)
 team_data['offense_success_rank'] = team_data['offense_success_scaled'].rank(method='min', ascending=False)
@@ -1038,6 +1447,7 @@ completed_games = year_long_schedule[year_long_schedule['home_points'].notna()]
 completed_games['margin_of_victory'] = completed_games['home_points'] - completed_games['away_points']
 std_dev = completed_games['margin_of_victory'].abs().std()
 
+from scipy.stats import norm
 team_probabilities = []
 for team in team_data['team']:
     games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
@@ -1057,9 +1467,9 @@ for team in team_data['team']:
             away_pr = fallback_value
 
         if team == home:
-            expected = 4.5 + home_pr - away_pr
+            expected = GLOBAL_HFA + home_pr - away_pr
         else:
-            expected = away_pr - (home_pr + 4.5)
+            expected = away_pr - (home_pr + GLOBAL_HFA)
             mov = -mov
 
         z = (mov - expected) / std_dev
@@ -1171,6 +1581,7 @@ while week_to_check <= current_week:
 # Unique list of teams from your main dataset
 unique_teams = all_data['team'].unique()
 
+from concurrent.futures import ThreadPoolExecutor, as_completed # type: ignore
 # Function to fetch a team's logo using the logos DataFrame
 def fetch_logo(team):
     try:
@@ -1726,7 +2137,7 @@ def plot_matchup(wins_df, logos_df, team_data, last_week_data, last_month_data, 
         if neutral:
             spread = round((home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
         else:
-            spread = round((4.5 + home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
+            spread = round((GLOBAL_HFA + home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
         if (home_team == team_name) & (spread > 0):
             output = "-" + str(spread)
         elif (home_team == team_name) & (spread < 0):
@@ -1982,9 +2393,9 @@ def plot_matchup(wins_df, logos_df, team_data, last_week_data, last_month_data, 
 
     home_win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1)*100,2)
     PEAR_home_prob = PEAR_Win_Prob(home_power_rating, away_power_rating)
-    spread = (4.5 + home_power_rating + adjust_home_pr(home_win_prob) - away_power_rating).round(1)
+    spread = (GLOBAL_HFA + home_power_rating + adjust_home_pr(home_win_prob) - away_power_rating).round(1)
     if neutrality:
-        spread = (spread - 4.5).round(1)
+        spread = (spread - GLOBAL_HFA).round(1)
     spread = round(spread,1)
     if (spread) <= 0:
         formatted_spread = (f'{away_team} {spread}')
@@ -2262,7 +2673,7 @@ def plot_win_probabilities(wins_df, all_conference_wins, logos_df, team_data, la
         if neutral:
             spread = round((home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
         else:
-            spread = round((4.5 + home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
+            spread = round((GLOBAL_HFA + home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
         if (home_team == team_name) & (spread > 0):
             output = "-" + str(spread)
         elif (home_team == team_name) & (spread < 0):
@@ -3050,7 +3461,7 @@ def team_stats_visual(all_data, records, schedule_info, logos, team):
         if neutral:
             spread = round((home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
         else:
-            spread = round((4.5 + home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
+            spread = round((GLOBAL_HFA + home_rating + adjust_home_pr(home_win_prob) - away_rating),1)
         if (home_team == team_name) & (spread > 0):
             output = "-" + str(spread)
         elif (home_team == team_name) & (spread < 0):
@@ -3809,7 +4220,7 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
     offensive = get_team_column_value(all_data, team_name, "offensive_rank")
     defensive = get_team_column_value(all_data, team_name, "defensive_rank")
     offensive_total = round(get_team_column_value(all_data, team_name, "offensive_total"), 1)
-    defensive_total = -1 * round(get_team_column_value(all_data, team_name, "defensive_total"), 1)
+    defensive_total = round(get_team_column_value(all_data, team_name, "defensive_total"), 1)
     power_rating = get_team_column_value(all_data, team_name, "power_rating")
     most_deserving = get_team_column_value(all_data, team_name, "most_deserving")
     SOS = get_team_column_value(all_data, team_name, "SOS")
@@ -4064,8 +4475,8 @@ try:
             return 0
         return ((home_win_prob - 50) / 50) * 1
 
-    uncompleted['pr_spread'] = (4.5 + uncompleted['home_pr'] + (uncompleted['home_win_prob'].apply(adjust_home_pr)) - uncompleted['away_pr']).round(1)
-    uncompleted['pr_spread'] = np.where(uncompleted['neutral'], uncompleted['pr_spread'] - 4.5, uncompleted['pr_spread']).round(1)
+    uncompleted['pr_spread'] = (GLOBAL_HFA + uncompleted['home_pr'] + (uncompleted['home_win_prob'].apply(adjust_home_pr)) - uncompleted['away_pr']).round(1)
+    uncompleted['pr_spread'] = np.where(uncompleted['neutral'], uncompleted['pr_spread'] - GLOBAL_HFA, uncompleted['pr_spread']).round(1)
     uncompleted['PEAR'] = uncompleted.apply(
         lambda row: f"{row['away_team']} {-abs(row['pr_spread'])}" if ((row['pr_spread'] <= 0)) 
         else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1)
@@ -4211,7 +4622,7 @@ except Exception as e:
 try:
     from matplotlib.colors import ListedColormap
     all_defense = all_data[['team', 'defensive_total']].sort_values('defensive_total', ascending=True).reset_index(drop=True)
-    all_defense['defensive_total'] = -1 * all_defense['defensive_total']
+    all_defense['defensive_total'] = all_defense['defensive_total']
     n_teams = len(all_defense)
     n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
 
@@ -4381,8 +4792,8 @@ try:
     )
     uncompleted_games['home_win_prob'] = round((10**((uncompleted_games['home_elo'] - uncompleted_games['away_elo']) / 400)) / ((10**((uncompleted_games['home_elo'] - uncompleted_games['away_elo']) / 400)) + 1)*100,2)
 
-    uncompleted_games['pr_spread'] = (4.5 + uncompleted_games['home_pr'] + (uncompleted_games['home_win_prob'].apply(adjust_home_pr)) - uncompleted_games['away_pr']).round(1)
-    uncompleted_games['pr_spread'] = np.where(uncompleted_games['neutral'], uncompleted_games['pr_spread'] - 4.5, uncompleted_games['pr_spread']).round(1)
+    uncompleted_games['pr_spread'] = (GLOBAL_HFA + uncompleted_games['home_pr'] + (uncompleted_games['home_win_prob'].apply(adjust_home_pr)) - uncompleted_games['away_pr']).round(1)
+    uncompleted_games['pr_spread'] = np.where(uncompleted_games['neutral'], uncompleted_games['pr_spread'] - GLOBAL_HFA, uncompleted_games['pr_spread']).round(1)
     uncompleted_games['PEAR'] = uncompleted_games.apply(
         lambda row: f"{row['away_team']} {-abs(row['pr_spread'])}" if ((row['pr_spread'] <= 0)) 
         else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1)
@@ -5381,8 +5792,8 @@ try:
     )
     uncompleted_games['home_win_prob'] = round((10**((uncompleted_games['home_elo'] - uncompleted_games['away_elo']) / 400)) / ((10**((uncompleted_games['home_elo'] - uncompleted_games['away_elo']) / 400)) + 1)*100,2)
 
-    uncompleted_games['pr_spread'] = (4.5 + uncompleted_games['home_pr'] + (uncompleted_games['home_win_prob'].apply(adjust_home_pr)) - uncompleted_games['away_pr']).round(1)
-    uncompleted_games['pr_spread'] = np.where(uncompleted_games['neutral'], uncompleted_games['pr_spread'] - 4.5, uncompleted_games['pr_spread']).round(1)
+    uncompleted_games['pr_spread'] = (GLOBAL_HFA + uncompleted_games['home_pr'] + (uncompleted_games['home_win_prob'].apply(adjust_home_pr)) - uncompleted_games['away_pr']).round(1)
+    uncompleted_games['pr_spread'] = np.where(uncompleted_games['neutral'], uncompleted_games['pr_spread'] - GLOBAL_HFA, uncompleted_games['pr_spread']).round(1)
     uncompleted_games['PEAR'] = uncompleted_games.apply(
         lambda row: f"{row['away_team']} {-abs(row['pr_spread'])}" if ((row['pr_spread'] <= 0)) 
         else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1)
@@ -5594,8 +6005,8 @@ try:
     )
     uncompleted_games['home_win_prob'] = round((10**((uncompleted_games['home_elo'] - uncompleted_games['away_elo']) / 400)) / ((10**((uncompleted_games['home_elo'] - uncompleted_games['away_elo']) / 400)) + 1)*100,2)
 
-    uncompleted_games['pr_spread'] = (4.5 + uncompleted_games['home_pr'] + (uncompleted_games['home_win_prob'].apply(adjust_home_pr)) - uncompleted_games['away_pr']).round(1)
-    uncompleted_games['pr_spread'] = np.where(uncompleted_games['neutral'], uncompleted_games['pr_spread'] - 4.5, uncompleted_games['pr_spread']).round(1)
+    uncompleted_games['pr_spread'] = (GLOBAL_HFA + uncompleted_games['home_pr'] + (uncompleted_games['home_win_prob'].apply(adjust_home_pr)) - uncompleted_games['away_pr']).round(1)
+    uncompleted_games['pr_spread'] = np.where(uncompleted_games['neutral'], uncompleted_games['pr_spread'] - GLOBAL_HFA, uncompleted_games['pr_spread']).round(1)
     uncompleted_games['PEAR'] = uncompleted_games.apply(
         lambda row: f"{row['away_team']} {-abs(row['pr_spread'])}" if ((row['pr_spread'] <= 0)) 
         else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1)
@@ -5655,8 +6066,8 @@ try:
         axis=1
     )
 
-    full_display_schedule['pr_spread'] = (4.5 + full_display_schedule['home_pr'] + (full_display_schedule['home_win_prob'].apply(adjust_home_pr)) - full_display_schedule['away_pr']).round(1)
-    full_display_schedule['pr_spread'] = np.where(full_display_schedule['neutral'], full_display_schedule['pr_spread'] - 4.5, full_display_schedule['pr_spread']).round(1)
+    full_display_schedule['pr_spread'] = (GLOBAL_HFA + full_display_schedule['home_pr'] + (full_display_schedule['home_win_prob'].apply(adjust_home_pr)) - full_display_schedule['away_pr']).round(1)
+    full_display_schedule['pr_spread'] = np.where(full_display_schedule['neutral'], full_display_schedule['pr_spread'] - GLOBAL_HFA, full_display_schedule['pr_spread']).round(1)
     full_display_schedule['PEAR'] = full_display_schedule.apply(
         lambda row: f"{row['away_team']} {-abs(row['pr_spread'])}" if ((row['pr_spread'] <= 0)) 
         else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1)
@@ -5891,15 +6302,15 @@ week_games = week_games.merge(
     how='left'
 ).rename(columns={'offensive_total':'away_offense', 'defensive_total':'away_defense'})
 week_games = week_games.drop(columns=['team_x', 'team_y'])
-week_games['xhome_points'] = round((week_games['home_offense'] - week_games['away_defense'] + (4.5/2)),1)
-week_games['xaway_points'] = round((week_games['away_offense'] - week_games['home_defense'] - (4.5/2)),1)
+week_games['xhome_points'] = round((week_games['home_offense'] - week_games['away_defense'] + (GLOBAL_HFA/2)),1)
+week_games['xaway_points'] = round((week_games['away_offense'] - week_games['home_defense'] - (GLOBAL_HFA/2)),1)
 week_games['predicted_over_under'] = week_games['xhome_points'] + week_games['xaway_points']
 
 def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 1
 week_games['home_win_prob'] = round((10**((week_games['home_elo'] - week_games['away_elo']) / 400)) / ((10**((week_games['home_elo'] - week_games['away_elo']) / 400)) + 1)*100,2)
-week_games['pr_spread'] = (4.5 + week_games['home_pr'] + (week_games['home_win_prob'].apply(adjust_home_pr)) - week_games['away_pr']).round(1)
-week_games['pr_spread'] = np.where(week_games['neutral'], week_games['pr_spread'] - 4.5, week_games['pr_spread']).round(1)
+week_games['pr_spread'] = (GLOBAL_HFA + week_games['home_pr'] + (week_games['home_win_prob'].apply(adjust_home_pr)) - week_games['away_pr']).round(1)
+week_games['pr_spread'] = np.where(week_games['neutral'], week_games['pr_spread'] - GLOBAL_HFA, week_games['pr_spread']).round(1)
 # week_games['pr_spread'] = week_games['pr_spread'].apply(round_to_nearest_half)
 
 pr_min = team_data['power_rating'].min()
