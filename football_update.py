@@ -1208,6 +1208,8 @@ model_features = [
     'in_house'
 ]
 team_data, diagnostics = build_power_ratings(team_data, opponent_adjustment_schedule, model_features)
+team_data.loc[team_data['team'] == 'Alabama', 'power_rating'] = 24.0
+team_data = team_data.sort_values('power_rating', ascending=False).reset_index(drop=True)
 
 ######################################## TEAM STATS AND RANKINGS #################################################
 
@@ -4621,7 +4623,7 @@ except Exception as e:
 
 try:
     from matplotlib.colors import ListedColormap
-    all_defense = all_data[['team', 'defensive_total']].sort_values('defensive_total', ascending=True).reset_index(drop=True)
+    all_defense = all_data[['team', 'defensive_total']].sort_values('defensive_total', ascending=False).reset_index(drop=True)
     all_defense['defensive_total'] = all_defense['defensive_total']
     n_teams = len(all_defense)
     n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
@@ -5319,9 +5321,7 @@ try:
     plt.gcf().set_facecolor('#CECEB2')
     logo_size = 2  # Half the size of the logo to create spacing
     for i in range(len(all_data)):
-        logo_url = logos[logos['team'] == all_data.loc[i,'team']]['logo'].values[0][0]
-        response = requests.get(logo_url)
-        img = mpimg.imread(BytesIO(response.content), format='png')
+        img = team_logos[all_data.loc[i,'team']]
         ax.imshow(img, aspect='auto', 
                 extent=(all_data['DDE'].iloc[i] - (logo_size-0.5),
                         all_data['DDE'].iloc[i] + (logo_size-0.5),
@@ -5868,8 +5868,6 @@ try:
             for i, ax in enumerate(axs.ravel()):
                 # Get the team logo URL
                 img = team_logos[this_conference_wins.loc[i, 'team']]
-                response = requests.get(logo_url)
-                img = Image.open(BytesIO(response.content))
                 
                 # Display the team logo with smaller size
                 ax.imshow(img, extent=(1,1.01,1.01,1), alpha=0.9)  # Adjust extent for smaller logo
@@ -5964,6 +5962,26 @@ year_long_schedule['PEAR_win_prob'] = year_long_schedule.apply(
     lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
 )
 year_long_schedule['home_win_prob'] = round((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) / ((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) + 1)*100,2)
+
+def calculate_game_quality(df, pr_min, pr_max, spread_cap=20, beta=8.5):
+    tq = (df['home_pr'] + df['away_pr']) / 2
+    tq_norm = (tq - pr_min) / (pr_max - pr_min)
+    tq_norm = tq_norm.clip(lower=0, upper=1)
+    
+    spread = df['home_pr'] - df['away_pr']
+    sc = 1 - (np.abs(spread) / spread_cap)
+    sc = sc.clip(lower=0, upper=1)
+    
+    # Combined input
+    x = (0.65*tq_norm + 0.35*sc)
+    
+    # Sigmoid transform
+    gq_raw = 1 / (1 + np.exp(-beta * (x - 0.5)))
+    
+    # Scale to 1–10
+    gq = (1 + 9 * gq_raw) + 0.1
+    gq = gq.clip(upper=10)
+    return gq.round(1)
 
 try:
     start_week = current_week
