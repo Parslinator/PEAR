@@ -4898,6 +4898,146 @@ except Exception as e:
     print(f"Error in code chunk: Mulligans vs. Upset. Error: {e}")
 
 try:
+    last_week_ratings = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week-1}.csv")
+    delta = pd.merge(team_data[['team', 'power_rating']], last_week_ratings[['team', 'power_rating']], how='left', on='team')
+    delta['delta'] = delta['power_rating_x'] - delta['power_rating_y']
+    from matplotlib.colors import ListedColormap
+
+    # Define the number of rows and columns
+    delta = delta.sort_values('delta', ascending=False).reset_index(drop=True)
+    n_teams = len(all_data)
+    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
+
+    # Plot configuration
+    fig_width = n_columns * 2.5
+    fig_height = 20 * 0.9
+    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
+    plt.subplots_adjust(hspace=0.3, wspace=0.1)
+
+    fig.patch.set_facecolor('#CECEB2')
+    plt.suptitle(f"Ratings Change From Week {current_week-1} to Week {current_week}", fontsize=20, y=0.905, x=0.52, fontweight='bold')
+
+    # Define colormap and normalization
+    min_rating = delta['delta'].min()
+    max_rating = delta['delta'].max()
+    base_cmap = plt.get_cmap('RdYlGn')
+    colors = base_cmap(np.linspace(0, 1, 256))
+    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
+    cmap = ListedColormap(colors)
+
+    def get_color(value):
+        """Return a color based on the normalized win_total."""
+        norm_value = (value - min_rating) / (max_rating - min_rating)
+        return cmap(norm_value)
+
+    # Iterate through the data to plot
+    for idx, team in delta.iterrows():
+        power_rating = team['delta']
+        team_name = team['team']
+        logo_url = logos[logos['team'] == team_name]['logo'].values[0][0]
+        
+        row = idx % 20
+        col = idx // 20
+        ax = axes[row, col]
+        ax.axis('off')  # Hide the main axis
+
+        img = team_logos[team_name]
+        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
+
+        text_ax = ax.inset_axes([0, 0, 1, 1])
+        text_ax.axis('off')
+        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
+        box_color = get_color(power_rating)
+        # numbers go: bottom left x, bottom left y, how wide the box is, how tall the box is
+        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
+        text_ax.text(1.8, 0.5, f"{power_rating:.1f}", ha='center', va='center',
+                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
+
+    if n_teams % 20 != 0:
+        for empty_row in range(n_teams % 20, 20):
+            axes[empty_row, n_columns - 1].axis('off')
+
+    pear_img = Image.open('./PEAR/pear_logo.jpg')
+    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
+    logo_ax.imshow(pear_img)
+    logo_ax.axis('off')
+    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
+    file_path = os.path.join(folder_path, "ratings_delta_last_week")
+    plt.savefig(file_path, dpi = 300, bbox_inches='tight')
+except Exception as e:
+    print(f"Error in code chunk: Ratings Delta From Last Week. Error: {e}")
+
+try:
+    preseason = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week1.csv")
+    delta = pd.merge(team_data[['team', 'power_rating']], preseason[['team', 'power_rating']], how='left', on='team')
+    delta['delta'] = delta['power_rating_x'] - delta['power_rating_y']
+    from matplotlib.colors import ListedColormap
+
+    # Define the number of rows and columns
+    delta = delta.sort_values('delta', ascending=False).reset_index(drop=True)
+    n_teams = len(all_data)
+    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
+
+    # Plot configuration
+    fig_width = n_columns * 2.5
+    fig_height = 20 * 0.9
+    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
+    plt.subplots_adjust(hspace=0.3, wspace=0.1)
+
+    fig.patch.set_facecolor('#CECEB2')
+    plt.suptitle(f"Ratings Change From Preseason to Week {current_week}", fontsize=20, y=0.905, x=0.52, fontweight='bold')
+
+    # Define colormap and normalization
+    min_rating = delta['delta'].min()
+    max_rating = delta['delta'].max()
+    base_cmap = plt.get_cmap('RdYlGn')
+    colors = base_cmap(np.linspace(0, 1, 256))
+    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
+    cmap = ListedColormap(colors)
+
+    def get_color(value):
+        """Return a color based on the normalized win_total."""
+        norm_value = (value - min_rating) / (max_rating - min_rating)
+        return cmap(norm_value)
+
+    # Iterate through the data to plot
+    for idx, team in delta.iterrows():
+        power_rating = team['delta']
+        team_name = team['team']
+        logo_url = logos[logos['team'] == team_name]['logo'].values[0][0]
+        
+        row = idx % 20
+        col = idx // 20
+        ax = axes[row, col]
+        ax.axis('off')  # Hide the main axis
+
+        img = logo_cache.get(team_name)
+        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
+
+        text_ax = ax.inset_axes([0, 0, 1, 1])
+        text_ax.axis('off')
+        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
+        box_color = get_color(power_rating)
+        # numbers go: bottom left x, bottom left y, how wide the box is, how tall the box is
+        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
+        text_ax.text(1.8, 0.5, f"{power_rating:.1f}", ha='center', va='center',
+                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
+
+    if n_teams % 20 != 0:
+        for empty_row in range(n_teams % 20, 20):
+            axes[empty_row, n_columns - 1].axis('off')
+
+    pear_img = Image.open('./PEAR/pear_logo.jpg')
+    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
+    logo_ax.imshow(pear_img)
+    logo_ax.axis('off')
+    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
+    file_path = os.path.join(folder_path, "ratings_delta_preseason")
+    plt.savefig(file_path, dpi = 300, bbox_inches='tight')
+except Exception as e:
+    print(f"Error in code chunk: Ratings Delta Preseason. Error: {e}")
+
+try:
     from matplotlib.colors import ListedColormap
     import pandas as pd
     import numpy as np
