@@ -1478,7 +1478,7 @@ for team in team_data['team']:
         prob = norm.cdf(z) - 0.5
         total_prob += prob
 
-    team_probabilities.append({'team': team, 'RTP': 10 + 10 * (total_prob / len(games))})
+    team_probabilities.append({'team': team, 'RTP': 10 * (total_prob / len(games))})
 
 RTP = pd.DataFrame(team_probabilities).sort_values('RTP', ascending=False)
 print("RTP Prep Done!")
@@ -5549,6 +5549,74 @@ try:
     print("MOV Performance Done!")
 except Exception as e:
     print(f"Error in code chunk: MOV Performance Ratings. Error: {e}")
+
+try:
+    from matplotlib.colors import ListedColormap
+
+    # Define the number of rows and columns
+    RTP = RTP.sort_values('RTP', ascending=False).reset_index(drop=True)
+    n_teams = len(RTP)
+    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
+
+    # Plot configuration
+    fig_width = n_columns * 2.5
+    fig_height = 20 * 0.9
+    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
+    plt.subplots_adjust(hspace=0.3, wspace=0.1)
+
+    fig.patch.set_facecolor('#CECEB2')
+    plt.suptitle(f"Adjusted Margin of Victory Performance - How Teams Do vs Projection", fontsize=20, y=0.905, x=0.52, fontweight='bold')
+
+    # Define colormap and normalization
+    min_rating = RTP['RTP'].min()
+    max_rating = RTP['RTP'].max()
+    base_cmap = plt.get_cmap('RdYlGn')
+    colors = base_cmap(np.linspace(0, 1, 256))
+    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
+    cmap = ListedColormap(colors)
+
+    def get_color(value):
+        """Return a color based on the normalized win_total."""
+        norm_value = (value - min_rating) / (max_rating - min_rating)
+        return cmap(norm_value)
+
+    # Iterate through the data to plot
+    for idx, team in RTP.iterrows():
+        power_rating = team['RTP']
+        team_name = team['team']
+        logo_url = logos[logos['team'] == team_name]['logo'].values[0][0]
+        
+        row = idx % 20
+        col = idx // 20
+        ax = axes[row, col]
+        ax.axis('off')  # Hide the main axis
+
+        img = team_logos[team_name]
+        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
+
+        text_ax = ax.inset_axes([0, 0, 1, 1])
+        text_ax.axis('off')
+        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
+        box_color = get_color(power_rating)
+        # numbers go: bottom left x, bottom left y, how wide the box is, how tall the box is
+        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
+        text_ax.text(1.8, 0.5, f"{power_rating:.1f}", ha='center', va='center',
+                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
+
+    if n_teams % 20 != 0:
+        for empty_row in range(n_teams % 20, 20):
+            axes[empty_row, n_columns - 1].axis('off')
+
+    pear_img = Image.open('./PEAR/pear_logo.jpg')
+    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
+    logo_ax.imshow(pear_img)
+    logo_ax.axis('off')
+    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
+    fig.text(0.52,0.097, "Difference between actual and expected margins of victory, adjusted for opponent strength, standardized by game-level variance", ha='center', va='center', fontsize=14)
+    plt.savefig(os.path.join(folder_path, "all_mov"), bbox_inches='tight', dpi=300)
+    print("All MOV Done!")
+except Exception as e:
+    print(f"Error in code chunk: All MOV. Error: {e}")
 
 try:
     most_deserving_playoff = most_deserving.merge(team_data[['team', 'conference']], on='team', how='left')
