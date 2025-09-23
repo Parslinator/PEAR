@@ -6130,7 +6130,7 @@ try:
             fig.text(0.38, 0.98, f"PEAR PROJECTED {this_conference.upper()} STANDINGS", fontsize=16, fontweight='bold', ha='left')
             fig.text(0.38, 0.95, "PERCENT CHANCE TO WIN AT LEAST _ CONFERENCE GAMES", fontsize =10, ha='left')
             file_path = os.path.join(conf_folder_path, f"{this_conference}")
-            plt.savefig(file_path, bbox_inches='tight')
+            plt.savefig(file_path, bbox_inches='tight', dpi = 500)
     conference_standings(projection_dataframe)
     print("Conference Projections Done!")
 except Exception as e:
