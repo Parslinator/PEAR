@@ -4295,7 +4295,7 @@ def display_schedule_visual(team_name, all_data, uncompleted_games, uncompleted_
     folder_path = f"./PEAR/PEAR Football/y{current_year}/Visuals/week_{current_week}/Stat Profiles"
     os.makedirs(folder_path, exist_ok=True)
     file_path = os.path.join(folder_path, f"{team}")
-    plt.savefig(file_path, dpi = 300)
+    plt.savefig(file_path, dpi = 500)
     # return fig, ax
 
 try:
