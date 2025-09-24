@@ -172,7 +172,7 @@ os.makedirs(folder_path, exist_ok=True)
 conf_folder_path = f"./PEAR/PEAR Football/y{current_year}/Visuals/week_{current_week}/Conference Projections"
 os.makedirs(conf_folder_path, exist_ok=True)
 
-from football_helper import best_and_worst, other_best_and_worst, monte_carlo_simulation_known, analyze_simulation_known
+from football_helper import best_and_worst, other_best_and_worst, monte_carlo_simulation_known, analyze_simulation_known, all_136_teams
 from football_helper import create_conference_projection, plot_matchup, display_schedule_visual, conference_standings, prob_win_at_least_x
 
 logos = outputs["logos"]
@@ -219,14 +219,6 @@ with ThreadPoolExecutor(max_workers=10) as executor:
         team, img = future.result()
         if img:
             team_logos[team] = img
-
-def fetch_logo_image(logo_url):
-    response = requests.get(logo_url)
-    return Image.open(BytesIO(response.content))
-
-import pandas as pd
-import numpy as np
-import numpy as np
 
 try:
     top_25 = all_data.head(25).reset_index(drop=True)
@@ -308,61 +300,12 @@ except Exception as e:
     print(f"Error in code chunk: GO5 Ratings. Error: {e}")
 
 try:
-    from matplotlib.colors import ListedColormap
-    all_data = all_data.sort_values('power_rating', ascending=False).reset_index(drop=True)
-    n_teams = len(all_data)
-    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
-    fig_width = n_columns * 2.5
-    fig_height = 20 * 0.9
-    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
-    plt.subplots_adjust(hspace=0.3, wspace=0.1)
-    fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"PEAR's Week {current_week} Power Ratings", fontsize=20, y=0.905, x=0.52, fontweight='bold')
-    min_rating = all_data['power_rating'].min()
-    max_rating = all_data['power_rating'].max()
-    base_cmap = plt.get_cmap('RdYlGn')
-    colors = base_cmap(np.linspace(0, 1, 256))
-    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
-    cmap = ListedColormap(colors)
-    def get_color(value):
-        """Return a color based on the normalized win_total."""
-        norm_value = (value - min_rating) / (max_rating - min_rating)
-        return cmap(norm_value)
-    for idx, team in all_data.iterrows():
-        power_rating = team['power_rating']
-        team_name = team['team']
-        row = idx % 20
-        col = idx // 20
-        ax = axes[row, col]
-        ax.axis('off')  # Hide the main axis
-
-        img = team_logos[team_name]
-        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
-
-        text_ax = ax.inset_axes([0, 0, 1, 1])
-        text_ax.axis('off')
-        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
-        box_color = get_color(power_rating)
-        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
-        text_ax.text(1.8, 0.5, f"{power_rating:.1f}", ha='center', va='center',
-                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-
-    if n_teams % 20 != 0:
-        for empty_row in range(n_teams % 20, 20):
-            axes[empty_row, n_columns - 1].axis('off')
-
-    pear_img = Image.open('./PEAR/pear_logo.jpg')
-    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
-    logo_ax.imshow(pear_img)
-    logo_ax.axis('off')
-    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
-    plt.savefig(os.path.join(folder_path, "all_power_ratings"), bbox_inches='tight', dpi=300)
+    all_136_teams(all_data, "power_rating", False, team_logos, 1, current_week, f"PEAR's Week {current_week} Power Ratings", folder_path, "all_power_ratings")
     print("All Power Ratings Done!")
 except Exception as e:
     print(f"Error in code chunk: All Power Ratings. Error: {e}")
 
 try:
-    from matplotlib.colors import ListedColormap
     start_week = 1
     end_week = 17
     games_list = []
@@ -422,263 +365,24 @@ try:
     updated_win_total = pd.merge(total_wins[['team', 'win_total']], records[['team', 'wins']], on='team', how='left')
     updated_win_total = pd.merge(team_data[['team']], updated_win_total, on='team', how='left')
     updated_win_total['updated_win_total'] = updated_win_total['win_total'] + updated_win_total['wins']
-    updated_win_total = updated_win_total.sort_values('updated_win_total', ascending=False).reset_index(drop=True)
-
-    n_teams = len(updated_win_total)
-    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
-
-    # Plot configuration
-    fig_width = n_columns * 2.5
-    fig_height = 20 * 0.9
-    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
-    plt.subplots_adjust(hspace=0.3, wspace=0.1)
-
-    fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"PEAR's Updated Win Totals", fontsize=20, y=0.905, x=0.52, fontweight='bold')
-
-    # Define colormap and normalization
-    min_rating = updated_win_total['updated_win_total'].min()
-    max_rating = updated_win_total['updated_win_total'].max()
-    base_cmap = plt.get_cmap('RdYlGn')
-    colors = base_cmap(np.linspace(0, 1, 256))
-    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
-    cmap = ListedColormap(colors)
-
-    def get_color(value):
-        """Return a color based on the normalized win_total."""
-        norm_value = (value - min_rating) / (max_rating - min_rating)
-        return cmap(norm_value)
-
-    # Iterate through the data to plot
-    for idx, team in updated_win_total.iterrows():
-        power_rating = team['updated_win_total']
-        team_name = team['team']
-        
-        row = idx % 20
-        col = idx // 20
-        ax = axes[row, col]
-        ax.axis('off')  # Hide the main axis
-
-        img = team_logos[team_name]
-        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
-
-        text_ax = ax.inset_axes([0, 0, 1, 1])
-        text_ax.axis('off')
-        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
-        box_color = get_color(power_rating)
-        # numbers go: bottom left x, bottom left y, how wide the box is, how tall the box is
-        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
-        text_ax.text(1.8, 0.5, f"{power_rating:.1f}", ha='center', va='center',
-                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-
-    if n_teams % 20 != 0:
-        for empty_row in range(n_teams % 20, 20):
-            axes[empty_row, n_columns - 1].axis('off')
-
-    pear_img = Image.open('./PEAR/pear_logo.jpg')
-    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
-    logo_ax.imshow(pear_img)
-    logo_ax.axis('off')
-    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
-    file_path = os.path.join(folder_path, "updated_win_totals")
-    plt.savefig(file_path, dpi = 300, bbox_inches='tight')
+    all_136_teams(updated_win_total, 'updated_win_total', False, team_logos, 1, current_week, f"PEAR's Updated Win Totals", folder_path, "updated_win_totals")
 except Exception as e:
     print(f"Error in code chunk: Updated Win Totals. Error: {e}")
 
 try:
-    from matplotlib.colors import ListedColormap
-    all_offense = all_data[['team', 'offensive_total']].sort_values('offensive_total', ascending=False).reset_index(drop=True)
-    n_teams = len(all_offense)
-    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
-
-    # Plot configuration
-    fig_width = n_columns * 2.5
-    fig_height = 20 * 0.9
-    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
-    plt.subplots_adjust(hspace=0.3, wspace=0.1)
-
-    fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Week {current_week} PEAR Offensive Ratings - A Measure of PPA, PPO, and Drive Quality", fontsize=20, y=0.905, x=0.52, fontweight='bold')
-
-    # Define colormap and normalization
-    min_rating = all_offense['offensive_total'].min()
-    max_rating = all_offense['offensive_total'].max()
-    base_cmap = plt.get_cmap('RdYlGn')
-    colors = base_cmap(np.linspace(0, 1, 256))
-    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
-    cmap = ListedColormap(colors)
-
-    def get_color(value):
-        """Return a color based on the normalized win_total."""
-        norm_value = (value - min_rating) / (max_rating - min_rating)
-        return cmap(norm_value)
-
-    # Iterate through the data to plot
-    for idx, team in all_offense.iterrows():
-        power_rating = team['offensive_total']
-        team_name = team['team']
-        
-        row = idx % 20
-        col = idx // 20
-        ax = axes[row, col]
-        ax.axis('off')  # Hide the main axis
-
-        img = team_logos[team_name]
-        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
-
-        text_ax = ax.inset_axes([0, 0, 1, 1])
-        text_ax.axis('off')
-        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
-        box_color = get_color(power_rating)
-        # numbers go: bottom left x, bottom left y, how wide the box is, how tall the box is
-        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
-        text_ax.text(1.8, 0.5, f"{power_rating:.2f}", ha='center', va='center',
-                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-
-    if n_teams % 20 != 0:
-        for empty_row in range(n_teams % 20, 20):
-            axes[empty_row, n_columns - 1].axis('off')
-
-    pear_img = Image.open('./PEAR/pear_logo.jpg')
-    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
-    logo_ax.imshow(pear_img)
-    logo_ax.axis('off')
-    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
-    file_path = os.path.join(folder_path, "all_offensive_ratings")
-    plt.savefig(file_path, dpi = 300, bbox_inches='tight')
+    all_136_teams(all_data, 'offensive_total', False, team_logos, 2, current_week, f"Week {current_week} PEAR Offensive Ratings - A Measure of PPA, PPO, and Drive Quality", "all_offensive_ratings")
     print("All Offensive Ratings Done!")
 except Exception as e:
     print(f"Error in code chunk: All Offensive Ratings. Error: {e}")
 
 try:
-    from matplotlib.colors import ListedColormap
-    all_defense = all_data[['team', 'defensive_total']].sort_values('defensive_total', ascending=False).reset_index(drop=True)
-    all_defense['defensive_total'] = all_defense['defensive_total']
-    n_teams = len(all_defense)
-    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
-
-    # Plot configuration
-    fig_width = n_columns * 2.5
-    fig_height = 20 * 0.9
-    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
-    plt.subplots_adjust(hspace=0.3, wspace=0.1)
-
-    fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Week {current_week} PEAR Defensive Ratings - A Measure of PPA, PPO, and Drive Quality", fontsize=20, y=0.905, x=0.52, fontweight='bold')
-
-    # Define colormap and normalization
-    min_rating = all_defense['defensive_total'].min()
-    max_rating = all_defense['defensive_total'].max()
-    base_cmap = plt.get_cmap('RdYlGn')
-    colors = base_cmap(np.linspace(0, 1, 256))
-    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
-    cmap = ListedColormap(colors)
-
-    def get_color(value):
-        """Return a color based on the normalized win_total."""
-        norm_value = (value - min_rating) / (max_rating - min_rating)
-        return cmap(norm_value)
-
-    # Iterate through the data to plot
-    for idx, team in all_defense.iterrows():
-        power_rating = team['defensive_total']
-        team_name = team['team']
-        logo_url = logos[logos['team'] == team_name]['logo'].values[0][0]
-        
-        row = idx % 20
-        col = idx // 20
-        ax = axes[row, col]
-        ax.axis('off')  # Hide the main axis
-
-        img = team_logos[team_name]
-        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
-
-        text_ax = ax.inset_axes([0, 0, 1, 1])
-        text_ax.axis('off')
-        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
-        box_color = get_color(power_rating)
-        # numbers go: bottom left x, bottom left y, how wide the box is, how tall the box is
-        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
-        text_ax.text(1.8, 0.5, f"{power_rating:.2f}", ha='center', va='center',
-                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-
-    if n_teams % 20 != 0:
-        for empty_row in range(n_teams % 20, 20):
-            axes[empty_row, n_columns - 1].axis('off')
-
-    pear_img = Image.open('./PEAR/pear_logo.jpg')
-    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
-    logo_ax.imshow(pear_img)
-    logo_ax.axis('off')
-    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
-    file_path = os.path.join(folder_path, "all_defensive_ratings")
-    plt.savefig(file_path, dpi = 300, bbox_inches='tight')
+    all_136_teams(all_data, 'defensive_total', False, team_logos, 2, current_week, f"Week {current_week} PEAR Defensive Ratings - A Measure of PPA, PPO, and Drive Quality", "all_defensive_ratings")
     print("All Defensive Ratings Done!")
 except Exception as e:
     print(f"Error in code chunk: All Defensive Ratings. Error: {e}")
 
 try:
-    from matplotlib.colors import ListedColormap
-    all_md = all_data[['team', 'most_deserving_wins']].sort_values('most_deserving_wins', ascending=False).reset_index(drop=True)
-    n_teams = len(all_md)
-    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
-
-    # Plot configuration
-    fig_width = n_columns * 2.5
-    fig_height = 20 * 0.9
-    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
-    plt.subplots_adjust(hspace=0.3, wspace=0.1)
-
-    fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Week {current_week} PEAR Most Deserving Rankings - AP Style Rankings", fontsize=20, y=0.905, x=0.52, fontweight='bold')
-
-    # Define colormap and normalization
-    min_rating = all_md['most_deserving_wins'].min()
-    max_rating = all_md['most_deserving_wins'].max()
-    base_cmap = plt.get_cmap('RdYlGn')
-    colors = base_cmap(np.linspace(0, 1, 256))
-    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
-    cmap = ListedColormap(colors)
-
-    def get_color(value):
-        """Return a color based on the normalized win_total."""
-        norm_value = (value - min_rating) / (max_rating - min_rating)
-        return cmap(norm_value)
-
-    # Iterate through the data to plot
-    for idx, team in all_md.iterrows():
-        power_rating = team['most_deserving_wins']
-        team_name = team['team']
-        logo_url = logos[logos['team'] == team_name]['logo'].values[0][0]
-        
-        row = idx % 20
-        col = idx // 20
-        ax = axes[row, col]
-        ax.axis('off')  # Hide the main axis
-
-        img = team_logos[team_name]
-        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
-
-        text_ax = ax.inset_axes([0, 0, 1, 1])
-        text_ax.axis('off')
-        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
-        box_color = get_color(power_rating)
-        # numbers go: bottom left x, bottom left y, how wide the box is, how tall the box is
-        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
-        text_ax.text(1.8, 0.5, f"{power_rating:.2f}", ha='center', va='center',
-                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-
-    if n_teams % 20 != 0:
-        for empty_row in range(n_teams % 20, 20):
-            axes[empty_row, n_columns - 1].axis('off')
-
-    pear_img = Image.open('./PEAR/pear_logo.jpg')
-    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
-    logo_ax.imshow(pear_img)
-    logo_ax.axis('off')
-    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
-    file_path = os.path.join(folder_path, "all_most_deserving")
-    plt.savefig(file_path, dpi = 300, bbox_inches='tight')
+    all_136_teams(all_data, 'most_deserving_wins', False, team_logos, 2, current_week, f"Week {current_week} PEAR Most Deserving Rankings - AP Style Rankings", folder_path, "all_most_deserving")
     print("All Most Deserving Done!")
 except Exception as e:
     print(f"Error in code chunk: All Most Deserving. Error: {e}")
@@ -759,69 +463,7 @@ try:
         'mulligans'
     ] = -15
     mulligans = mulligans.sort_values(['mulligans', 'power_rating'], ascending=[False, False]).reset_index(drop=True)
-    from matplotlib.colors import ListedColormap
-    n_teams = len(mulligans)
-    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
-
-    # Plot configuration
-    fig_width = n_columns * 2.5
-    fig_height = 20 * 0.9
-    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
-    plt.subplots_adjust(hspace=0.3, wspace=0.1)
-
-    fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Week {current_week} Mulligans / Upsets", fontsize=20, y=0.905, x=0.52, fontweight='bold')
-
-    # Define colormap and normalization
-    min_rating = mulligans['mulligans'].min()
-    max_rating = mulligans['mulligans'].max()
-    base_cmap = plt.get_cmap('RdYlGn')
-    colors = base_cmap(np.linspace(0, 1, 256))
-    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
-    cmap = ListedColormap(colors)
-
-    def get_color(value):
-        """Return a color based on the normalized win_total."""
-        norm_value = (value - min_rating) / (max_rating - min_rating)
-        return cmap(norm_value)
-
-    # Iterate through the data to plot
-    for idx, team in mulligans.iterrows():
-        power_rating = team['mulligans']
-        team_name = team['team']
-        
-        row = idx % 20
-        col = idx // 20
-        ax = axes[row, col]
-        ax.axis('off')  # Hide the main axis
-
-        img = team_logos[team_name]
-        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
-
-        text_ax = ax.inset_axes([0, 0, 1, 1])
-        text_ax.axis('off')
-        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
-        box_color = get_color(power_rating)
-        # numbers go: bottom left x, bottom left y, how wide the box is, how tall the box is
-        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
-        if power_rating == -15:
-            text_ax.text(1.8, 0.5, f"N/A", ha='center', va='center',
-                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-        else:
-            text_ax.text(1.8, 0.5, f"{power_rating}", ha='center', va='center',
-                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-
-    if n_teams % 20 != 0:
-        for empty_row in range(n_teams % 20, 20):
-            axes[empty_row, n_columns - 1].axis('off')
-
-    pear_img = Image.open('./PEAR/pear_logo.jpg')
-    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
-    logo_ax.imshow(pear_img)
-    logo_ax.axis('off')
-    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
-    file_path = os.path.join(folder_path, "mulligans_vs_upset")
-    plt.savefig(file_path, dpi = 300, bbox_inches='tight')
+    all_136_teams(mulligans, 'mulligans', False, team_logos, 0, current_week, f"Week {current_week} Mulligans / Upsets", folder_path, "mulligans_vs_upset")
 except Exception as e:
     print(f"Error in code chunk: Mulligans vs. Upset. Error: {e}")
 
@@ -829,69 +471,7 @@ try:
     last_week_ratings = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week-1}.csv")
     delta = pd.merge(team_data[['team', 'power_rating']], last_week_ratings[['team', 'power_rating']], how='left', on='team')
     delta['delta'] = delta['power_rating_x'] - delta['power_rating_y']
-    from matplotlib.colors import ListedColormap
-
-    # Define the number of rows and columns
-    delta = delta.sort_values('delta', ascending=False).reset_index(drop=True)
-    n_teams = len(all_data)
-    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
-
-    # Plot configuration
-    fig_width = n_columns * 2.5
-    fig_height = 20 * 0.9
-    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
-    plt.subplots_adjust(hspace=0.3, wspace=0.1)
-
-    fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Ratings Change From Week {current_week-1} to Week {current_week}", fontsize=20, y=0.905, x=0.52, fontweight='bold')
-
-    # Define colormap and normalization
-    min_rating = delta['delta'].min()
-    max_rating = delta['delta'].max()
-    base_cmap = plt.get_cmap('RdYlGn')
-    colors = base_cmap(np.linspace(0, 1, 256))
-    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
-    cmap = ListedColormap(colors)
-
-    def get_color(value):
-        """Return a color based on the normalized win_total."""
-        norm_value = (value - min_rating) / (max_rating - min_rating)
-        return cmap(norm_value)
-
-    # Iterate through the data to plot
-    for idx, team in delta.iterrows():
-        power_rating = team['delta']
-        team_name = team['team']
-        logo_url = logos[logos['team'] == team_name]['logo'].values[0][0]
-        
-        row = idx % 20
-        col = idx // 20
-        ax = axes[row, col]
-        ax.axis('off')  # Hide the main axis
-
-        img = team_logos[team_name]
-        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
-
-        text_ax = ax.inset_axes([0, 0, 1, 1])
-        text_ax.axis('off')
-        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
-        box_color = get_color(power_rating)
-        # numbers go: bottom left x, bottom left y, how wide the box is, how tall the box is
-        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
-        text_ax.text(1.8, 0.5, f"{power_rating:.1f}", ha='center', va='center',
-                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-
-    if n_teams % 20 != 0:
-        for empty_row in range(n_teams % 20, 20):
-            axes[empty_row, n_columns - 1].axis('off')
-
-    pear_img = Image.open('./PEAR/pear_logo.jpg')
-    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
-    logo_ax.imshow(pear_img)
-    logo_ax.axis('off')
-    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
-    file_path = os.path.join(folder_path, "ratings_delta_last_week")
-    plt.savefig(file_path, dpi = 300, bbox_inches='tight')
+    all_136_teams(delta, 'delta', False, team_logos, 1, current_week, f"Ratings Change From Week {current_week-1} to Week {current_week}", folder_path, "ratings_delta_last_week")
 except Exception as e:
     print(f"Error in code chunk: Ratings Delta From Last Week. Error: {e}")
 
@@ -899,76 +479,11 @@ try:
     preseason = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week1.csv")
     delta = pd.merge(team_data[['team', 'power_rating']], preseason[['team', 'power_rating']], how='left', on='team')
     delta['delta'] = delta['power_rating_x'] - delta['power_rating_y']
-    from matplotlib.colors import ListedColormap
-
-    # Define the number of rows and columns
-    delta = delta.sort_values('delta', ascending=False).reset_index(drop=True)
-    n_teams = len(all_data)
-    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
-
-    # Plot configuration
-    fig_width = n_columns * 2.5
-    fig_height = 20 * 0.9
-    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
-    plt.subplots_adjust(hspace=0.3, wspace=0.1)
-
-    fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Ratings Change From Preseason to Week {current_week}", fontsize=20, y=0.905, x=0.52, fontweight='bold')
-
-    # Define colormap and normalization
-    min_rating = delta['delta'].min()
-    max_rating = delta['delta'].max()
-    base_cmap = plt.get_cmap('RdYlGn')
-    colors = base_cmap(np.linspace(0, 1, 256))
-    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
-    cmap = ListedColormap(colors)
-
-    def get_color(value):
-        """Return a color based on the normalized win_total."""
-        norm_value = (value - min_rating) / (max_rating - min_rating)
-        return cmap(norm_value)
-
-    # Iterate through the data to plot
-    for idx, team in delta.iterrows():
-        power_rating = team['delta']
-        team_name = team['team']
-        logo_url = logos[logos['team'] == team_name]['logo'].values[0][0]
-        
-        row = idx % 20
-        col = idx // 20
-        ax = axes[row, col]
-        ax.axis('off')  # Hide the main axis
-
-        img = team_logos[team_name]
-        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
-
-        text_ax = ax.inset_axes([0, 0, 1, 1])
-        text_ax.axis('off')
-        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
-        box_color = get_color(power_rating)
-        # numbers go: bottom left x, bottom left y, how wide the box is, how tall the box is
-        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
-        text_ax.text(1.8, 0.5, f"{power_rating:.1f}", ha='center', va='center',
-                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-
-    if n_teams % 20 != 0:
-        for empty_row in range(n_teams % 20, 20):
-            axes[empty_row, n_columns - 1].axis('off')
-
-    pear_img = Image.open('./PEAR/pear_logo.jpg')
-    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
-    logo_ax.imshow(pear_img)
-    logo_ax.axis('off')
-    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
-    file_path = os.path.join(folder_path, "ratings_delta_preseason")
-    plt.savefig(file_path, dpi = 300, bbox_inches='tight')
+    all_136_teams(delta, 'delta', False, team_logos, 1, current_week, f"Ratings Change From Preseason to Week {current_week}", folder_path, "ratings_delta_preseason")
 except Exception as e:
     print(f"Error in code chunk: Ratings Delta Preseason. Error: {e}")
 
 try:
-    from matplotlib.colors import ListedColormap
-    import pandas as pd
-    import numpy as np
     from scipy.stats import binom
     from math import comb
 
@@ -978,135 +493,14 @@ try:
         axis=1
     )
     mulligans = mulligans.sort_values(['prob_reach_wins', 'power_rating'], ascending=[False, False]).reset_index(drop=True)
-    n_teams = len(mulligans)
-    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
-
-    # Plot configuration
-    fig_width = n_columns * 2.5
-    fig_height = 20 * 0.9
-    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
-    plt.subplots_adjust(hspace=0.3, wspace=0.1)
-
-    fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Week {current_week} At-Large Playoff Discussion Chances", fontsize=20, y=0.905, x=0.52, fontweight='bold')
-
-    # Define colormap and normalization
-    min_rating = mulligans['prob_reach_wins'].min()
-    max_rating = mulligans['prob_reach_wins'].max()
-    base_cmap = plt.get_cmap('RdYlGn')
-    colors = base_cmap(np.linspace(0, 1, 256))
-    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
-    cmap = ListedColormap(colors)
-
-    def get_color(value):
-        """Return a color based on the normalized win_total."""
-        norm_value = (value - min_rating) / (max_rating - min_rating)
-        return cmap(norm_value)
-
-    # Iterate through the data to plot
-    for idx, team in mulligans.iterrows():
-        power_rating = team['prob_reach_wins']
-        team_name = team['team']
-        
-        row = idx % 20
-        col = idx // 20
-        ax = axes[row, col]
-        ax.axis('off')  # Hide the main axis
-
-        img = team_logos[team_name]
-        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
-
-        text_ax = ax.inset_axes([0, 0, 1, 1])
-        text_ax.axis('off')
-        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
-        box_color = get_color(power_rating)
-        # numbers go: bottom left x, bottom left y, how wide the box is, how tall the box is
-        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
-        if power_rating == 0.0:
-            text_ax.text(1.8, 0.5, f"<1%", ha='center', va='center',
-                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-        else:
-            text_ax.text(1.8, 0.5, f"{round(power_rating)}%", ha='center', va='center',
-                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-
-    if n_teams % 20 != 0:
-        for empty_row in range(n_teams % 20, 20):
-            axes[empty_row, n_columns - 1].axis('off')
-
-    pear_img = Image.open('./PEAR/pear_logo.jpg')
-    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
-    logo_ax.imshow(pear_img)
-    logo_ax.axis('off')
-    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
-    fig.text(0.52,0.097, "Probability each team reaches the win total needed to stay in at-large contention - this is NOT Playoff Probability", ha='center', va='center', fontsize=14)
-    file_path = os.path.join(folder_path, "at_large_playoff_chances")
-    plt.savefig(file_path, dpi = 300, bbox_inches='tight')
+    all_136_teams(mulligans, 'prob_reach_wins', False, team_logos, 0, current_week, f"Week {current_week} At-Large Playoff Discussion Chances", folder_path, "at_large_playoff_chances", "Probability each team reaches the win total needed to stay in at-large contention - this is NOT Playoff Probability")
 except Exception as e:
     print(f"Error in code chunk: At Large Playoff Chances. Error: {e}")
 
 try:
-    all_sos = all_data[['team', 'avg_expected_wins']].sort_values('avg_expected_wins').reset_index(drop=True)
-    n_teams = len(all_sos)
-    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
-
-    # Plot configuration
-    fig_width = n_columns * 2.5
-    fig_height = 20 * 0.9
-    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
-    plt.subplots_adjust(hspace=0.3, wspace=0.1)
-
-    fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Week {current_week} SOS Rankings", fontsize=20, y=0.905, x=0.52, fontweight='bold')
-
-    # Define colormap and normalization
-    min_rating = all_sos['avg_expected_wins'].min()
-    max_rating = all_sos['avg_expected_wins'].max()
-    base_cmap = plt.get_cmap('RdYlGn')
-    colors = base_cmap(np.linspace(0, 1, 256))
-    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
-    cmap = ListedColormap(colors)
-
-    def get_color(value):
-        """Return a color based on the normalized win_total."""
-        norm_value = (value - min_rating) / (max_rating - min_rating)
-        return cmap(norm_value)
-
-    # Iterate through the data to plot
-    for idx, team in all_sos.iterrows():
-        power_rating = team['avg_expected_wins']
-        team_name = team['team']
-        
-        row = idx % 20
-        col = idx // 20
-        ax = axes[row, col]
-        ax.axis('off')  # Hide the main axis
-
-        img = team_logos[team_name]
-        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
-
-        text_ax = ax.inset_axes([0, 0, 1, 1])
-        text_ax.axis('off')
-        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
-        box_color = get_color(power_rating)
-        # numbers go: bottom left x, bottom left y, how wide the box is, how tall the box is
-        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
-        text_ax.text(1.8, 0.5, f"{power_rating:.2f}", ha='center', va='center',
-                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-
-    if n_teams % 20 != 0:
-        for empty_row in range(n_teams % 20, 20):
-            axes[empty_row, n_columns - 1].axis('off')
-
-    pear_img = Image.open('./PEAR/pear_logo.jpg')
-    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
-    logo_ax.imshow(pear_img)
-    logo_ax.axis('off')
-    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
-    file_path = os.path.join(folder_path, "all_sos")
-    plt.savefig(file_path, dpi = 300, bbox_inches='tight')
+    all_136_teams(all_data, 'avg_expected_wins', True, team_logos, 2, current_week, f"Week {current_week} SOS Rankings", folder_path, "all_sos")
 except Exception as e:
     print(f"Error in code chunk: All SOS. Error: {e}")
-
 
 try:
     conference_stats = all_data.groupby('conference')['power_rating'].agg(['mean', 'min', 'max']).reset_index()
@@ -1143,107 +537,6 @@ try:
     print("Conference Average Done!")
 except Exception as e:
     print(f"Error in code chunk: Conference Average Ratings. Error: {e}")
-
-try:
-    conference_list = ['SEC', 'Big Ten', 'Big 12', 'ACC', 'Pac-12', 'Conference USA', 'Mid-American', 'Sun Belt', 'American Athletic', 'Mountain West']
-    top_4_seeds = all_data[all_data['conference'].isin(conference_list)].groupby('conference').first().sort_values('power_rating', ascending=False).reset_index()[0:4]
-    autobid_5 = all_data[all_data['conference'].isin(conference_list)].groupby('conference').first().sort_values('power_rating', ascending=False).reset_index()[4:5]
-    excluded_teams = list(top_4_seeds['team']) + list(autobid_5['team'])
-    at_large_bids = all_data[~all_data['team'].isin(excluded_teams)].head(7).reset_index(drop=True)
-    at_large_bids = pd.concat([at_large_bids, autobid_5]).reset_index(drop=True)
-    first_four_out = all_data[~all_data['team'].isin(excluded_teams)].head(11).reset_index(drop=True)[7:]
-    next_four_out = all_data[~all_data['team'].isin(excluded_teams)].head(15).reset_index(drop=True)[11:]
-    # Creating a dictionary for at_large_bids starting from seed 5
-    at_large_dict = {i + 5: team for i, team in enumerate(at_large_bids['team'])}
-    power_5_dict = {i + 1: team for i, team in enumerate(top_4_seeds['team'])}
-    seeding = {**power_5_dict, **at_large_dict}
-    def draw_playoff_bracket(seeding):
-        fig, ax = plt.subplots(figsize=(12, 12),dpi=125)
-        
-        # Round 1 matchups and byes for teams 1-4
-        first_round_matchups = [
-            (8, 9), (5, 12), (7, 10), (6, 11) 
-        ]
-        
-        # Mapping teams to their matchup in round 1
-        matchups_text = [
-            f"#{match[0]} {seeding[match[0]]} vs #{match[1]} {seeding[match[1]]}" for match in first_round_matchups
-        ]
-        
-        # Round 2 (quarterfinals): top seeds (1-4) vs winners of round 1
-        top_seeds = [1, 4, 3, 2]
-
-        # Positions for round 1 (y coordinates for matches)
-        y_round_1 = [0.90, 0.65, 0.4, 0.15]
-        
-        # Positions for round 2 (y coordinates for top 4 seeds)
-        y_round_2 = [0.90, 0.65, 0.4, 0.15]
-
-        top_seed_locations = [0.8, 0.55, 0.3, 0.05]
-        
-        # Adding matchups from the first round
-        for i, (y, text) in enumerate(zip(y_round_1, matchups_text)):
-            ax.text(0.05, y+0.05, text, fontsize=10, verticalalignment='center')
-            # Display team 1 logo
-            team1_logo = team_logos[seeding[first_round_matchups[i][0]]]
-            imagebox1 = OffsetImage(team1_logo, zoom=0.1)
-            ab1 = AnnotationBbox(imagebox1, (0.1, y), frameon=False)
-            ax.add_artist(ab1)
-            
-            # Display team 2 logo
-            team2_logo = team_logos[seeding[first_round_matchups[i][1]]]
-            imagebox2 = OffsetImage(team2_logo, zoom=0.1)
-            ab2 = AnnotationBbox(imagebox2, (0.2, y), frameon=False)
-            ax.add_artist(ab2)
-
-        # Adding the top 4 seeds (bye teams)
-        for i, seed in enumerate(top_seeds):
-            # Fetch and display logo for the top seed (bye team)
-            ax.text(0.25, top_seed_locations[i]+0.05, f"#{seed} {seeding[seed]}", fontsize=10, verticalalignment='center')
-            bye_team_logo = team_logos[seeding[seed]]
-            imagebox_bye = OffsetImage(bye_team_logo, zoom=0.1)
-            ab_bye = AnnotationBbox(imagebox_bye, (0.3, top_seed_locations[i]), frameon=False)
-            ax.add_artist(ab_bye)
-        
-        # Drawing lines connecting round 1 winners to the top 4 seeds
-        for i in range(4):
-            ax.add_patch(patches.ConnectionPatch((0.15, y_round_1[i]-0.05), (0.15, top_seed_locations[i]), 'data', 'data', arrowstyle="-"))
-            ax.add_patch(patches.ConnectionPatch((0.15, top_seed_locations[i]), (0.25, top_seed_locations[i]), 'data', 'data', arrowstyle="-"))
-            ax.add_patch(patches.ConnectionPatch((0.35, top_seed_locations[i]), (0.5, top_seed_locations[i]), 'data', 'data', arrowstyle='-'))
-            
-
-        ax.add_patch(patches.ConnectionPatch((0.5, top_seed_locations[0]), (0.5, top_seed_locations[1]), 'data', 'data', arrowstyle='-'))
-        ax.add_patch(patches.ConnectionPatch((0.5, top_seed_locations[2]), (0.5, top_seed_locations[3]), 'data', 'data', arrowstyle='-'))
-        ax.add_patch(patches.ConnectionPatch((0.5, (top_seed_locations[0]+top_seed_locations[1])/2), (0.7, (top_seed_locations[0]+top_seed_locations[1])/2), 'data', 'data', arrowstyle='-'))
-        ax.add_patch(patches.ConnectionPatch((0.5, (top_seed_locations[2]+top_seed_locations[3])/2), (0.7, (top_seed_locations[2]+top_seed_locations[3])/2), 'data', 'data', arrowstyle='-'))
-        ax.add_patch(patches.ConnectionPatch((0.7, (top_seed_locations[0]+top_seed_locations[1])/2), (0.7, (top_seed_locations[2]+top_seed_locations[3])/2), 'data', 'data', arrowstyle='-'))
-        ax.add_patch(patches.ConnectionPatch((0.7, (top_seed_locations[1]+top_seed_locations[2])/2), (0.9, (top_seed_locations[1]+top_seed_locations[2])/2), 'data', 'data', arrowstyle='-'))
-
-        ax.text(0.8, 0.95, "First Four Out", fontsize = 12, verticalalignment='center', ha='center',fontweight='bold')
-        ax.text(0.8,0.92, f"{first_four_out.iloc[0,1]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.89, f"{first_four_out.iloc[1,1]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.86, f"{first_four_out.iloc[2,1]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.83, f"{first_four_out.iloc[3,1]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.80, f"Next Four Out", verticalalignment='center', fontsize = 12, ha='center', fontweight='bold')
-        ax.text(0.8,0.77, f"{next_four_out.iloc[0,1]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.74, f"{next_four_out.iloc[1,1]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.71, f"{next_four_out.iloc[2,1]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.68, f"{next_four_out.iloc[3,1]}", fontsize = 12, verticalalignment='center', ha='center')
-
-        # Final formatting
-        ax.set_xlim(0, 1)
-        ax.set_ylim(0, 1)
-        ax.axis('off')
-        ax.text(0.9, 0.05, "@PEARatings", fontsize=18, fontweight='bold', ha='right')
-        plt.gca().set_facecolor('#CECEB2')
-        plt.gcf().set_facecolor('#CECEB2')
-        plt.title("PEAR Power Ratings Bracket", fontweight='bold', fontsize=20)
-        file_path = os.path.join(folder_path, "projected_playoff")
-        plt.savefig(file_path, dpi = 300, bbox_inches = 'tight')
-    draw_playoff_bracket(seeding)
-    print("Projected Playoff Done!")
-except Exception as e:
-    print(f"Error in code chunk: Projected Playoff Ratings. Error: {e}")
 
 try:
     best_and_worst(all_data, team_logos, 'total_turnovers_scaled', "Turnover Margin Percentiles", 
@@ -1308,15 +601,6 @@ except Exception as e:
     print(f"Error in code chunk: DDE Ratings. Error: {e}")
 
 try:
-    columns_to_average = ["offensive_rank", "defensive_rank", "STM_rank", "PBR_rank", "DCE_rank", "DDE_rank"]
-    all_data["average_metric_rank"] = round(all_data[columns_to_average].mean(axis=1), 1)
-    best_and_worst(all_data, team_logos, 'average_metric_rank', "PEAR Average Metric Ranking", 
-                    "Average OFF, DEF, ST, PBR, DCE, DDE Ranking - Lower is Better", "average_metric_rank",folder_path)
-    print("Average Metric Done!")
-except:
-    print(f"Error in code chunk: Average Metric Ratings. Error: {e}")
-
-try:
     scaler100 = MinMaxScaler(feature_range=(1, 100))
     all_data['offensive_total'] = scaler100.fit_transform(all_data[['offensive_total']])
     all_data['offensive_total'] = all_data['offensive_total'] - all_data['offensive_total'].mean()
@@ -1350,41 +634,6 @@ try:
     print("Offense vs. Defense Done!")
 except Exception as e:
     print(f"Error in code chunk: Offense vs. Defense Ratings. Error: {e}")
-
-try:
-    scaler100 = MinMaxScaler(feature_range=(1, 100))
-    all_data['DCE'] = scaler100.fit_transform(all_data[['DCE']])
-    all_data['DCE'] = all_data['DCE'] - all_data['DCE'].mean()
-    all_data['DDE'] = scaler100.fit_transform(all_data[['DDE']])
-    all_data['DDE'] = all_data['DDE'] - all_data['DDE'].mean()
-    fig, ax = plt.subplots(figsize=(15, 9),dpi=125)
-    plt.gca().set_facecolor('#CECEB2')
-    plt.gcf().set_facecolor('#CECEB2')
-    logo_size = 2  # Half the size of the logo to create spacing
-    for i in range(len(all_data)):
-        img = team_logos[all_data.loc[i,'team']]
-        ax.imshow(img, aspect='auto', 
-                extent=(all_data['DDE'].iloc[i] - (logo_size-0.5),
-                        all_data['DDE'].iloc[i] + (logo_size-0.5),
-                        all_data['DCE'].iloc[i] - logo_size,
-                        all_data['DCE'].iloc[i] + logo_size))
-    ax.set_xlabel('Drive Disruption Efficiency')
-    ax.set_ylabel('Drive Control Efficiency')
-    ax.set_title('DCE vs. DDE', fontweight='bold', fontsize=14)
-    plt.xlim(all_data['DDE'].min() - 5, all_data['DDE'].max() + 5)  # Adjust x-axis limits for visibility
-    plt.ylim(all_data['DCE'].min() - 5, all_data['DCE'].max() + 5)  # Adjust y-axis limits for visibility
-    plt.grid(False)  # Turn off the grid
-    plt.axhline(0, linestyle='--', color='black', alpha = 0.3)
-    plt.axvline(0, linestyle='--', color='black', alpha = 0.3)
-    plt.text(45, 50, "Good DCE, Good DDE", fontsize=10, fontweight='bold', ha='center')
-    plt.text(-30, 50, "Good DCE, Bad DDE", fontsize=10, fontweight='bold', ha='center')
-    plt.text(45, -50, "Bad DCE, Good DDE", fontsize=10, fontweight='bold', ha='center')
-    plt.text(-30, -50, "Bad DCE, Bad DDE", fontsize=10, fontweight='bold', ha='center')
-    file_path = os.path.join(folder_path, "dce_vs_dde")
-    plt.savefig(file_path, bbox_inches='tight', dpi=300)
-    print("DCE vs. DDE Done!")
-except Exception as e:
-    print(f"Error in code chunk: DCE vs. DDE Ratings. Error: {e}")
 
 try:
     performance_list = []
@@ -1452,180 +701,10 @@ except Exception as e:
     print(f"Error in code chunk: MOV Performance Ratings. Error: {e}")
 
 try:
-    from matplotlib.colors import ListedColormap
-
-    # Define the number of rows and columns
-    RTP = RTP.sort_values('RTP', ascending=False).reset_index(drop=True)
-    n_teams = len(RTP)
-    n_columns = (n_teams // 20) + (1 if n_teams % 20 != 0 else 0)
-
-    # Plot configuration
-    fig_width = n_columns * 2.5
-    fig_height = 20 * 0.9
-    fig, axes = plt.subplots(nrows=20, ncols=n_columns, figsize=(fig_width, fig_height), dpi=300)
-    plt.subplots_adjust(hspace=0.3, wspace=0.1)
-
-    fig.patch.set_facecolor('#CECEB2')
-    plt.suptitle(f"Adjusted Margin of Victory Performance - How Teams Do vs Projection", fontsize=20, y=0.905, x=0.52, fontweight='bold')
-
-    # Define colormap and normalization
-    min_rating = RTP['RTP'].min()
-    max_rating = RTP['RTP'].max()
-    base_cmap = plt.get_cmap('RdYlGn')
-    colors = base_cmap(np.linspace(0, 1, 256))
-    colors[:50, :3] = colors[:50, :3] + (1 - colors[:50, :3]) * 0.4  # blend toward white
-    cmap = ListedColormap(colors)
-
-    def get_color(value):
-        """Return a color based on the normalized win_total."""
-        norm_value = (value - min_rating) / (max_rating - min_rating)
-        return cmap(norm_value)
-
-    # Iterate through the data to plot
-    for idx, team in RTP.iterrows():
-        power_rating = team['RTP']
-        team_name = team['team']
-        logo_url = logos[logos['team'] == team_name]['logo'].values[0][0]
-        
-        row = idx % 20
-        col = idx // 20
-        ax = axes[row, col]
-        ax.axis('off')  # Hide the main axis
-
-        img = team_logos[team_name]
-        ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
-
-        text_ax = ax.inset_axes([0, 0, 1, 1])
-        text_ax.axis('off')
-        text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
-        box_color = get_color(power_rating)
-        # numbers go: bottom left x, bottom left y, how wide the box is, how tall the box is
-        text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
-        text_ax.text(1.8, 0.5, f"{power_rating:.1f}", ha='center', va='center',
-                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-
-    if n_teams % 20 != 0:
-        for empty_row in range(n_teams % 20, 20):
-            axes[empty_row, n_columns - 1].axis('off')
-
-    pear_img = Image.open('./PEAR/pear_logo.jpg')
-    logo_ax = fig.add_axes([0.807, 0.106, 0.1, 0.1], anchor='SE', zorder=10)  # Adjust x to near right edge
-    logo_ax.imshow(pear_img)
-    logo_ax.axis('off')
-    fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
-    fig.text(0.52,0.097, "Difference between actual and expected margins of victory, adjusted for opponent strength, standardized by game-level variance", ha='center', va='center', fontsize=14)
-    plt.savefig(os.path.join(folder_path, "all_mov"), bbox_inches='tight', dpi=300)
+    all_136_teams(RTP, 'RTP', False, team_logos, 1, current_week, f"Adjusted Margin of Victory Performance - How Teams Do vs Projection", folder_path, "all_mov", "Difference between actual and expected margins of victory, adjusted for opponent strength, standardized by game-level variance")
     print("All MOV Done!")
 except Exception as e:
     print(f"Error in code chunk: All MOV. Error: {e}")
-
-try:
-    most_deserving_playoff = most_deserving.merge(team_data[['team', 'conference']], on='team', how='left')
-    # most_deserving_playoff = most_deserving_playoff[~(most_deserving_playoff['team'] == 'BYU')][0:25]
-    # most_deserving_playoff = most_deserving_playoff[~(most_deserving_playoff['team'] == 'Army')][0:25]
-    conference_list = ['SEC', 'Big Ten', 'Big 12', 'ACC', 'Conference USA', 'Mid-American', 'Sun Belt', 'American Athletic', 'Mountain West']
-    top_4_seeds = most_deserving_playoff[most_deserving_playoff['conference'].isin(conference_list)].groupby('conference').first().sort_values('most_deserving_wins', ascending=False).reset_index()[0:4]
-    autobid_5 = most_deserving_playoff[most_deserving_playoff['conference'].isin(conference_list)].groupby('conference').first().sort_values('most_deserving_wins', ascending=False).reset_index()[4:5]
-    # conference_champs = ['Oregon', 'Georgia', 'Boise State', 'Arizona State', 'Clemson', 'Army']
-    # top_4_seeds = most_deserving_playoff[most_deserving_playoff['team'].isin(conference_champs)].sort_values('wins_above_average', ascending=False).reset_index()[0:4]
-    # autobid_5 = most_deserving_playoff[most_deserving_playoff['team'].isin(conference_champs)].sort_values('wins_above_average', ascending=False).reset_index()[4:5]
-    excluded_teams = list(top_4_seeds['team']) + list(autobid_5['team'])
-    at_large_bids = most_deserving_playoff[~most_deserving_playoff['team'].isin(excluded_teams)].head(7).reset_index(drop=True)
-    at_large_bids = pd.concat([at_large_bids, autobid_5]).reset_index(drop=True)
-    first_four_out = most_deserving_playoff[~most_deserving_playoff['team'].isin(excluded_teams)].head(11).reset_index(drop=True)[7:]
-    next_four_out = most_deserving_playoff[~most_deserving_playoff['team'].isin(excluded_teams)].head(15).reset_index(drop=True)[11:]
-    # Creating a dictionary for at_large_bids starting from seed 5
-    at_large_dict = {i + 5: team for i, team in enumerate(at_large_bids['team'])}
-    power_5_dict = {i + 1: team for i, team in enumerate(top_4_seeds['team'])}
-    seeding = {**power_5_dict, **at_large_dict}
-    def draw_playoff_bracket(seeding):
-        fig, ax = plt.subplots(figsize=(12, 12),dpi=125)
-        
-        # Round 1 matchups and byes for teams 1-4
-        first_round_matchups = [
-            (8, 9), (5, 12), (7, 10), (6, 11) 
-        ]
-        
-        # Mapping teams to their matchup in round 1
-        matchups_text = [
-            f"#{match[0]} {seeding[match[0]]} vs #{match[1]} {seeding[match[1]]}" for match in first_round_matchups
-        ]
-        
-        # Round 2 (quarterfinals): top seeds (1-4) vs winners of round 1
-        top_seeds = [1, 4, 2, 3]
-
-        # Positions for round 1 (y coordinates for matches)
-        y_round_1 = [0.90, 0.65, 0.4, 0.15]
-        
-        # Positions for round 2 (y coordinates for top 4 seeds)
-        y_round_2 = [0.90, 0.65, 0.4, 0.15]
-
-        top_seed_locations = [0.8, 0.55, 0.3, 0.05]
-        
-        # Adding matchups from the first round
-        for i, (y, text) in enumerate(zip(y_round_1, matchups_text)):
-            ax.text(0.05, y+0.05, text, fontsize=10, verticalalignment='center')
-            # Display team 1 logo
-            team1_logo = team_logos[seeding[first_round_matchups[i][0]]]
-            imagebox1 = OffsetImage(team1_logo, zoom=0.1)
-            ab1 = AnnotationBbox(imagebox1, (0.1, y), frameon=False)
-            ax.add_artist(ab1)
-            
-            # Display team 2 logo
-            team2_logo = team_logos[seeding[first_round_matchups[i][1]]]
-            imagebox2 = OffsetImage(team2_logo, zoom=0.1)
-            ab2 = AnnotationBbox(imagebox2, (0.2, y), frameon=False)
-            ax.add_artist(ab2)
-
-        # Adding the top 4 seeds (bye teams)
-        for i, seed in enumerate(top_seeds):
-            # Fetch and display logo for the top seed (bye team)
-            ax.text(0.25, top_seed_locations[i]+0.05, f"#{seed} {seeding[seed]}", fontsize=10, verticalalignment='center')
-            bye_team_logo = team_logos[seeding[seed]]
-            imagebox_bye = OffsetImage(bye_team_logo, zoom=0.1)
-            ab_bye = AnnotationBbox(imagebox_bye, (0.3, top_seed_locations[i]), frameon=False)
-            ax.add_artist(ab_bye)
-        
-        # Drawing lines connecting round 1 winners to the top 4 seeds
-        for i in range(4):
-            ax.add_patch(patches.ConnectionPatch((0.15, y_round_1[i]-0.05), (0.15, top_seed_locations[i]), 'data', 'data', arrowstyle="-"))
-            ax.add_patch(patches.ConnectionPatch((0.15, top_seed_locations[i]), (0.25, top_seed_locations[i]), 'data', 'data', arrowstyle="-"))
-            ax.add_patch(patches.ConnectionPatch((0.35, top_seed_locations[i]), (0.5, top_seed_locations[i]), 'data', 'data', arrowstyle='-'))
-            
-
-        ax.add_patch(patches.ConnectionPatch((0.5, top_seed_locations[0]), (0.5, top_seed_locations[1]), 'data', 'data', arrowstyle='-'))
-        ax.add_patch(patches.ConnectionPatch((0.5, top_seed_locations[2]), (0.5, top_seed_locations[3]), 'data', 'data', arrowstyle='-'))
-        ax.add_patch(patches.ConnectionPatch((0.5, (top_seed_locations[0]+top_seed_locations[1])/2), (0.7, (top_seed_locations[0]+top_seed_locations[1])/2), 'data', 'data', arrowstyle='-'))
-        ax.add_patch(patches.ConnectionPatch((0.5, (top_seed_locations[2]+top_seed_locations[3])/2), (0.7, (top_seed_locations[2]+top_seed_locations[3])/2), 'data', 'data', arrowstyle='-'))
-        ax.add_patch(patches.ConnectionPatch((0.7, (top_seed_locations[0]+top_seed_locations[1])/2), (0.7, (top_seed_locations[2]+top_seed_locations[3])/2), 'data', 'data', arrowstyle='-'))
-        ax.add_patch(patches.ConnectionPatch((0.7, (top_seed_locations[1]+top_seed_locations[2])/2), (0.9, (top_seed_locations[1]+top_seed_locations[2])/2), 'data', 'data', arrowstyle='-'))
-
-        ax.text(0.8, 0.95, "First Four Out", fontsize = 12, verticalalignment='center', ha='center',fontweight='bold')
-        ax.text(0.8,0.92, f"{first_four_out.iloc[0,0]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.89, f"{first_four_out.iloc[1,0]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.86, f"{first_four_out.iloc[2,0]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.83, f"{first_four_out.iloc[3,0]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.80, f"Next Four Out", verticalalignment='center', fontsize = 12, ha='center', fontweight='bold')
-        ax.text(0.8,0.77, f"{next_four_out.iloc[0,0]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.74, f"{next_four_out.iloc[1,0]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.71, f"{next_four_out.iloc[2,0]}", fontsize = 12, verticalalignment='center', ha='center')
-        ax.text(0.8,0.68, f"{next_four_out.iloc[3,0]}", fontsize = 12, verticalalignment='center', ha='center')
-        
-        # Final formatting
-        ax.set_xlim(0, 1)
-        ax.set_ylim(0, 1)
-        ax.axis('off')
-        ax.text(0.9, 0.05, "@PEARatings", fontsize=18, fontweight='bold', ha='right')
-        plt.gca().set_facecolor('#CECEB2')
-        plt.gcf().set_facecolor('#CECEB2')
-        plt.title("PEAR Most Deserving Bracket", fontweight='bold', fontsize=20)
-        file_path = os.path.join(folder_path, "most_deserving_playoff")
-        plt.savefig(file_path, bbox_inches='tight',dpi=300)
-    # Assuming team_data is a DataFrame with columns ['team', 'logo'], where 'logo' is the URL to each team's logo
-    draw_playoff_bracket(seeding)
-    print("Most Deserving Playoff Done!")
-except Exception as e:
-    print(f"Error occurred while drawing MD playoff bracket: {e}")
 
 try:
     average_pr = round(team_data['power_rating'].mean(), 2)
