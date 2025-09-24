@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PEAR - College Football Power Ratings</title>
+    <!-- External libraries for parsing data files -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+        /* General Styling */
         * {
             margin: 0;
             padding: 0;
@@ -16,7 +18,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            color: #fff;
+            color: #e0e0e0;
             line-height: 1.6;
             min-height: 100vh;
         }
@@ -27,20 +29,23 @@
             padding: 20px;
         }
 
+        /* Header */
         .header {
             text-align: center;
-            padding: 40px 0;
+            padding: 40px 20px;
             background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
             margin-bottom: 30px;
             backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .logo {
-            width: 150px;
-            height: auto;
+            width: 120px;
+            height: 120px;
             margin-bottom: 20px;
             border-radius: 50%;
+            border: 3px solid #4ecdc4;
         }
 
         h1 {
@@ -55,14 +60,14 @@
         .subtitle {
             font-size: 1.2rem;
             opacity: 0.8;
-            margin-bottom: 20px;
         }
 
+        /* Navigation Tabs */
         .nav-tabs {
             display: flex;
             justify-content: center;
             margin-bottom: 30px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
             border-radius: 50px;
             padding: 5px;
             flex-wrap: wrap;
@@ -77,12 +82,12 @@
             border-radius: 25px;
             transition: all 0.3s ease;
             font-size: 1rem;
+            font-weight: 500;
             margin: 2px;
         }
 
         .tab-btn:hover {
             background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
         }
 
         .tab-btn.active {
@@ -91,6 +96,7 @@
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
         }
 
+        /* Tab Content */
         .tab-content {
             display: none;
             animation: fadeIn 0.5s ease;
@@ -105,14 +111,15 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .data-table {
+        /* Data Tables */
+        .data-table-container {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
             overflow: hidden;
             margin-bottom: 30px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            max-height: 500px;
+            max-height: 60vh;
             overflow-y: auto;
         }
 
@@ -122,14 +129,13 @@
         }
 
         th, td {
-            padding: 12px 8px;
+            padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.9rem;
         }
 
         th {
-            background: linear-gradient(45deg, rgba(255, 107, 107, 0.3), rgba(78, 205, 196, 0.3));
+            background: rgba(0,0,0,0.2);
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -139,12 +145,11 @@
         }
 
         tbody tr:hover {
-            background: rgba(255, 255, 255, 0.05);
-            transform: scale(1.01);
-            transition: all 0.2s ease;
+            background: rgba(78, 205, 196, 0.1);
         }
 
-        .spread-calculator, .visual-selector {
+        /* Forms and Interactive Elements */
+        .card {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
             padding: 30px;
@@ -152,33 +157,20 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; color: #4ecdc4; }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #4ecdc4;
-        }
-
-        select, input {
+        select, input[type="text"] {
             width: 100%;
             padding: 12px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
             color: #fff;
             font-size: 1rem;
-            backdrop-filter: blur(5px);
         }
-
-        select option {
-            background: #1a1a2e;
-            color: #fff;
-        }
+        select option { background: #1a1a2e; color: #fff; }
 
         .btn {
             background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
@@ -190,14 +182,8 @@
             font-size: 1rem;
             font-weight: 600;
             transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); }
 
         .result {
             margin-top: 20px;
@@ -207,706 +193,466 @@
             border-left: 4px solid #4ecdc4;
         }
 
+        /* Layout */
         .two-column {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 30px;
-            margin-bottom: 30px;
         }
 
-        .caption {
-            font-size: 0.9rem;
-            opacity: 0.7;
-            margin-top: 10px;
-            font-style: italic;
-        }
+        /* Utility Classes */
+        .caption { font-size: 0.9rem; opacity: 0.7; margin-top: 10px; text-align: center; }
+        .loading, .error { text-align: center; padding: 50px; font-size: 1.1rem; }
+        .error { background: rgba(255, 107, 107, 0.2); border-left: 4px solid #ff6b6b; border-radius: 8px; margin: 20px 0; }
+        .visual-image { max-width: 100%; height: auto; border-radius: 10px; margin-top: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
 
-        .loading {
-            text-align: center;
-            padding: 50px;
-            opacity: 0.7;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 25px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            font-size: 1rem;
-            backdrop-filter: blur(5px);
-            margin-bottom: 20px;
-        }
-
-        .search-box input::placeholder {
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        .error {
-            background: rgba(255, 107, 107, 0.2);
-            border-left: 4px solid #ff6b6b;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-
-        .visual-image {
-            max-width: 100%;
-            height: auto;
-            border-radius: 10px;
-            margin-top: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-
+        /* Responsive Design */
         @media (max-width: 768px) {
-            .two-column {
-                grid-template-columns: 1fr;
-            }
-            
-            h1 {
-                font-size: 2rem;
-            }
-            
-            th, td {
-                padding: 8px 4px;
-                font-size: 0.8rem;
-            }
+            h1 { font-size: 2.2rem; }
+            .nav-tabs { flex-direction: column; align-items: stretch; border-radius: 15px; }
+            .tab-btn { margin: 2px 5px; text-align: center; }
+            th, td { padding: 8px 5px; font-size: 0.85rem; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <img src="PEAR/pear_logo.jpg" alt="PEAR Logo" class="logo">
+        <!-- Header -->
+        <header class="header">
+            <img src="PEAR/pear_logo.jpg" alt="PEAR Logo" class="logo" onerror="this.style.display='none'">
             <h1>PEAR</h1>
-            <p class="subtitle">College Football Power Ratings</p>
-            <p class="subtitle" id="weekDisplay">Week 5 • 2025 Season</p>
-        </div>
+            <p class="subtitle" id="weekDisplay">College Football Power Ratings</p>
+        </header>
+        
+        <!-- Global Error Message Container -->
+        <div id="globalErrorContainer"></div>
 
-        <div class="nav-tabs">
-            <button class="tab-btn active" onclick="showTab('power-ratings', this)">Power Ratings</button>
-            <button class="tab-btn" onclick="showTab('spreads', this)">Spreads</button>
-            <button class="tab-btn" onclick="showTab('visuals', this)">Visuals</button>
-            <button class="tab-btn" onclick="showTab('calculator', this)">Calculator</button>
-            <button class="tab-btn" onclick="showTab('archive', this)">Archive</button>
-        </div>
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="power-ratings">Power Ratings</button>
+            <button class="tab-btn" data-tab="spreads">Spreads</button>
+            <button class="tab-btn" data-tab="visuals">Visuals</button>
+            <button class="tab-btn" data-tab="calculator">Calculator</button>
+            <button class="tab-btn" data-tab="archive">Archive</button>
+        </nav>
 
         <!-- Power Ratings Tab -->
-        <div id="power-ratings" class="tab-content active">
-            <h2>FBS Power Ratings</h2>
-            <div class="search-box">
-                <input type="text" id="teamSearch" placeholder="Search teams..." onkeyup="filterTeams()">
+        <main id="power-ratings" class="tab-content active">
+            <div class="card">
+                <input type="text" id="teamSearch" placeholder="Search teams..." aria-label="Search teams">
             </div>
-            <div class="data-table">
+            <div class="data-table-container">
                 <div id="ratingsLoading" class="loading">Loading ratings data...</div>
                 <table id="ratingsTable" style="display: none;">
-                    <thead>
-                        <tr id="ratingsHeader"></tr>
-                    </thead>
+                    <thead><tr id="ratingsHeader"></tr></thead>
                     <tbody id="ratingsBody"></tbody>
                 </table>
             </div>
-            <p class="caption">MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense</p>
-        </div>
+            <p class="caption">MD: Most Deserving | SOS: Strength of Schedule | SOR: Strength of Record | ST: Special Teams | PBR: Pass Blocking | DCE: Def. Carry Eff. | DDE: Def. Dropback Eff.</p>
+        </main>
 
         <!-- Spreads Tab -->
-        <div id="spreads" class="tab-content">
-            <h2 id="spreadsTitle">Week 5 Spreads</h2>
-            <div class="data-table">
+        <main id="spreads" class="tab-content">
+            <h2 id="spreadsTitle" class="subtitle" style="text-align: center; margin-bottom: 20px;">Weekly Spreads</h2>
+            <div class="data-table-container">
                 <div id="spreadsLoading" class="loading">Loading spreads data...</div>
                 <table id="spreadsTable" style="display: none;">
-                    <thead>
-                        <tr id="spreadsHeader"></tr>
-                    </thead>
+                    <thead><tr id="spreadsHeader"></tr></thead>
                     <tbody id="spreadsBody"></tbody>
                 </table>
             </div>
-            <p class="caption">GQI - Game Quality Index, measuring the entertainment value of each matchup</p>
-        </div>
+            <p class="caption">GQI: Game Quality Index (Entertainment Value)</p>
+        </main>
 
         <!-- Visuals Tab -->
-        <div id="visuals" class="tab-content">
-            <h2>Game Visuals & Stat Profiles</h2>
+        <main id="visuals" class="tab-content">
             <div class="two-column">
-                <div class="visual-selector">
+                <div class="card">
                     <h3>Game Images</h3>
                     <div class="form-group">
                         <label for="gameSelect">Select a Game:</label>
-                        <select id="gameSelect" onchange="displayGameImage()">
-                            <option value="">Loading games...</option>
-                        </select>
+                        <select id="gameSelect"><option value="">Loading games...</option></select>
                     </div>
                     <div id="gameImageContainer"></div>
                 </div>
-
-                <div class="visual-selector">
+                <div class="card">
                     <h3>Stat Profiles</h3>
                     <div class="form-group">
                         <label for="profileSelect">Select a Stat Profile:</label>
-                        <select id="profileSelect" onchange="displayStatProfile()">
-                            <option value="">Loading stat profiles...</option>
-                        </select>
+                        <select id="profileSelect"><option value="">Loading profiles...</option></select>
                     </div>
                     <div id="profileImageContainer"></div>
                 </div>
             </div>
-        </div>
+        </main>
 
         <!-- Calculator Tab -->
-        <div id="calculator" class="tab-content">
+        <main id="calculator" class="tab-content">
             <div class="two-column">
-                <div class="spread-calculator">
-                    <h2>Calculate Spread Between Any Two Teams</h2>
+                <div class="card">
+                    <h2>Spread Calculator</h2>
                     <form id="spreadForm">
-                        <div class="form-group">
-                            <label for="awayTeam">Away Team</label>
-                            <select id="awayTeam" required>
-                                <option value="">Loading teams...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="homeTeam">Home Team</label>
-                            <select id="homeTeam" required>
-                                <option value="">Loading teams...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Game Location</label>
-                            <select id="neutralField">
-                                <option value="false">On Campus</option>
-                                <option value="true">Neutral Field</option>
-                            </select>
-                        </div>
+                        <div class="form-group"><label for="awayTeam">Away Team</label><select id="awayTeam" required><option value="">Loading...</option></select></div>
+                        <div class="form-group"><label for="homeTeam">Home Team</label><select id="homeTeam" required><option value="">Loading...</option></select></div>
+                        <div class="form-group"><label for="neutralField">Location</label><select id="neutralField"><option value="false">On Campus</option><option value="true">Neutral Field</option></select></div>
                         <button type="submit" class="btn">Calculate Spread</button>
                     </form>
                     <div id="spreadResult" class="result" style="display: none;"></div>
                 </div>
-
-                <div class="spread-calculator">
-                    <h2>Win Probability Calculator</h2>
+                <div class="card">
+                    <h2>Win Probability</h2>
                     <form id="probForm">
-                        <div class="form-group">
-                            <label for="probTeam1">Team 1 (Home)</label>
-                            <select id="probTeam1" required>
-                                <option value="">Loading teams...</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="probTeam2">Team 2 (Away)</label>
-                            <select id="probTeam2" required>
-                                <option value="">Loading teams...</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn">Calculate Probability</button>
+                        <div class="form-group"><label for="probTeam1">Team 1 (Home)</label><select id="probTeam1" required><option value="">Loading...</option></select></div>
+                        <div class="form-group"><label for="probTeam2">Team 2 (Away)</label><select id="probTeam2" required><option value="">Loading...</option></select></div>
+                        <button type="submit" class="btn">Calculate</button>
                     </form>
                     <div id="probResult" class="result" style="display: none;"></div>
                 </div>
             </div>
-        </div>
+        </main>
 
         <!-- Archive Tab -->
-        <div id="archive" class="tab-content">
-            <h2>Historical Ratings Archive</h2>
+        <main id="archive" class="tab-content">
             <div class="two-column">
-                <div class="data-table">
+                <div class="card data-table-container">
                     <h3>Team Data Overview</h3>
                     <div id="archiveLoading" class="loading">Loading historical data...</div>
                     <table id="archiveTable" style="display: none;">
-                        <thead>
-                            <tr id="archiveHeader"></tr>
-                        </thead>
+                        <thead><tr id="archiveHeader"></tr></thead>
                         <tbody id="archiveBody"></tbody>
                     </table>
                 </div>
-
-                <div class="spread-calculator">
-                    <h3>Team Historical Search</h3>
+                <div class="card">
+                    <h3>Team History</h3>
                     <form id="teamHistoryForm">
-                        <div class="form-group">
-                            <label for="historyTeam">Select Team</label>
-                            <select id="historyTeam" required>
-                                <option value="">Loading teams...</option>
-                            </select>
-                        </div>
+                        <div class="form-group"><label for="historyTeam">Select Team</label><select id="historyTeam" required><option value="">Loading...</option></select></div>
                         <button type="submit" class="btn">View History</button>
                     </form>
                     <div id="historyResult" class="result" style="display: none;"></div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <script>
-        // Global variables to store data
-        let teamRatingsData = [];
-        let spreadsData = [];
-        let teamDataWeek = [];
-        let currentWeek = 5; // This could be dynamically determined
-        const GLOBAL_HFA = 3;
+        // Main application logic is encapsulated in an object to avoid polluting the global scope.
+        const App = {
+            // Store data and configuration here
+            data: {
+                ratings: [],
+                spreads: [],
+                teamData: [],
+                teamsList: []
+            },
+            config: {
+                year: 2025,
+                week: 5,
+                hfa: 3 // Home Field Advantage
+            },
 
-        // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, initializing app...');
-            loadAllData();
-        });
+            // --- INITIALIZATION ---
+            init() {
+                this.addEventListeners();
+                this.loadAllData();
+                this.updateStaticUI();
+            },
 
-        // Load all data files
-        async function loadAllData() {
-            console.log('Starting to load all data...');
-            try {
-                // Load data with error handling for each file
-                const promises = [
-                    loadTeamRatings().catch(e => console.warn('Team ratings failed:', e)),
-                    loadSpreadsData().catch(e => console.warn('Spreads data failed:', e)),
-                    loadTeamData().catch(e => console.warn('Team data failed:', e)),
-                    loadVisualFiles().catch(e => console.warn('Visual files failed:', e))
-                ];
+            addEventListeners() {
+                // Tab navigation
+                document.querySelector('.nav-tabs').addEventListener('click', this.handleTabClick.bind(this));
                 
-                await Promise.allSettled(promises);
-                
-                populateTeamSelectors();
-                console.log('Data loading completed');
-                
-                // Show error message if no data loaded
-                if (teamRatingsData.length === 0 && spreadsData.length === 0 && teamDataWeek.length === 0) {
-                    showError('Unable to load data files. Please ensure the PEAR folder structure is correct and files exist.');
-                }
-                
-            } catch (error) {
-                console.error('Error loading data:', error);
-                showError('Failed to load data files. Please check file paths and folder structure.');
-            }
-        }
+                // Interactive elements
+                document.getElementById('teamSearch').addEventListener('keyup', this.handleTeamSearch.bind(this));
+                document.getElementById('spreadForm').addEventListener('submit', this.handleSpreadCalculation.bind(this));
+                document.getElementById('probForm').addEventListener('submit', this.handleProbabilityCalculation.bind(this));
+                document.getElementById('teamHistoryForm').addEventListener('submit', this.handleHistorySearch.bind(this));
 
-        // Load team ratings from CSV
-        async function loadTeamRatings() {
-            console.log("Loading team ratings...");
-
-            const filePath = `PEAR/PEAR Football/y2025/Ratings/PEAR_week${currentWeek}.csv`;
-            const encodedPath = encodeURI(filePath);  // <-- encodes spaces and special chars
-            console.log("Attempting to fetch:", encodedPath);
-
-            try {
-                const response = await fetch(encodedPath);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const csvText = await response.text();
-                console.log("CSV text length:", csvText.length);
-
-                Papa.parse(csvText, {
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        if (results.errors.length > 0) {
-                            console.warn("CSV parsing errors:", results.errors);
-                        }
-                        teamRatingsData = results.data;
-                        console.log("Team ratings loaded:", teamRatingsData.length, "teams");
-                        displayRatingsTable();
-                        hideLoading("ratingsLoading");
+                // Visuals selectors
+                document.getElementById('gameSelect').addEventListener('change', this.displayGameImage.bind(this));
+                document.getElementById('profileSelect').addEventListener('change', this.displayStatProfile.bind(this));
+            },
+            
+            updateStaticUI() {
+                const { week, year } = this.config;
+                document.getElementById('weekDisplay').textContent = `Week ${week} • ${year} Season`;
+                document.getElementById('spreadsTitle').textContent = `Week ${week} Spreads`;
+            },
+            
+            // --- DATA LOADING ---
+            async fetchFile(path, type = 'csv') {
+                try {
+                    const response = await fetch(path);
+                    if (!response.ok) {
+                        throw new Error(`Failed to load ${path}. Status: ${response.status}`);
                     }
+                    if (type === 'csv') {
+                        const csvText = await response.text();
+                        return Papa.parse(csvText, { header: true, skipEmptyLines: true }).data;
+                    } else if (type === 'xlsx') {
+                        const buffer = await response.arrayBuffer();
+                        const workbook = XLSX.read(buffer, { type: 'array' });
+                        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                        return XLSX.utils.sheet_to_json(sheet);
+                    }
+                } catch (error) {
+                    console.error(error);
+                    this.showError(`Could not load data from ${path}. Check the file path and that you are running a local server.`);
+                    return null; // Return null on failure
+                }
+            },
+            
+            async loadAllData() {
+                const { year, week } = this.config;
+                const ratingsPath = `PEAR/PEAR Football/y${year}/Ratings/PEAR_week${week}.csv`;
+                const spreadsPath = `PEAR/PEAR Football/y${year}/Spreads/spreads_tracker_week${week}.xlsx`;
+                const teamDataPath = `PEAR/PEAR Football/y${year}/Data/team_data_week${week}.csv`;
+
+                const [ratings, spreads, teamData] = await Promise.all([
+                    this.fetchFile(ratingsPath, 'csv'),
+                    this.fetchFile(spreadsPath, 'xlsx'),
+                    this.fetchFile(teamDataPath, 'csv')
+                ]);
+
+                // Process ratings data
+                if (ratings) {
+                    this.data.ratings = ratings;
+                    this.data.teamsList = ratings.map(row => row.team).filter(Boolean).sort();
+                    this.renderRatingsTable();
+                    this.populateTeamSelectors();
+                }
+                this.toggleLoading('ratingsLoading', false);
+
+                // Process spreads data
+                if (spreads) {
+                    this.data.spreads = spreads;
+                    this.renderSpreadsTable();
+                }
+                this.toggleLoading('spreadsLoading', false);
+                
+                // Process archive data
+                if (teamData) {
+                    this.data.teamData = teamData;
+                    this.renderArchiveTable();
+                }
+                this.toggleLoading('archiveLoading', false);
+                
+                this.setupVisuals();
+            },
+
+            // --- RENDERING ---
+            renderRatingsTable(filteredData = this.data.ratings) {
+                const table = document.getElementById('ratingsTable');
+                const header = document.getElementById('ratingsHeader');
+                const body = document.getElementById('ratingsBody');
+                
+                if (filteredData.length === 0) {
+                    table.style.display = 'none';
+                    return;
+                }
+                
+                header.innerHTML = `<th>Rank</th><th>Team</th><th>Rating</th><th>MD</th><th>SOS</th><th>SOR</th><th>OFF</th><th>DEF</th><th>ST</th><th>PBR</th><th>DCE</th><th>DDE</th><th>CONF</th>`;
+                body.innerHTML = filteredData.map((row, index) => {
+                    // Helper to safely parse integer ranks from CSV strings
+                    const parseRank = (value) => {
+                        if (value === null || value === undefined || value === '') return '-';
+                        const num = parseInt(value, 10);
+                        return isNaN(num) ? '-' : num;
+                    };
+
+                    return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${row.team || '-'}</td>
+                        <td>${parseFloat(row.power_rating || 0).toFixed(1)}</td>
+                        <td>${parseRank(row.most_deserving)}</td>
+                        <td>${parseRank(row.SOS)}</td>
+                        <td>${parseRank(row.SOR)}</td>
+                        <td>${parseRank(row.Offense)}</td>
+                        <td>${parseRank(row.Defense)}</td>
+                        <td>${parseRank(row.STM_rank)}</td>
+                        <td>${parseRank(row.PBR_rank)}</td>
+                        <td>${parseRank(row.DCE_rank)}</td>
+                        <td>${parseRank(row.DDE_rank)}</td>
+                        <td>${row.conference || '-'}</td>
+                    </tr>
+                    `;
+                }).join('');
+                table.style.display = 'table';
+            },
+
+            renderSpreadsTable() {
+                const table = document.getElementById('spreadsTable');
+                const header = document.getElementById('spreadsHeader');
+                const body = document.getElementById('spreadsBody');
+                
+                header.innerHTML = `<th>Home</th><th>Away</th><th>PEAR</th><th>Vegas</th><th>Diff</th><th>GQI</th>`;
+                body.innerHTML = this.data.spreads.filter(row => row.home_team).map(row => `
+                    <tr>
+                        <td>${row.home_team || ''}</td>
+                        <td>${row.away_team || ''}</td>
+                        <td>${row.PEAR || ''}</td>
+                        <td>${row.Vegas || row.formattedSpread || ''}</td>
+                        <td>${parseFloat(row.difference || 0).toFixed(1)}</td>
+                        <td>${parseFloat(row.GQI || row.game_quality || 0).toFixed(1)}</td>
+                    </tr>
+                `).join('');
+                table.style.display = 'table';
+            },
+            
+            renderArchiveTable() {
+                const table = document.getElementById('archiveTable');
+                const header = document.getElementById('archiveHeader');
+                const body = document.getElementById('archiveBody');
+                const sampleRow = this.data.teamData[0];
+                if (!sampleRow) return;
+
+                const headers = Object.keys(sampleRow).slice(0, 8);
+                header.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
+                body.innerHTML = this.data.teamData.slice(0, 50).map(row => `
+                    <tr>${headers.map(h => `<td>${row[h] || ''}</td>`).join('')}</tr>
+                `).join('');
+                table.style.display = 'table';
+            },
+
+            populateTeamSelectors() {
+                const options = `<option value="">Select Team</option>` + this.data.teamsList.map(team => `<option value="${team}">${team}</option>`).join('');
+                ['awayTeam', 'homeTeam', 'probTeam1', 'probTeam2', 'historyTeam'].forEach(id => {
+                    document.getElementById(id).innerHTML = options;
                 });
-            } catch (error) {
-                console.error("Error loading team ratings:", error);
-                document.getElementById("ratingsLoading").innerText =
-                    "Error loading ratings data. Check console.";
-            }
-        }
+            },
 
-
-        // Load spreads data from Excel
-        async function loadSpreadsData() {
-            try {
-                console.log('Loading spreads data...');
-                const response = await fetch(`./PEAR/PEAR Football/y2025/Spreads/spreads_tracker_week${currentWeek}.xlsx`);
+            // --- EVENT HANDLERS ---
+            handleTabClick(event) {
+                if (!event.target.matches('.tab-btn')) return;
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                const tabName = event.target.dataset.tab;
+                document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
                 
-                const arrayBuffer = await response.arrayBuffer();
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                
-                const worksheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[worksheetName];
-                spreadsData = XLSX.utils.sheet_to_json(worksheet);
-                
-                console.log('Spreads data loaded:', spreadsData.length, 'games');
-                displaySpreadsTable();
-                hideLoading('spreadsLoading');
-            } catch (error) {
-                console.error('Error loading spreads data:', error);
-                hideLoading('spreadsLoading');
-                showDataError('spreadsTable', 'Failed to load spreads data');
-                throw error;
-            }
-        }
+                document.getElementById(tabName).classList.add('active');
+                event.target.classList.add('active');
+            },
 
-        // Load team data from CSV
-        async function loadTeamData() {
-            try {
-                console.log('Loading team data...');
-                const response = await fetch(`./PEAR/PEAR Football/y2025/Data/team_data_week${currentWeek}.csv`);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const csvText = await response.text();
-                
-                Papa.parse(csvText, {
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        if (results.errors.length > 0) {
-                            console.warn('CSV parsing errors:', results.errors);
-                        }
-                        teamDataWeek = results.data;
-                        console.log('Team data loaded:', teamDataWeek.length, 'entries');
-                        displayArchiveTable();
-                        hideLoading('archiveLoading');
-                    },
-                    error: function(error) {
-                        console.error('Papa parse error:', error);
-                        throw error;
-                    }
-                });
-            } catch (error) {
-                console.error('Error loading team data:', error);
-                hideLoading('archiveLoading');
-                showDataError('archiveTable', 'Failed to load team data');
-                throw error;
-            }
-        }
-
-        // Load visual files list
-        async function loadVisualFiles() {
-            try {
-                console.log('Setting up visual files...');
-                // Since we can't directly list directory contents in a browser,
-                // we'll need to maintain a list of files or use a different approach
-                // For now, we'll create placeholder options
-                const gameSelect = document.getElementById('gameSelect');
-                const profileSelect = document.getElementById('profileSelect');
-                
-                // You'll need to manually maintain these lists or use a server-side solution
-                const gameFiles = ['game1.png', 'game2.png', 'game3.png'];
-                const profileFiles = ['profile1.png', 'profile2.png', 'profile3.png'];
-                
-                gameSelect.innerHTML = '<option value="">Select a game...</option>' +
-                    gameFiles.map(file => `<option value="${file}">${file}</option>`).join('');
-                
-                profileSelect.innerHTML = '<option value="">Select a profile...</option>' +
-                    profileFiles.map(file => `<option value="${file}">${file}</option>`).join('');
-                
-                console.log('Visual files setup complete');
-            } catch (error) {
-                console.error('Error loading visual files:', error);
-                throw error;
-            }
-        }
-
-        // Display ratings table
-        function displayRatingsTable() {
-            if (teamRatingsData.length === 0) return;
+            handleTeamSearch(event) {
+                const searchTerm = event.target.value.toLowerCase();
+                const filtered = this.data.ratings.filter(row => (row.team || '').toLowerCase().includes(searchTerm));
+                this.renderRatingsTable(filtered);
+            },
             
-            console.log('Displaying ratings table...');
-            const table = document.getElementById('ratingsTable');
-            const header = document.getElementById('ratingsHeader');
-            const body = document.getElementById('ratingsBody');
-            
-            // Create header
-            const headers = ['Rank', 'Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'CONF'];
-            header.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
-            
-            // Create rows
-            body.innerHTML = teamRatingsData.map((row, index) => {
-                return `<tr>
-                    <td>${index + 1}</td>
-                    <td>${row.team || row.Team || ''}</td>
-                    <td>${parseFloat(row.power_rating || row.Rating || 0).toFixed(1)}</td>
-                    <td>${row.most_deserving || row.MD || ''}</td>
-                    <td>${parseFloat(row.SOS || 0).toFixed(1)}</td>
-                    <td>${parseFloat(row.SOR || 0).toFixed(1)}</td>
-                    <td>${row.offensive_rank || row.OFF || ''}</td>
-                    <td>${row.defensive_rank || row.DEF || ''}</td>
-                    <td>${row.conference || row.CONF || ''}</td>
-                </tr>`;
-            }).join('');
-            
-            table.style.display = 'table';
-        }
-
-        // Display spreads table
-        function displaySpreadsTable() {
-            if (spreadsData.length === 0) return;
-            
-            console.log('Displaying spreads table...');
-            const table = document.getElementById('spreadsTable');
-            const header = document.getElementById('spreadsHeader');
-            const body = document.getElementById('spreadsBody');
-            
-            // Create header
-            const headers = ['Home Team', 'Away Team', 'PEAR', 'Vegas', 'Difference', 'GQI'];
-            header.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
-            
-            // Create rows
-            body.innerHTML = spreadsData.filter(row => row.home_team).map(row => {
-                return `<tr>
-                    <td>${row.home_team || ''}</td>
-                    <td>${row.away_team || ''}</td>
-                    <td>${row.PEAR || ''}</td>
-                    <td>${row.Vegas || row.formattedSpread || ''}</td>
-                    <td>${parseFloat(row.difference || 0).toFixed(1)}</td>
-                    <td>${parseFloat(row.GQI || row.game_quality || 0).toFixed(1)}</td>
-                </tr>`;
-            }).join('');
-            
-            table.style.display = 'table';
-        }
-
-        // Display archive table
-        function displayArchiveTable() {
-            if (teamDataWeek.length === 0) return;
-            
-            console.log('Displaying archive table...');
-            const table = document.getElementById('archiveTable');
-            const header = document.getElementById('archiveHeader');
-            const body = document.getElementById('archiveBody');
-            
-            // Create header - show first 8 columns
-            const sampleRow = teamDataWeek[0];
-            const headers = Object.keys(sampleRow).slice(0, 8);
-            header.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
-            
-            // Create rows
-            body.innerHTML = teamDataWeek.slice(0, 50).map(row => {
-                return `<tr>
-                    ${headers.map(header => `<td>${row[header] || ''}</td>`).join('')}
-                </tr>`;
-            }).join('');
-            
-            table.style.display = 'table';
-        }
-
-        // Populate team selectors
-        function populateTeamSelectors() {
-            console.log('Populating team selectors...');
-            const teams = teamRatingsData.map(row => row.team || row.Team).filter(team => team).sort();
-            
-            const selectors = ['awayTeam', 'homeTeam', 'probTeam1', 'probTeam2', 'historyTeam'];
-            
-            selectors.forEach(selectorId => {
-                const selector = document.getElementById(selectorId);
-                if (selector) {
-                    if (teams.length > 0) {
-                        selector.innerHTML = '<option value="">Select Team</option>' +
-                            teams.map(team => `<option value="${team}">${team}</option>`).join('');
-                    } else {
-                        selector.innerHTML = '<option value="">No teams available</option>';
-                    }
-                }
-            });
-        }
-
-        // Filter teams in the ratings table
-        function filterTeams() {
-            const searchTerm = document.getElementById('teamSearch').value.toLowerCase();
-            const rows = document.querySelectorAll('#ratingsBody tr');
-            
-            rows.forEach(row => {
-                const teamName = row.cells[1].textContent.toLowerCase();
-                row.style.display = teamName.includes(searchTerm) ? '' : 'none';
-            });
-        }
-
-        // Show tab function
-        function showTab(tabName, buttonElement) {
-            console.log('Switching to tab:', tabName);
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(tabName).classList.add('active');
-            if (buttonElement) {
-                buttonElement.classList.add('active');
-            }
-        }
-
-        // Calculate spread
-        function calculateSpread(homeTeam, awayTeam, isNeutral = false) {
-            const homeData = teamRatingsData.find(team => (team.team || team.Team) === homeTeam);
-            const awayData = teamRatingsData.find(team => (team.team || team.Team) === awayTeam);
-            
-            if (!homeData || !awayData) return null;
-            
-            const homePR = parseFloat(homeData.power_rating || homeData.Rating || 0);
-            const awayPR = parseFloat(awayData.power_rating || awayData.Rating || 0);
-            
-            let rawSpread = GLOBAL_HFA + homePR - awayPR;
-            if (isNeutral) rawSpread -= GLOBAL_HFA;
-            
-            const spread = Math.round(rawSpread * 10) / 10;
-            
-            if (spread >= 0) {
-                return `${homeTeam} -${spread}`;
-            } else {
-                return `${awayTeam} ${Math.abs(spread)}`;
-            }
-        }
-
-        // Calculate win probability
-        function calculateWinProbability(homePR, awayPR) {
-            const ratingDiff = homePR - awayPR;
-            return Math.round((1 / (1 + Math.pow(10, -ratingDiff / 20))) * 100 * 100) / 100;
-        }
-
-        // Event listeners
-        document.getElementById('spreadForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const homeTeam = document.getElementById('homeTeam').value;
-            const awayTeam = document.getElementById('awayTeam').value;
-            const isNeutral = document.getElementById('neutralField').value === 'true';
-            
-            if (homeTeam && awayTeam) {
-                const result = calculateSpread(homeTeam, awayTeam, isNeutral);
+            handleSpreadCalculation(e) {
+                e.preventDefault();
+                const homeTeam = document.getElementById('homeTeam').value;
+                const awayTeam = document.getElementById('awayTeam').value;
+                const isNeutral = document.getElementById('neutralField').value === 'true';
                 const resultDiv = document.getElementById('spreadResult');
                 
-                if (result) {
-                    resultDiv.innerHTML = `<strong>Predicted Spread:</strong> ${result}`;
-                    resultDiv.style.display = 'block';
-                } else {
-                    resultDiv.innerHTML = '<strong>Error:</strong> Could not calculate spread for selected teams.';
-                    resultDiv.style.display = 'block';
-                }
-            }
-        });
+                const homeData = this.data.ratings.find(t => t.team === homeTeam);
+                const awayData = this.data.ratings.find(t => t.team === awayTeam);
 
-        document.getElementById('probForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+                if (homeData && awayData) {
+                    const homePR = parseFloat(homeData.power_rating || 0);
+                    const awayPR = parseFloat(awayData.power_rating || 0);
+                    let spread = homePR - awayPR + (isNeutral ? 0 : this.config.hfa);
+                    spread = Math.round(spread * 2) / 2; // Round to nearest 0.5
+                    
+                    const favoredTeam = spread > 0 ? homeTeam : awayTeam;
+                    resultDiv.innerHTML = `<strong>Predicted Spread:</strong> ${favoredTeam} -${Math.abs(spread)}`;
+                } else {
+                    resultDiv.innerHTML = '<strong>Error:</strong> Could not find data for one or both teams.';
+                }
+                resultDiv.style.display = 'block';
+            },
             
-            const team1 = document.getElementById('probTeam1').value;
-            const team2 = document.getElementById('probTeam2').value;
-            
-            if (team1 && team2) {
-                const team1Data = teamRatingsData.find(team => (team.team || team.Team) === team1);
-                const team2Data = teamRatingsData.find(team => (team.team || team.Team) === team2);
+            handleProbabilityCalculation(e) {
+                e.preventDefault();
+                const team1 = document.getElementById('probTeam1').value;
+                const team2 = document.getElementById('probTeam2').value;
+                const resultDiv = document.getElementById('probResult');
                 
+                const team1Data = this.data.ratings.find(t => t.team === team1);
+                const team2Data = this.data.ratings.find(t => t.team === team2);
+
                 if (team1Data && team2Data) {
-                    const team1PR = parseFloat(team1Data.power_rating || team1Data.Rating || 0);
-                    const team2PR = parseFloat(team2Data.power_rating || team2Data.Rating || 0);
+                    const team1PR = parseFloat(team1Data.power_rating || 0);
+                    const team2PR = parseFloat(team2Data.power_rating || 0);
+                    const diff = (team1PR + this.config.hfa) - team2PR;
+                    const prob = 1 / (1 + Math.pow(10, -diff * 0.04));
                     
-                    const winProb = calculateWinProbability(team1PR, team2PR);
-                    const resultDiv = document.getElementById('probResult');
-                    
-                    resultDiv.innerHTML = `
-                        <strong>Win Probabilities:</strong><br>
-                        ${team1} (Home): ${winProb}%<br>
-                        ${team2} (Away): ${100 - winProb}%
-                    `;
-                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `<strong>Win Probabilities:</strong><br>${team1}: ${(prob * 100).toFixed(1)}%<br>${team2}: ${((1 - prob) * 100).toFixed(1)}%`;
                 } else {
-                    document.getElementById('probResult').innerHTML = '<strong>Error:</strong> Could not find team data.';
-                    document.getElementById('probResult').style.display = 'block';
+                    resultDiv.innerHTML = '<strong>Error:</strong> Could not find team data.';
                 }
-            }
-        });
+                resultDiv.style.display = 'block';
+            },
 
-        document.getElementById('teamHistoryForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const selectedTeam = document.getElementById('historyTeam').value;
-            const resultDiv = document.getElementById('historyResult');
-            
-            if (selectedTeam) {
-                const teamHistory = teamDataWeek.filter(row => 
-                    (row.team || row.Team) === selectedTeam
-                );
-                
-                if (teamHistory.length > 0) {
-                    const team = teamHistory[0];
-                    resultDiv.innerHTML = `
-                        <strong>${selectedTeam} - Week ${currentWeek} Stats:</strong><br>
+            handleHistorySearch(e) {
+                e.preventDefault();
+                const teamName = document.getElementById('historyTeam').value;
+                const resultDiv = document.getElementById('historyResult');
+                const team = this.data.teamData.find(row => row.team === teamName);
+
+                if (team) {
+                    resultDiv.innerHTML = `<strong>${teamName} - Week ${this.config.week} Stats:</strong><br>
                         Power Rating: ${parseFloat(team.power_rating || 0).toFixed(1)}<br>
                         Offensive Rank: ${team.offensive_rank || 'N/A'}<br>
                         Defensive Rank: ${team.defensive_rank || 'N/A'}<br>
-                        SOS: ${parseFloat(team.SOS || 0).toFixed(1)}<br>
-                        Conference: ${team.conference || 'N/A'}
-                    `;
-                    resultDiv.style.display = 'block';
+                        SOS: ${parseFloat(team.SOS || 0).toFixed(1)}`;
                 } else {
-                    resultDiv.innerHTML = '<strong>No data found for selected team.</strong>';
-                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = 'No data found for selected team.';
                 }
-            }
-        });
+                resultDiv.style.display = 'block';
+            },
 
-        // Display game image
-        function displayGameImage() {
-            const selectedFile = document.getElementById('gameSelect').value;
-            const container = document.getElementById('gameImageContainer');
+            // --- VISUALS ---
+            setupVisuals() {
+                // NOTE: Listing files from a directory is not possible in client-side JS.
+                // You must manually list the available image files here.
+                const gameFiles = ['AirForce_vs_Navy.png', 'BoiseState_vs_UtahState.png']; // Example
+                const profileFiles = ['Top25_PEAR.png', 'Conference_Ratings.png']; // Example
+                
+                const gameSelect = document.getElementById('gameSelect');
+                const profileSelect = document.getElementById('profileSelect');
+
+                gameSelect.innerHTML = '<option value="">Select a game...</option>' + gameFiles.map(f => `<option value="${f}">${f.replace('.png', '').replace(/_/g, ' ')}</option>`).join('');
+                profileSelect.innerHTML = '<option value="">Select a profile...</option>' + profileFiles.map(f => `<option value="${f}">${f.replace('.png', '').replace(/_/g, ' ')}</option>`).join('');
+            },
+
+            displayGameImage(e) {
+                const container = document.getElementById('gameImageContainer');
+                const fileName = e.target.value;
+                if (fileName) {
+                    const path = `PEAR/PEAR Football/y${this.config.year}/Visuals/week_${this.config.week}/Games/${fileName}`;
+                    container.innerHTML = `<img src="${path}" alt="${fileName}" class="visual-image" onerror="this.parentElement.innerHTML='<div class=error>Image not found.</div>'">`;
+                } else {
+                    container.innerHTML = '';
+                }
+            },
+
+            displayStatProfile(e) {
+                const container = document.getElementById('profileImageContainer');
+                const fileName = e.target.value;
+                if (fileName) {
+                    const path = `PEAR/PEAR Football/y${this.config.year}/Visuals/week_${this.config.week}/Stat Profiles/${fileName}`;
+                    container.innerHTML = `<img src="${path}" alt="${fileName}" class="visual-image" onerror="this.parentElement.innerHTML='<div class=error>Image not found.</div>'">`;
+                } else {
+                    container.innerHTML = '';
+                }
+            },
             
-            if (selectedFile) {
-                container.innerHTML = `<img src="./PEAR/PEAR Football/y2025/Visuals/week_${currentWeek}/Games/${selectedFile}" 
-                                      alt="${selectedFile}" class="visual-image" 
-                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                      <div style="display:none;" class="error">Image not found: ${selectedFile}</div>`;
-            } else {
-                container.innerHTML = '';
+            // --- UTILITY FUNCTIONS ---
+            toggleLoading(elementId, show) {
+                const el = document.getElementById(elementId);
+                if (el) el.style.display = show ? 'block' : 'none';
+            },
+
+            showError(message) {
+                const container = document.getElementById('globalErrorContainer');
+                container.innerHTML = `<div class="error">${message}</div>`;
             }
-        }
+        };
 
-        // Display stat profile
-        function displayStatProfile() {
-            const selectedFile = document.getElementById('profileSelect').value;
-            const container = document.getElementById('profileImageContainer');
-            
-            if (selectedFile) {
-                container.innerHTML = `<img src="./PEAR/PEAR Football/y2025/Visuals/week_${currentWeek}/Stat Profiles/${selectedFile}" 
-                                      alt="${selectedFile}" class="visual-image"
-                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                      <div style="display:none;" class="error">Image not found: ${selectedFile}</div>`;
-            } else {
-                container.innerHTML = '';
-            }
-        }
-
-        // Utility functions
-        function hideLoading(elementId) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.style.display = 'none';
-            }
-        }
-
-        function showError(message) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error';
-            errorDiv.innerHTML = message;
-            document.querySelector('.container').prepend(errorDiv);
-            
-            setTimeout(() => {
-                errorDiv.remove();
-            }, 5000);
-        }
-
-        function showDataError(tableId, message) {
-            const table = document.getElementById(tableId);
-            if (table) {
-                const parent = table.parentElement;
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'error';
-                errorDiv.innerHTML = message;
-                parent.appendChild(errorDiv);
-            }
-        }
-
-        // Update week display if needed
-        function updateWeekDisplay() {
-            document.getElementById('weekDisplay').textContent = `Week ${currentWeek} • 2025 Season`;
-            document.getElementById('spreadsTitle').textContent = `Week ${currentWeek} Spreads`;
-        }
-
-        // Initialize week display
-        updateWeekDisplay();
+        // Start the application once the DOM is ready.
+        document.addEventListener('DOMContentLoaded', () => App.init());
+    </script>
+</body>
+</html>
