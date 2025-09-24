@@ -107,7 +107,7 @@ model_features = [
 team_data, diag, sys = build_power_ratings_multi_target(team_data, opponent_adjustment_schedule, model_features, ['kford_rating', 'sp_rating'], 0.4)
 
 team_data, team_power_rankings = stats_formatting(team_data, current_week, current_year)
-team_data, year_long_schedule, SOS, SOR, most_deserving = metric_creation(team_data, records, current_week, current_year, postseason)
+team_data, year_long_schedule, SOS, SOR, RTP, most_deserving = metric_creation(team_data, records, current_week, current_year, postseason)
 
 folder_path = f"./PEAR/PEAR Football/y{current_year}/Data"
 os.makedirs(folder_path, exist_ok=True)
@@ -939,7 +939,7 @@ try:
         ax = axes[row, col]
         ax.axis('off')  # Hide the main axis
 
-        img = logo_cache.get(team_name)
+        img = team_logos[team_name]
         ax.imshow(img, extent=[-1, 2, -1, 2], clip_on=False, zorder=0)
 
         text_ax = ax.inset_axes([0, 0, 1, 1])

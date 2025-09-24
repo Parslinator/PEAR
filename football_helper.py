@@ -2080,18 +2080,48 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
             xWins += 1
         return round(wins - xWins, 3)
 
-
     deserving_results = Parallel(n_jobs=-1)(delayed(calc_deserving)(team) for team in team_data['team'])
     most_deserving = pd.DataFrame({'team': team_data['team'], 'most_deserving_wins': deserving_results})
     most_deserving = most_deserving.sort_values('most_deserving_wins', ascending=False).reset_index(drop=True)
     most_deserving['most_deserving'] = most_deserving.index + 1
     print("Most Deserving Calculation Done")
 
+    num_12_pr = team_data['power_rating'].iloc[11]
+    completed_games = year_long_schedule[year_long_schedule['home_points'].notna()]
+    completed_games['margin_of_victory'] = completed_games['home_points'] - completed_games['away_points']
+    std_dev = completed_games['margin_of_victory'].abs().std()
+    from scipy.stats import norm
+    team_probabilities = []
+    for team in team_data['team']:
+        games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
+        total_prob = 0
+        for _, g in games.iterrows():
+            home, away = g['home_team'], g['away_team']
+            mov = g['margin_of_victory']
+            if home in team_data['team'].values:
+                home_pr = team_data.loc[team_data['team'] == home, 'power_rating'].values[0]
+            else:
+                home_pr = fallback_value
+            if away in team_data['team'].values:
+                away_pr = team_data.loc[team_data['team'] == away, 'power_rating'].values[0]
+            else:
+                away_pr = fallback_value
+            if team == home:
+                expected = GLOBAL_HFA + home_pr - away_pr
+            else:
+                expected = away_pr - (home_pr + GLOBAL_HFA)
+                mov = -mov
+            z = (mov - expected) / std_dev
+            prob = norm.cdf(z) - 0.5
+            total_prob += prob
+        team_probabilities.append({'team': team, 'RTP': 10 * (total_prob / len(games))})
+    RTP = pd.DataFrame(team_probabilities).sort_values('RTP', ascending=False)
+
     team_data = pd.merge(team_data, SOS, how='left', on='team')
     team_data = pd.merge(team_data, SOR, how='left', on='team')
     team_data = pd.merge(team_data, most_deserving, how='left', on='team')
 
-    return team_data, year_long_schedule, SOS, SOR, most_deserving
+    return team_data, year_long_schedule, SOS, SOR, RTP, most_deserving
 
 
 
@@ -3226,7 +3256,7 @@ def display_schedule_visual(team_name, all_data, full_display_schedule, uncomple
     folder_path = f"./PEAR/PEAR Football/y{current_year}/Visuals/week_{current_week}/Stat Profiles"
     os.makedirs(folder_path, exist_ok=True)
     file_path = os.path.join(folder_path, f"{team_name}")
-    plt.savefig(file_path, dpi = 500)
+    plt.savefig(file_path, dpi = 400)
     # return fig, ax
 
 def conference_standings(projection_dataframe, records, team_data, team_logos, conf_folder_path):
