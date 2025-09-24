@@ -123,6 +123,74 @@
             overflow-y: auto;
         }
 
+        /* Custom scrollbar styling */
+        .data-table-container::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .data-table-container::-webkit-scrollbar-track {
+            background: rgba(26, 26, 46, 0.3);
+            border-radius: 10px;
+        }
+
+        .data-table-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-radius: 10px;
+            border: 2px solid rgba(26, 26, 46, 0.3);
+        }
+
+        .data-table-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #ff5252, #26a69a);
+        }
+
+        /* Firefox scrollbar */
+        .data-table-container {
+            scrollbar-width: thin;
+            scrollbar-color: #4ecdc4 rgba(26, 26, 46, 0.3);
+        }
+
+        .download-section {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, #4ecdc4, #45b7d1);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Color-coded cells */
+        .rating-cell {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .rating-excellent { background: linear-gradient(135deg, #4a90e2, #357abd); color: white; }
+        .rating-good { background: linear-gradient(135deg, #7cb342, #689f38); color: white; }
+        .rating-average { background: linear-gradient(135deg, #ffa726, #fb8c00); color: white; }
+        .rating-poor { background: linear-gradient(135deg, #ef5350, #e53935); color: white; }
+        .rating-neutral { background: linear-gradient(135deg, #9e9e9e, #757575); color: white; }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -135,13 +203,29 @@
         }
 
         th {
-            background: rgba(0,0,0,0.2);
+            background: rgba(26, 26, 46, 0.95);
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
             position: sticky;
             top: 0;
             z-index: 10;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background: rgba(78, 205, 196, 0.3);
+        }
+
+        th.sorted-asc::after {
+            content: " ▲";
+            color: #4ecdc4;
+        }
+
+        th.sorted-desc::after {
+            content: " ▼";
+            color: #4ecdc4;
         }
 
         tbody tr:hover {
@@ -232,14 +316,17 @@
             <button class="tab-btn active" data-tab="power-ratings">Power Ratings</button>
             <button class="tab-btn" data-tab="spreads">Spreads</button>
             <button class="tab-btn" data-tab="visuals">Visuals</button>
-            <button class="tab-btn" data-tab="calculator">Calculator</button>
-            <button class="tab-btn" data-tab="archive">Archive</button>
         </nav>
 
         <!-- Power Ratings Tab -->
         <main id="power-ratings" class="tab-content active">
             <div class="card">
                 <input type="text" id="teamSearch" placeholder="Search teams..." aria-label="Search teams">
+            </div>
+            <div class="download-section">
+                <button class="download-btn" onclick="App.downloadCSV('ratings')">
+                    📊 Download CSV
+                </button>
             </div>
             <div class="data-table-container">
                 <div id="ratingsLoading" class="loading">Loading ratings data...</div>
@@ -248,20 +335,39 @@
                     <tbody id="ratingsBody"></tbody>
                 </table>
             </div>
-            <p class="caption">MD: Most Deserving | SOS: Strength of Schedule | SOR: Strength of Record | ST: Special Teams | PBR: Pass Blocking | DCE: Def. Carry Eff. | DDE: Def. Dropback Eff.</p>
+            <p class="caption">MD: Most Deserving | SOS: Strength of Schedule | SOR: Strength of Record | OFF: Offense | DEF: Defense</p>
         </main>
 
         <!-- Spreads Tab -->
         <main id="spreads" class="tab-content">
-            <h2 id="spreadsTitle" class="subtitle" style="text-align: center; margin-bottom: 20px;">Weekly Spreads</h2>
-            <div class="data-table-container">
-                <div id="spreadsLoading" class="loading">Loading spreads data...</div>
-                <table id="spreadsTable" style="display: none;">
-                    <thead><tr id="spreadsHeader"></tr></thead>
-                    <tbody id="spreadsBody"></tbody>
-                </table>
+            <div class="two-column">
+                <div>
+                    <h2 id="spreadsTitle" class="subtitle" style="text-align: center; margin-bottom: 20px;">Weekly Spreads</h2>
+                    <div class="download-section">
+                        <button class="download-btn" onclick="App.downloadCSV('spreads')">
+                            📊 Download CSV
+                        </button>
+                    </div>
+                    <div class="data-table-container">
+                        <div id="spreadsLoading" class="loading">Loading spreads data...</div>
+                        <table id="spreadsTable" style="display: none;">
+                            <thead><tr id="spreadsHeader"></tr></thead>
+                            <tbody id="spreadsBody"></tbody>
+                        </table>
+                    </div>
+                    <p class="caption">GQI: Game Quality Index (Entertainment Value)</p>
+                </div>
+                <div class="card">
+                    <h2>Spread Calculator</h2>
+                    <form id="spreadForm">
+                        <div class="form-group"><label for="awayTeam">Away Team</label><select id="awayTeam" required><option value="">Loading...</option></select></div>
+                        <div class="form-group"><label for="homeTeam">Home Team</label><select id="homeTeam" required><option value="">Loading...</option></select></div>
+                        <div class="form-group"><label for="neutralField">Location</label><select id="neutralField"><option value="false">On Campus</option><option value="true">Neutral Field</option></select></div>
+                        <button type="submit" class="btn">Calculate Spread</button>
+                    </form>
+                    <div id="spreadResult" class="result" style="display: none;"></div>
+                </div>
             </div>
-            <p class="caption">GQI: Game Quality Index (Entertainment Value)</p>
         </main>
 
         <!-- Visuals Tab -->
@@ -285,57 +391,10 @@
                 </div>
             </div>
         </main>
-
-        <!-- Calculator Tab -->
-        <main id="calculator" class="tab-content">
-            <div class="two-column">
-                <div class="card">
-                    <h2>Spread Calculator</h2>
-                    <form id="spreadForm">
-                        <div class="form-group"><label for="awayTeam">Away Team</label><select id="awayTeam" required><option value="">Loading...</option></select></div>
-                        <div class="form-group"><label for="homeTeam">Home Team</label><select id="homeTeam" required><option value="">Loading...</option></select></div>
-                        <div class="form-group"><label for="neutralField">Location</label><select id="neutralField"><option value="false">On Campus</option><option value="true">Neutral Field</option></select></div>
-                        <button type="submit" class="btn">Calculate Spread</button>
-                    </form>
-                    <div id="spreadResult" class="result" style="display: none;"></div>
-                </div>
-                <div class="card">
-                    <h2>Win Probability</h2>
-                    <form id="probForm">
-                        <div class="form-group"><label for="probTeam1">Team 1 (Home)</label><select id="probTeam1" required><option value="">Loading...</option></select></div>
-                        <div class="form-group"><label for="probTeam2">Team 2 (Away)</label><select id="probTeam2" required><option value="">Loading...</option></select></div>
-                        <button type="submit" class="btn">Calculate</button>
-                    </form>
-                    <div id="probResult" class="result" style="display: none;"></div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Archive Tab -->
-        <main id="archive" class="tab-content">
-            <div class="two-column">
-                <div class="card data-table-container">
-                    <h3>Team Data Overview</h3>
-                    <div id="archiveLoading" class="loading">Loading historical data...</div>
-                    <table id="archiveTable" style="display: none;">
-                        <thead><tr id="archiveHeader"></tr></thead>
-                        <tbody id="archiveBody"></tbody>
-                    </table>
-                </div>
-                <div class="card">
-                    <h3>Team History</h3>
-                    <form id="teamHistoryForm">
-                        <div class="form-group"><label for="historyTeam">Select Team</label><select id="historyTeam" required><option value="">Loading...</option></select></div>
-                        <button type="submit" class="btn">View History</button>
-                    </form>
-                    <div id="historyResult" class="result" style="display: none;"></div>
-                </div>
-            </div>
-        </main>
     </div>
 
     <script>
-        // Main application logic is encapsulated in an object to avoid polluting the global scope.
+        // Main application logic
         const App = {
             // Store data and configuration here
             data: {
@@ -364,8 +423,6 @@
                 // Interactive elements
                 document.getElementById('teamSearch').addEventListener('keyup', this.handleTeamSearch.bind(this));
                 document.getElementById('spreadForm').addEventListener('submit', this.handleSpreadCalculation.bind(this));
-                document.getElementById('probForm').addEventListener('submit', this.handleProbabilityCalculation.bind(this));
-                document.getElementById('teamHistoryForm').addEventListener('submit', this.handleHistorySearch.bind(this));
 
                 // Visuals selectors
                 document.getElementById('gameSelect').addEventListener('change', this.displayGameImage.bind(this));
@@ -381,13 +438,21 @@
             // --- DATA LOADING ---
             async fetchFile(path, type = 'csv') {
                 try {
+                    console.log(`Attempting to fetch: ${path}`);
                     const response = await fetch(path);
                     if (!response.ok) {
                         throw new Error(`Failed to load ${path}. Status: ${response.status}`);
                     }
                     if (type === 'csv') {
                         const csvText = await response.text();
-                        return Papa.parse(csvText, { header: true, skipEmptyLines: true }).data;
+                        console.log(`CSV loaded, length: ${csvText.length} chars`);
+                        const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+                        console.log(`Parsed ${parsed.data.length} rows`);
+                        if (parsed.data.length > 0) {
+                            console.log('Sample row:', parsed.data[0]);
+                            console.log('Headers:', Object.keys(parsed.data[0]));
+                        }
+                        return parsed.data;
                     } else if (type === 'xlsx') {
                         const buffer = await response.arrayBuffer();
                         const workbook = XLSX.read(buffer, { type: 'array' });
@@ -397,20 +462,225 @@
                 } catch (error) {
                     console.error(error);
                     this.showError(`Could not load data from ${path}. Check the file path and that you are running a local server.`);
-                    return null; // Return null on failure
+                    return null;
+                }
+            },
+
+            async fetchDirectoryContents(dirPath) {
+                try {
+                    // Since we can't directly list directory contents in client-side JS,
+                    // we'll try to fetch a directory index or use a predefined list
+                    // This is a workaround - you may need to manually update these lists
+                    
+                    const gameFiles = ["Air Force vs Hawai'i.png",
+                                    'Arizona State vs TCU.png',
+                                    'Arkansas vs Notre Dame.png',
+                                    'Boise State vs App State.png',
+                                    'Boston College vs California.png',
+                                    'Buffalo vs UConn.png',
+                                    'Central Michigan vs Eastern Michigan.png',
+                                    'Colorado State vs Washington State.png',
+                                    'Colorado vs BYU.png',
+                                    'East Carolina vs Army.png',
+                                    'Florida Atlantic vs Memphis.png',
+                                    'Georgia vs Alabama.png',
+                                    'Illinois vs USC.png',
+                                    'Iowa State vs Arizona.png',
+                                    'Iowa vs Indiana.png',
+                                    'James Madison vs Georgia Southern.png',
+                                    'Kansas State vs UCF.png',
+                                    'Kansas vs Cincinnati.png',
+                                    'Kennesaw State vs Middle Tennessee.png',
+                                    'Louisiana vs Marshall.png',
+                                    'Minnesota vs Rutgers.png',
+                                    'Mississippi State vs Tennessee.png',
+                                    'Missouri State vs Western Kentucky.png',
+                                    'Missouri vs Massachusetts.png',
+                                    'NC State vs Virginia Tech.png',
+                                    'Navy vs Rice.png',
+                                    'New Mexico vs New Mexico State.png',
+                                    'North Texas vs South Alabama.png',
+                                    'Northern Illinois vs San Diego State.png',
+                                    'Northwestern vs UCLA.png',
+                                    'Ohio vs Bowling Green.png',
+                                    'Oklahoma State vs Baylor.png',
+                                    'Old Dominion vs Liberty.png',
+                                    'Ole Miss vs LSU.png',
+                                    'Oregon State vs Houston.png',
+                                    'Penn State vs Oregon.png',
+                                    'Pittsburgh vs Louisville.png',
+                                    'South Carolina vs Kentucky.png',
+                                    'Southern Miss vs Jacksonville State.png',
+                                    'Stanford vs San José State.png',
+                                    'Syracuse vs Duke.png',
+                                    'Texas A&M vs Auburn.png',
+                                    'Toledo vs Akron.png',
+                                    'Tulsa vs Tulane.png',
+                                    'UL Monroe vs Arkansas State.png',
+                                    'UTEP vs Louisiana Tech.png',
+                                    'Vanderbilt vs Utah State.png',
+                                    'Virginia vs Florida State.png',
+                                    'Wake Forest vs Georgia Tech.png',
+                                    'Washington vs Ohio State.png',
+                                    'West Virginia vs Utah.png'];
+                    const profileFiles = ['Air Force.png',
+                                        'Akron.png',
+                                        'Alabama.png',
+                                        'App State.png',
+                                        'Arizona State.png',
+                                        'Arizona.png',
+                                        'Arkansas State.png',
+                                        'Arkansas.png',
+                                        'Army.png',
+                                        'Auburn.png',
+                                        'BYU.png',
+                                        'Ball State.png',
+                                        'Baylor.png',
+                                        'Boise State.png',
+                                        'Boston College.png',
+                                        'Bowling Green.png',
+                                        'Buffalo.png',
+                                        'California.png',
+                                        'Central Michigan.png',
+                                        'Charlotte.png',
+                                        'Cincinnati.png',
+                                        'Clemson.png',
+                                        'Coastal Carolina.png',
+                                        'Colorado State.png',
+                                        'Colorado.png',
+                                        'Delaware.png',
+                                        'Duke.png',
+                                        'East Carolina.png',
+                                        'Eastern Michigan.png',
+                                        'Florida Atlantic.png',
+                                        'Florida International.png',
+                                        'Florida State.png',
+                                        'Florida.png',
+                                        'Fresno State.png',
+                                        'Georgia Southern.png',
+                                        'Georgia State.png',
+                                        'Georgia Tech.png',
+                                        'Georgia.png',
+                                        "Hawai'i.png",
+                                        'Houston.png',
+                                        'Illinois.png',
+                                        'Indiana.png',
+                                        'Iowa State.png',
+                                        'Iowa.png',
+                                        'Jacksonville State.png',
+                                        'James Madison.png',
+                                        'Kansas State.png',
+                                        'Kansas.png',
+                                        'Kennesaw State.png',
+                                        'Kent State.png',
+                                        'Kentucky.png',
+                                        'LSU.png',
+                                        'Liberty.png',
+                                        'Louisiana Tech.png',
+                                        'Louisiana.png',
+                                        'Louisville.png',
+                                        'Marshall.png',
+                                        'Maryland.png',
+                                        'Massachusetts.png',
+                                        'Memphis.png',
+                                        'Miami (OH).png',
+                                        'Miami.png',
+                                        'Michigan State.png',
+                                        'Michigan.png',
+                                        'Middle Tennessee.png',
+                                        'Minnesota.png',
+                                        'Mississippi State.png',
+                                        'Missouri State.png',
+                                        'Missouri.png',
+                                        'NC State.png',
+                                        'Navy.png',
+                                        'Nebraska.png',
+                                        'Nevada.png',
+                                        'New Mexico State.png',
+                                        'New Mexico.png',
+                                        'North Carolina.png',
+                                        'North Texas.png',
+                                        'Northern Illinois.png',
+                                        'Northwestern.png',
+                                        'Notre Dame.png',
+                                        'Ohio State.png',
+                                        'Ohio.png',
+                                        'Oklahoma State.png',
+                                        'Oklahoma.png',
+                                        'Old Dominion.png',
+                                        'Ole Miss.png',
+                                        'Oregon State.png',
+                                        'Oregon.png',
+                                        'Penn State.png',
+                                        'Pittsburgh.png',
+                                        'Purdue.png',
+                                        'Rice.png',
+                                        'Rutgers.png',
+                                        'SMU.png',
+                                        'Sam Houston.png',
+                                        'San Diego State.png',
+                                        'San José State.png',
+                                        'South Alabama.png',
+                                        'South Carolina.png',
+                                        'South Florida.png',
+                                        'Southern Miss.png',
+                                        'Stanford.png',
+                                        'Syracuse.png',
+                                        'TCU.png',
+                                        'Temple.png',
+                                        'Tennessee.png',
+                                        'Texas A&M.png',
+                                        'Texas State.png',
+                                        'Texas Tech.png',
+                                        'Texas.png',
+                                        'Toledo.png',
+                                        'Troy.png',
+                                        'Tulane.png',
+                                        'Tulsa.png',
+                                        'UAB.png',
+                                        'UCF.png',
+                                        'UCLA.png',
+                                        'UConn.png',
+                                        'UL Monroe.png',
+                                        'UNLV.png',
+                                        'USC.png',
+                                        'UTEP.png',
+                                        'UTSA.png',
+                                        'Utah State.png',
+                                        'Utah.png',
+                                        'Vanderbilt.png',
+                                        'Virginia Tech.png',
+                                        'Virginia.png',
+                                        'Wake Forest.png',
+                                        'Washington State.png',
+                                        'Washington.png',
+                                        'West Virginia.png',
+                                        'Western Kentucky.png',
+                                        'Western Michigan.png',
+                                        'Wisconsin.png',
+                                        'Wyoming.png'];
+                    
+                    // Return appropriate list based on directory path
+                    if (dirPath.includes('Games')) {
+                        return gameFiles;
+                    } else if (dirPath.includes('Stat Profiles')) {
+                        return profileFiles;
+                    }
+                    return [];
+                } catch (error) {
+                    console.error('Error fetching directory contents:', error);
+                    return [];
                 }
             },
             
             async loadAllData() {
                 const { year, week } = this.config;
-                const ratingsPath = `PEAR/PEAR Football/y${year}/Ratings/PEAR_week${week}.csv`;
+                const ratingsPath = `PEAR/PEAR Football/y${year}/Data/team_data_week${week}.csv`;
                 const spreadsPath = `PEAR/PEAR Football/y${year}/Spreads/spreads_tracker_week${week}.xlsx`;
-                const teamDataPath = `PEAR/PEAR Football/y${year}/Data/team_data_week${week}.csv`;
 
-                const [ratings, spreads, teamData] = await Promise.all([
+                const [ratings, spreads] = await Promise.all([
                     this.fetchFile(ratingsPath, 'csv'),
-                    this.fetchFile(spreadsPath, 'xlsx'),
-                    this.fetchFile(teamDataPath, 'csv')
+                    this.fetchFile(spreadsPath, 'xlsx')
                 ]);
 
                 // Process ratings data
@@ -419,6 +689,7 @@
                     this.data.teamsList = ratings.map(row => row.team).filter(Boolean).sort();
                     this.renderRatingsTable();
                     this.populateTeamSelectors();
+                    this.addTableSorting('ratingsTable');
                 }
                 this.toggleLoading('ratingsLoading', false);
 
@@ -426,15 +697,9 @@
                 if (spreads) {
                     this.data.spreads = spreads;
                     this.renderSpreadsTable();
+                    this.addTableSorting('spreadsTable');
                 }
                 this.toggleLoading('spreadsLoading', false);
-                
-                // Process archive data
-                if (teamData) {
-                    this.data.teamData = teamData;
-                    this.renderArchiveTable();
-                }
-                this.toggleLoading('archiveLoading', false);
                 
                 this.setupVisuals();
             },
@@ -450,30 +715,51 @@
                     return;
                 }
                 
-                header.innerHTML = `<th>Rank</th><th>Team</th><th>Rating</th><th>MD</th><th>SOS</th><th>SOR</th><th>OFF</th><th>DEF</th><th>ST</th><th>PBR</th><th>DCE</th><th>DDE</th><th>CONF</th>`;
+                // Debug logging to see actual field names
+                const sampleRow = filteredData[0];
+                console.log('=== DEBUGGING RATINGS DATA ===');
+                console.log('Sample row:', sampleRow);
+                console.log('All available keys:', Object.keys(sampleRow));
+                console.log('Sample values:');
+                Object.keys(sampleRow).forEach(key => {
+                    console.log(`  ${key}: "${sampleRow[key]}"`);
+                });
+                
+                header.innerHTML = `<th>Rank</th><th>Team</th><th>Rating</th><th>MD</th><th>SOS</th><th>SOR</th><th>OFF</th><th>DEF</th><th>CONF</th>`;
                 body.innerHTML = filteredData.map((row, index) => {
-                    // Helper to safely parse integer ranks from CSV strings
-                    const parseRank = (value) => {
-                        if (value === null || value === undefined || value === '') return '-';
-                        const num = parseInt(value, 10);
-                        return isNaN(num) ? '-' : num;
+                    // Let's try to be more flexible with field names and not convert to integers too aggressively
+                    const getValue = (row, possibleFields) => {
+                        for (let field of possibleFields) {
+                            if (row[field] !== undefined && row[field] !== null && row[field] !== '') {
+                                return row[field];
+                            }
+                        }
+                        return '-';
+                    };
+
+                    const getNumericValue = (row, possibleFields, isFloat = false) => {
+                        const value = getValue(row, possibleFields);
+                        if (value === '-' || value === 'N/A' || value === null || value === undefined || value === '') {
+                            return '-';
+                        }
+                        const num = isFloat ? parseFloat(value) : parseInt(value, 10);
+                        if (isNaN(num)) {
+                            return value; // Return original value if it's not a number
+                        }
+                        return isFloat ? num.toFixed(1) : num;
                     };
 
                     return `
                     <tr>
                         <td>${index + 1}</td>
-                        <td>${row.team || '-'}</td>
-                        <td>${parseFloat(row.power_rating || 0).toFixed(1)}</td>
-                        <td>${parseRank(row.most_deserving)}</td>
-                        <td>${parseRank(row.SOS)}</td>
-                        <td>${parseRank(row.SOR)}</td>
-                        <td>${parseRank(row.Offense)}</td>
-                        <td>${parseRank(row.Defense)}</td>
-                        <td>${parseRank(row.STM_rank)}</td>
-                        <td>${parseRank(row.PBR_rank)}</td>
-                        <td>${parseRank(row.DCE_rank)}</td>
-                        <td>${parseRank(row.DDE_rank)}</td>
-                        <td>${row.conference || '-'}</td>
+                        <td>${getValue(row, ['team', 'Team'])}</td>
+                        <td>${getNumericValue(row, ['power_rating', 'Rating'], true)}</td>
+                        <td>${getValue(row, ['most_deserving', 'MD'])}</td>
+                        <td>${getValue(row, ['SOS'], true)}</td>
+                        <td>${getValue(row, ['SOR'], true)}</td>
+                        <td>${getValue(row, ['Offense', 'OFF', 'offensive_rank'])}</td>
+                        <td>${getValue(row, ['Defense', 'DEF', 'defensive_rank'])}</td>
+                        <td>${getValue(row, ['conference', 'CONF'])}</td>
                     </tr>
                     `;
                 }).join('');
@@ -485,12 +771,20 @@
                 const header = document.getElementById('spreadsHeader');
                 const body = document.getElementById('spreadsBody');
                 
-                header.innerHTML = `<th>Home</th><th>Away</th><th>PEAR</th><th>Vegas</th><th>Diff</th><th>GQI</th>`;
+                // Debug logging for spreads data
+                if (this.data.spreads.length > 0) {
+                    console.log('=== DEBUGGING SPREADS DATA ===');
+                    console.log('Sample spreads row:', this.data.spreads[0]);
+                    console.log('Spreads keys:', Object.keys(this.data.spreads[0]));
+                }
+                
+                header.innerHTML = `<th>Home</th><th>Away</th><th>PEAR</th><th>Raw</th><th>Vegas</th><th>Diff</th><th>GQI</th>`;
                 body.innerHTML = this.data.spreads.filter(row => row.home_team).map(row => `
                     <tr>
                         <td>${row.home_team || ''}</td>
                         <td>${row.away_team || ''}</td>
                         <td>${row.PEAR || ''}</td>
+                        <td>${row.pr_spread || row.raw_spread || ''}</td>
                         <td>${row.Vegas || row.formattedSpread || ''}</td>
                         <td>${parseFloat(row.difference || 0).toFixed(1)}</td>
                         <td>${parseFloat(row.GQI || row.game_quality || 0).toFixed(1)}</td>
@@ -500,25 +794,63 @@
             },
             
             renderArchiveTable() {
-                const table = document.getElementById('archiveTable');
-                const header = document.getElementById('archiveHeader');
-                const body = document.getElementById('archiveBody');
-                const sampleRow = this.data.teamData[0];
-                if (!sampleRow) return;
-
-                const headers = Object.keys(sampleRow).slice(0, 8);
-                header.innerHTML = headers.map(h => `<th>${h}</th>`).join('');
-                body.innerHTML = this.data.teamData.slice(0, 50).map(row => `
-                    <tr>${headers.map(h => `<td>${row[h] || ''}</td>`).join('')}</tr>
-                `).join('');
-                table.style.display = 'table';
+                // Removed - Archive tab eliminated
             },
 
             populateTeamSelectors() {
                 const options = `<option value="">Select Team</option>` + this.data.teamsList.map(team => `<option value="${team}">${team}</option>`).join('');
-                ['awayTeam', 'homeTeam', 'probTeam1', 'probTeam2', 'historyTeam'].forEach(id => {
+                ['awayTeam', 'homeTeam'].forEach(id => {
                     document.getElementById(id).innerHTML = options;
                 });
+            },
+
+            // --- TABLE SORTING ---
+            addTableSorting(tableId) {
+                const table = document.getElementById(tableId);
+                const headers = table.querySelectorAll('th');
+                
+                headers.forEach((header, index) => {
+                    header.addEventListener('click', () => {
+                        this.sortTable(table, index);
+                    });
+                });
+            },
+
+            sortTable(table, columnIndex) {
+                const tbody = table.querySelector('tbody');
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                const header = table.querySelector('th:nth-child(' + (columnIndex + 1) + ')');
+                
+                // Remove existing sort indicators
+                table.querySelectorAll('th').forEach(th => {
+                    th.classList.remove('sorted-asc', 'sorted-desc');
+                });
+                
+                // Determine sort direction
+                const currentSort = header.dataset.sort || 'none';
+                const newSort = currentSort === 'asc' ? 'desc' : 'asc';
+                header.dataset.sort = newSort;
+                header.classList.add(newSort === 'asc' ? 'sorted-asc' : 'sorted-desc');
+                
+                // Sort rows
+                rows.sort((a, b) => {
+                    const aVal = a.cells[columnIndex].textContent.trim();
+                    const bVal = b.cells[columnIndex].textContent.trim();
+                    
+                    // Handle numeric values
+                    const aNum = parseFloat(aVal);
+                    const bNum = parseFloat(bVal);
+                    
+                    if (!isNaN(aNum) && !isNaN(bNum)) {
+                        return newSort === 'asc' ? aNum - bNum : bNum - aNum;
+                    }
+                    
+                    // Handle text values
+                    return newSort === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                });
+                
+                // Reattach sorted rows
+                rows.forEach(row => tbody.appendChild(row));
             },
 
             // --- EVENT HANDLERS ---
@@ -550,8 +882,8 @@
                 const awayData = this.data.ratings.find(t => t.team === awayTeam);
 
                 if (homeData && awayData) {
-                    const homePR = parseFloat(homeData.power_rating || 0);
-                    const awayPR = parseFloat(awayData.power_rating || 0);
+                    const homePR = parseFloat(homeData.power_rating || homeData.Rating || 0);
+                    const awayPR = parseFloat(awayData.power_rating || awayData.Rating || 0);
                     let spread = homePR - awayPR + (isNeutral ? 0 : this.config.hfa);
                     spread = Math.round(spread * 2) / 2; // Round to nearest 0.5
                     
@@ -562,59 +894,28 @@
                 }
                 resultDiv.style.display = 'block';
             },
-            
-            handleProbabilityCalculation(e) {
-                e.preventDefault();
-                const team1 = document.getElementById('probTeam1').value;
-                const team2 = document.getElementById('probTeam2').value;
-                const resultDiv = document.getElementById('probResult');
-                
-                const team1Data = this.data.ratings.find(t => t.team === team1);
-                const team2Data = this.data.ratings.find(t => t.team === team2);
-
-                if (team1Data && team2Data) {
-                    const team1PR = parseFloat(team1Data.power_rating || 0);
-                    const team2PR = parseFloat(team2Data.power_rating || 0);
-                    const diff = (team1PR + this.config.hfa) - team2PR;
-                    const prob = 1 / (1 + Math.pow(10, -diff * 0.04));
-                    
-                    resultDiv.innerHTML = `<strong>Win Probabilities:</strong><br>${team1}: ${(prob * 100).toFixed(1)}%<br>${team2}: ${((1 - prob) * 100).toFixed(1)}%`;
-                } else {
-                    resultDiv.innerHTML = '<strong>Error:</strong> Could not find team data.';
-                }
-                resultDiv.style.display = 'block';
-            },
 
             handleHistorySearch(e) {
-                e.preventDefault();
-                const teamName = document.getElementById('historyTeam').value;
-                const resultDiv = document.getElementById('historyResult');
-                const team = this.data.teamData.find(row => row.team === teamName);
-
-                if (team) {
-                    resultDiv.innerHTML = `<strong>${teamName} - Week ${this.config.week} Stats:</strong><br>
-                        Power Rating: ${parseFloat(team.power_rating || 0).toFixed(1)}<br>
-                        Offensive Rank: ${team.offensive_rank || 'N/A'}<br>
-                        Defensive Rank: ${team.defensive_rank || 'N/A'}<br>
-                        SOS: ${parseFloat(team.SOS || 0).toFixed(1)}`;
-                } else {
-                    resultDiv.innerHTML = 'No data found for selected team.';
-                }
-                resultDiv.style.display = 'block';
+                // Removed - Archive functionality eliminated
             },
 
             // --- VISUALS ---
-            setupVisuals() {
-                // NOTE: Listing files from a directory is not possible in client-side JS.
-                // You must manually list the available image files here.
-                const gameFiles = ['AirForce_vs_Navy.png', 'BoiseState_vs_UtahState.png']; // Example
-                const profileFiles = ['Top25_PEAR.png', 'Conference_Ratings.png']; // Example
+            async setupVisuals() {
+                const { year, week } = this.config;
+                const gamesDir = `PEAR/PEAR Football/y${year}/Visuals/week_${week}/Games`;
+                const profilesDir = `PEAR/PEAR Football/y${year}/Visuals/week_${week}/Stat Profiles`;
+                
+                const gameFiles = await this.fetchDirectoryContents(gamesDir);
+                const profileFiles = await this.fetchDirectoryContents(profilesDir);
                 
                 const gameSelect = document.getElementById('gameSelect');
                 const profileSelect = document.getElementById('profileSelect');
 
-                gameSelect.innerHTML = '<option value="">Select a game...</option>' + gameFiles.map(f => `<option value="${f}">${f.replace('.png', '').replace(/_/g, ' ')}</option>`).join('');
-                profileSelect.innerHTML = '<option value="">Select a profile...</option>' + profileFiles.map(f => `<option value="${f}">${f.replace('.png', '').replace(/_/g, ' ')}</option>`).join('');
+                gameSelect.innerHTML = '<option value="">Select a game...</option>' + 
+                    gameFiles.map(f => `<option value="${f}">${f.replace(/\.(png|jpg|jpeg)$/i, '').replace(/_/g, ' ')}</option>`).join('');
+                
+                profileSelect.innerHTML = '<option value="">Select a profile...</option>' + 
+                    profileFiles.map(f => `<option value="${f}">${f.replace(/\.(png|jpg|jpeg)$/i, '').replace(/_/g, ' ')}</option>`).join('');
             },
 
             displayGameImage(e) {
@@ -622,7 +923,7 @@
                 const fileName = e.target.value;
                 if (fileName) {
                     const path = `PEAR/PEAR Football/y${this.config.year}/Visuals/week_${this.config.week}/Games/${fileName}`;
-                    container.innerHTML = `<img src="${path}" alt="${fileName}" class="visual-image" onerror="this.parentElement.innerHTML='<div class=error>Image not found.</div>'">`;
+                    container.innerHTML = `<img src="${path}" alt="${fileName}" class="visual-image" onerror="this.parentElement.innerHTML='<div class=error>Image not found: ${fileName}</div>'">`;
                 } else {
                     container.innerHTML = '';
                 }
@@ -633,13 +934,115 @@
                 const fileName = e.target.value;
                 if (fileName) {
                     const path = `PEAR/PEAR Football/y${this.config.year}/Visuals/week_${this.config.week}/Stat Profiles/${fileName}`;
-                    container.innerHTML = `<img src="${path}" alt="${fileName}" class="visual-image" onerror="this.parentElement.innerHTML='<div class=error>Image not found.</div>'">`;
+                    container.innerHTML = `<img src="${path}" alt="${fileName}" class="visual-image" onerror="this.parentElement.innerHTML='<div class=error>Image not found: ${fileName}</div>'">`;
                 } else {
                     container.innerHTML = '';
                 }
             },
             
             // --- UTILITY FUNCTIONS ---
+            downloadCSV(type) {
+                let data, filename, displayHeaders;
+                
+                if (type === 'ratings') {
+                    data = this.data.ratings;
+                    filename = `PEAR_Ratings_Week${this.config.week}_${this.config.year}.csv`;
+                    // Only include the columns shown in the ratings table
+                    displayHeaders = ['Rank', 'Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'CONF'];
+                } else if (type === 'spreads') {
+                    data = this.data.spreads.filter(row => row.home_team);
+                    filename = `PEAR_Spreads_Week${this.config.week}_${this.config.year}.csv`;
+                    // Only include the columns shown in the spreads table
+                    displayHeaders = ['Home', 'Away', 'PEAR', 'Raw', 'Vegas', 'Diff', 'GQI'];
+                }
+                
+                if (!data || data.length === 0) {
+                    alert('No data available to download');
+                    return;
+                }
+                
+                // Convert data to CSV format using only displayed columns
+                let csvContent;
+                
+                if (type === 'ratings') {
+                    const getValue = (row, possibleFields) => {
+                        for (let field of possibleFields) {
+                            if (row[field] !== undefined && row[field] !== null && row[field] !== '') {
+                                return row[field];
+                            }
+                        }
+                        return '-';
+                    };
+
+                    const getNumericValue = (row, possibleFields, isFloat = false) => {
+                        const value = getValue(row, possibleFields);
+                        if (value === '-' || value === 'N/A' || value === null || value === undefined || value === '') {
+                            return '-';
+                        }
+                        const num = isFloat ? parseFloat(value) : parseInt(value, 10);
+                        if (isNaN(num)) {
+                            return value;
+                        }
+                        return isFloat ? num.toFixed(1) : num;
+                    };
+
+                    csvContent = [
+                        displayHeaders.join(','),
+                        ...data.map((row, index) => [
+                            index + 1, // Rank
+                            getValue(row, ['team', 'Team']),
+                            getNumericValue(row, ['power_rating', 'Rating'], true),
+                            getValue(row, ['most_deserving', 'MD']),
+                            getValue(row, ['SOS'], true),
+                            getValue(row, ['SOR'], true),
+                            getValue(row, ['Offense', 'OFF', 'offensive_rank']),
+                            getValue(row, ['Defense', 'DEF', 'defensive_rank']),
+                            getValue(row, ['conference', 'CONF'])
+                        ].map(value => {
+                            // Escape commas and quotes in CSV
+                            if (String(value).includes(',') || String(value).includes('"')) {
+                                return `"${String(value).replace(/"/g, '""')}"`;
+                            }
+                            return value;
+                        }).join(','))
+                    ].join('\n');
+                    
+                } else if (type === 'spreads') {
+                    csvContent = [
+                        displayHeaders.join(','),
+                        ...data.map(row => [
+                            row.home_team || '',
+                            row.away_team || '',
+                            row.PEAR || '',
+                            row.pr_spread || row.raw_spread || '',
+                            row.Vegas || row.formattedSpread || '',
+                            parseFloat(row.difference || 0).toFixed(1),
+                            parseFloat(row.GQI || row.game_quality || 0).toFixed(1)
+                        ].map(value => {
+                            // Escape commas and quotes in CSV
+                            if (String(value).includes(',') || String(value).includes('"')) {
+                                return `"${String(value).replace(/"/g, '""')}"`;
+                            }
+                            return value;
+                        }).join(','))
+                    ].join('\n');
+                }
+                
+                // Create and trigger download
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                
+                if (link.download !== undefined) {
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', filename);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            },
+
             toggleLoading(elementId, show) {
                 const el = document.getElementById(elementId);
                 if (el) el.style.display = show ? 'block' : 'none';
