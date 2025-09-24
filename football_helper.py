@@ -432,6 +432,35 @@ def create_conference_projection(all_data, uncompleted_conference_games):
     df = pd.merge(df, all_data[['team', 'conference']], how='left', on='team')
     return df
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def flatten_dict(d, parent_key='', sep='_'):
     """Flatten nested dict to single-level dict with joined keys."""
     items = []
