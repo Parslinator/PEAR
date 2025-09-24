@@ -2037,7 +2037,6 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
     SOS = pd.DataFrame({'team': team_data['team'], 'avg_expected_wins': expected_wins_list})
     SOS = SOS.sort_values('avg_expected_wins').reset_index(drop=True)
     SOS['SOS'] = SOS.index + 1
-    print("SOS Calculation Done")
 
     # --- SOR Calculation ---
     completed_games = year_long_schedule[year_long_schedule['home_points'].notna()].copy()
@@ -2077,7 +2076,6 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
     SOR.insert(0, 'team', team_data['team'])
     SOR = SOR.sort_values('wins_above_good', ascending=False).reset_index(drop=True)
     SOR['SOR'] = SOR.index + 1
-    print("SOR Calculation Done")
 
     # --- Most Deserving Calculation ---
     num_12_pr = team_data['power_rating'].iloc[11]
@@ -2113,7 +2111,6 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
     most_deserving = pd.DataFrame({'team': team_data['team'], 'most_deserving_wins': deserving_results})
     most_deserving = most_deserving.sort_values('most_deserving_wins', ascending=False).reset_index(drop=True)
     most_deserving['most_deserving'] = most_deserving.index + 1
-    print("Most Deserving Calculation Done")
 
     num_12_pr = team_data['power_rating'].iloc[11]
     completed_games = year_long_schedule[year_long_schedule['home_points'].notna()]
@@ -2149,6 +2146,7 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
     team_data = pd.merge(team_data, SOS, how='left', on='team')
     team_data = pd.merge(team_data, SOR, how='left', on='team')
     team_data = pd.merge(team_data, most_deserving, how='left', on='team')
+    print("Metric Creation Done")
 
     return team_data, year_long_schedule, SOS, SOR, RTP, most_deserving
 

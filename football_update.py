@@ -105,6 +105,7 @@ model_features = [
 ]
 
 team_data, diag, sys = build_power_ratings_multi_target(team_data, opponent_adjustment_schedule, model_features, ['kford_rating', 'sp_rating'], 0.4)
+print(sys.print_diagnostics())
 
 team_data, team_power_rankings = stats_formatting(team_data, current_week, current_year)
 team_data, year_long_schedule, SOS, SOR, RTP, most_deserving = metric_creation(team_data, records, current_week, current_year, postseason)
