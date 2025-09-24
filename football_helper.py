@@ -1242,7 +1242,7 @@ from scipy.optimize import differential_evolution
 
 def in_house_power_ratings(team_data, opponent_adjustment_schedule, current_week,
                            core_metrics, target_col="kford_rating",
-                           fixed_scale=16, home_field_advantage=3):
+                           fixed_scale=16, home_field_advantage=GLOBAL_HFA):
     """
     Build in-house power ratings using weighted optimization of core metrics.
 
@@ -1259,7 +1259,7 @@ def in_house_power_ratings(team_data, opponent_adjustment_schedule, current_week
         Column in team_data to optimize against (for rank correlation).
     fixed_scale : float, default=16
         Scaling factor applied to ratings after weighting.
-    home_field_advantage : float, default=3
+    home_field_advantage : float, default=GLOBAL_HFA
         Points added to home team when not neutral.
 
     Returns
@@ -1432,7 +1432,7 @@ class MultiTargetPowerRatingSystem:
     Multi-target power rating system that can optimize for multiple rating columns
     """
     
-    def __init__(self, use_xgb=HAS_XGB, home_field_advantage=3.0, random_state=42):
+    def __init__(self, use_xgb=HAS_XGB, home_field_advantage=GLOBAL_HFA, random_state=42):
         self.use_xgb = use_xgb
         self.hfa = home_field_advantage
         self.random_state = random_state
