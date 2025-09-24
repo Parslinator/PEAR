@@ -2784,7 +2784,7 @@ def plot_matchup(wins_df, logos_df, team_logos, team_data, last_week_data, last_
 
     file_path = os.path.join(folder_path, f"{home_team} vs {away_team}")
 
-    plt.savefig(file_path, bbox_inches='tight', dpi = 500)
+    plt.savefig(file_path, bbox_inches='tight', dpi = 300)
 
 def display_schedule_visual(team_name, all_data, full_display_schedule, uncompleted_games, uncompleted_conference_games, cSOS, logo_cache, logos, current_year, current_week):
 
