@@ -123,6 +123,9 @@ team_power_rankings.to_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_w
 
 print("---------- Power Ratings Done! ----------")
 
+def PEAR_Win_Prob(home_power_rating, away_power_rating):
+    return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
+
 games = []
 for week in range(1,current_week):
     response = games_api.get_games(year=current_year, week=week,classification = 'fbs')
