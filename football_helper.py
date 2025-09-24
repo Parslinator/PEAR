@@ -1809,7 +1809,9 @@ class MultiTargetPowerRatingSystem:
                 target_name = key.replace('final_', '').replace('_correlation', '')
                 print(f"  {target_name}: {value:.4f}")
         
-        print(f"\nGames analyzed: {self.diagnostics['n_games']}")
+        print(f"\nGames analyzed: {self.diagnostics['n_games']}\n")
+
+        print(self.get_rankings(10)[['team', 'power_rating']])
 
 # Convenience function matching original interface
 def build_power_ratings_multi_target(team_data, schedule_df, model_features, 
