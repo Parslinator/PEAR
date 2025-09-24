@@ -3439,7 +3439,7 @@ def all_136_teams(all_data, column, ascending_direction, team_logos, digits, cur
     fig.text(0.857, 0.208, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
     if subtitle:
         fig.text(0.52,0.097, f"{subtitle}", ha='center', va='center', fontsize=14)
-    plt.savefig(os.path.join(folder_path, file_path), bbox_inches='tight', dpi=300)
+    plt.savefig(os.path.join(folder_path, file_path), bbox_inches='tight', dpi=400)
 
 
 

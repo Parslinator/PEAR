@@ -370,13 +370,13 @@ except Exception as e:
     print(f"Error in code chunk: Updated Win Totals. Error: {e}")
 
 try:
-    all_136_teams(all_data, 'offensive_total', False, team_logos, 2, current_week, f"Week {current_week} PEAR Offensive Ratings - A Measure of PPA, PPO, and Drive Quality", "all_offensive_ratings")
+    all_136_teams(all_data, 'offensive_total', False, team_logos, 2, current_week, f"Week {current_week} PEAR Offensive Ratings - A Measure of PPA, PPO, and Drive Quality", folder_path, "all_offensive_ratings")
     print("All Offensive Ratings Done!")
 except Exception as e:
     print(f"Error in code chunk: All Offensive Ratings. Error: {e}")
 
 try:
-    all_136_teams(all_data, 'defensive_total', False, team_logos, 2, current_week, f"Week {current_week} PEAR Defensive Ratings - A Measure of PPA, PPO, and Drive Quality", "all_defensive_ratings")
+    all_136_teams(all_data, 'defensive_total', False, team_logos, 2, current_week, f"Week {current_week} PEAR Defensive Ratings - A Measure of PPA, PPO, and Drive Quality", folder_path, "all_defensive_ratings")
     print("All Defensive Ratings Done!")
 except Exception as e:
     print(f"Error in code chunk: All Defensive Ratings. Error: {e}")
@@ -464,6 +464,7 @@ try:
     ] = -15
     mulligans = mulligans.sort_values(['mulligans', 'power_rating'], ascending=[False, False]).reset_index(drop=True)
     all_136_teams(mulligans, 'mulligans', False, team_logos, 0, current_week, f"Week {current_week} Mulligans / Upsets", folder_path, "mulligans_vs_upset")
+    print("Mulligans vs. Upsets Done!")
 except Exception as e:
     print(f"Error in code chunk: Mulligans vs. Upset. Error: {e}")
 
@@ -472,6 +473,7 @@ try:
     delta = pd.merge(team_data[['team', 'power_rating']], last_week_ratings[['team', 'power_rating']], how='left', on='team')
     delta['delta'] = delta['power_rating_x'] - delta['power_rating_y']
     all_136_teams(delta, 'delta', False, team_logos, 1, current_week, f"Ratings Change From Week {current_week-1} to Week {current_week}", folder_path, "ratings_delta_last_week")
+    print("Ratings Delta LW Done!")
 except Exception as e:
     print(f"Error in code chunk: Ratings Delta From Last Week. Error: {e}")
 
@@ -480,6 +482,7 @@ try:
     delta = pd.merge(team_data[['team', 'power_rating']], preseason[['team', 'power_rating']], how='left', on='team')
     delta['delta'] = delta['power_rating_x'] - delta['power_rating_y']
     all_136_teams(delta, 'delta', False, team_logos, 1, current_week, f"Ratings Change From Preseason to Week {current_week}", folder_path, "ratings_delta_preseason")
+    print("Ratings Delta Preseason Done!")
 except Exception as e:
     print(f"Error in code chunk: Ratings Delta Preseason. Error: {e}")
 
@@ -494,11 +497,13 @@ try:
     )
     mulligans = mulligans.sort_values(['prob_reach_wins', 'power_rating'], ascending=[False, False]).reset_index(drop=True)
     all_136_teams(mulligans, 'prob_reach_wins', False, team_logos, 0, current_week, f"Week {current_week} At-Large Playoff Discussion Chances", folder_path, "at_large_playoff_chances", "Probability each team reaches the win total needed to stay in at-large contention - this is NOT Playoff Probability")
+    print("At Large Playoff Done!")
 except Exception as e:
     print(f"Error in code chunk: At Large Playoff Chances. Error: {e}")
 
 try:
     all_136_teams(all_data, 'avg_expected_wins', True, team_logos, 2, current_week, f"Week {current_week} SOS Rankings", folder_path, "all_sos")
+    print("All SOS Done!")
 except Exception as e:
     print(f"Error in code chunk: All SOS. Error: {e}")
 
