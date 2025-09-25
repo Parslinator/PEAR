@@ -371,13 +371,25 @@ except Exception as e:
     print(f"Error in code chunk: Updated Win Totals. Error: {e}")
 
 try:
-    all_136_teams(all_data, 'offensive_total', False, team_logos, 2, current_week, f"Week {current_week} PEAR Offensive Ratings - A Measure of PPA, PPO, and Drive Quality", folder_path, "all_offensive_ratings")
+    all_136_teams(all_data, 'offensive_total', False, team_logos, 2, current_week, f"Week {current_week} PEAR Offensive Efficiencies - A Measure of PPA, PPO, and Drive Quality", folder_path, "all_offensive_efficiency")
+    print("All Offensive Efficiencies Done!")
+except Exception as e:
+    print(f"Error in code chunk: All Offensive Efficiencies. Error: {e}")
+
+try:
+    all_136_teams(all_data, 'defensive_total', False, team_logos, 2, current_week, f"Week {current_week} PEAR Defensive Efficiencies - A Measure of PPA, PPO, and Drive Quality", folder_path, "all_defensive_efficiency")
+    print("All Defensive Efficiencies Done!")
+except Exception as e:
+    print(f"Error in code chunk: All Defensive Efficiencies. Error: {e}")
+
+try:
+    all_136_teams(all_data, 'offensive_rating', False, team_logos, 1, current_week, f"Week {current_week} PEAR Offensive Ratings", folder_path, "all_offensive_ratings")
     print("All Offensive Ratings Done!")
 except Exception as e:
     print(f"Error in code chunk: All Offensive Ratings. Error: {e}")
 
 try:
-    all_136_teams(all_data, 'defensive_total', False, team_logos, 2, current_week, f"Week {current_week} PEAR Defensive Ratings - A Measure of PPA, PPO, and Drive Quality", folder_path, "all_defensive_ratings")
+    all_136_teams(all_data, 'defensive_rating', True, team_logos, 1, current_week, f"Week {current_week} PEAR Defensive Ratings", folder_path, "all_defensive_ratings")
     print("All Defensive Ratings Done!")
 except Exception as e:
     print(f"Error in code chunk: All Defensive Ratings. Error: {e}")

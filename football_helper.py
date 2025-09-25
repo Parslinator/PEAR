@@ -1039,8 +1039,6 @@ def compute_off_def_totals_and_ranks(team_data_df, season_metrics_df):
     )
     team_data_df["offensive_total"] = (team_data_df["off_ppa"] + team_data_df["off_ppo"] + team_data_df["off_dq"])
     team_data_df["defensive_total"] = (team_data_df["def_ppa"] + team_data_df["def_ppo"] + team_data_df["def_dq"])
-    team_data_df["offensive_rank"] = team_data_df["offensive_total"].rank(ascending=False, method="dense").astype(int)
-    team_data_df["defensive_rank"] = team_data_df["defensive_total"].rank(ascending=False, method="dense").astype(int)
     return team_data_df
 
 # ---------------------------
@@ -1612,13 +1610,14 @@ class MultiTargetPowerRatingSystem:
         return offense_predictions, defense_predictions
     
     def _optimize_offense_defense_ratings(self, team_data, model_features, h_idx, a_idx, 
-                                         actual_total, power_ratings, correlation_weight=0.5, total_weight=0.5):
+                                        actual_total, power_ratings, correlation_weight=0.5, total_weight=0.5):
         """
-        Optimize offensive and defensive ratings to:
+        Optimize offensive and defensive ratings with proportional adjustment:
         1. Match sp_offense_rating and sp_defense_rating using MSE loss
         2. Accurately predict game totals
         3. Ensure ratings are non-negative
         4. Maintain constraint: offense_rating - defense_rating = power_rating
+        5. Balance accuracy between offense and defense ratings
         """
         X_team_scaled = self.scaler.transform(team_data[model_features].values.astype(float))
         
@@ -1638,41 +1637,51 @@ class MultiTargetPowerRatingSystem:
         
         def objective(params):
             """
-            Optimize offense/defense ratings with constraints:
-            - Non-negativity
-            - offense_rating - defense_rating = power_rating
-            
-            params: [offense_scale, offense_shift, defense_scale, defense_shift]
+            Optimize offense/defense ratings with proportional adjustment to balance accuracy
             """
             offense_scale, offense_shift, defense_scale, defense_shift = params
             
             # Transform base predictions
-            offense_ratings_raw = offense_base * offense_scale + offense_shift
-            defense_ratings_raw = defense_base * defense_scale + defense_shift
+            offense_raw = offense_base * offense_scale + offense_shift
+            defense_raw = defense_base * defense_scale + defense_shift
             
-            # Apply power rating constraint: offense - defense = power_rating
-            # We'll adjust defense to satisfy the constraint while keeping offense as predicted
-            # defense = offense - power_rating
-            offense_ratings = np.maximum(0, offense_ratings_raw)
-            defense_from_constraint = offense_ratings - power_ratings
+            # Proportional adjustment method
+            # Calculate the constraint violation and split it proportionally
+            violation = (offense_raw - defense_raw) - power_ratings
             
-            # If constraint-based defense would be negative, adjust offense upward
-            min_defense_needed = np.maximum(0, -defense_from_constraint)
-            offense_ratings_adjusted = offense_ratings + min_defense_needed
-            defense_ratings = offense_ratings_adjusted - power_ratings
+            # Split the violation correction between offense and defense
+            # Give more adjustment weight to the rating that's currently further from its target
+            if has_offense_target and has_defense_target:
+                offense_error = np.mean(np.abs(offense_raw - offense_target))
+                defense_error = np.mean(np.abs(defense_raw - defense_target))
+                total_error = offense_error + defense_error
+                
+                if total_error > 0:
+                    # Adjust more for the rating with higher error (inverse weighting)
+                    offense_weight = defense_error / total_error
+                    defense_weight = offense_error / total_error
+                else:
+                    offense_weight = defense_weight = 0.5
+            else:
+                offense_weight = defense_weight = 0.5
+                
+            offense_ratings = offense_raw - violation * offense_weight
+            defense_ratings = defense_raw + violation * defense_weight
             
-            # Ensure defense is still non-negative (should be by construction)
-            defense_ratings = np.maximum(0, defense_ratings)
+            # Ensure non-negativity while maintaining constraint
+            # If either would be negative, shift both up equally
+            min_rating = np.minimum(offense_ratings, defense_ratings)
+            negative_adjustment = np.maximum(0, -min_rating)
             
-            # Final check: recalculate offense to maintain constraint
-            offense_ratings_final = defense_ratings + power_ratings
+            offense_ratings = offense_ratings + negative_adjustment
+            defense_ratings = defense_ratings + negative_adjustment
             
-            # Calculate MSE loss for target matching
+            # Calculate target matching loss with equal weighting
             target_loss = 0
             n_targets = 0
             
             if has_offense_target:
-                offense_mse = mean_squared_error(offense_ratings_final, offense_target)
+                offense_mse = mean_squared_error(offense_ratings, offense_target)
                 # Normalize by variance of target
                 offense_target_var = np.var(offense_target)
                 if offense_target_var > 0:
@@ -1681,7 +1690,7 @@ class MultiTargetPowerRatingSystem:
                     
             if has_defense_target:
                 defense_mse = mean_squared_error(defense_ratings, defense_target)
-                # Normalize by variance of target
+                # Normalize by variance of target  
                 defense_target_var = np.var(defense_target)
                 if defense_target_var > 0:
                     target_loss += defense_mse / defense_target_var
@@ -1691,29 +1700,40 @@ class MultiTargetPowerRatingSystem:
                 target_loss = target_loss / n_targets
             
             # Calculate total prediction loss
-            home_offense_contrib = (offense_ratings_final[h_idx] + defense_ratings[a_idx]) / 2
-            away_offense_contrib = (offense_ratings_final[a_idx] + defense_ratings[h_idx]) / 2
+            home_offense_contrib = (offense_ratings[h_idx] + defense_ratings[a_idx]) / 2
+            away_offense_contrib = (offense_ratings[a_idx] + defense_ratings[h_idx]) / 2
             predicted_total = home_offense_contrib + away_offense_contrib
             
             total_mae = np.mean(np.abs(predicted_total - actual_total))
             baseline_total_mae = np.mean(np.abs(actual_total - np.mean(actual_total)))
             normalized_total_mae = total_mae / baseline_total_mae if baseline_total_mae > 0 else total_mae
             
-            # Add constraint violation penalty (should be zero by construction, but helps optimization)
-            constraint_violation = np.mean(np.abs((offense_ratings_final - defense_ratings) - power_ratings))
+            # Add constraint violation penalty (should be minimal due to construction)
+            constraint_violation = np.mean(np.abs((offense_ratings - defense_ratings) - power_ratings))
             
-            # Combined loss
+            # Add balance penalty - penalize if one rating is much more accurate than the other
+            balance_penalty = 0
+            if has_offense_target and has_defense_target:
+                off_accuracy = -np.mean((offense_ratings - offense_target)**2) / offense_target_var
+                def_accuracy = -np.mean((defense_ratings - defense_target)**2) / defense_target_var
+                
+                # Penalize large differences in accuracy (encourages balance)
+                accuracy_imbalance = abs(off_accuracy - def_accuracy)
+                balance_penalty = 0.15 * accuracy_imbalance  # Slightly higher penalty for balance
+            
+            # Combined loss with balance consideration
             loss = (correlation_weight * target_loss + 
-                   total_weight * normalized_total_mae + 
-                   10.0 * constraint_violation)  # Heavy penalty for constraint violation
+                total_weight * normalized_total_mae + 
+                10.0 * constraint_violation +
+                balance_penalty)
             
             return loss
         
-        # Optimize with bounds - allow wider range for shifts to accommodate non-negativity
+        # Optimize with bounds
         bounds = [
             (0.1, 3.0),   # offense_scale
-            (-50, 50),    # offense_shift (wider range to ensure non-negative ratings possible)
-            (0.1, 3.0),   # defense_scale
+            (-50, 50),    # offense_shift
+            (0.1, 3.0),   # defense_scale  
             (-50, 50)     # defense_shift
         ]
         
@@ -1721,28 +1741,40 @@ class MultiTargetPowerRatingSystem:
             objective,
             bounds,
             seed=self.random_state,
-            maxiter=300,
+            maxiter=400,  # Increased iterations for better balance
             polish=True
         )
         
-        # Apply optimal transformation with constraint enforcement
+        # Apply optimal transformation with proportional adjustment
         offense_scale, offense_shift, defense_scale, defense_shift = result.x
-        offense_ratings_raw = offense_base * offense_scale + offense_shift
+        offense_raw = offense_base * offense_scale + offense_shift
+        defense_raw = defense_base * defense_scale + defense_shift
         
-        # Apply power rating constraint: offense - defense = power_rating
-        offense_ratings = np.maximum(0, offense_ratings_raw)
-        defense_from_constraint = offense_ratings - power_ratings
+        # Apply proportional constraint satisfaction
+        violation = (offense_raw - defense_raw) - power_ratings
         
-        # If constraint-based defense would be negative, adjust offense upward
-        min_defense_needed = np.maximum(0, -defense_from_constraint)
-        offense_ratings_adjusted = offense_ratings + min_defense_needed
-        defense_ratings = offense_ratings_adjusted - power_ratings
+        if has_offense_target and has_defense_target:
+            offense_error = np.mean(np.abs(offense_raw - offense_target))
+            defense_error = np.mean(np.abs(defense_raw - defense_target))
+            total_error = offense_error + defense_error
+            
+            if total_error > 0:
+                offense_weight = defense_error / total_error
+                defense_weight = offense_error / total_error
+            else:
+                offense_weight = defense_weight = 0.5
+        else:
+            offense_weight = defense_weight = 0.5
+            
+        offense_ratings = offense_raw - violation * offense_weight
+        defense_ratings = defense_raw + violation * defense_weight
         
-        # Ensure defense is non-negative (should be by construction)
-        defense_ratings = np.maximum(0, defense_ratings)
+        # Ensure non-negativity while maintaining constraint
+        min_rating = np.minimum(offense_ratings, defense_ratings)
+        negative_adjustment = np.maximum(0, -min_rating)
         
-        # Final ratings with constraint enforced
-        offense_ratings = defense_ratings + power_ratings
+        offense_ratings = offense_ratings + negative_adjustment
+        defense_ratings = defense_ratings + negative_adjustment
         
         # Calculate final diagnostics
         if has_offense_target:
@@ -1750,7 +1782,6 @@ class MultiTargetPowerRatingSystem:
             off_mae = mean_absolute_error(offense_ratings, offense_target)
             self.diagnostics['offense_mse'] = off_mse
             self.diagnostics['offense_mae'] = off_mae
-            # Also keep correlation for comparison
             off_corr = spearmanr(offense_ratings, offense_target).correlation
             self.diagnostics['offense_correlation'] = off_corr
             
@@ -1759,9 +1790,14 @@ class MultiTargetPowerRatingSystem:
             def_mae = mean_absolute_error(defense_ratings, defense_target)
             self.diagnostics['defense_mse'] = def_mse
             self.diagnostics['defense_mae'] = def_mae
-            # Also keep correlation for comparison
             def_corr = spearmanr(defense_ratings, defense_target).correlation
             self.diagnostics['defense_correlation'] = def_corr
+        
+        # Additional balance diagnostics
+        if has_offense_target and has_defense_target:
+            self.diagnostics['accuracy_balance'] = abs(off_corr - def_corr)
+            self.diagnostics['mae_balance'] = abs(off_mae - def_mae)
+            self.diagnostics['constraint_method'] = 'proportional_adjustment'
         
         # Total prediction diagnostics
         home_offense_contrib = (offense_ratings[h_idx] + defense_ratings[a_idx]) / 2
@@ -1771,7 +1807,7 @@ class MultiTargetPowerRatingSystem:
         self.diagnostics['total_mae'] = np.mean(np.abs(predicted_total - actual_total))
         self.diagnostics['total_r2'] = r2_score(actual_total, predicted_total)
         
-        # Add constraint validation diagnostics
+        # Constraint validation diagnostics
         constraint_check = offense_ratings - defense_ratings - power_ratings
         self.diagnostics['constraint_violation_max'] = np.max(np.abs(constraint_check))
         self.diagnostics['constraint_violation_mean'] = np.mean(np.abs(constraint_check))
@@ -2230,6 +2266,8 @@ def stats_formatting(team_data, current_week, current_year):
     team_data['defense_explosive_rank'] = team_data['defense_explosive'].rank(method='min', ascending=False)
     team_data['total_turnovers_rank'] = team_data['total_turnovers_scaled'].rank(method='min', ascending=False)
     team_data['penalties_rank'] = team_data['penalties_scaled'].rank(method='min', ascending=False)
+    team_data["offensive_rank"] = team_data["offensive_rating"].rank(ascending=False, method="first").astype(int)
+    team_data["defensive_rank"] = team_data["defensive_rating"].rank(ascending=True, method="first").astype(int)
 
     # --- Sort + Rankings
     team_data = team_data.sort_values(by='power_rating', ascending=False).reset_index(drop=True)
@@ -3484,8 +3522,8 @@ def display_schedule_visual(team_name, all_data, full_display_schedule, uncomple
     # Data values
     offensive = get_team_column_value(all_data, team_name, "offensive_rank")
     defensive = get_team_column_value(all_data, team_name, "defensive_rank")
-    offensive_total = round(get_team_column_value(all_data, team_name, "offensive_total"), 1)
-    defensive_total = round(get_team_column_value(all_data, team_name, "defensive_total"), 1)
+    offensive_total = round(get_team_column_value(all_data, team_name, "offensive_rating"), 1)
+    defensive_total = round(get_team_column_value(all_data, team_name, "defensive_rating"), 1)
     power_rating = get_team_column_value(all_data, team_name, "power_rating")
     most_deserving = get_team_column_value(all_data, team_name, "most_deserving")
     SOS = get_team_column_value(all_data, team_name, "SOS")
@@ -3714,21 +3752,36 @@ def all_136_teams(all_data, column, ascending_direction, team_logos, digits, cur
         text_ax.text(-0.1, 0.5, f"#{idx + 1}", ha='right', va='center', fontsize=12, fontweight='bold')
         box_color = get_color(power_rating)
         text_ax.add_patch(plt.Rectangle((1.1, -0.125), 1.4, 1.29, color=box_color, transform=text_ax.transAxes, zorder=1, clip_on=False, linewidth=0.5, edgecolor='black'))
-        if digits == 1:
-            text_ax.text(1.8, 0.5, f"{power_rating:.1f}", ha='center', va='center',
+        if file_path == 'mulligans_vs_upset':
+            if power_rating == -15:
+                text_ax.text(1.8, 0.5, f"N/A", ha='center', va='center',
+                    fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
+            else:
+                text_ax.text(1.8, 0.5, f"{power_rating}", ha='center', va='center',
                         fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-        elif digits == 0:
-            text_ax.text(1.8, 0.5, f"{power_rating}", ha='center', va='center',
+        elif file_path == 'at_large_playoff_chances':
+            if power_rating == 0.0:
+                text_ax.text(1.8, 0.5, f"<1%", ha='center', va='center',
                         fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-        elif digits == 2:
-            text_ax.text(1.8, 0.5, f"{power_rating:.2f}", ha='center', va='center',
+            else:
+                text_ax.text(1.8, 0.5, f"{round(power_rating)}%", ha='center', va='center',
                         fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-        elif digits == 3:
-            text_ax.text(1.8, 0.5, f"{power_rating:.3f}", ha='center', va='center',
-                        fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
-        else:
-            text_ax.text(1.8, 0.5, f"{power_rating:.1f}", ha='center', va='center',
-                        fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
+        else:    
+            if digits == 1:
+                text_ax.text(1.8, 0.5, f"{power_rating:.1f}", ha='center', va='center',
+                            fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
+            elif digits == 0:
+                text_ax.text(1.8, 0.5, f"{power_rating}", ha='center', va='center',
+                            fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
+            elif digits == 2:
+                text_ax.text(1.8, 0.5, f"{power_rating:.2f}", ha='center', va='center',
+                            fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
+            elif digits == 3:
+                text_ax.text(1.8, 0.5, f"{power_rating:.3f}", ha='center', va='center',
+                            fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
+            else:
+                text_ax.text(1.8, 0.5, f"{power_rating:.1f}", ha='center', va='center',
+                            fontsize=16, fontweight='bold', color='black', transform=text_ax.transAxes, zorder=2)
 
     if n_teams % 20 != 0:
         for empty_row in range(n_teams % 20, 20):
