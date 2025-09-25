@@ -1445,7 +1445,7 @@ from scipy.optimize import minimize, differential_evolution
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import cross_val_score
-from sklearn.metrics import mean_absolute_error, r2_score
+from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -1461,7 +1461,7 @@ class MultiTargetPowerRatingSystem:
     Multi-target power rating system that can optimize for multiple rating columns
     """
     
-    def __init__(self, use_xgb=HAS_XGB, home_field_advantage=GLOBAL_HFA, random_state=42):
+    def __init__(self, use_xgb=HAS_XGB, home_field_advantage=3.0, random_state=42):
         self.use_xgb = use_xgb
         self.hfa = home_field_advantage
         self.random_state = random_state
@@ -1515,9 +1515,10 @@ class MultiTargetPowerRatingSystem:
         h_idx = schedule_clean['home_team'].map(team_to_idx).values
         a_idx = schedule_clean['away_team'].map(team_to_idx).values
         actual_margin = schedule_clean['home_points'].values - schedule_clean['away_points'].values
+        actual_total = schedule_clean['home_points'].values + schedule_clean['away_points'].values
         hfa = np.where(schedule_clean['neutral'] == False, self.hfa, 0.0)
         
-        return schedule_clean, h_idx, a_idx, actual_margin, hfa
+        return schedule_clean, h_idx, a_idx, actual_margin, actual_total, hfa
     
     def _create_composite_target(self, team_data, target_columns, target_weights=None):
         """Create weighted composite target from multiple columns"""
@@ -1583,6 +1584,199 @@ class MultiTargetPowerRatingSystem:
         margin_features = np.column_stack([X_team_scaled, np.zeros(len(X_team_scaled))])
         margin_ratings = self.models['margin_model'].predict(margin_features)
         return margin_ratings
+    
+    def _train_offense_defense_models(self, team_data, model_features, h_idx, a_idx, actual_total):
+        """Train models for offensive and defensive ratings"""
+        X_team_scaled = self.scaler.transform(team_data[model_features].values.astype(float))
+        
+        # Train offensive rating model if sp_offense_rating exists
+        if 'sp_offense_rating' in team_data.columns:
+            offense_target = team_data['sp_offense_rating'].values
+            offense_model = self._fit_regressor(X_team_scaled, offense_target, 'offense')
+            self.models['offense_model'] = offense_model
+            offense_predictions = offense_model.predict(X_team_scaled)
+        else:
+            # Fallback: use offensive features to estimate offense
+            offense_predictions = np.zeros(len(team_data))
+            
+        # Train defensive rating model if sp_defense_rating exists  
+        if 'sp_defense_rating' in team_data.columns:
+            defense_target = team_data['sp_defense_rating'].values
+            defense_model = self._fit_regressor(X_team_scaled, defense_target, 'defense')
+            self.models['defense_model'] = defense_model
+            defense_predictions = defense_model.predict(X_team_scaled)
+        else:
+            # Fallback: use defensive features to estimate defense
+            defense_predictions = np.zeros(len(team_data))
+            
+        return offense_predictions, defense_predictions
+    
+    def _optimize_offense_defense_ratings(self, team_data, model_features, h_idx, a_idx, 
+                                         actual_total, power_ratings, correlation_weight=0.5, total_weight=0.5):
+        """
+        Optimize offensive and defensive ratings to:
+        1. Match sp_offense_rating and sp_defense_rating using MSE loss
+        2. Accurately predict game totals
+        3. Ensure ratings are non-negative
+        4. Maintain constraint: offense_rating - defense_rating = power_rating
+        """
+        X_team_scaled = self.scaler.transform(team_data[model_features].values.astype(float))
+        
+        # Get initial predictions from models
+        offense_base, defense_base = self._train_offense_defense_models(
+            team_data, model_features, h_idx, a_idx, actual_total
+        )
+        
+        # Get target values if they exist
+        has_offense_target = 'sp_offense_rating' in team_data.columns
+        has_defense_target = 'sp_defense_rating' in team_data.columns
+        
+        if has_offense_target:
+            offense_target = team_data['sp_offense_rating'].values
+        if has_defense_target:
+            defense_target = team_data['sp_defense_rating'].values
+        
+        def objective(params):
+            """
+            Optimize offense/defense ratings with constraints:
+            - Non-negativity
+            - offense_rating - defense_rating = power_rating
+            
+            params: [offense_scale, offense_shift, defense_scale, defense_shift]
+            """
+            offense_scale, offense_shift, defense_scale, defense_shift = params
+            
+            # Transform base predictions
+            offense_ratings_raw = offense_base * offense_scale + offense_shift
+            defense_ratings_raw = defense_base * defense_scale + defense_shift
+            
+            # Apply power rating constraint: offense - defense = power_rating
+            # We'll adjust defense to satisfy the constraint while keeping offense as predicted
+            # defense = offense - power_rating
+            offense_ratings = np.maximum(0, offense_ratings_raw)
+            defense_from_constraint = offense_ratings - power_ratings
+            
+            # If constraint-based defense would be negative, adjust offense upward
+            min_defense_needed = np.maximum(0, -defense_from_constraint)
+            offense_ratings_adjusted = offense_ratings + min_defense_needed
+            defense_ratings = offense_ratings_adjusted - power_ratings
+            
+            # Ensure defense is still non-negative (should be by construction)
+            defense_ratings = np.maximum(0, defense_ratings)
+            
+            # Final check: recalculate offense to maintain constraint
+            offense_ratings_final = defense_ratings + power_ratings
+            
+            # Calculate MSE loss for target matching
+            target_loss = 0
+            n_targets = 0
+            
+            if has_offense_target:
+                offense_mse = mean_squared_error(offense_ratings_final, offense_target)
+                # Normalize by variance of target
+                offense_target_var = np.var(offense_target)
+                if offense_target_var > 0:
+                    target_loss += offense_mse / offense_target_var
+                    n_targets += 1
+                    
+            if has_defense_target:
+                defense_mse = mean_squared_error(defense_ratings, defense_target)
+                # Normalize by variance of target
+                defense_target_var = np.var(defense_target)
+                if defense_target_var > 0:
+                    target_loss += defense_mse / defense_target_var
+                    n_targets += 1
+            
+            if n_targets > 0:
+                target_loss = target_loss / n_targets
+            
+            # Calculate total prediction loss
+            home_offense_contrib = (offense_ratings_final[h_idx] + defense_ratings[a_idx]) / 2
+            away_offense_contrib = (offense_ratings_final[a_idx] + defense_ratings[h_idx]) / 2
+            predicted_total = home_offense_contrib + away_offense_contrib
+            
+            total_mae = np.mean(np.abs(predicted_total - actual_total))
+            baseline_total_mae = np.mean(np.abs(actual_total - np.mean(actual_total)))
+            normalized_total_mae = total_mae / baseline_total_mae if baseline_total_mae > 0 else total_mae
+            
+            # Add constraint violation penalty (should be zero by construction, but helps optimization)
+            constraint_violation = np.mean(np.abs((offense_ratings_final - defense_ratings) - power_ratings))
+            
+            # Combined loss
+            loss = (correlation_weight * target_loss + 
+                   total_weight * normalized_total_mae + 
+                   10.0 * constraint_violation)  # Heavy penalty for constraint violation
+            
+            return loss
+        
+        # Optimize with bounds - allow wider range for shifts to accommodate non-negativity
+        bounds = [
+            (0.1, 3.0),   # offense_scale
+            (-50, 50),    # offense_shift (wider range to ensure non-negative ratings possible)
+            (0.1, 3.0),   # defense_scale
+            (-50, 50)     # defense_shift
+        ]
+        
+        result = differential_evolution(
+            objective,
+            bounds,
+            seed=self.random_state,
+            maxiter=300,
+            polish=True
+        )
+        
+        # Apply optimal transformation with constraint enforcement
+        offense_scale, offense_shift, defense_scale, defense_shift = result.x
+        offense_ratings_raw = offense_base * offense_scale + offense_shift
+        
+        # Apply power rating constraint: offense - defense = power_rating
+        offense_ratings = np.maximum(0, offense_ratings_raw)
+        defense_from_constraint = offense_ratings - power_ratings
+        
+        # If constraint-based defense would be negative, adjust offense upward
+        min_defense_needed = np.maximum(0, -defense_from_constraint)
+        offense_ratings_adjusted = offense_ratings + min_defense_needed
+        defense_ratings = offense_ratings_adjusted - power_ratings
+        
+        # Ensure defense is non-negative (should be by construction)
+        defense_ratings = np.maximum(0, defense_ratings)
+        
+        # Final ratings with constraint enforced
+        offense_ratings = defense_ratings + power_ratings
+        
+        # Calculate final diagnostics
+        if has_offense_target:
+            off_mse = mean_squared_error(offense_ratings, offense_target)
+            off_mae = mean_absolute_error(offense_ratings, offense_target)
+            self.diagnostics['offense_mse'] = off_mse
+            self.diagnostics['offense_mae'] = off_mae
+            # Also keep correlation for comparison
+            off_corr = spearmanr(offense_ratings, offense_target).correlation
+            self.diagnostics['offense_correlation'] = off_corr
+            
+        if has_defense_target:
+            def_mse = mean_squared_error(defense_ratings, defense_target)
+            def_mae = mean_absolute_error(defense_ratings, defense_target)
+            self.diagnostics['defense_mse'] = def_mse
+            self.diagnostics['defense_mae'] = def_mae
+            # Also keep correlation for comparison
+            def_corr = spearmanr(defense_ratings, defense_target).correlation
+            self.diagnostics['defense_correlation'] = def_corr
+        
+        # Total prediction diagnostics
+        home_offense_contrib = (offense_ratings[h_idx] + defense_ratings[a_idx]) / 2
+        away_offense_contrib = (offense_ratings[a_idx] + defense_ratings[h_idx]) / 2
+        predicted_total = home_offense_contrib + away_offense_contrib
+        
+        self.diagnostics['total_mae'] = np.mean(np.abs(predicted_total - actual_total))
+        self.diagnostics['total_r2'] = r2_score(actual_total, predicted_total)
+        
+        # Add constraint validation diagnostics
+        constraint_check = offense_ratings - defense_ratings - power_ratings
+        self.diagnostics['constraint_violation_max'] = np.max(np.abs(constraint_check))
+        self.diagnostics['constraint_violation_mean'] = np.mean(np.abs(constraint_check))
+        
+        return offense_ratings, defense_ratings
     
     def _optimize_multi_target_ensemble(self, target_predictions, margin_ratings, team_data, 
                                        target_columns, h_idx, a_idx, actual_margin, hfa,
@@ -1667,7 +1861,7 @@ class MultiTargetPowerRatingSystem:
     def fit(self, team_data, schedule_df, model_features, target_columns, 
             mae_weight=0.3, correlation_weight=0.7):
         """
-        Fit multi-target power rating system
+        Fit multi-target power rating system with offense/defense components
         
         Parameters:
         -----------
@@ -1692,8 +1886,8 @@ class MultiTargetPowerRatingSystem:
         # Set team as index
         team_data_indexed = team_data.set_index('team', drop=False)
         
-        # Prepare game data
-        schedule_clean, h_idx, a_idx, actual_margin, hfa = self._prepare_game_data(
+        # Prepare game data (now includes actual_total)
+        schedule_clean, h_idx, a_idx, actual_margin, actual_total, hfa = self._prepare_game_data(
             team_data_indexed, schedule_df
         )
         
@@ -1709,8 +1903,7 @@ class MultiTargetPowerRatingSystem:
         
         # Compute margin-based ratings
         margin_ratings = self._compute_margin_ratings(team_data_indexed, model_features)
-        
-        # Optimize multi-target ensemble
+        # Optimize multi-target ensemble for power ratings
         optimal_target_weights, optimal_ensemble_weight = self._optimize_multi_target_ensemble(
             target_predictions, margin_ratings, team_data_indexed, target_columns,
             h_idx, a_idx, actual_margin, hfa, mae_weight, correlation_weight
@@ -1726,10 +1919,34 @@ class MultiTargetPowerRatingSystem:
         # Center ratings
         ensemble_ratings = ensemble_ratings - ensemble_ratings.mean()
         
+        # Optimize multi-target ensemble for power ratings
+        optimal_target_weights, optimal_ensemble_weight = self._optimize_multi_target_ensemble(
+            target_predictions, margin_ratings, team_data_indexed, target_columns,
+            h_idx, a_idx, actual_margin, hfa, mae_weight, correlation_weight
+        )
+        
+        # Create final ensemble ratings
+        composite_pred = sum(w * target_predictions[col] 
+                           for w, col in zip(optimal_target_weights, target_columns))
+        
+        ensemble_ratings = (optimal_ensemble_weight * composite_pred + 
+                          (1 - optimal_ensemble_weight) * margin_ratings)
+        
+        # Center ratings
+        ensemble_ratings = ensemble_ratings - ensemble_ratings.mean()
+        
+        # Now optimize offense and defense ratings with power rating constraint
+        offense_ratings, defense_ratings = self._optimize_offense_defense_ratings(
+            team_data_indexed, model_features, h_idx, a_idx, actual_total, ensemble_ratings,
+            correlation_weight=0.6, total_weight=0.4
+        )
+        
         # Store results - reset index to avoid ambiguity and ensure clean rounding
         self.team_ratings = pd.DataFrame({
             'team': team_data_indexed['team'].values,
-            'power_rating': self._clean_round(ensemble_ratings)
+            'power_rating': self._clean_round(ensemble_ratings),
+            'offensive_rating': self._clean_round(offense_ratings),
+            'defensive_rating': self._clean_round(defense_ratings)
         })
         
         # Add individual component ratings for analysis - ensure all are properly rounded  
@@ -1752,6 +1969,7 @@ class MultiTargetPowerRatingSystem:
             'optimal_ensemble_weight': optimal_ensemble_weight,
             'final_game_mae': final_mae,
             'baseline_margin_mae': np.mean(np.abs(actual_margin)),
+            'baseline_total_mae': np.mean(np.abs(actual_total - np.mean(actual_total))),
             'n_games': len(actual_margin),
             **final_correlations
         })
@@ -1759,22 +1977,50 @@ class MultiTargetPowerRatingSystem:
         return self
     
     def predict_game(self, home_team, away_team, neutral=False):
-        """Predict margin for a specific game"""
+        """Predict margin, total, and scores for a specific game"""
         if self.team_ratings is None:
             raise ValueError("Model must be fitted before making predictions")
         
         team_lookup = dict(zip(self.team_ratings['team'], self.team_ratings['power_rating']))
+        offense_lookup = dict(zip(self.team_ratings['team'], self.team_ratings['offensive_rating']))
+        defense_lookup = dict(zip(self.team_ratings['team'], self.team_ratings['defensive_rating']))
         
+        # Get ratings
         home_rating = team_lookup.get(home_team, 0)
         away_rating = team_lookup.get(away_team, 0)
-        hfa = 0 if neutral else self.hfa
-        spread = round(home_rating + hfa - away_rating, 1)
-        if spread < 0:
-            pear = f'{away_team} {spread}'
-        else:
-            pear = f'{home_team} -{spread}'
+        home_offense = offense_lookup.get(home_team, 0)
+        away_offense = offense_lookup.get(away_team, 0)
+        home_defense = defense_lookup.get(home_team, 0)
+        away_defense = defense_lookup.get(away_team, 0)
         
-        return pear
+        hfa = 0 if neutral else self.hfa
+        
+        # Calculate spread
+        spread = round(home_rating + hfa - away_rating, 1)
+        
+        # Calculate total
+        home_offense_contrib = (home_offense + away_defense) / 2
+        away_offense_contrib = (away_offense + home_defense) / 2
+        predicted_total = round(home_offense_contrib + away_offense_contrib, 1)
+        
+        # Calculate predicted scores
+        # Use spread and total to derive individual scores
+        home_score = round((predicted_total + spread) / 2, 1)
+        away_score = round((predicted_total - spread) / 2, 1)
+        
+        # Format spread output
+        if spread < 0:
+            spread_str = f'{away_team} -{abs(spread)}'
+        else:
+            spread_str = f'{home_team} -{spread}'
+        
+        return {
+            'spread': spread_str,
+            'total': predicted_total,
+            'home_score': home_score,
+            'away_score': away_score,
+            'predicted_score': f'{home_team} {home_score}, {away_team} {away_score}'
+        }
     
     def get_rankings(self, n=25):
         """Get top N teams by power rating"""
@@ -1802,6 +2048,31 @@ class MultiTargetPowerRatingSystem:
         print(f"  Baseline MAE: {self.diagnostics['baseline_margin_mae']:.3f}")
         print(f"  Improvement: {(1 - self.diagnostics['final_game_mae']/self.diagnostics['baseline_margin_mae']):.1%}")
         
+        # Offense/Defense performance with new metrics
+        print(f"\nOffense/Defense Ratings:")
+        if 'offense_mse' in self.diagnostics:
+            print(f"  Offense MSE vs sp_offense_rating: {self.diagnostics['offense_mse']:.4f}")
+            print(f"  Offense MAE vs sp_offense_rating: {self.diagnostics['offense_mae']:.4f}")
+            print(f"  Offense correlation with sp_offense_rating: {self.diagnostics['offense_correlation']:.4f}")
+        if 'defense_mse' in self.diagnostics:
+            print(f"  Defense MSE vs sp_defense_rating: {self.diagnostics['defense_mse']:.4f}")
+            print(f"  Defense MAE vs sp_defense_rating: {self.diagnostics['defense_mae']:.4f}")
+            print(f"  Defense correlation with sp_defense_rating: {self.diagnostics['defense_correlation']:.4f}")
+        
+        print(f"  Total prediction MAE: {self.diagnostics['total_mae']:.3f}")
+        print(f"  Total prediction R²: {self.diagnostics['total_r2']:.4f}")
+        
+        # Constraint validation diagnostics
+        if 'constraint_violation_max' in self.diagnostics:
+            print(f"  Constraint (O-D=P) - Max violation: {self.diagnostics['constraint_violation_max']:.6f}")
+            print(f"  Constraint (O-D=P) - Mean violation: {self.diagnostics['constraint_violation_mean']:.6f}")
+        
+        # Non-negativity diagnostics  
+        offense_ratings = self.team_ratings['offensive_rating'].values
+        defense_ratings = self.team_ratings['defensive_rating'].values
+        print(f"  Offense ratings - Min: {np.min(offense_ratings):.1f}, Mean: {np.mean(offense_ratings):.1f}")
+        print(f"  Defense ratings - Min: {np.min(defense_ratings):.1f}, Mean: {np.mean(defense_ratings):.1f}")
+        
         # Target correlations
         print(f"\nTarget Correlations:")
         for key, value in self.diagnostics.items():
@@ -1811,13 +2082,15 @@ class MultiTargetPowerRatingSystem:
         
         print(f"\nGames analyzed: {self.diagnostics['n_games']}\n")
 
-        print(self.get_rankings(10)[['team', 'power_rating']])
+        # Show top teams with all ratings
+        print("\nTop 10 Teams:")
+        print(self.get_rankings(10)[['team', 'power_rating', 'offensive_rating', 'defensive_rating']])
 
 # Convenience function matching original interface
 def build_power_ratings_multi_target(team_data, schedule_df, model_features, 
                                     target_columns=['fpi'], mae_weight=0.3):
     """
-    Build power ratings optimizing for multiple target columns
+    Build power ratings optimizing for multiple target columns with offense/defense components
     
     Parameters:
     -----------
@@ -1829,9 +2102,9 @@ def build_power_ratings_multi_target(team_data, schedule_df, model_features,
     system = MultiTargetPowerRatingSystem()
     system.fit(team_data, schedule_df, model_features, target_columns, mae_weight=mae_weight)
     
-    # Merge ratings back to original team_data
+    # Merge all ratings back to original team_data
     result_data = team_data.merge(
-        system.team_ratings[['team', 'power_rating']], 
+        system.team_ratings[['team', 'power_rating', 'offensive_rating', 'defensive_rating']], 
         on='team', 
         how='left'
     )
