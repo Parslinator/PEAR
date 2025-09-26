@@ -290,19 +290,22 @@ def get_team_column_value(df, team, column):
     return ""
 
 def average_team_distribution(num_simulations, schedules, average, team_name):
-    # Precompute opponent probabilities
-    is_home = schedules['home_team'] == team_name
-    win_probs = np.where(
-        is_home,
-        schedules['away_pr'].apply(lambda opp_pr: PEAR_Win_Prob(average, opp_pr, schedules['neutral'])),
-        100 - schedules['home_pr'].apply(lambda opp_pr: PEAR_Win_Prob(opp_pr, average, schedules['neutral']))
-    )  # <-- remove .to_numpy()
+    # Precompute opponent probabilities per game
+    def calc_win_prob(row):
+        if row['home_team'] == team_name:
+            # team is home
+            return PEAR_Win_Prob(average, row['away_pr'], row['neutral'])
+        else:
+            # team is away
+            return 100 - PEAR_Win_Prob(row['home_pr'], average, row['neutral'])
+
+    win_probs = schedules.apply(calc_win_prob, axis=1)
 
     games_played = len(schedules)
 
     # Monte Carlo simulation
     random_matrix = np.random.rand(num_simulations, games_played) * 100
-    wins_matrix = random_matrix < win_probs  # True = win, False = loss
+    wins_matrix = random_matrix < win_probs.values  # True = win, False = loss
     win_counts = wins_matrix.sum(axis=1)
     loss_counts = games_played - win_counts
 
@@ -2292,15 +2295,22 @@ import pandas as pd
 
 # --- Vectorized PEAR Win Prob function ---
 def PEAR_Win_Prob_vectorized(home_pr, away_pr, neutral):
-    if neutral == False:
-        home_pr = home_pr + 1.5
-    rating_diff = np.array(home_pr) - np.array(away_pr)
-    return np.round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
+    home_pr = np.array(home_pr, dtype=float)
+    away_pr = np.array(away_pr, dtype=float)
+    neutral = np.array(neutral, dtype=bool)
+    
+    # Add 1.5 to home rating only when not neutral
+    home_pr += np.where(neutral, 0, 1.5)
+    
+    rating_diff = home_pr - away_pr
+    win_prob = 1 / (1 + 10 ** (-rating_diff / 20.5)) * 100
+    return np.round(win_prob, 2)
+
 
 # ---------------- METRIC CREATION ---------------- #
 def metric_creation(team_data, records, current_week, current_year, postseason=False):
     """Create SOS, SOR, and Most Deserving metrics for teams."""
-    # --- Build Year-Long Schedule
+    # --- Build Year-Long Schedule ---
     games_list = []
     for week in range(1, 17):
         response = games_api.get_games(year=current_year, week=week, classification='fbs')
@@ -2320,7 +2330,7 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
     ]
     year_long_schedule = pd.DataFrame(games)
 
-    # --- Merge power ratings
+    # --- Merge power ratings ---
     fallback_value = team_data['power_rating'].mean() - 2 * team_data['power_rating'].std()
     for side in ['home', 'away']:
         year_long_schedule = year_long_schedule.merge(
@@ -2329,7 +2339,7 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
         ).rename(columns={'power_rating': f'{side}_pr'}).drop(columns='team')
         year_long_schedule[f'{side}_pr'] = year_long_schedule[f'{side}_pr'].fillna(fallback_value)
 
-    # --- Add Win Probabilities
+    # --- Add Win Probabilities ---
     year_long_schedule['PEAR_win_prob'] = PEAR_Win_Prob_vectorized(
         year_long_schedule['home_pr'], year_long_schedule['away_pr'], year_long_schedule['neutral']
     )
@@ -2364,18 +2374,23 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
         team_games = completed_games[(completed_games['home_team'] == team) | 
                                     (completed_games['away_team'] == team)].copy()
 
-        home_probs = PEAR_Win_Prob_vectorized(good_team_pr, team_games['away_pr'], team_games['neutral'])
-        away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_pr'], good_team_pr, team_games['neutral'])
+        # Vectorized good_win_prob
+        home_good = np.where(team_games['home_team'] == team, good_team_pr, team_games['home_pr'])
+        away_good = np.where(team_games['home_team'] == team, team_games['away_pr'], good_team_pr)
+        good_win_prob = PEAR_Win_Prob_vectorized(home_good, away_good, team_games['neutral'])
+        team_games['good_win_prob'] = np.where(team_games['home_team'] == team, good_win_prob, 100 - good_win_prob)
 
-        team_games['good_win_prob'] = np.where(team_games['home_team'] == team, home_probs, away_probs)
+        # Vectorized avg_win_prob
+        home_avg = np.where(team_games['home_team'] == team, average_pr, team_games['home_pr'])
+        away_avg = np.where(team_games['home_team'] == team, team_games['away_pr'], average_pr)
+        avg_win_prob = PEAR_Win_Prob_vectorized(home_avg, away_avg, team_games['neutral'])
+        team_games['avg_win_prob'] = np.where(team_games['home_team'] == team, avg_win_prob, 100 - avg_win_prob)
 
-        home_probs = PEAR_Win_Prob_vectorized(average_pr, team_games['away_pr'], team_games['neutral'])
-        away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_pr'], average_pr, team_games['neutral'])
-        team_games['avg_win_prob'] = np.where(team_games['home_team'] == team, home_probs, away_probs)
-
-        home_probs = PEAR_Win_Prob_vectorized(elite_team_pr, team_games['away_pr'], team_games['neutral'])
-        away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_pr'], elite_team_pr, team_games['neutral'])
-        team_games['elite_win_prob'] = np.where(team_games['home_team'] == team, home_probs, away_probs)
+        # Vectorized elite_win_prob
+        home_elite = np.where(team_games['home_team'] == team, elite_team_pr, team_games['home_pr'])
+        away_elite = np.where(team_games['home_team'] == team, team_games['away_pr'], elite_team_pr)
+        elite_win_prob = PEAR_Win_Prob_vectorized(home_elite, away_elite, team_games['neutral'])
+        team_games['elite_win_prob'] = np.where(team_games['home_team'] == team, elite_win_prob, 100 - elite_win_prob)
 
         current_xWins = round(team_games['avg_win_prob'].sum() / 100, 2)
         good_xWins = round(team_games['good_win_prob'].sum() / 100, 2)
@@ -2406,7 +2421,7 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
         games_played = records.loc[records['team'] == team, 'games_played'].values[0]
         wins = records.loc[records['team'] == team, 'wins'].values[0]
         team_games = completed_games[(completed_games['home_team'] == team) |
-                                    (completed_games['away_team'] == team)].copy()
+                                     (completed_games['away_team'] == team)].copy()
         if current_week < 6:
             mov_adj = 0
         else:
@@ -2415,9 +2430,16 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
         team_games['home_input'] = np.where(~team_games['neutral'], team_games['home_pr'] + 2, team_games['home_pr'])
         team_games['home_12_pr'] = np.where(~team_games['neutral'], num_12_pr + 2, num_12_pr)
         team_games['away_12_pr'] = num_12_pr
-        home_probs = PEAR_Win_Prob_vectorized(team_games['home_12_pr'], team_games['away_pr'], team_games['neutral']) + mov_adj
-        away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_input'], team_games['away_12_pr'], team_games['neutral']) - mov_adj
-        team_games['adj_win_prob'] = np.where(team_games['home_team'] == team, home_probs, away_probs)
+
+        home_probs = np.where(
+            team_games['home_team'] == team, team_games['home_12_pr'], team_games['home_input']
+        )
+        away_probs = np.where(
+            team_games['home_team'] == team, team_games['away_pr'], team_games['away_12_pr']
+        )
+
+        adj_win_prob = PEAR_Win_Prob_vectorized(home_probs, away_probs, team_games['neutral']) + mov_adj
+        team_games['adj_win_prob'] = np.where(team_games['home_team'] == team, adj_win_prob, 100 - adj_win_prob)
 
         xWins = round(team_games['adj_win_prob'].sum() / 100, 3)
         if games_played != len(team_games):
@@ -2429,11 +2451,13 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
     most_deserving = most_deserving.sort_values('most_deserving_wins', ascending=False).reset_index(drop=True)
     most_deserving['most_deserving'] = most_deserving.index + 1
 
+    # --- RTP Calculation (unchanged) ---
     num_12_pr = team_data['power_rating'].iloc[11]
     completed_games = year_long_schedule[year_long_schedule['home_points'].notna()]
     completed_games['margin_of_victory'] = completed_games['home_points'] - completed_games['away_points']
     std_dev = completed_games['margin_of_victory'].abs().std()
     from scipy.stats import norm
+
     team_probabilities = []
     for team in team_data['team']:
         games = completed_games[(completed_games['home_team'] == team) | (completed_games['away_team'] == team)]
@@ -2441,14 +2465,8 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
         for _, g in games.iterrows():
             home, away = g['home_team'], g['away_team']
             mov = g['margin_of_victory']
-            if home in team_data['team'].values:
-                home_pr = team_data.loc[team_data['team'] == home, 'power_rating'].values[0]
-            else:
-                home_pr = fallback_value
-            if away in team_data['team'].values:
-                away_pr = team_data.loc[team_data['team'] == away, 'power_rating'].values[0]
-            else:
-                away_pr = fallback_value
+            home_pr = team_data.loc[team_data['team'] == home, 'power_rating'].values[0] if home in team_data['team'].values else fallback_value
+            away_pr = team_data.loc[team_data['team'] == away, 'power_rating'].values[0] if away in team_data['team'].values else fallback_value
             if team == home:
                 expected = GLOBAL_HFA + home_pr - away_pr
             else:
@@ -2460,9 +2478,11 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
         team_probabilities.append({'team': team, 'RTP': 10 * (total_prob / len(games))})
     RTP = pd.DataFrame(team_probabilities).sort_values('RTP', ascending=False)
 
+    # --- Merge Metrics ---
     team_data = pd.merge(team_data, SOS, how='left', on='team')
     team_data = pd.merge(team_data, SOR, how='left', on='team')
     team_data = pd.merge(team_data, most_deserving, how='left', on='team')
+    team_data = pd.merge(team_data, RTP, how='left', on='team')
     print("Metric Creation Done")
 
     return team_data, year_long_schedule, SOS, SOR, RTP, most_deserving
