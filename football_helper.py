@@ -294,8 +294,8 @@ def average_team_distribution(num_simulations, schedules, average, team_name):
     is_home = schedules['home_team'] == team_name
     win_probs = np.where(
         is_home,
-        schedules['away_pr'].apply(lambda opp_pr: PEAR_Win_Prob(average, opp_pr)),
-        100 - schedules['home_pr'].apply(lambda opp_pr: PEAR_Win_Prob(opp_pr, average))
+        schedules['away_pr'].apply(lambda opp_pr: PEAR_Win_Prob(average, opp_pr, schedules['neutral'])),
+        100 - schedules['home_pr'].apply(lambda opp_pr: PEAR_Win_Prob(opp_pr, average, schedules['neutral']))
     )  # <-- remove .to_numpy()
 
     games_played = len(schedules)
@@ -475,7 +475,9 @@ def flatten_dict(d, parent_key='', sep='_'):
 def date_sort(game):
     return game['start_date']
 
-def PEAR_Win_Prob(home_power_rating, away_power_rating):
+def PEAR_Win_Prob(home_power_rating, away_power_rating, neutral):
+    if neutral == False:
+        home_power_rating = home_power_rating + 1.5
     return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
 
 def standardize_team_names(df):
@@ -2289,7 +2291,9 @@ import numpy as np
 import pandas as pd
 
 # --- Vectorized PEAR Win Prob function ---
-def PEAR_Win_Prob_vectorized(home_pr, away_pr):
+def PEAR_Win_Prob_vectorized(home_pr, away_pr, neutral):
+    if neutral == False:
+        home_pr = home_pr + 1.5
     rating_diff = np.array(home_pr) - np.array(away_pr)
     return np.round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
 
@@ -2327,7 +2331,7 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
 
     # --- Add Win Probabilities
     year_long_schedule['PEAR_win_prob'] = PEAR_Win_Prob_vectorized(
-        year_long_schedule['home_pr'], year_long_schedule['away_pr']
+        year_long_schedule['home_pr'], year_long_schedule['away_pr'], year_long_schedule['neutral']
     )
 
     # Pre-index schedules per team
@@ -2360,17 +2364,17 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
         team_games = completed_games[(completed_games['home_team'] == team) | 
                                     (completed_games['away_team'] == team)].copy()
 
-        home_probs = PEAR_Win_Prob_vectorized(good_team_pr, team_games['away_pr'])
-        away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_pr'], good_team_pr)
+        home_probs = PEAR_Win_Prob_vectorized(good_team_pr, team_games['away_pr'], team_games['neutral'])
+        away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_pr'], good_team_pr, team_games['neutral'])
 
         team_games['good_win_prob'] = np.where(team_games['home_team'] == team, home_probs, away_probs)
 
-        home_probs = PEAR_Win_Prob_vectorized(average_pr, team_games['away_pr'])
-        away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_pr'], average_pr)
+        home_probs = PEAR_Win_Prob_vectorized(average_pr, team_games['away_pr'], team_games['neutral'])
+        away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_pr'], average_pr, team_games['neutral'])
         team_games['avg_win_prob'] = np.where(team_games['home_team'] == team, home_probs, away_probs)
 
-        home_probs = PEAR_Win_Prob_vectorized(elite_team_pr, team_games['away_pr'])
-        away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_pr'], elite_team_pr)
+        home_probs = PEAR_Win_Prob_vectorized(elite_team_pr, team_games['away_pr'], team_games['neutral'])
+        away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_pr'], elite_team_pr, team_games['neutral'])
         team_games['elite_win_prob'] = np.where(team_games['home_team'] == team, home_probs, away_probs)
 
         current_xWins = round(team_games['avg_win_prob'].sum() / 100, 2)
@@ -2411,8 +2415,8 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
         team_games['home_input'] = np.where(~team_games['neutral'], team_games['home_pr'] + 2, team_games['home_pr'])
         team_games['home_12_pr'] = np.where(~team_games['neutral'], num_12_pr + 2, num_12_pr)
         team_games['away_12_pr'] = num_12_pr
-        home_probs = PEAR_Win_Prob_vectorized(team_games['home_12_pr'], team_games['away_pr']) + mov_adj
-        away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_input'], team_games['away_12_pr']) - mov_adj
+        home_probs = PEAR_Win_Prob_vectorized(team_games['home_12_pr'], team_games['away_pr'], team_games['neutral']) + mov_adj
+        away_probs = 100 - PEAR_Win_Prob_vectorized(team_games['home_input'], team_games['away_12_pr'], team_games['neutral']) - mov_adj
         team_games['adj_win_prob'] = np.where(team_games['home_team'] == team, home_probs, away_probs)
 
         xWins = round(team_games['adj_win_prob'].sum() / 100, 3)
@@ -2616,7 +2620,9 @@ def plot_matchup(wins_df, logos_df, team_logos, team_data, last_week_data, last_
     sns.set(style='whitegrid')
     ################################# HELPER FUNCTIONS #################################
 
-    def PEAR_Win_Prob(home_power_rating, away_power_rating):
+    def PEAR_Win_Prob(home_power_rating, away_power_rating, neutral):
+        if neutral == False:
+            home_power_rating = home_power_rating + 1.5
         return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
 
     def adjust_home_pr(home_win_prob):
@@ -2783,11 +2789,11 @@ def plot_matchup(wins_df, logos_df, team_logos, team_data, last_week_data, last_
                                     away_completed_games['PEAR_win_prob'], 
                                     1 - away_completed_games['PEAR_win_prob'])
     home_completed_games['avg_win_prob'] = np.where(home_completed_games['home_team'] == home_team, 
-                                    PEAR_Win_Prob(average_pr, home_completed_games['away_pr']), 
-                                    100 - PEAR_Win_Prob(home_completed_games['home_pr'], average_pr))
+                                    PEAR_Win_Prob(average_pr, home_completed_games['away_pr'], home_completed_games['neutral']), 
+                                    100 - PEAR_Win_Prob(home_completed_games['home_pr'], average_pr, home_completed_games['neutral']))
     away_completed_games['avg_win_prob'] = np.where(away_completed_games['home_team'] == away_team, 
-                                    PEAR_Win_Prob(average_pr, away_completed_games['away_pr']), 
-                                    100 - PEAR_Win_Prob(away_completed_games['home_pr'], average_pr))
+                                    PEAR_Win_Prob(average_pr, away_completed_games['away_pr'], away_completed_games['neutral']), 
+                                    100 - PEAR_Win_Prob(away_completed_games['home_pr'], average_pr, away_completed_games['neutral']))
     home_avg_xwins = round(sum(home_completed_games['avg_win_prob']) / 100, 1)
     home_avg_xlosses = round(len(home_completed_games) - home_avg_xwins, 1)
     away_avg_xwins = round(sum(away_completed_games['avg_win_prob']) / 100, 1)
@@ -2893,7 +2899,7 @@ def plot_matchup(wins_df, logos_df, team_logos, team_data, last_week_data, last_
     away_penalties_rank = int(all_data[all_data['team'] == away_team]['penalties_rank'].values[0])
 
     home_win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1)*100,2)
-    PEAR_home_prob = PEAR_Win_Prob(home_power_rating, away_power_rating)
+    PEAR_home_prob = PEAR_Win_Prob(home_power_rating, away_power_rating, neutrality)
     spread = (GLOBAL_HFA + home_power_rating + adjust_home_pr(home_win_prob) - away_power_rating).round(1)
     if neutrality:
         spread = (spread - GLOBAL_HFA).round(1)

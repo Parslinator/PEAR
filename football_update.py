@@ -124,7 +124,9 @@ team_power_rankings.to_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_w
 
 print("---------- Power Ratings Done! ----------")
 
-def PEAR_Win_Prob(home_power_rating, away_power_rating):
+def PEAR_Win_Prob(home_power_rating, away_power_rating, neutral):
+    if neutral == False:
+        home_power_rating = home_power_rating + 1.5
     return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
 
 games = []
@@ -159,7 +161,7 @@ fallback_value = team_data['power_rating'].mean() - 2 * team_data['power_rating'
 schedule_info['home_pr'] = schedule_info['home_pr'].fillna(fallback_value)
 schedule_info['away_pr'] = schedule_info['away_pr'].fillna(fallback_value)
 schedule_info['PEAR_win_prob'] = schedule_info.apply(
-    lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr']), axis=1
+    lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'], row['neutral']), axis=1
 )
 schedule_info['home_win_prob'] = round((10**((schedule_info['home_elo'] - schedule_info['away_elo']) / 400)) / ((10**((schedule_info['home_elo'] - schedule_info['away_elo']) / 400)) + 1)*100,2)
 
@@ -341,7 +343,7 @@ try:
     uncompleted['home_pr'].fillna(missing_rating, inplace=True)
     uncompleted['away_pr'].fillna(missing_rating, inplace=True)
     uncompleted['PEAR_win_prob'] = uncompleted.apply(
-        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
+        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'], row['neutral'])/100, axis=1
     )
     uncompleted['home_win_prob'] = round((10**((uncompleted['home_elo'] - uncompleted['away_elo']) / 400)) / ((10**((uncompleted['home_elo'] - uncompleted['away_elo']) / 400)) + 1)*100,2)
 
@@ -435,7 +437,7 @@ try:
     uncompleted_games['home_pr'].fillna(missing_rating, inplace=True)
     uncompleted_games['away_pr'].fillna(missing_rating, inplace=True)
     uncompleted_games['PEAR_win_prob'] = uncompleted_games.apply(
-        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
+        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'], row['neutral'])/100, axis=1
     )
     uncompleted_games['home_win_prob'] = round((10**((uncompleted_games['home_elo'] - uncompleted_games['away_elo']) / 400)) / ((10**((uncompleted_games['home_elo'] - uncompleted_games['away_elo']) / 400)) + 1)*100,2)
 
@@ -1002,7 +1004,7 @@ try:
     uncompleted_games['home_pr'].fillna(missing_rating, inplace=True)
     uncompleted_games['away_pr'].fillna(missing_rating, inplace=True)
     uncompleted_games['PEAR_win_prob'] = uncompleted_games.apply(
-        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
+        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'], row['neutral'])/100, axis=1
     )
     uncompleted_games['home_win_prob'] = round((10**((uncompleted_games['home_elo'] - uncompleted_games['away_elo']) / 400)) / ((10**((uncompleted_games['home_elo'] - uncompleted_games['away_elo']) / 400)) + 1)*100,2)
 
@@ -1056,7 +1058,7 @@ year_long_schedule['home_pr'] = year_long_schedule['home_pr'].fillna(fallback_va
 year_long_schedule['away_pr'] = year_long_schedule['away_pr'].fillna(fallback_value)
 
 year_long_schedule['PEAR_win_prob'] = year_long_schedule.apply(
-    lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
+    lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'], row['neutral'])/100, axis=1
 )
 year_long_schedule['home_win_prob'] = round((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) / ((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) + 1)*100,2)
 
@@ -1116,7 +1118,7 @@ try:
     uncompleted_games['home_pr'].fillna(missing_rating, inplace=True)
     uncompleted_games['away_pr'].fillna(missing_rating, inplace=True)
     uncompleted_games['PEAR_win_prob'] = uncompleted_games.apply(
-        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
+        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'], row['neutral'])/100, axis=1
     )
     uncompleted_games['home_win_prob'] = round((10**((uncompleted_games['home_elo'] - uncompleted_games['away_elo']) / 400)) / ((10**((uncompleted_games['home_elo'] - uncompleted_games['away_elo']) / 400)) + 1)*100,2)
 
@@ -1165,7 +1167,7 @@ try:
     full_display_schedule['away_pr'] = full_display_schedule['away_pr'].fillna(fallback_value)
 
     full_display_schedule['PEAR_win_prob'] = full_display_schedule.apply(
-        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
+        lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'], row['neutral'])/100, axis=1
     )
     full_display_schedule['home_win_prob'] = (
         10 ** ((full_display_schedule['home_elo'] - full_display_schedule['away_elo']) / 400)
@@ -1605,10 +1607,12 @@ for _, row in logos.iterrows():
         print(f"Error loading logo for {team_name}: {e}")
         logo_cache[team_name] = None  # Placeholder if something fails
 
-def PEAR_Win_Prob(home_power_rating, away_power_rating):
+def PEAR_Win_Prob(home_power_rating, away_power_rating, neutral):
+    if neutral == False:
+        home_power_rating = home_power_rating + 1.5
     return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
 
-visual = week_games[['week', 'start_date', 'home_team', 'away_team', 'home_pr', 'away_pr', 'PEAR', 'GQI']].dropna()
+visual = week_games[['week', 'start_date', 'home_team', 'away_team', 'home_pr', 'away_pr', 'neutral', 'PEAR', 'GQI']].dropna()
 visual['start_date'] = pd.to_datetime(visual['start_date'], utc=True)
 visual['start_date'] = visual['start_date'].dt.tz_convert('US/Central')
 time_thresholds = [
@@ -1631,7 +1635,7 @@ visual['start_date'] = visual['start_date'].dt.date
 visual = visual.sort_values(['start_date', 'time_class', 'GQI'], ascending=[True, True, False]).reset_index(drop=True)
 
 visual['PEAR_win_prob'] = round(100*(visual.apply(
-    lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
+    lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'], row['neutral'])/100, axis=1
 )),1)
 
 save_dir = f"PEAR/PEAR Football/y{current_year}/Visuals/Schedule"
