@@ -34,6 +34,33 @@ checkmark_font = fm.FontProperties(family='DejaVu Sans')
 warnings.filterwarnings("ignore")
 GLOBAL_HFA = 3
 
+configuration = cfbd.Configuration(
+    access_token = '7vGedNNOrnl0NGcSvt92FcVahY602p7IroVBlCA1Tt+WI/dCwtT7Gj5VzmaHrrxS'
+)
+api_client = cfbd.ApiClient(configuration)
+advanced_instance = cfbd.StatsApi(api_client)
+games_api = cfbd.GamesApi(api_client)
+betting_api = cfbd.BettingApi(api_client)
+ratings_api = cfbd.RatingsApi(api_client)
+teams_api = cfbd.TeamsApi(api_client)
+metrics_api = cfbd.MetricsApi(api_client)
+players_api = cfbd.PlayersApi(api_client)
+recruiting_api = cfbd.RecruitingApi(api_client)
+drives_api = cfbd.DrivesApi(api_client)
+
+logos_info_list = []
+response = teams_api.get_teams()
+logos_info_list = [*logos_info_list, *response]
+logos_info_dict = [dict(
+    team = l.school,
+    color = l.color,
+    alt_color = l.alternate_color,
+    logo = l.logos,
+    classification = l.classification
+) for l in logos_info_list]
+logos = pd.DataFrame(logos_info_dict)
+logos = logos[logos['classification'] == 'fbs'].reset_index(drop=True)
+
 central = pytz.timezone("US/Central")
 now_ct = datetime.now(central)
 start_dt = central.localize(datetime(2025, 9, 2, 9, 0, 0))
@@ -382,6 +409,419 @@ def teams_yearly_stats(team, data):
     team_df = team_df[['Season', 'Normalized Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE']]
     return team_df
 
+import matplotlib.pyplot as plt
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+from matplotlib.patches import Rectangle
+
+def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, current_year, current_week):
+    logo_url = logos[logos['team'] == away_team]['logo'].values[0][0]
+    response = requests.get(logo_url)
+    away_logo = Image.open(BytesIO(response.content))
+
+    logo_url = logos[logos['team'] == home_team]['logo'].values[0][0]
+    response = requests.get(logo_url)
+    home_logo = Image.open(BytesIO(response.content))
+
+    def fixed_width_text(ax, x, y, text, width=0.06, height=0.04,
+                        facecolor="lightgrey", edgecolor="none", alpha=1.0, **kwargs):
+        # Draw rectangle behind text
+        ax.add_patch(Rectangle(
+            (x - width/2, y - height/2), width, height,
+            transform=ax.transAxes,
+            facecolor=facecolor,
+            edgecolor=edgecolor,
+            alpha=alpha,
+            zorder=1
+        ))
+
+        # Draw text centered on top
+        ax.text(x, y, text,
+                ha="center", va="center", zorder=2, **kwargs)
+
+    def rank_to_color(rank, vmin=1, vmax=136):
+        """
+        Map a rank (1–136) to a hex color.
+        Dark blue = best (1), grey = middle, dark red = worst (136).
+        """
+        # Define colormap from blue → grey → red
+        cmap = mcolors.LinearSegmentedColormap.from_list(
+            "rank_cmap", ["#00008B", "#D3D3D3", "#8B0000"]  # dark blue, grey, dark red
+        )
+        
+        # Normalize rank to [0,1]
+        norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+        rgba = cmap(norm(rank))
+        
+        # Convert RGBA to hex
+        return mcolors.to_hex(rgba)
+
+    def get_value_and_rank(df, team, column, higher_is_better=True):
+        """
+        Return (value, rank) for a given team and column.
+        
+        Args:
+            df (pd.DataFrame): Data source with 'team' and stat columns.
+            team (str): Team name to look up.
+            column (str): Column name to extract.
+            higher_is_better (bool): If True, high values rank better (1 = highest).
+                                    If False, low values rank better (1 = lowest).
+        """
+        ascending = not higher_is_better
+        ranks = df[column].rank(ascending=ascending, method="first").astype(int)
+
+        value = df.loc[df['team'] == team, column].values[0]
+        rank = ranks.loc[df['team'] == team].values[0]
+
+        return value, rank
+
+    def get_column_value(df, team, column):
+        """Return the scalar value for a given team/column."""
+        return df.loc[df['team'] == team, column].values[0]
+    
+    def adjust_home_pr(home_win_prob):
+        if home_win_prob is None or (isinstance(home_win_prob, float) and math.isnan(home_win_prob)):
+            return 0
+        return ((home_win_prob - 50) / 50) * 1
+
+    away_pr, away_rank = get_value_and_rank(all_data, away_team, 'power_rating')
+    away_elo      = get_column_value(all_data, away_team, 'elo')
+    away_offense, away_offense_rank = get_value_and_rank(all_data, away_team, 'offensive_rating')
+    away_defense, away_defense_rank = get_value_and_rank(all_data, away_team, 'defensive_rating', False)
+    away_off_exp, away_off_exp_rank  = get_value_and_rank(all_data, away_team, 'Offense_explosiveness_adj')
+    away_off_sr, away_off_sr_rank = get_value_and_rank(all_data, away_team, 'Offense_successRate_adj')
+    away_off_rus, away_off_rus_rank = get_value_and_rank(all_data, away_team, 'Offense_rushing_adj')
+    away_off_pas, away_off_pas_rank = get_value_and_rank(all_data, away_team, 'Offense_passing_adj')
+    away_off_ppo, away_off_ppo_rank = get_value_and_rank(all_data, away_team, 'adj_offense_ppo')
+    away_off_ppa, away_off_ppa_rank = get_value_and_rank(all_data, away_team, 'Offense_ppa_adj')
+    away_off_plays, away_off_plays_rank = get_value_and_rank(all_data, away_team, 'Offense_plays_adj')
+    away_def_exp, away_def_exp_rank = get_value_and_rank(all_data, away_team, 'Defense_explosiveness_adj', False)
+    away_def_sr, away_def_sr_rank = get_value_and_rank(all_data, away_team, 'Defense_successRate_adj', False)
+    away_def_rus, away_def_rus_rank = get_value_and_rank(all_data, away_team, 'Defense_rushing_adj', False)
+    away_def_pas, away_def_pas_rank = get_value_and_rank(all_data, away_team, 'Defense_passing_adj', False)
+    away_def_ppo, away_def_ppo_rank = get_value_and_rank(all_data, away_team, 'adj_defense_ppo', False)
+    away_def_ppa, away_def_ppa_rank = get_value_and_rank(all_data, away_team, 'Defense_ppa_adj', False)
+    away_def_plays, away_def_plays_rank = get_value_and_rank(all_data, away_team, 'Defense_plays_adj', False)
+
+    home_pr, home_rank = get_value_and_rank(all_data, home_team, 'power_rating')
+    home_elo      = get_column_value(all_data, home_team, 'elo')
+    home_offense, home_offense_rank = get_value_and_rank(all_data, home_team, 'offensive_rating')
+    home_defense, home_defense_rank = get_value_and_rank(all_data, home_team, 'defensive_rating', False)
+    home_off_exp, home_off_exp_rank = get_value_and_rank(all_data, home_team, 'Offense_explosiveness_adj')
+    home_off_sr, home_off_sr_rank = get_value_and_rank(all_data, home_team, 'Offense_successRate_adj')
+    home_off_rus, home_off_rus_rank = get_value_and_rank(all_data, home_team, 'Offense_rushing_adj')
+    home_off_pas, home_off_pas_rank = get_value_and_rank(all_data, home_team, 'Offense_passing_adj')
+    home_off_ppo, home_off_ppo_rank = get_value_and_rank(all_data, home_team, 'adj_offense_ppo')
+    home_off_ppa, home_off_ppa_rank = get_value_and_rank(all_data, home_team, 'Offense_ppa_adj')
+    home_off_plays, home_off_plays_rank = get_value_and_rank(all_data, home_team, 'Offense_plays_adj')
+    home_def_exp, home_def_exp_rank = get_value_and_rank(all_data, home_team, 'Defense_explosiveness_adj', False)
+    home_def_sr, home_def_sr_rank = get_value_and_rank(all_data, home_team, 'Defense_successRate_adj', False)
+    home_def_rus, home_def_rus_rank = get_value_and_rank(all_data, home_team, 'Defense_rushing_adj', False)
+    home_def_pas, home_def_pas_rank = get_value_and_rank(all_data, home_team, 'Defense_passing_adj', False)
+    home_def_ppo, home_def_ppo_rank = get_value_and_rank(all_data, home_team, 'adj_defense_ppo', False)
+    home_def_ppa, home_def_ppa_rank = get_value_and_rank(all_data, home_team, 'Defense_ppa_adj', False)
+    home_def_plays, home_def_plays_rank = get_value_and_rank(all_data, home_team, 'Defense_plays_adj', False)
+
+    home_win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1)*100,2)
+    PEAR_home_prob = PEAR_Win_Prob(home_pr, away_pr, neutrality)
+    spread = (3+home_pr+adjust_home_pr(home_win_prob)-away_pr).round(1)
+    if neutrality:
+        spread = (spread-3).round(1)
+    if (spread) <= 0:
+        formatted_spread = (f'{away_team} {spread}')
+        game_win_prob = round(100 - PEAR_home_prob,2)
+    elif (spread) > 0:
+        formatted_spread = (f'{home_team} -{spread}')
+
+    home_offense_contrib = (home_offense + away_defense) / 2
+    away_offense_contrib = (away_offense + home_defense) / 2
+    predicted_total = round(home_offense_contrib + away_offense_contrib, 1)
+
+    # Calculate predicted scores
+    # Use spread and total to derive individual scores
+    home_score = round((predicted_total + spread) / 2, 1)
+    away_score = round((predicted_total - spread) / 2, 1)
+
+    def plot_logo(ax, img, xy, zoom=0.2):
+        """Helper to plot a logo at given xy coords."""
+        imagebox = OffsetImage(img, zoom=zoom)
+        ab = AnnotationBbox(imagebox, xy, frameon=False)
+        ax.add_artist(ab)
+
+    # Create blank figure
+    fig, ax = plt.subplots(figsize=(16, 12), dpi=400)
+    fig.patch.set_facecolor('#CECEB2')
+    ax.set_facecolor('#CECEB2')
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.axis("off")
+
+    # ----------------
+    # logos, score, win prob, spread, O/U
+    # ----------------
+    plot_logo(ax, away_logo, (0.15, 0.75), zoom=0.5)
+    plot_logo(ax, home_logo, (0.85, 0.75), zoom=0.5)
+    if neutrality:
+        ax.text(0.5, 0.96, f"{away_team} (N) {home_team}", ha='center', fontsize=32, fontweight='bold', bbox=dict(facecolor='red', alpha=0.0))
+    else:
+        ax.text(0.5, 0.96, f"{away_team} at {home_team}", ha='center', fontsize=32, fontweight='bold', bbox=dict(facecolor='red', alpha=0.0))
+    ax.text(0.5, 0.57, f"{formatted_spread}", ha='center', fontsize=28, fontweight='bold', bbox=dict(facecolor='blue', alpha=0.0))
+    ax.text(0.5, 0.625, f"O/U: {predicted_total}", ha='center', fontsize=28, fontweight='bold', bbox=dict(facecolor='blue', alpha=0.0))
+
+    ax.text(0.4, 0.89, f"WIN PROB (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+    ax.text(0.4, 0.84, f"{round(100-PEAR_home_prob,1)}", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+    ax.text(0.4, 0.77, f"PROJ. POINTS", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+    ax.text(0.4, 0.72, f"{away_score}", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+    ax.text(0.5, 0.725, f"—", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+    ax.text(0.6, 0.89, f"WIN PROB (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+    ax.text(0.6, 0.84, f"{round(PEAR_home_prob,1)}", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+    ax.text(0.6, 0.77, f"PROJ. POINTS", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+    ax.text(0.6, 0.72, f"{home_score}", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+
+
+    # ---------------------------
+    # Helper for each row
+    # ---------------------------
+    def rank_text_color(rank):
+        if rank != "" and (1 <= rank <= 55 or 81 <= rank <= 136):
+            return 'white'
+        return 'black'
+
+    def add_row(x_vals, y, away_val, away_rank, metric_name, home_rank, home_val):
+        # Helper to choose text color based on rank
+
+        # Away value
+        if away_val != "":
+            ax.text(x_vals[0], y, f"{away_val:.2f}", ha='center', fontsize=16, fontweight='bold',
+                    bbox=dict(facecolor='green', alpha=0))
+
+        # Away rank box
+        if away_rank != "":
+            fixed_width_text(
+                ax, x_vals[1], y+0.007, f"{away_rank}", width=0.06, height=0.04,
+                facecolor=rank_to_color(away_rank), alpha=alpha_val,
+                fontsize=16, fontweight='bold', color=rank_text_color(away_rank)
+            )
+
+        # Metric name
+        if metric_name != "":
+            ax.text(x_vals[2], y, metric_name, ha='center', fontsize=16, fontweight='bold',
+                    bbox=dict(facecolor='green', alpha=0))
+
+        # Home rank box
+        if home_rank != "":
+            fixed_width_text(
+                ax, x_vals[3], y+0.007, f"{home_rank}", width=0.06, height=0.04,
+                facecolor=rank_to_color(home_rank), alpha=alpha_val,
+                fontsize=16, fontweight='bold', color=rank_text_color(home_rank)
+            )
+
+        # Home value
+        if home_val != "":
+            ax.text(x_vals[4], y, f"{home_val:.2f}", ha='center', fontsize=16, fontweight='bold',
+                    bbox=dict(facecolor='green', alpha=0))
+
+    alpha_val = 0.9
+
+    # Header
+    ax.text(0.5, 0.528, f"{away_team} OFF vs {home_team} DEF",
+            ha='center', fontsize=16, fontweight='bold',
+            bbox=dict(facecolor='green', alpha=0))
+    ax.hlines(y=0.518, xmin=0.29, xmax=0.71, colors='black', linewidth=1)
+
+    # X positions for the 5 columns
+    x_cols = [0.31, 0.378, 0.5, 0.622, 0.69]
+
+    # Away OFF vs Home DEF
+    add_row(x_cols, 0.49, away_off_exp, away_off_exp_rank, "EXPLOSIVENESS", home_def_exp_rank, home_def_exp)
+    add_row(x_cols, 0.45, away_off_sr, away_off_sr_rank, "SUCCESS RATE", home_def_sr_rank, home_def_sr)
+    add_row(x_cols, 0.41, away_off_rus, away_off_rus_rank, "RUSHING PPA", home_def_rus_rank, home_def_rus)
+    add_row(x_cols, 0.37, away_off_pas, away_off_pas_rank, "PASSING PPA", home_def_pas_rank, home_def_pas)
+    add_row(x_cols, 0.33, away_off_ppa, away_off_ppa_rank, "TOTAL PPA", home_def_ppa_rank, home_def_ppa)
+    add_row(x_cols, 0.29, away_off_ppo, away_off_ppo_rank, "POINTS PER OPP", home_def_ppo_rank, home_def_ppo)
+
+    # Header for Away DEF vs Home OFF
+    ax.text(0.5, 0.248, f"{away_team} DEF vs {home_team} OFF",
+            ha='center', fontsize=16, fontweight='bold', bbox=dict(facecolor='green', alpha=0))
+    ax.hlines(y=0.238, xmin=0.29, xmax=0.71, colors='black', linewidth=1)
+
+    # Away DEF vs Home OFF
+    add_row(x_cols, 0.21, away_def_exp, away_def_exp_rank, "EXPLOSIVENESS", home_off_exp_rank, home_off_exp)
+    add_row(x_cols, 0.17, away_def_sr, away_def_sr_rank, "SUCCESS RATE", home_off_sr_rank, home_off_sr)
+    add_row(x_cols, 0.13, away_def_rus, away_def_rus_rank, "RUSHING PPA", home_off_rus_rank, home_off_rus)
+    add_row(x_cols, 0.09, away_def_pas, away_def_pas_rank, "PASSING PPA", home_off_pas_rank, home_off_pas)
+    add_row(x_cols, 0.05, away_def_ppa, away_def_ppa_rank, "TOTAL PPA", home_off_ppa_rank, home_off_ppa)
+    add_row(x_cols, 0.01, away_def_ppo, away_def_ppo_rank, "POINTS PER OPP", home_off_ppo_rank, home_off_ppo)
+    add_row(x_cols, -0.03, "", "", "@PEARatings", "", "")
+
+    home_wins = get_column_value(all_data, home_team, 'wins')
+    home_losses = get_column_value(all_data, home_team, 'losses')
+    home_conf_wins = get_column_value(all_data, home_team, 'conference_wins')
+    home_conf_losses = get_column_value(all_data, home_team, 'conference_losses')
+    away_wins = get_column_value(all_data, away_team, 'wins')
+    away_losses = get_column_value(all_data, away_team, 'losses')
+    away_conf_wins = get_column_value(all_data, away_team, 'conference_wins')
+    away_conf_losses = get_column_value(all_data, away_team, 'conference_losses')
+    away_off_dq, away_off_dq_rank = get_value_and_rank(all_data, away_team, 'adj_offense_drive_quality')
+    away_def_dq, away_def_dq_rank = get_value_and_rank(all_data, away_team, 'adj_defense_drive_quality', False)
+    home_off_dq, home_off_dq_rank = get_value_and_rank(all_data, home_team, 'adj_offense_drive_quality')
+    home_def_dq, home_def_dq_rank = get_value_and_rank(all_data, home_team, 'adj_defense_drive_quality', False)
+    away_off_fp, away_off_fp_rank = get_value_and_rank(all_data, away_team, 'Offense_fieldPosition_averageStart', False)
+    away_def_fp, away_def_fp_rank = get_value_and_rank(all_data, away_team, 'Defense_fieldPosition_averageStart')
+    home_off_fp, home_off_fp_rank = get_value_and_rank(all_data, home_team, 'Offense_fieldPosition_averageStart', False)
+    home_def_fp, home_def_fp_rank = get_value_and_rank(all_data, home_team, 'Defense_fieldPosition_averageStart')
+    away_md, away_md_rank = get_value_and_rank(all_data, away_team, 'most_deserving_wins')
+    home_md, home_md_rank = get_value_and_rank(all_data, home_team, 'most_deserving_wins')
+    away_sos, away_sos_rank = get_value_and_rank(all_data, away_team, 'avg_expected_wins', False)
+    home_sos, home_sos_rank = get_value_and_rank(all_data, home_team, 'avg_expected_wins', False)
+    away_mov, away_mov_rank = get_value_and_rank(all_data, away_team, 'RTP')
+    home_mov, home_mov_rank = get_value_and_rank(all_data, home_team, 'RTP')
+
+    ax.text(0.01, 0.53, f"{away_wins}-{away_losses} ({away_conf_wins}-{away_conf_losses})", ha='left', fontsize=16, fontweight='bold')
+    ax.text(0.01, 0.49, f"RATING", ha='left', fontsize=16, fontweight='bold')
+    ax.hlines(y=0.478, xmin=0.01, xmax=0.26, colors='black', linewidth=1)
+    ax.text(0.19, 0.49, f"{away_pr}", ha='right', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.23, 0.49+0.007, f"{away_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(away_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(away_rank))
+    
+    ax.text(0.08, 0.45, f"OFF", ha='left', fontsize=16, fontweight='bold')
+    ax.text(0.19, 0.45, f"{away_offense}", ha='right', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.23, 0.45+0.007, f"{away_offense_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(away_offense_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(away_offense_rank))
+
+    ax.text(0.08, 0.41, f"DEF", ha='left', fontsize=16, fontweight='bold')
+    ax.text(0.19, 0.41, f"{away_defense}", ha='right', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.23, 0.41+0.007, f"{away_defense_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(away_defense_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(away_defense_rank))
+
+    ax.text(0.01, 0.37, f"DRIVE QUALITY", ha='left', fontsize=16, fontweight='bold')
+    ax.hlines(y=0.358, xmin=0.01, xmax=0.26, colors='black', linewidth=1)
+
+    ax.text(0.08, 0.33, f"OFF", ha='left', fontsize=16, fontweight='bold')
+    ax.text(0.19, 0.33, f"{away_off_dq}", ha='right', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.23, 0.33+0.007, f"{away_off_dq_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(away_off_dq_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(away_off_dq_rank))
+    
+    ax.text(0.08, 0.29, f"DEF", ha='left', fontsize=16, fontweight='bold')
+    ax.text(0.19, 0.29, f"{away_def_dq}", ha='right', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.23, 0.29+0.007, f"{away_def_dq_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(away_def_dq_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(away_def_dq_rank))
+
+    ax.text(0.01, 0.25, f"FIELD POSITION", ha='left', fontsize=16, fontweight='bold')
+    ax.hlines(y=0.238, xmin=0.01, xmax=0.26, colors='black', linewidth=1)
+
+    ax.text(0.08, 0.21, f"OFF", ha='left', fontsize=16, fontweight='bold')
+    ax.text(0.19, 0.21, f"{75-away_off_fp:.1f}", ha='right', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.23, 0.21+0.007, f"{away_off_fp_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(away_off_fp_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(away_off_fp_rank))
+    
+    ax.text(0.08, 0.17, f"DEF", ha='left', fontsize=16, fontweight='bold')
+    ax.text(0.19, 0.17, f"{away_def_fp-75:.1f}", ha='right', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.23, 0.17+0.007, f"{away_def_fp_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(away_def_fp_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(away_def_fp_rank))
+    
+    ax.text(0.01, 0.13, f"RESUME", ha='left', fontsize=16, fontweight='bold')
+    ax.hlines(y=0.118, xmin=0.01, xmax=0.26, colors='black', linewidth=1)
+
+    ax.text(0.08, 0.09, f"MD", ha='left', fontsize=16, fontweight='bold')
+    ax.text(0.19, 0.09, f"{away_md}", ha='right', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.23, 0.09+0.007, f"{away_md_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(away_md_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(away_md_rank))
+
+    ax.text(0.08, 0.05, f"SOS", ha='left', fontsize=16, fontweight='bold')
+    ax.text(0.19, 0.05, f"{away_sos:.2f}", ha='right', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.23, 0.05+0.007, f"{away_sos_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(away_sos_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(away_sos_rank))
+
+    ax.text(0.08, 0.01, f"MOV", ha='left', fontsize=16, fontweight='bold')
+    ax.text(0.19, 0.01, f"{away_mov:.2f}", ha='right', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.23, 0.01+0.007, f"{away_mov_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(away_mov_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(away_mov_rank))
+
+   
+   
+    ax.text(0.99, 0.53, f"{home_wins}-{home_losses} ({home_conf_wins}-{home_conf_losses})", ha='right', fontsize=16, fontweight='bold')
+    ax.text(0.99, 0.49, f"RATING", ha='right', fontsize=16, fontweight='bold')
+    ax.hlines(y=0.478, xmin=0.74, xmax=0.99, colors='black', linewidth=1)
+    ax.text(0.81, 0.49, f"{home_pr}", ha='left', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.77, 0.49+0.007, f"{home_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(home_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(home_rank))
+    
+    ax.text(0.92, 0.45, f"OFF", ha='right', fontsize=16, fontweight='bold')
+    ax.text(0.81, 0.45, f"{home_offense}", ha='left', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.77, 0.45+0.007, f"{home_offense_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(home_offense_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(home_offense_rank))
+
+    ax.text(0.92, 0.41, f"DEF", ha='right', fontsize=16, fontweight='bold')
+    ax.text(0.81, 0.41, f"{home_defense}", ha='left', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.77, 0.41+0.007, f"{home_defense_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(home_defense_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(home_defense_rank))
+    
+    ax.text(0.99, 0.37, f"DRIVE QUALITY", ha='right', fontsize=16, fontweight='bold')
+    ax.hlines(y=0.358, xmin=0.74, xmax=0.99, colors='black', linewidth=1)
+
+    ax.text(0.92, 0.33, f"OFF", ha='right', fontsize=16, fontweight='bold')
+    ax.text(0.81, 0.33, f"{home_off_dq}", ha='left', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.77, 0.33+0.007, f"{home_off_dq_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(home_off_dq_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(home_off_dq_rank))
+    
+    ax.text(0.92, 0.29, f"DEF", ha='right', fontsize=16, fontweight='bold')
+    ax.text(0.81, 0.29, f"{home_def_dq}", ha='left', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.77, 0.29+0.007, f"{home_def_dq_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(home_def_dq_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(home_def_dq_rank))
+
+    ax.text(0.99, 0.25, f"FIELD POSITION", ha='right', fontsize=16, fontweight='bold')
+    ax.hlines(y=0.238, xmin=0.74, xmax=0.99, colors='black', linewidth=1)
+
+    ax.text(0.92, 0.21, f"OFF", ha='right', fontsize=16, fontweight='bold')
+    ax.text(0.81, 0.21, f"{75-home_off_fp:.1f}", ha='left', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.77, 0.21+0.007, f"{home_off_fp_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(home_off_fp_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(home_off_fp_rank))
+
+    ax.text(0.92, 0.17, f"DEF", ha='right', fontsize=16, fontweight='bold')
+    ax.text(0.81, 0.17, f"{home_def_fp-75:.1f}", ha='left', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.77, 0.17+0.007, f"{home_def_fp_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(home_def_fp_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(home_def_fp_rank))
+    
+    ax.text(0.99, 0.13, f"RESUME", ha='right', fontsize=16, fontweight='bold')
+    ax.hlines(y=0.118, xmin=0.74, xmax=0.99, colors='black', linewidth=1)
+
+    ax.text(0.92, 0.09, f"MD", ha='right', fontsize=16, fontweight='bold')
+    ax.text(0.81, 0.09, f"{home_md}", ha='left', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.77, 0.09+0.007, f"{home_md_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(home_md_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(home_md_rank))
+
+    ax.text(0.92, 0.05, f"SOS", ha='right', fontsize=16, fontweight='bold')
+    ax.text(0.81, 0.05, f"{home_sos:.2f}", ha='left', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.77, 0.05+0.007, f"{home_sos_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(home_sos_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(home_sos_rank))
+
+    ax.text(0.92, 0.01, f"MOV", ha='right', fontsize=16, fontweight='bold')
+    ax.text(0.81, 0.01, f"{home_mov:.2f}", ha='left', fontsize=16, fontweight='bold')
+    fixed_width_text(ax, 0.77, 0.01+0.007, f"{home_mov_rank}", width=0.06, height=0.04,
+                            facecolor=rank_to_color(home_mov_rank), alpha=alpha_val,
+                            fontsize=16, fontweight='bold', color=rank_text_color(home_mov_rank))
+    
+    return fig
+
 def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 1
 
@@ -462,7 +902,8 @@ with col2:
         spread_button = st.form_submit_button("Calculate Spread")
         if spread_button:
             neutrality = True if neutrality == "Neutral Field" else False
-            st.write(find_spread(home_team, away_team, neutrality))
+            fig = plot_matchup_new(all_data, logos, away_team, home_team, neutrality, current_year, current_week)
+            st.pyplot(fig)
 
 st.divider()
 
