@@ -89,10 +89,10 @@ def date_sort(game):
     game_date = datetime.datetime.strptime(game['start_date'], "%Y-%m-%dT%H:%M:%S.000Z")
     return game_date
 
-def PEAR_Win_Prob(home_pr, away_pr):
-    rating_diff = home_pr - away_pr
-    win_prob = round(1 / (1 + 10 ** (-rating_diff / 20)) * 100, 2)
-    return win_prob
+def PEAR_Win_Prob(home_power_rating, away_power_rating, neutral):
+    if neutral == False:
+        home_power_rating = home_power_rating + 1.5
+    return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
 
 def render_year(year: int, week: int, col):
     """Render a single year's ratings in the given column."""
