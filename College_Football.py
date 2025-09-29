@@ -117,7 +117,7 @@ def render_year(year: int, week: int, col):
         st.dataframe(
             all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF',
                       'ST', 'PBR', 'DCE', 'DDE', 'CONF']],
-            use_container_width=True
+            width='stretch'
         )
     st.caption("MD - Most Deserving (ESCAPE's 'AP' Ballot), SOS - Strength of Schedule, "
                "SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, "
@@ -836,8 +836,8 @@ if current_week == 1:
     all_data['Team'] = all_data['team']
     all_data.index = all_data.index + 1
     with st.container(border=True, height=440):
-        st.dataframe(all_data[['Team', 'Rating', 'SOS', 'win_total']], use_container_width=True)
-        # st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
+        st.dataframe(all_data[['Team', 'Rating', 'SOS', 'win_total']], width='stretch')
+        # st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'ST', 'PBR', 'DCE', 'DDE', 'CONF']], width='stretch')
     st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, ST - Special Teams, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
     # , MD - Most Deserving Rankings
 else:
@@ -854,7 +854,7 @@ else:
 
     all_data.index = all_data.index + 1
     with st.container(border=True, height=440):
-        st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'PBR', 'DCE', 'DDE', 'CONF']], use_container_width=True)
+        st.dataframe(all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'PBR', 'DCE', 'DDE', 'CONF']], width='stretch')
     st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
     # , MD - Most Deserving Rankings
 
@@ -869,7 +869,7 @@ with col1:
     selected_file = st.selectbox("Select a game image:", file_list, key="game_image")
     if selected_file:
         file_path = os.path.join(folder_path, selected_file)
-        st.image(file_path, caption=selected_file, use_container_width=True)
+        st.image(file_path, caption=selected_file, width='stretch')
 
 # --- Column 2: Stat Profiles ---
 with col2:
@@ -878,7 +878,7 @@ with col2:
     selected_file = st.selectbox("Select a stat profile:", file_list, key="stat_profile")
     if selected_file:
         file_path = os.path.join(folder_path, selected_file)
-        st.image(file_path, caption=selected_file, use_container_width=True)
+        st.image(file_path, caption=selected_file, width='stretch')
 
 st.divider()
 
@@ -889,7 +889,7 @@ spreads.index = spreads.index+1
 with col1:
     st.markdown(f'<h2 id="fbs-power-ratings">Week {current_week} Spreads</h2>', unsafe_allow_html=True)
     with st.container(border=True, height=440):
-        st.dataframe(spreads[['home_team', 'away_team', 'GQI', 'PEAR', 'Vegas', 'difference', 'PEAR_raw']].dropna(), use_container_width=True)
+        st.dataframe(spreads[['home_team', 'away_team', 'GQI', 'PEAR', 'Vegas', 'difference', 'PEAR_raw']].dropna(), width='stretch')
 
 with col2:
     st.sidebar.markdown(f"[Calculate {current_year} Spread](#calculate-spread-between-any-two-teams)", unsafe_allow_html=True)
@@ -928,7 +928,7 @@ col1, col2 = st.columns(2)
 with col1:
     st.markdown(f'<h2 id="year-normalized-ratings">Year Normalized Ratings</h2>', unsafe_allow_html=True)
     with st.container(border=True, height=440):
-        st.dataframe(team_data[['Team', 'Normalized Rating', 'Season']], use_container_width=True)
+        st.dataframe(team_data[['Team', 'Normalized Rating', 'Season']], width='stretch')
 
 with col2:
     st.markdown(f'<h2 id="view-a-specific-teams-stats">View A Specific Teams Stats</h2>', unsafe_allow_html=True)
@@ -936,7 +936,7 @@ with col2:
         team = st.selectbox("Team Filter", ["Select Team"] + list(sorted(team_data['team'].unique())))
         filter_button = st.form_submit_button("Filter Team")
         if filter_button:
-            st.dataframe(teams_yearly_stats(team, team_data), use_container_width=True)
+            st.dataframe(teams_yearly_stats(team, team_data), width='stretch')
 
 st.divider()
 
