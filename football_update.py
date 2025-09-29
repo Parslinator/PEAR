@@ -59,7 +59,7 @@ drives_api = cfbd.DrivesApi(api_client)
 
 from football_helper import modeling_data_import, build_power_ratings_multi_target, in_house_power_ratings, average_team_distribution, metric_creation, stats_formatting
 
-outputs = modeling_data_import(5)
+outputs = modeling_data_import(6)
 team_data = outputs["team_data"]
 opponent_adjustment_schedule = outputs["opponent_adjustment_schedule"]
 updated_metrics = outputs["updated_metrics"]
@@ -143,7 +143,8 @@ games = [dict(
             away_team=g.away_team,
             away_elo=g.away_pregame_elo,
             home_points = g.home_points,
-            away_points = g.away_points
+            away_points = g.away_points,
+            neutral = g.neutral_site
             ) for g in games if g.home_points is not None]
 schedule_info = pd.DataFrame(games)
 
@@ -176,7 +177,7 @@ conf_folder_path = f"./PEAR/PEAR Football/y{current_year}/Visuals/week_{current_
 os.makedirs(conf_folder_path, exist_ok=True)
 
 from football_helper import best_and_worst, other_best_and_worst, monte_carlo_simulation_known, analyze_simulation_known, all_136_teams
-from football_helper import create_conference_projection, plot_matchup, display_schedule_visual, conference_standings, prob_win_at_least_x
+from football_helper import create_conference_projection, plot_matchup_new, display_schedule_visual, conference_standings, prob_win_at_least_x
 
 logos = outputs["logos"]
 
@@ -1274,13 +1275,6 @@ except Exception as e:
 
 try:
     if postseason:
-        team_wins, team_loss = monte_carlo_simulation_known(1000, year_long_schedule, team_data)
-        win_thresholds_in_season = analyze_simulation_known(team_wins, team_loss, year_long_schedule, records)
-    else:
-        team_wins, team_loss = monte_carlo_simulation_known(1000, schedule_info, team_data)
-        win_thresholds_in_season = analyze_simulation_known(team_wins, team_loss, schedule_info, records)
-    print("Win Thresholds Done!")
-    if postseason:
         games = []
         response = games_api.get_games(year=current_year, classification = 'fbs', season_type='postseason')
         games = [*games, *response]
@@ -1311,9 +1305,7 @@ try:
         home_team = game['home_team'].strip()
         neutral = game['neutral']
         print(f"{home_team} vs. {away_team} - {i+1}/{len(week_games)}")
-        plot_matchup(win_thresholds_in_season, 
-                            logos, team_logos, team_data, last_week_data, last_month_data, 
-                            start_season_data, all_data, year_long_schedule, records, SOS, SOR, elo_ratings, home_team, away_team, current_year, current_week, neutral)
+        plot_matchup_new(all_data, team_logos, away_team, home_team, neutral, current_year, current_week)
     print("Matchup Visuals Done!")
 except Exception as e:
     print(f"Error occurred while drawing Matchup Visuals: {e}")
