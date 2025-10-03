@@ -3191,7 +3191,7 @@ import matplotlib.pyplot as plt
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.patches import Rectangle
 
-def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, current_year, current_week):
+def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, current_year, current_week, save, time_outlet=None):
     # Example: pulling logos from your dictionary
     away_logo = team_logos[away_team]
     home_logo = team_logos[home_team]
@@ -3338,6 +3338,7 @@ def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, cur
         ax.text(0.5, 0.96, f"{away_team} (N) {home_team}", ha='center', fontsize=32, fontweight='bold', bbox=dict(facecolor='red', alpha=0.0))
     else:
         ax.text(0.5, 0.96, f"{away_team} at {home_team}", ha='center', fontsize=32, fontweight='bold', bbox=dict(facecolor='red', alpha=0.0))
+    ax.text(0.5, 0.92, f'{time_outlet}', ha='center', fontsize=20, fontweight='bold', bbox=dict(facecolor='blue', alpha=0.0))
     ax.text(0.5, 0.57, f"{formatted_spread}", ha='center', fontsize=28, fontweight='bold', bbox=dict(facecolor='blue', alpha=0.0))
     ax.text(0.5, 0.625, f"O/U: {predicted_total}", ha='center', fontsize=28, fontweight='bold', bbox=dict(facecolor='blue', alpha=0.0))
 
@@ -3594,15 +3595,16 @@ def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, cur
                             facecolor=rank_to_color(home_mov_rank), alpha=alpha_val,
                             fontsize=16, fontweight='bold', color=rank_text_color(home_mov_rank))
     
-    folder_path = f"./PEAR/PEAR Football/y{current_year}/Visuals/week_{current_week}/Games"
-    os.makedirs(folder_path, exist_ok=True)
+    if save:        
+        folder_path = f"./PEAR/PEAR Football/y{current_year}/Visuals/week_{current_week}/Games"
+        os.makedirs(folder_path, exist_ok=True)
 
-    file_path = os.path.join(folder_path, f"{home_team} vs {away_team}")
+        file_path = os.path.join(folder_path, f"{home_team} vs {away_team}")
 
-    plt.savefig(file_path, bbox_inches='tight', dpi = 300)
+        plt.savefig(file_path, bbox_inches='tight', dpi = 300)
 
-
-    # plt.show()
+    else:
+        plt.show()
 
 def display_schedule_visual(team_name, all_data, full_display_schedule, uncompleted_games, uncompleted_conference_games, cSOS, logo_cache, logos, current_year, current_week):
 

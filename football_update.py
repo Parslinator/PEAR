@@ -1274,6 +1274,22 @@ except Exception as e:
     print(f"Error occurred while drawing Stat Profiles: {e}")
 
 try:
+
+    media_list = games_api.get_media(year=current_year, week=current_week)
+    media_dict = [dict(
+                    id=g.id,
+                    outlet=g.outlet
+                    ) for g in media_list]
+    media_info = pd.DataFrame(media_dict)
+    outlet_priority = {"ABC": 1, "ESPN": 2, "FOX": 3, "NBC": 4}
+    media_info_clean = (
+        media_info
+        .assign(priority=media_info["outlet"].map(outlet_priority).fillna(99))
+        .sort_values(["id", "priority"])
+        .drop_duplicates(subset=["id"], keep="first")
+        .drop(columns="priority")
+    )
+
     if postseason:
         games = []
         response = games_api.get_games(year=current_year, classification = 'fbs', season_type='postseason')
@@ -1299,13 +1315,22 @@ try:
                 neutral = g.neutral_site
                 ) for g in games if g.home_pregame_elo is not None and g.away_pregame_elo is not None]
     week_games = pd.DataFrame(games)
+    week_games["start_time"] = (
+        pd.to_datetime(week_games["start_date"], utc=True)   # parse strings (handles offsets like +00:00/-05:00)
+        .dt.tz_convert("America/Chicago")                 # convert to Central (handles DST)
+        .dt.strftime("%A %I:%M %p")                       # e.g. "Friday 08:00 PM"
+        .str.replace(r'(?<=\s)0', '', regex=True)         # remove leading zero -> "Friday 8:00 PM"
+    )
+    week_games = pd.merge(week_games, media_info_clean, on="id", how="left")
+    week_games['time_outlet'] = week_games['start_time'] + ' - ' + week_games['outlet']
 
     for i, game in week_games.iterrows():
         away_team = game['away_team'].strip()
         home_team = game['home_team'].strip()
         neutral = game['neutral']
+        time_outlet = game['time_outlet']
         print(f"{home_team} vs. {away_team} - {i+1}/{len(week_games)}")
-        plot_matchup_new(all_data, team_logos, away_team, home_team, neutral, current_year, current_week)
+        plot_matchup_new(all_data, team_logos, away_team, home_team, neutral, current_year, current_week, True, time_outlet)
     print("Matchup Visuals Done!")
 except Exception as e:
     print(f"Error occurred while drawing Matchup Visuals: {e}")
