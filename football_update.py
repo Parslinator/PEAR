@@ -59,7 +59,7 @@ drives_api = cfbd.DrivesApi(api_client)
 
 from football_helper import modeling_data_import, build_power_ratings_multi_target, in_house_power_ratings, average_team_distribution, metric_creation, stats_formatting
 
-outputs = modeling_data_import(6)
+outputs = modeling_data_import(7)
 team_data = outputs["team_data"]
 opponent_adjustment_schedule = outputs["opponent_adjustment_schedule"]
 updated_metrics = outputs["updated_metrics"]
