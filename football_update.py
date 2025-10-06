@@ -176,7 +176,7 @@ os.makedirs(folder_path, exist_ok=True)
 conf_folder_path = f"./PEAR/PEAR Football/y{current_year}/Visuals/week_{current_week}/Conference Projections"
 os.makedirs(conf_folder_path, exist_ok=True)
 
-from football_helper import best_and_worst, other_best_and_worst, monte_carlo_simulation_known, analyze_simulation_known, all_136_teams
+from football_helper import best_and_worst, other_best_and_worst, draw_playoff_bracket_new, all_136_teams
 from football_helper import create_conference_projection, plot_matchup_new, display_schedule_visual, conference_standings, prob_win_at_least_x
 
 logos = outputs["logos"]
@@ -920,6 +920,20 @@ try:
     print("Resume Vs Ratings Done!")
 except Exception as e:
     print(f"Error occurred while drawing Resume Vs Ratings: {e}")
+
+try:
+    file_path = "power_rating_playoff"
+    draw_playoff_bracket_new(all_data, 'power_rating', team_logos, 'Projected College Football Playoff Bracket via PEAR Power Rating', True, folder_path, file_path)
+    print("Power Rating Playoff Done!")
+except Exception as e:
+    print(f"Error occurred while drawing Power Rating Playoff: {e}")
+
+try:
+    file_path = "most_deserving_playoff"
+    draw_playoff_bracket_new(all_data, 'most_deserving_wins', team_logos, 'Projected College Football Playoff Bracket via PEAR Most Deserving', True, folder_path, file_path)
+    print("Most Deserving Playoff Done!")
+except Exception as e:
+    print(f"Error occurred while drawing Most Deserving Playoff: {e}")
 
 try:
     fig, ax = plt.subplots(figsize=(15, 9),dpi=125)

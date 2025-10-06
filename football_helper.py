@@ -4276,23 +4276,279 @@ def all_136_teams(all_data, column, ascending_direction, team_logos, digits, cur
         fig.text(0.52,0.097, f"{subtitle}", ha='center', va='center', fontsize=14)
     plt.savefig(os.path.join(folder_path, file_path), bbox_inches='tight', dpi=400)
 
+from matplotlib.lines import Line2D
+
+def draw_playoff_bracket_new(all_data, column, team_logos, title, save=False, folder_path=None, file_path=None):
+    all_data = all_data.sort_values(column, ascending=False).reset_index(drop=True)
+    power_conferences = ["ACC", "Big 12", "Big Ten", "SEC"]
+    g5_conferences = ["American Athletic", "Conference USA", "Mid-American", "Mountain West", "Sun Belt"]
+    playoff_selector = all_data.sort_values(column, ascending=False).reset_index(drop=True)
+    power_conf_selections = (
+        playoff_selector[playoff_selector['conference'].isin(power_conferences)]
+        .groupby('conference', as_index=False)
+        .first()
+    )
+    g5_top = (
+        playoff_selector[playoff_selector['conference'].isin(g5_conferences)]
+        .head(1)
+    )
+    auto_qualifiers = pd.concat([power_conf_selections, g5_top])
+    remaining_spots = 12 - len(auto_qualifiers)
+    remaining = playoff_selector[~playoff_selector['team'].isin(auto_qualifiers['team'])].head(remaining_spots)
+    playoff_field = pd.concat([auto_qualifiers, remaining]).sort_values(column, ascending=False).reset_index(drop=True)
+    playoff_field['seed'] = range(1, len(playoff_field) + 1)
+
+    g5_already_selected = auto_qualifiers['conference'].isin(g5_conferences)
+    g5_selected_conferences = auto_qualifiers.loc[g5_already_selected, 'conference'].tolist()
+
+    # 2. Remaining G5 conferences
+    remaining_g5_conferences = [c for c in g5_conferences if c not in g5_selected_conferences]
+
+    # 3. Highest-rated team from each remaining G5 conference
+    remaining_g5_champions = (
+        playoff_selector[
+            playoff_selector['conference'].isin(remaining_g5_conferences)
+        ]
+        .groupby('conference', as_index=False)
+        .first()
+    )
+    next_best = playoff_selector[
+        ~playoff_selector['team'].isin(
+            pd.concat([playoff_field])['team']
+        )
+    ].head(10)
+    at_large = pd.concat([remaining_g5_champions, next_best]).reset_index(drop=True)
+    at_large = at_large.sort_values(column, ascending=False).reset_index(drop=True)
+    at_large['seed'] = range(1, len(at_large) + 1)
+
+    # Bracket matchups
+    matchups = [
+        (7,10), (6,11), (8,9), (5,12)
+    ]
+
+    fig, ax = plt.subplots(figsize=(16, 10))
+    fig.patch.set_facecolor("#CECEB2")
+    ax.set_facecolor("#CECEB2")
+    ax.axis('off')
+
+    x_start = 0
+    y_start = 0.3
+    y_gap = 0.5
+    zoom = 0.07
+
+    def add_team_box(df, seed, x, y, color="#f0f0f0", in_playoff=True, empty=False):
+        """
+        Adds a team box to the bracket.
+        
+        Parameters:
+        - seed: int, team seed
+        - x, y: float, position
+        - color: str, box fill color
+        - empty: bool, if True, draw only the rectangle (no logo or text)
+        """
+        # Draw the rectangle (always)
+        if in_playoff:
+            team = df.loc[df['seed'] == seed, 'team'].values[0]
+            if team in auto_qualifiers['team'].values:
+                color = "#C0C0C0"  # light gray
+            if empty:
+                color = 'white'
+            rect = patches.Rectangle(
+                (x+0.0, y-0.07),
+                0.18,
+                0.14,
+                linewidth=2,
+                edgecolor='black',
+                facecolor=color,
+                zorder=0
+            )
+            ax.add_patch(rect)
+
+            if not empty:
+                img = team_logos[team]  # from your cache
+
+                # Add logo
+                if img is not None:
+                    im = OffsetImage(img, zoom=zoom)
+                    ab = AnnotationBbox(im, (x + 0.03, y), frameon=False, box_alignment=(0, 0.5))
+                    ax.add_artist(ab)
+
+                # Add seed and team text
+                ax.text(x + 0.015, y, f"{seed}", va="center", ha="center", fontsize=20, fontweight="bold")
+                rank = all_data[all_data['team'] == team].index[0] + 1
+                ax.text(x + 0.072, y, f'{rank}', va="center", ha="center", fontsize=14)
+                ax.text(x + 0.082, y, f'{team}', va="center", ha="left", fontsize=14, fontweight="bold")
+        else:
+            team = df.loc[df['seed'] == seed, 'team'].values[0]
+            if team in remaining_g5_champions['team'].values:
+                color = "#C0C0C0"  # light gray
+            if empty:
+                color='white'
+            rect = patches.Rectangle(
+                (x+0.0, y-0.05),
+                0.14,
+                0.10,
+                linewidth=2,
+                edgecolor='black',
+                facecolor=color,
+                zorder=0
+            )
+            ax.add_patch(rect)
+
+            if not empty:
+                img = team_logos[team]  # from your cache
+
+                # Add logo
+                if img is not None:
+                    im = OffsetImage(img, zoom=zoom-0.03)
+                    ab = AnnotationBbox(im, (x + 0.026, y), frameon=False, box_alignment=(0, 0.5))
+                    ax.add_artist(ab)
+
+                rank = all_data[all_data['team'] == team].index[0] + 1
+                ax.text(x + 0.015, y, f'{rank}', va="center", ha="center", fontsize=14)
+                ax.text(x + 0.05, y, f'{team}', va="center", ha="left", fontsize=11, fontweight="bold")
+
+    def add_lines(x, y1, y2):
+        line = Line2D([x, x+0.02], [y2, y2], linewidth=2, color='black', zorder=1)
+        ax.add_line(line)
+        line = Line2D([x, x+0.02], [y1, y1], linewidth=2, color='black', zorder=1)
+        ax.add_line(line)
+        line = Line2D([x+0.02, x+0.02], [y1, y2], linewidth=2, color='black', zorder=1)
+        ax.add_line(line)
+        line = Line2D([x+0.02, x+0.04], [(y1 + y2) / 2, (y1 + y2) / 2], linewidth=2, color='black', zorder=1)
+        ax.add_line(line)
+
+    # Plot first-round matchups
+    for i, (low, high) in enumerate(matchups):
+        y = y_start + i * y_gap
+        add_team_box(playoff_field, high, x_start, y + 0.085, color="white")  # higher seed
+        add_team_box(playoff_field, low, x_start, y - 0.085, color="white")   # lower seed
+        add_lines(0.18, y-0.085, y+0.085)
+
+    add_team_box(playoff_field,4, 0.22, 1.55, color='white')
+    add_team_box(playoff_field,4, 0.22, 1.8, color='white', empty=True)
+    add_team_box(playoff_field,1, 0.22, 1.05, color='white')
+    add_team_box(playoff_field,1, 0.22, 1.3, color='white', empty=True)
+    add_team_box(playoff_field,3, 0.22, 0.55, color='white')
+    add_team_box(playoff_field,3, 0.22, 0.8, color='white', empty=True)
+    add_team_box(playoff_field,2, 0.22, 0.05, color='white')
+    add_team_box(playoff_field,2, 0.22, 0.3, color='white', empty=True)
+    add_lines(0.4, 1.55, 1.8)
+    add_lines(0.4, 1.05, 1.3)
+    add_lines(0.4, 0.55, 0.8)
+    add_lines(0.4, 0.05, 0.3)
+
+    add_team_box(playoff_field,1, 0.44, 1.675, color='white', empty=True)
+    add_team_box(playoff_field,1, 0.44, 1.175, color='white', empty=True)
+    add_team_box(playoff_field,1, 0.44, 0.675, color='white', empty=True)
+    add_team_box(playoff_field,1, 0.44, 0.175, color='white', empty=True)
+    add_lines(0.62, 1.175, 1.675)
+    add_lines(0.62, 0.175, 0.675)
+
+    add_team_box(playoff_field,1, 0.66, 1.425, color='white', empty=True)
+    add_team_box(playoff_field,1, 0.66, 0.425, color='white', empty=True)
+
+    y_start = 1.705
+    for i in range(len(at_large)):
+        value = i+1
+        y = y_start - i * 0.12
+        add_team_box(at_large,value,0.85,y,color='white', in_playoff=False, empty=False)
 
 
+    ax.text(0.5, 2.25, f'{title}', va='center', ha='center', fontsize=24, fontweight='bold')
+    ax.text(0.5, 2.16, f'@PEARatings', va='center', ha='center', fontsize=20, fontweight='bold')
 
+    rect = patches.Rectangle(
+        (0.0, 2),
+        0.18,
+        0.1,
+        linewidth=2,
+        edgecolor='black',
+        facecolor='black',
+        zorder=0
+    )
+    ax.add_patch(rect)
+    ax.text(
+        0.0 + 0.18/2,  # x center
+        2 + 0.1/2,     # y center
+        "FIRST ROUND",       # text
+        color='white', # text color
+        fontsize=18,
+        fontweight='bold',
+        ha='center',   # horizontal alignment
+        va='center'    # vertical alignment
+    )
 
+    rect = patches.Rectangle(
+        (0.22, 2),
+        0.18,
+        0.1,
+        linewidth=2,
+        edgecolor='black',
+        facecolor='black',
+        zorder=0
+    )
+    ax.add_patch(rect)
+    ax.text(
+        0.22 + 0.18/2,  # x center
+        2 + 0.1/2,     # y center
+        "QUARTERFINALS",       # text
+        color='white', # text color
+        fontsize=18,
+        fontweight='bold',
+        ha='center',   # horizontal alignment
+        va='center'    # vertical alignment
+    )
 
+    rect = patches.Rectangle(
+        (0.44, 2),
+        0.18,
+        0.1,
+        linewidth=2,
+        edgecolor='black',
+        facecolor='black',
+        zorder=0
+    )
+    ax.add_patch(rect)
+    ax.text(
+        0.44 + 0.18/2,  # x center
+        2 + 0.1/2,     # y center
+        "SEMIFINALS",       # text
+        color='white', # text color
+        fontsize=18,
+        fontweight='bold',
+        ha='center',   # horizontal alignment
+        va='center'    # vertical alignment
+    )
 
+    rect = patches.Rectangle(
+        (0.66, 2),
+        0.18,
+        0.1,
+        linewidth=2,
+        edgecolor='black',
+        facecolor='black',
+        zorder=0
+    )
+    ax.add_patch(rect)
+    ax.text(
+        0.66 + 0.18/2,  # x center
+        2 + 0.1/2,     # y center
+        "CHAMPIONSHIP",       # text
+        color='white', # text color
+        fontsize=18,
+        fontweight='bold',
+        ha='center',   # horizontal alignment
+        va='center'    # vertical alignment
+    )
 
+    ax.set_xlim(0, 1)
+    ax.set_ylim(-0.05, 2.3)
+    plt.tight_layout()
 
-
-
-
-
-
-
-
-
-
-
-
-
+    if save:        
+        os.makedirs(folder_path, exist_ok=True)
+        file_path = os.path.join(folder_path, f"{file_path}")
+        plt.savefig(file_path, dpi = 300, bbox_inches='tight')
+    else:
+        plt.show()
