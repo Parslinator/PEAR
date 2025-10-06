@@ -910,7 +910,7 @@ with col2:
         spread_button = st.form_submit_button("Calculate Spread")
         if spread_button:
             neutrality = True if neutrality == "Neutral Field" else False
-            fig = plot_matchup_new(all_data, logos, away_team, home_team, neutrality, current_year, current_week)
+            fig = plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, current_year, current_week)
             st.pyplot(fig)
 
 st.divider()
