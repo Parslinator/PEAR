@@ -61,6 +61,19 @@ logos_info_dict = [dict(
 logos = pd.DataFrame(logos_info_dict)
 logos = logos[logos['classification'] == 'fbs'].reset_index(drop=True)
 
+logo_folder = "./PEAR/PEAR Football/logos/"
+team_logos = {}
+for filename in os.listdir(logo_folder):
+    if filename.endswith(".png"):
+        team_name = filename[:-4].replace("_", " ")
+        file_path = os.path.join(logo_folder, filename)
+        try:
+            img = Image.open(file_path).convert("RGBA")
+            team_logos[team_name] = img
+        except Exception as e:
+            print(f"Error reading {filename}: {e}")
+            team_logos[team_name] = None
+
 central = pytz.timezone("US/Central")
 now_ct = datetime.now(central)
 start_dt = central.localize(datetime(2025, 9, 2, 9, 0, 0))
@@ -414,13 +427,8 @@ from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.patches import Rectangle
 
 def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, current_year, current_week):
-    logo_url = logos[logos['team'] == away_team]['logo'].values[0][0]
-    response = requests.get(logo_url)
-    away_logo = Image.open(BytesIO(response.content))
-
-    logo_url = logos[logos['team'] == home_team]['logo'].values[0][0]
-    response = requests.get(logo_url)
-    home_logo = Image.open(BytesIO(response.content))
+    away_logo = team_logos[away_team]
+    home_logo = team_logos[home_team]
 
     def fixed_width_text(ax, x, y, text, width=0.06, height=0.04,
                         facecolor="lightgrey", edgecolor="none", alpha=1.0, **kwargs):

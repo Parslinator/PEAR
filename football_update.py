@@ -216,13 +216,21 @@ def fetch_logo(team):
         return team, None
 
 # Use ThreadPoolExecutor to download in parallel
+import os
+from PIL import Image
+
+logo_folder = "./PEAR/PEAR Football/logos/"
 team_logos = {}
-with ThreadPoolExecutor(max_workers=10) as executor:
-    futures = [executor.submit(fetch_logo, team) for team in unique_teams]
-    for future in as_completed(futures):
-        team, img = future.result()
-        if img:
-            team_logos[team] = img
+for filename in os.listdir(logo_folder):
+    if filename.endswith(".png"):
+        team_name = filename[:-4].replace("_", " ")
+        file_path = os.path.join(logo_folder, filename)
+        try:
+            img = Image.open(file_path).convert("RGBA")
+            team_logos[team_name] = img
+        except Exception as e:
+            print(f"Error reading {filename}: {e}")
+            team_logos[team_name] = None
 
 try:
     top_25 = all_data.head(25).reset_index(drop=True)
@@ -1227,18 +1235,18 @@ try:
     logos = pd.DataFrame(logos_info_dict)
     fbs_fcs = logos[(logos['classification'] == 'fbs') | (logos['classification'] == 'fcs')].reset_index(drop=True)
 
+    logo_folder = "./PEAR/PEAR Football/logos/"
     fbs_fcs_logos = {}
-
-    for _, row in fbs_fcs.iterrows():
-        team_name = row['team']
-        logo_url = row['logo'][0]  # Assuming logo is a list with URL at index 0
-        try:
-            response = requests.get(logo_url)
-            img = Image.open(BytesIO(response.content))  # Ensure transparency support
-            fbs_fcs_logos[team_name] = img
-        except Exception as e:
-            print(f"Error loading logo for {team_name}: {e}")
-            fbs_fcs_logos[team_name] = None  # Placeholder if something fails
+    for filename in os.listdir(logo_folder):
+        if filename.endswith(".png"):
+            team_name = filename[:-4].replace("_", " ")
+            file_path = os.path.join(logo_folder, filename)
+            try:
+                img = Image.open(file_path).convert("RGBA")
+                fbs_fcs_logos[team_name] = img
+            except Exception as e:
+                print(f"Error reading {filename}: {e}")
+                fbs_fcs_logos[team_name] = None
 
     all_data['at_large_wins'] = np.ceil(all_data['avg_expected_wins']-0.5).astype(int)
     all_data['wins_needed'] = all_data['at_large_wins'] - all_data['wins']
