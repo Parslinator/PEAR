@@ -48,19 +48,6 @@ players_api = cfbd.PlayersApi(api_client)
 recruiting_api = cfbd.RecruitingApi(api_client)
 drives_api = cfbd.DrivesApi(api_client)
 
-logos_info_list = []
-response = teams_api.get_teams()
-logos_info_list = [*logos_info_list, *response]
-logos_info_dict = [dict(
-    team = l.school,
-    color = l.color,
-    alt_color = l.alternate_color,
-    logo = l.logos,
-    classification = l.classification
-) for l in logos_info_list]
-logos = pd.DataFrame(logos_info_dict)
-logos = logos[logos['classification'] == 'fbs'].reset_index(drop=True)
-
 logo_folder = "./PEAR/PEAR Football/logos/"
 team_logos = {}
 for filename in os.listdir(logo_folder):
