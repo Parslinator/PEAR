@@ -48,18 +48,25 @@ players_api = cfbd.PlayersApi(api_client)
 recruiting_api = cfbd.RecruitingApi(api_client)
 drives_api = cfbd.DrivesApi(api_client)
 
+from concurrent.futures import ThreadPoolExecutor
+
 logo_folder = "./PEAR/PEAR Football/logos/"
 team_logos = {}
-for filename in os.listdir(logo_folder):
-    if filename.endswith(".png"):
-        team_name = filename[:-4].replace("_", " ")
-        file_path = os.path.join(logo_folder, filename)
-        try:
-            img = Image.open(file_path).convert("RGBA")
-            team_logos[team_name] = img
-        except Exception as e:
-            print(f"Error reading {filename}: {e}")
-            team_logos[team_name] = None
+def load_image(filename):
+    team_name = filename[:-4].replace("_", " ")
+    file_path = os.path.join(logo_folder, filename)
+    try:
+        img = Image.open(file_path).convert("RGBA")
+        return (team_name, img)
+    except Exception as e:
+        print(f"Error reading {filename}: {e}")
+        return (team_name, None)
+
+png_files = [f for f in os.listdir(logo_folder) if f.endswith(".png")]
+
+with ThreadPoolExecutor(max_workers=8) as executor:
+    results = executor.map(load_image, png_files)
+    team_logos = dict(results)
 
 central = pytz.timezone("US/Central")
 now_ct = datetime.now(central)
