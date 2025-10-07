@@ -108,7 +108,7 @@ team_data, diag, sys = build_power_ratings_multi_target(team_data, opponent_adju
 print(sys.print_diagnostics())
 
 team_data, team_power_rankings = stats_formatting(team_data, current_week, current_year)
-team_data, year_long_schedule, SOS, SOR, RTP, most_deserving = metric_creation(team_data, records, current_week, current_year, postseason)
+team_data, year_long_schedule, SOS, SOR, RTP, most_deserving, composite = metric_creation(team_data, records, current_week, current_year, postseason)
 
 folder_path = f"./PEAR/PEAR Football/y{current_year}/Data"
 os.makedirs(folder_path, exist_ok=True)
@@ -288,6 +288,28 @@ try:
     print("Most Deserving Done!")
 except Exception as e:
     print(f"Error in code chunk: Most Deserving Ratings. Error: {e}")
+
+try:
+    top_25 = composite.head(25).reset_index(drop=True)
+    fig, axs = plt.subplots(5, 5, figsize=(7, 7), dpi=125)
+    fig.subplots_adjust(hspace=0.5, wspace=0.5)
+    fig.patch.set_facecolor('#CECEB2')
+    plt.suptitle(f"Week {current_week} Composite Top 25", fontsize=20, fontweight='bold', color='black')
+    fig.text(0.5, 0.92, "Combination of MD, OFF, DEF", fontsize=12, ha='center', color='black')
+    fig.text(0.5, 0.89, "@PEARatings", fontsize=12, ha='center', color='black', fontweight='bold')
+
+    for i, ax in enumerate(axs.ravel()):
+        team = top_25.loc[i, 'team']
+        img = team_logos[team]
+        ax.imshow(img)
+        ax.set_facecolor('#f0f0f0')
+        ax.text(0.5, -0.1, f"#{i+1} {team} \n{round(top_25.loc[i, 'composite_score'], 3)}", fontsize=8, transform=ax.transAxes, ha='center', va='top')
+        ax.axis('off')
+    plt.savefig(os.path.join(folder_path, "composite_ranking"), bbox_inches='tight', dpi=300)
+    print("Composite Done!")
+except Exception as e:
+    print(f"Error in code chunk: Most Deserving Ratings. Error: {e}")
+
 
 try:
     group_of_5 = ['Conference USA', 'Mid-American', 'Sun Belt', 'American Athletic', 'Mountain West']

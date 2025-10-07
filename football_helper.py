@@ -2518,9 +2518,27 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
     team_data = pd.merge(team_data, SOR, how='left', on='team')
     team_data = pd.merge(team_data, most_deserving, how='left', on='team')
     team_data = pd.merge(team_data, RTP, how='left', on='team')
+
+    scaler = MinMaxScaler()
+    composite = team_data.copy()
+    composite[['most_deserving_wins_scaled', 'offensive_rating_scaled']] = scaler.fit_transform(
+        composite[['most_deserving_wins', 'offensive_rating']]
+    )
+    composite['defensive_rating_scaled'] = scaler.fit_transform(
+        (-composite['defensive_rating']).values.reshape(-1, 1)
+    )
+    composite['composite_score'] = (
+        0.6*composite['most_deserving_wins_scaled'] +
+        0.2*composite['offensive_rating_scaled'] +
+        0.2*composite['defensive_rating_scaled']
+    ).round(3)
+    composite['composite_rank'] = composite['composite_score'].rank(ascending=False, method='dense').astype(int)
+    composite = composite.sort_values('composite_score', ascending=False).reset_index(drop=True)
+
+    team_data = pd.merge(team_data, composite[['team', 'composite_rank', 'composite_score']], how='left', on='team')
     print("Metric Creation Done")
 
-    return team_data, year_long_schedule, SOS, SOR, RTP, most_deserving
+    return team_data, year_long_schedule, SOS, SOR, RTP, most_deserving, composite
 
 
 
