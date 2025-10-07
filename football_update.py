@@ -176,7 +176,7 @@ os.makedirs(folder_path, exist_ok=True)
 conf_folder_path = f"./PEAR/PEAR Football/y{current_year}/Visuals/week_{current_week}/Conference Projections"
 os.makedirs(conf_folder_path, exist_ok=True)
 
-from football_helper import best_and_worst, other_best_and_worst, draw_playoff_bracket_new, all_136_teams
+from football_helper import best_and_worst, other_best_and_worst, draw_playoff_bracket_new, all_136_teams, _calculate_game_quality
 from football_helper import create_conference_projection, plot_matchup_new, display_schedule_visual, conference_standings, prob_win_at_least_x
 
 logos = outputs["logos"]
@@ -189,16 +189,6 @@ if os.path.exists(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{curre
     last_week_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week-1}.csv")
 else:
     last_week_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv")
-week_to_check = current_week - 4
-last_month_data = None
-# Loop to find the most recent existing file
-while week_to_check <= current_week:
-    file_path = f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{week_to_check}.csv"
-    if os.path.exists(file_path):
-        # If the file is found, read it in and break the loop
-        last_month_data = pd.read_csv(file_path)
-        break    
-    week_to_check += 1
 
 # Unique list of teams from your main dataset
 unique_teams = all_data['team'].unique()
@@ -215,22 +205,26 @@ def fetch_logo(team):
         print(f"Error loading logo for {team}: {e}")
         return team, None
 
-# Use ThreadPoolExecutor to download in parallel
 import os
 from PIL import Image
-
+from concurrent.futures import ThreadPoolExecutor
 logo_folder = "./PEAR/PEAR Football/logos/"
 team_logos = {}
-for filename in os.listdir(logo_folder):
-    if filename.endswith(".png"):
-        team_name = filename[:-4].replace("_", " ")
-        file_path = os.path.join(logo_folder, filename)
-        try:
-            img = Image.open(file_path).convert("RGBA")
-            team_logos[team_name] = img
-        except Exception as e:
-            print(f"Error reading {filename}: {e}")
-            team_logos[team_name] = None
+def load_image(filename):
+    team_name = filename[:-4].replace("_", " ")
+    file_path = os.path.join(logo_folder, filename)
+    try:
+        img = Image.open(file_path).convert("RGBA")
+        return (team_name, img)
+    except Exception as e:
+        print(f"Error reading {filename}: {e}")
+        return (team_name, None)
+
+png_files = [f for f in os.listdir(logo_folder) if f.endswith(".png")]
+
+with ThreadPoolExecutor(max_workers=8) as executor:
+    results = executor.map(load_image, png_files)
+    team_logos = dict(results)
 
 try:
     top_25 = all_data.head(25).reset_index(drop=True)
@@ -254,14 +248,7 @@ try:
         diff_str = f"{diff:+.1f}" if not pd.isna(diff) else "N/A"
         ax.imshow(img)
         ax.set_facecolor('#f0f0f0')
-        ax.text(
-            0.5, -0.1,
-            f"#{i+1} {team}\n{pr} ({diff_str})",
-            fontsize=8,
-            transform=ax.transAxes,
-            ha='center',
-            va='top'
-        )
+        ax.text(0.5, -0.1,f"#{i+1} {team}\n{pr} ({diff_str})",fontsize=8,transform=ax.transAxes,ha='center',va='top')
         ax.axis('off')
     plt.savefig(os.path.join(folder_path, "top25"), bbox_inches='tight', dpi=300)
     print("Top 25 Done!")
@@ -1107,26 +1094,6 @@ year_long_schedule['PEAR_win_prob'] = year_long_schedule.apply(
 )
 year_long_schedule['home_win_prob'] = round((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) / ((10**((year_long_schedule['home_elo'] - year_long_schedule['away_elo']) / 400)) + 1)*100,2)
 
-def calculate_game_quality(df, pr_min, pr_max, spread_cap=20, beta=8.5):
-    tq = (df['home_pr'] + df['away_pr']) / 2
-    tq_norm = (tq - pr_min) / (pr_max - pr_min)
-    tq_norm = tq_norm.clip(lower=0, upper=1)
-    
-    spread = df['home_pr'] - df['away_pr']
-    sc = 1 - (np.abs(spread) / spread_cap)
-    sc = sc.clip(lower=0, upper=1)
-    
-    # Combined input
-    x = (0.65*tq_norm + 0.35*sc)
-    
-    # Sigmoid transform
-    gq_raw = 1 / (1 + np.exp(-beta * (x - 0.5)))
-    
-    # Scale to 1–10
-    gq = (1 + 9 * gq_raw) + 0.1
-    gq = gq.clip(upper=10)
-    return gq.round(1)
-
 try:
     start_week = current_week
     end_week = 17
@@ -1238,7 +1205,7 @@ try:
     pr_max = team_data['power_rating'].max()
 
     # Calculate game quality
-    full_display_schedule['GQI'] = calculate_game_quality(
+    full_display_schedule['GQI'] = _calculate_game_quality(
         full_display_schedule,
         pr_min=pr_min,
         pr_max=pr_max,
@@ -1381,292 +1348,34 @@ except Exception as e:
 
 print("---------- Visuals Done! ----------")
 
-team_data = pd.read_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv').drop(columns=['Unnamed: 0'])
-all_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}.csv").drop(columns=['Unnamed: 0'])
-
-offensive_scaler = MinMaxScaler(feature_range=(35,70))
-defensive_scaler = MinMaxScaler(feature_range=(15,40))
-all_data['offensive_total'] = offensive_scaler.fit_transform(all_data[['offensive_total']])
-all_data['defensive_total'] = defensive_scaler.fit_transform(all_data[['defensive_total']])
-
-if postseason:
-    games = []
-    response = games_api.get_games(year=current_year, classification = 'fbs', season_type='postseason')
-    games = [*games, *response]
-else:
-    games = []
-    response = games_api.get_games(year=current_year, week = current_week, classification = 'fbs')
-    games = [*games, *response]
-
-
-games_dict = [dict(
-            id=g.id,
-            season=g.season,
-            week=g.week,
-            start_date=g.start_date,
-            home_team=g.home_team,
-            home_conference=g.home_conference,
-            home_points=g.home_points,
-            home_elo=g.home_pregame_elo,
-            away_team=g.away_team,
-            away_conference=g.away_conference,
-            away_points=g.away_points,
-            away_elo=g.away_pregame_elo,
-            neutral = g.neutral_site
-            ) for g in games]
-week_games = pd.DataFrame(games_dict)
-
-week_games['home_elo'] = week_games.apply(
-    lambda row: elo_ratings.loc[elo_ratings['team'] == row['home_team'], 'elo'].values[0]
-    if pd.isna(row['home_elo']) else row['home_elo'], axis=1
+from football_helper import analyze_vegas_predictions, _calculate_pr_prediction
+import matplotlib.pyplot as plt
+week_games, predictions, fig = analyze_vegas_predictions(
+    current_week=current_week,
+    current_year=current_year,
+    postseason=postseason,
+    save=True
 )
 
-# Update `away_elo` where it is NaN or None
-week_games['away_elo'] = week_games.apply(
-    lambda row: elo_ratings.loc[elo_ratings['team'] == row['away_team'], 'elo'].values[0]
-    if not elo_ratings.loc[elo_ratings['team'] == row['away_team'], 'elo'].empty else None, axis=1
-)
+from concurrent.futures import ThreadPoolExecutor
 
-def calculate_game_quality(df, pr_min, pr_max, spread_cap=20, beta=8.5):
-    tq = (df['home_pr'] + df['away_pr']) / 2
-    tq_norm = (tq - pr_min) / (pr_max - pr_min)
-    tq_norm = tq_norm.clip(lower=0, upper=1)
-    
-    spread = df['home_pr'] - df['away_pr']
-    sc = 1 - (np.abs(spread) / spread_cap)
-    sc = sc.clip(lower=0, upper=1)
-    
-    # Combined input
-    x = (0.65*tq_norm + 0.35*sc)
-    
-    # Sigmoid transform
-    gq_raw = 1 / (1 + np.exp(-beta * (x - 0.5)))
-    
-    # Scale to 1–10
-    gq = (1 + 9 * gq_raw) + 0.1
-    gq = gq.clip(upper=10)
-    return gq.round(1)
-
-missing_rating = round(team_data['power_rating'].mean() - 2*team_data['power_rating'].std(),1)
-team_data.fillna(missing_rating, inplace=True)
-def round_to_nearest_half(x):
-    return np.round(x * 2) / 2
-week_games = week_games.merge(
-    team_data[['team', 'power_rating']],
-    left_on='home_team',
-    right_on='team',
-    how='left'
-).rename(columns={'power_rating': 'home_pr'})
-week_games = week_games.merge(
-    team_data[['team', 'power_rating']],
-    left_on='away_team',
-    right_on='team',
-    how='left'
-).rename(columns={'power_rating': 'away_pr'})
-week_games = week_games.drop(columns=['team_x', 'team_y'])
-
-week_games = week_games.merge(
-    all_data[['team', 'offensive_total', 'defensive_total']],
-    left_on='home_team',
-    right_on='team',
-    how='left'
-).rename(columns={'offensive_total':'home_offense', 'defensive_total':'home_defense'})
-week_games = week_games.merge(
-    all_data[['team', 'offensive_total', 'defensive_total']],
-    left_on='away_team',
-    right_on='team',
-    how='left'
-).rename(columns={'offensive_total':'away_offense', 'defensive_total':'away_defense'})
-week_games = week_games.drop(columns=['team_x', 'team_y'])
-week_games['xhome_points'] = round((week_games['home_offense'] - week_games['away_defense'] + (GLOBAL_HFA/2)),1)
-week_games['xaway_points'] = round((week_games['away_offense'] - week_games['home_defense'] - (GLOBAL_HFA/2)),1)
-week_games['predicted_over_under'] = week_games['xhome_points'] + week_games['xaway_points']
-
-def adjust_home_pr(home_win_prob):
-    return ((home_win_prob - 50) / 50) * 1
-week_games['home_win_prob'] = round((10**((week_games['home_elo'] - week_games['away_elo']) / 400)) / ((10**((week_games['home_elo'] - week_games['away_elo']) / 400)) + 1)*100,2)
-week_games['pr_spread'] = (GLOBAL_HFA + week_games['home_pr'] + (week_games['home_win_prob'].apply(adjust_home_pr)) - week_games['away_pr']).round(1)
-week_games['pr_spread'] = np.where(week_games['neutral'], week_games['pr_spread'] - GLOBAL_HFA, week_games['pr_spread']).round(1)
-# week_games['pr_spread'] = week_games['pr_spread'].apply(round_to_nearest_half)
-
-pr_min = team_data['power_rating'].min()
-pr_max = team_data['power_rating'].max()
-
-# Calculate game quality
-week_games['GQI'] = calculate_game_quality(
-    week_games,
-    pr_min=pr_min,
-    pr_max=pr_max,
-    spread_cap=30
-)
-
-if postseason:
-    betting = []
-    response = betting_api.get_lines(year=current_year, season_type="postseason")
-    betting.extend(response)  # Use extend for list concatenation
-else:
-    betting = []
-    response = betting_api.get_lines(year=current_year, week=current_week)
-    betting.extend(response)  # Use extend for list concatenation
-
-
-betting_info_list = []
-
-for bet in betting:
-    data = bet.to_dict() if hasattr(bet, 'to_dict') else vars(bet)
-    lines = pd.DataFrame(data['lines'])
-
-    if not lines.empty:
-        # Try to get consensus lines first
-        consensus_lines = lines[lines['provider'] == 'consensus']
-        
-        if consensus_lines.empty:
-            consensus_lines = lines[lines['provider'] == 'DraftKings']
-        if consensus_lines.empty:
-            consensus_lines = lines[lines['provider'] == 'ESPN Bet']
-        if consensus_lines.empty:
-            consensus_lines = lines[lines['provider'] == 'Bovada']
-        
-
-
-        if not consensus_lines.empty:
-            consensus_lines = consensus_lines[['spread', 'formattedSpread','spreadOpen', 'overUnder']]
-            combined_data = {
-                'id': data['id'],
-                'season_type': data['seasonType']
-            }
-            df = pd.DataFrame([combined_data])
-            full_df = pd.concat([df.reset_index(drop=True), consensus_lines.reset_index(drop=True)], axis=1)
-            betting_info_list.append(full_df)
-
-betting_info = pd.concat(betting_info_list, ignore_index=True)
-week_games = pd.merge(week_games, betting_info, on='id', how='left')
-week_games['spread'] = week_games['spread'] * -1
-week_games['spreadOpen'] = week_games['spreadOpen'] * -1
-
-# if current_week == 7:
-#     week_games.loc[week_games['home_team'] == 'Western Kentucky', 'pr_spread'] += 0.5
-
-# Capping predictions that are more than 15 points away from the Vegas Spread
-threshold = 25
-capped_preds = np.clip(week_games['pr_spread'], week_games['spread'] - threshold, week_games['spread'] + threshold)
-week_games['pr_spread'] = capped_preds
-
-# Function to find out if PR predicts the favorite or underdog
-def calculate_pr_prediction(row, pr_spread_col, vegas_spread_col):
-    if (row[vegas_spread_col] < 0) and (row[pr_spread_col] < 0) and (row[pr_spread_col] < row[vegas_spread_col]):
-        return 'Favorite'
-    elif (row[vegas_spread_col] > 0) and (row[pr_spread_col] > 0) and (row[pr_spread_col] > row[vegas_spread_col]):
-        return 'Favorite'
-    elif (row[vegas_spread_col] == row[pr_spread_col]):
-        return 'Exact'
-    else:
-        return 'Underdog'
-
-week_games['formatted_open'] = week_games.apply(
-    lambda row: f"{row['away_team']} {row['spreadOpen']}" if row['spreadOpen'] < 0 
-                else f"{row['home_team']} -{row['spreadOpen']}", axis=1
-)
-
-# Use the above function
-def add_pr_prediction(week_games, pr_spread_col, vegas_spread_col, prediction_col_name='pr_prediction'):
-    week_games[prediction_col_name] = week_games.apply(calculate_pr_prediction, axis=1, args=(pr_spread_col,vegas_spread_col,))
-    return week_games
-week_games = add_pr_prediction(week_games, 'pr_spread', 'spread', 'pr_prediction')
-week_games = add_pr_prediction(week_games, 'pr_spread', 'spreadOpen', 'opening_spread_prediction')
-
-# Formatting the KRATOS Power Rating Spread
-week_games['PEAR'] = week_games.apply(
-    lambda row: f"{row['away_team']} {-abs(row['pr_spread'])}" if ((row['pr_spread'] <= 0)) 
-    else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1)
-
-week_games['difference'] = abs(week_games['pr_spread'] - week_games['spread'])
-week_games['opening_difference'] = abs(week_games['pr_spread'] - week_games['spreadOpen'])
-week_games['over_under_difference'] = abs(week_games['overUnder'] - week_games['predicted_over_under'])
-week_games = week_games.sort_values(by=["difference", "home_win_prob"], ascending=False).reset_index(drop=True)
-week_games = week_games.drop_duplicates(subset='home_team')
-prediction_information = week_games[['home_team', 'away_team', 'GQI', 'home_win_prob','difference', 'formatted_open', 'formattedSpread', 'PEAR', 'pr_prediction', 'home_pr', 'away_pr']]
-prediction_information = prediction_information.dropna()
-print("Total Difference from Vegas Spread:", round(sum(prediction_information['difference']),1))
-print("Average Difference from Vegas Spread:", round(sum(prediction_information['difference'])/len(prediction_information), 2))
-print("Average Over Under Difference", round(sum(week_games['over_under_difference'])/len(week_games), 2))
-
-week_games['actual_margin'] = week_games['home_points'] - week_games['away_points']
-def calculate_margin_team(row):
-    if row['actual_margin'] > 0:
-        return f"{row['home_team']} -{row['actual_margin']}"  # If actual_margin is positive
-    elif row['actual_margin'] < 0:
-        return f"{row['away_team']} {row['actual_margin']}"  # If actual_margin is negative
-    else:
-        return ''
-week_games['actual_spread'] = week_games.apply(calculate_margin_team, axis=1)
-week_games = add_pr_prediction(week_games, 'actual_margin', 'spread', 'CLOSE ATS RESULT')
-week_games = add_pr_prediction(week_games, 'actual_margin', 'spreadOpen', 'OPEN ATS RESULT')
-
-def check_prediction_correct(row, prediction_col, ats_tester):
-    if row['actual_spread'] == '':
-        return ''
-    if row[prediction_col] == row[ats_tester]:
-        return 1
-    elif 'Exact' in (row[prediction_col], row[ats_tester]):
-        return 1
-    else:
-        return 0
-# Apply the check prediction function and store the result in a new column
-week_games['PEAR ATS CLOSE'] = week_games.apply(lambda row: check_prediction_correct(row, 'pr_prediction', 'CLOSE ATS RESULT'), axis=1)
-week_games['PEAR ATS OPEN'] = week_games.apply(lambda row: check_prediction_correct(row, 'opening_spread_prediction', 'OPEN ATS RESULT'), axis=1)
-
-def check_straight_up(row, prediction_col):
-    if row['actual_spread'] == '':
-        return ''
-    if (row['actual_margin'] < 0) and (row[prediction_col] < 0):
-        return 1
-    elif (row['actual_margin'] > 0) and (row[prediction_col] > 0):
-        return 1
-    else:
-        return 0
-week_games['PEAR SU'] = week_games.apply(lambda row: check_straight_up(row, 'pr_spread'), axis = 1)
-game_completion_info = week_games[['home_team', 'away_team', 'GQI', 'difference', 'formatted_open', 'formattedSpread', 'PEAR', 'pr_spread', 'spread', 'actual_margin', 'actual_spread', 'PEAR ATS OPEN', 'PEAR ATS CLOSE', 'PEAR SU']]
-completed = game_completion_info[game_completion_info["PEAR ATS CLOSE"] != '']
-no_pushes = completed[completed['difference'] != 0]
-no_pushes = no_pushes[no_pushes['spread'] != no_pushes['actual_margin']]
-
-X = 10
-if len(completed) > 0:
-    win_difference = completed.loc[completed["PEAR ATS CLOSE"] == 1, "difference"].sum()
-    total_difference = completed['difference'].sum()
-    MAE = round(abs(week_games['actual_margin'] - week_games['pr_spread']).mean(),2)
-    DAE = round(abs(week_games['actual_margin'] - week_games['pr_spread']).median(),2)
-    RMSE = round(math.sqrt(((week_games['actual_margin'] - week_games['pr_spread']) ** 2).mean()),2)
-    count = (abs(week_games['actual_margin'] - week_games['pr_spread']) < X).sum()
-    MAE_plus = 0.5 * MAE + 0.25 * DAE + 0.25 * RMSE
-    wATS = round(win_difference/total_difference * 100, 2)
-    print("----------------------")
-    print("Performance This Week")
-    print("----------------------")
-    print(f"SU: {round(100*sum(completed['PEAR SU'] / len(completed)),2)}%  -  {sum(completed['PEAR SU'])}/{len(completed)}")
-    print(f"ATS: {round(100 * sum(no_pushes['PEAR ATS CLOSE']) / len(no_pushes),2)}%  -  {sum(no_pushes['PEAR ATS CLOSE'])}/{len(no_pushes)}")
-    print(f'wATS: {wATS}%')
-    print(f"MAE: {MAE}")
-    print(f"DAE: {DAE}")
-    print(f"RMSE: {RMSE}")
-    print(f"MAE+: {round(100-MAE_plus,2)}%")
-    print(f"AE < {X}: {round(count/len(completed)*100,2)}%")
-
-game_completion_info.to_excel(f'./PEAR/PEAR Football/y{current_year}/Spreads/spreads_tracker_week{current_week}.xlsx')
-
+logo_folder = "./PEAR/PEAR Football/logos/"
 logo_cache = {}
-logos = logos[logos['classification'] == 'fbs'].reset_index(drop=True)
-for _, row in logos.iterrows():
-    team_name = row['team']
-    logo_url = row['logo'][0]  # Assuming logo is a list with URL at index 0
+def load_image(filename):
+    team_name = filename[:-4].replace("_", " ")
+    file_path = os.path.join(logo_folder, filename)
     try:
-        response = requests.get(logo_url)
-        img = Image.open(BytesIO(response.content))  # Ensure transparency support
-        logo_cache[team_name] = img
+        img = Image.open(file_path).convert("RGBA")
+        return (team_name, img)
     except Exception as e:
-        print(f"Error loading logo for {team_name}: {e}")
-        logo_cache[team_name] = None  # Placeholder if something fails
+        print(f"Error reading {filename}: {e}")
+        return (team_name, None)
+
+png_files = [f for f in os.listdir(logo_folder) if f.endswith(".png")]
+
+with ThreadPoolExecutor(max_workers=8) as executor:
+    results = executor.map(load_image, png_files)
+    logo_cache = dict(results)
 
 def PEAR_Win_Prob(home_power_rating, away_power_rating, neutral):
     if neutral == False:

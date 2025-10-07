@@ -435,7 +435,475 @@ def create_conference_projection(all_data, uncompleted_conference_games):
     df = pd.merge(df, all_data[['team', 'conference']], how='left', on='team')
     return df
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import cfbd
+from sklearn.preprocessing import MinMaxScaler
+import datetime
 
+def add_pr_prediction(week_games, pr_spread_col, vegas_spread_col, prediction_col_name='pr_prediction'):
+    week_games[prediction_col_name] = week_games.apply(_calculate_pr_prediction, axis=1, args=(pr_spread_col,vegas_spread_col,))
+    return week_games
+
+def calculate_margin_team(row):
+    if row['actual_margin'] > 0:
+        return f"{row['home_team']} -{row['actual_margin']}"  # If actual_margin is positive
+    elif row['actual_margin'] < 0:
+        return f"{row['away_team']} {row['actual_margin']}"  # If actual_margin is negative
+    else:
+        return ''
+
+def check_prediction_correct(row, prediction_col, ats_tester):
+    if row['actual_spread'] == '':
+        return ''
+    if row[prediction_col] == row[ats_tester]:
+        return 1
+    elif 'Exact' in (row[prediction_col], row[ats_tester]):
+        return 1
+    else:
+        return 0
+
+def check_straight_up(row, prediction_col):
+    if row['actual_spread'] == '':
+        return ''
+    if (row['actual_margin'] < 0) and (row[prediction_col] < 0):
+        return 1
+    elif (row['actual_margin'] > 0) and (row[prediction_col] > 0):
+        return 1
+    else:
+        return 0
+
+def check_over_under(row, prediction_col):
+    if row['actual_total'] == '':
+        return ''
+    if (row['actual_total'] < row['overUnder']) and (row[prediction_col] < row['overUnder']):
+        return 1
+    elif (row['actual_total'] > row['overUnder']) and (row[prediction_col] > row['overUnder']):
+        return 1
+    else:
+        return 0
+
+def analyze_vegas_predictions(current_week, current_year, postseason=False, post_season_week=1, save=False):
+    """
+    Analyze and compare PEAR predictions against Vegas spreads.
+    
+    Parameters:
+    -----------
+    current_week : int
+        The week number for regular season games
+    current_year : int
+        The year of the season
+    postseason : bool, default=False
+        Whether to analyze postseason games
+    post_season_week : int, default=1
+        The postseason week number (used if postseason=True)
+    
+    Returns:
+    --------
+    tuple : (week_games DataFrame, prediction_information DataFrame, matplotlib figure)
+    """
+    
+    # Load data
+    team_data = pd.read_csv(
+        f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv'
+    ).drop(columns=['Unnamed: 0'], errors='ignore')
+    
+    all_data = pd.read_csv(
+        f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}.csv"
+    ).drop(columns=['Unnamed: 0'], errors='ignore')
+    
+    # Configure API
+    configuration = cfbd.Configuration(
+        access_token='7vGedNNOrnl0NGcSvt92FcVahY602p7IroVBlCA1Tt+WI/dCwtT7Gj5VzmaHrrxS'
+    )
+    api_client = cfbd.ApiClient(configuration)
+    games_api = cfbd.GamesApi(api_client)
+    betting_api = cfbd.BettingApi(api_client)
+    ratings_api = cfbd.RatingsApi(api_client)
+    
+    # Fetch games
+    if postseason:
+        games = games_api.get_games(
+            year=current_year, 
+            classification='fbs', 
+            season_type='postseason'
+        )
+    else:
+        games = games_api.get_games(
+            year=current_year, 
+            week=current_week, 
+            classification='fbs'
+        )
+    
+    # Convert games to DataFrame
+    games_dict = [{
+        'id': g.id,
+        'season': g.season,
+        'week': g.week,
+        'start_date': g.start_date,
+        'home_team': g.home_team,
+        'home_conference': g.home_conference,
+        'home_points': g.home_points,
+        'home_elo': g.home_pregame_elo,
+        'away_team': g.away_team,
+        'away_conference': g.away_conference,
+        'away_points': g.away_points,
+        'away_elo': g.away_pregame_elo,
+        'neutral': g.neutral_site
+    } for g in games]
+    
+    week_games = pd.DataFrame(games_dict)
+    week_games['start_date'] = pd.to_datetime(week_games['start_date'])
+    week_games = week_games.sort_values('start_date').reset_index(drop=True)
+    
+    # Fetch and merge ELO ratings
+    elo_ratings_list = ratings_api.get_elo(year=current_year)
+    elo_ratings = pd.DataFrame([{
+        'team': e.team,
+        'elo': e.elo
+    } for e in elo_ratings_list])
+    
+    # Handle new FBS teams
+    if current_week == 1:
+        new_teams = pd.DataFrame({
+            "team": ["Missouri State", "Delaware"],
+            "elo": [1500, 1500]
+        })
+        elo_ratings = pd.concat([elo_ratings, new_teams], ignore_index=True)
+    
+    # Update missing ELO values
+    week_games = week_games.merge(
+        elo_ratings.rename(columns={'elo': 'elo_lookup'}),
+        left_on='home_team',
+        right_on='team',
+        how='left'
+    )
+    week_games['home_elo'] = week_games['home_elo'].fillna(week_games['elo_lookup'])
+    week_games = week_games.drop(columns=['team', 'elo_lookup'])
+    
+    week_games = week_games.merge(
+        elo_ratings.rename(columns={'elo': 'elo_lookup'}),
+        left_on='away_team',
+        right_on='team',
+        how='left'
+    )
+    week_games['away_elo'] = week_games['away_elo'].fillna(week_games['elo_lookup'])
+    week_games = week_games.drop(columns=['team', 'elo_lookup'])
+    
+    # Merge power ratings
+    week_games = week_games.merge(
+        all_data[['team', 'power_rating', 'offensive_rating', 'defensive_rating']],
+        left_on='home_team',
+        right_on='team',
+        how='left'
+    ).rename(columns={
+        'power_rating': 'home_pr',
+        'offensive_rating': 'home_or',
+        'defensive_rating': 'home_dr'
+    }).drop(columns=['team'])
+    
+    week_games = week_games.merge(
+        all_data[['team', 'power_rating', 'offensive_rating', 'defensive_rating']],
+        left_on='away_team',
+        right_on='team',
+        how='left'
+    ).rename(columns={
+        'power_rating': 'away_pr',
+        'offensive_rating': 'away_or',
+        'defensive_rating': 'away_dr'
+    }).drop(columns=['team'])
+    
+    # Calculate predictions
+    elo_diff = week_games['home_elo'] - week_games['away_elo']
+    week_games['home_win_prob'] = round(
+        (10**(elo_diff / 400)) / ((10**(elo_diff / 400)) + 1) * 100, 2
+    )
+    
+    home_adj = ((week_games['home_win_prob'] - 50) / 50) * 1
+    week_games['pr_spread'] = (
+        GLOBAL_HFA + week_games['home_pr'] + home_adj - week_games['away_pr']
+    ).round(1)
+    
+    # Adjust for neutral site
+    week_games.loc[week_games['neutral'], 'pr_spread'] -= 3
+    week_games['pr_spread'] = week_games['pr_spread'].round(1)
+    
+    # Calculate totals
+    week_games['total'] = (
+        (week_games['home_or'] + week_games['away_dr']) / 2 +
+        (week_games['away_or'] + week_games['home_dr']) / 2
+    ).round(1)
+    
+    # Calculate Game Quality Index
+    pr_min = team_data['power_rating'].min()
+    pr_max = team_data['power_rating'].max()
+    week_games['GQI'] = _calculate_game_quality(
+        week_games, pr_min, pr_max, spread_cap=30
+    )
+    
+    # Fetch betting lines
+    if postseason:
+        betting = betting_api.get_lines(year=current_year, season_type="postseason")
+    else:
+        betting = betting_api.get_lines(year=current_year, week=current_week)
+    
+    # Process betting information
+    betting_info_list = []
+    for bet in betting:
+        data = bet.to_dict() if hasattr(bet, 'to_dict') else vars(bet)
+        lines = pd.DataFrame(data['lines'])
+        
+        if lines.empty:
+            continue
+        
+        # Priority order for providers
+        for provider in ['consensus', 'Bovada', 'DraftKings', 'ESPN Bet']:
+            consensus_lines = lines[lines['provider'] == provider]
+            if not consensus_lines.empty:
+                break
+        
+        if not consensus_lines.empty:
+            consensus_lines = consensus_lines[['spread', 'formattedSpread', 'spreadOpen', 'overUnder']]
+            combined_data = {'id': data['id'], 'season_type': data['seasonType']}
+            df = pd.DataFrame([combined_data])
+            full_df = pd.concat([df.reset_index(drop=True), consensus_lines.reset_index(drop=True)], axis=1)
+            betting_info_list.append(full_df)
+    
+    betting_info = pd.concat(betting_info_list, ignore_index=True)
+    week_games = week_games.merge(betting_info, on='id', how='left')
+    week_games = week_games.dropna(subset=['formattedSpread'])
+    
+    # Flip spread signs
+    week_games['spread'] *= -1
+    week_games['spreadOpen'] *= -1
+    
+    # Cap predictions
+    threshold = 25
+    week_games['pr_spread'] = np.clip(
+        week_games['pr_spread'],
+        week_games['spread'] - threshold,
+        week_games['spread'] + threshold
+    )
+    
+    # Calculate predictions
+    week_games['pr_prediction'] = week_games.apply(
+        lambda row: _calculate_pr_prediction(row, 'pr_spread', 'spread'), axis=1
+    )
+    week_games['opening_spread_prediction'] = week_games.apply(
+        lambda row: _calculate_pr_prediction(row, 'pr_spread', 'spreadOpen'), axis=1
+    )
+    week_games['ou_prediction'] = week_games.apply(
+        lambda row: _calculate_ou_prediction(row, 'total', 'overUnder'), axis=1
+    )
+    
+    # Format spreads
+    week_games['formatted_open'] = week_games.apply(
+        lambda row: f"{row['away_team']} {row['spreadOpen']}" if row['spreadOpen'] < 0
+        else f"{row['home_team']} -{row['spreadOpen']}", axis=1
+    )
+    
+    week_games['PEAR'] = week_games.apply(
+        lambda row: f"{row['away_team']} {-abs(row['pr_spread'])}" if row['pr_spread'] <= 0
+        else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1
+    )
+    
+    # Calculate differences
+    week_games['difference'] = abs(week_games['pr_spread'] - week_games['spread'])
+    week_games['opening_difference'] = abs(week_games['pr_spread'] - week_games['spreadOpen'])
+    week_games['total_difference'] = abs(week_games['total'] - week_games['overUnder'])
+    
+    # Sort and clean
+    week_games = week_games.sort_values(
+        by=["difference", "home_win_prob"], ascending=False
+    ).reset_index(drop=True)
+    week_games = week_games.drop_duplicates(subset='home_team')
+    
+    # Create prediction information summary
+    prediction_information = week_games[[
+        'home_team', 'away_team', 'GQI', 'difference', 'formatted_open',
+        'formattedSpread', 'PEAR', 'pr_prediction', 'home_pr', 'away_pr',
+        'overUnder', 'total', 'total_difference', 'ou_prediction'
+    ]].dropna()
+    
+    # Create visualization
+    fig = _plot_vegas_differences(prediction_information)
+
+    # Print summary statistics
+    print("="*60)
+    print("PREDICTION SUMMARY")
+    print("="*60)
+    
+    print("\nSpread Prediction Distribution:")
+    print("-" * 40)
+    print(week_games['pr_prediction'].value_counts().to_string())
+    
+    print("\nOver/Under Prediction Distribution:")
+    print("-" * 40)
+    print(week_games['ou_prediction'].value_counts().to_string())
+    
+    print("\nTop 5 Games by Spread Difference:")
+    print("-" * 40)
+    top_5 = prediction_information[['home_team', 'away_team', 'difference', 'formattedSpread', 'PEAR']].head(5)
+    print(top_5.to_string(index=False))
+
+    print("\nBottom 5 Games by Spread Difference:")
+    print("-" * 40)
+    bottom_5 = prediction_information[['home_team', 'away_team', 'difference', 'formattedSpread', 'PEAR']].tail(5)
+    print(bottom_5.to_string(index=False))
+    print("="*60)
+
+    week_games['actual_margin'] = week_games['home_points'] - week_games['away_points']
+    week_games['actual_spread'] = week_games.apply(calculate_margin_team, axis=1)
+    week_games = add_pr_prediction(week_games, 'actual_margin', 'spread', 'CLOSE ATS RESULT')
+    week_games = add_pr_prediction(week_games, 'actual_margin', 'spreadOpen', 'OPEN ATS RESULT')
+    week_games['PEAR ATS CLOSE'] = week_games.apply(lambda row: check_prediction_correct(row, 'pr_prediction', 'CLOSE ATS RESULT'), axis=1)
+    week_games['PEAR ATS OPEN'] = week_games.apply(lambda row: check_prediction_correct(row, 'opening_spread_prediction', 'OPEN ATS RESULT'), axis=1)
+
+    week_games['PEAR SU'] = week_games.apply(lambda row: check_straight_up(row, 'pr_spread'), axis = 1)
+    week_games['actual_total'] = week_games['home_points'] + week_games['away_points']
+    week_games['PEAR_OU'] = week_games.apply(lambda row: check_over_under(row, 'total'), axis = 1)
+    game_completion_info = week_games[['home_team', 'away_team', 'GQI', 'difference', 'formatted_open', 'formattedSpread', 'PEAR', 'pr_spread', 'spread', 'actual_margin', 'actual_spread', 'PEAR ATS OPEN', 'PEAR ATS CLOSE', 'PEAR SU', 'PEAR_OU']]
+    completed = game_completion_info[
+        (game_completion_info["PEAR ATS CLOSE"] != '') &
+        (game_completion_info["GQI"].notna())
+    ]
+    no_pushes = completed[completed['difference'] != 0]
+    no_pushes = no_pushes[no_pushes['spread'] != no_pushes['actual_margin']]
+
+    X = 10
+    if len(completed) > 0:
+        win_difference = completed.loc[completed["PEAR ATS CLOSE"] == 1, "difference"].sum()
+        total_difference = completed['difference'].sum()
+        MAE = round(abs(week_games['actual_margin'] - week_games['pr_spread']).mean(),2)
+        DAE = round(abs(week_games['actual_margin'] - week_games['pr_spread']).median(),2)
+        RMSE = round(math.sqrt(((week_games['actual_margin'] - week_games['pr_spread']) ** 2).mean()),2)
+        count = (abs(week_games['actual_margin'] - week_games['pr_spread']) < X).sum()
+        MAE_plus = 0.5 * MAE + 0.25 * DAE + 0.25 * RMSE
+        wATS = round(win_difference/total_difference * 100, 2)
+        wOU = round(sum(completed['PEAR_OU']) / len(completed) * 100, 2)
+
+        print(f"SU: {round(100*sum(completed['PEAR SU'] / len(completed)),2)}%  -  {sum(completed['PEAR SU'])}/{len(completed)}")
+        print(f"ATS: {round(100 * sum(no_pushes['PEAR ATS CLOSE']) / len(no_pushes),2)}%  -  {sum(no_pushes['PEAR ATS CLOSE'])}/{len(no_pushes)}")
+        print(f'wATS: {wATS}%')
+        print(f"MAE: {MAE}")
+        print(f"DAE: {DAE}")
+        print(f"RMSE: {RMSE}")
+        print(f"MAE+: {round(100-MAE_plus,2)}%")
+        print(f"AE < {X}: {round(count/len(completed)*100,2)}%")
+        print(f"OU: {wOU}% - {sum(completed['PEAR_OU'])}/{len(completed)}")
+    
+    if save:
+        game_completion_info.dropna(subset=['difference']).to_excel(f'./PEAR/PEAR Football/y{current_year}/Spreads/spreads_tracker_week{current_week}.xlsx')
+    
+    return week_games, prediction_information, fig
+
+
+def _calculate_game_quality(df, pr_min, pr_max, spread_cap=20, beta=8.5):
+    """Calculate Game Quality Index based on team quality and competitiveness."""
+    tq = (df['home_pr'] + df['away_pr']) / 2
+    tq_norm = ((tq - pr_min) / (pr_max - pr_min)).clip(0, 1)
+    
+    spread = df['home_pr'] - df['away_pr']
+    sc = (1 - (np.abs(spread) / spread_cap)).clip(0, 1)
+    
+    x = 0.65 * tq_norm + 0.35 * sc
+    gq_raw = 1 / (1 + np.exp(-beta * (x - 0.5)))
+    gq = (1 + 9 * gq_raw + 0.1).clip(upper=10)
+    
+    return gq.round(1)
+
+
+def _calculate_pr_prediction(row, pr_spread_col, vegas_spread_col):
+    """Determine if prediction favors favorite or underdog."""
+    pr = row[pr_spread_col]
+    vegas = row[vegas_spread_col]
+    
+    if vegas < 0 and pr < 0 and pr < vegas:
+        return 'Favorite'
+    elif vegas > 0 and pr > 0 and pr > vegas:
+        return 'Favorite'
+    elif vegas == pr:
+        return 'Exact'
+    else:
+        return 'Underdog'
+
+
+def _calculate_ou_prediction(row, total_col, vegas_total_col):
+    """Determine over/under prediction."""
+    if row[total_col] > row[vegas_total_col]:
+        return 'Over'
+    elif row[total_col] < row[vegas_total_col]:
+        return 'Under'
+    else:
+        return 'Exact'
+
+
+def _plot_vegas_differences(prediction_information):
+    """Create visualization comparing predictions to Vegas lines."""
+    
+    def single_plot(ax, data, title, ylabel, stats_text):
+        spreads_sorted = data.sort_values()
+        count_below_7 = len(spreads_sorted[spreads_sorted <= 7])
+        count_above_7 = len(spreads_sorted[spreads_sorted > 7])
+        x_values = range(1, len(spreads_sorted) + 1)
+        y_min = spreads_sorted.min()
+        y_max = spreads_sorted.max()
+        y_ticks = np.arange(np.floor(y_min), np.ceil(y_max) + 0.5, 0.5)
+        
+        ax.plot(x_values, spreads_sorted, marker='o', linestyle='-', color='b', markersize=4)
+        ax.axhspan(ymin=y_min, ymax=7, color='blue', alpha=0.2)
+        ax.axhline(y=7, linestyle='--', color='darkgreen')
+        
+        if y_max > 6.5:
+            ax.axhspan(ymin=7, ymax=y_max, color='darkgreen', alpha=0.2)
+            ax.text(len(x_values) * 0.05, 7.5, f'{count_above_7}', color='black', fontsize=10)
+        
+        ax.text(len(x_values) * 0.05, 1.5, f'{count_below_7}', color='black', fontsize=10)
+        ax.text(
+            0.02, 0.95, stats_text,
+            transform=ax.transAxes,
+            fontsize=9, color="black",
+            verticalalignment="top",
+            bbox=dict(facecolor="white", alpha=0.7, edgecolor="gray")
+        )
+        
+        ax.set_title(title)
+        ax.set_xlabel('Game')
+        ax.set_ylabel(ylabel)
+        ax.grid(True)
+        ax.set_yticks(y_ticks)
+        ax.tick_params(axis='y', labelsize=7)
+    
+    # Calculate statistics
+    total_diff = round(sum(prediction_information['difference']), 1)
+    total_ou_diff = round(sum(prediction_information['total_difference']), 1)
+    avg_diff_spread = round(prediction_information['difference'].mean(), 2)
+    avg_diff_total = round(prediction_information['total_difference'].mean(), 2)
+    
+    stats_spread = f"Total: {total_diff}\nAvg: {avg_diff_spread}"
+    stats_total = f"Total: {total_ou_diff}\nAvg: {avg_diff_total}"
+    
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5), dpi=150)
+    
+    single_plot(
+        axes[0],
+        prediction_information['difference'],
+        'Difference from Vegas Spread Tracked by Game',
+        'Difference from Vegas Spread',
+        stats_spread
+    )
+    
+    single_plot(
+        axes[1],
+        prediction_information['total_difference'],
+        'Difference from Vegas Over Under Tracked by Game',
+        'Difference from Vegas Over Under',
+        stats_total
+    )
+    
+    plt.tight_layout()
+    return fig
 
 
 
