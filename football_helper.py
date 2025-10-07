@@ -733,20 +733,14 @@ def analyze_vegas_predictions(current_week, current_year, postseason=False, post
     print("="*60)
     print("PREDICTION SUMMARY")
     print("="*60)
-    
-    print("\nSpread Prediction Distribution:")
-    print("-" * 40)
     print(week_games['pr_prediction'].value_counts().to_string())
-    
-    print("\nOver/Under Prediction Distribution:")
     print("-" * 40)
     print(week_games['ou_prediction'].value_counts().to_string())
-    
-    print("\nTop 5 Games by Spread Difference:")
+    print("="*60)
+    print("Top 5 Games by Spread Difference:")
     print("-" * 40)
     top_5 = prediction_information[['home_team', 'away_team', 'difference', 'formattedSpread', 'PEAR']].head(5)
     print(top_5.to_string(index=False))
-
     print("\nBottom 5 Games by Spread Difference:")
     print("-" * 40)
     bottom_5 = prediction_information[['home_team', 'away_team', 'difference', 'formattedSpread', 'PEAR']].tail(5)
