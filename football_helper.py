@@ -3671,6 +3671,21 @@ import matplotlib.pyplot as plt
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.patches import Rectangle
 
+def calculate_gq(home_pr, away_pr, spread, min_pr, max_pr):
+    tq = (home_pr + away_pr) / 2
+    tq_norm = np.clip((tq - min_pr) / (max_pr - min_pr), 0, 1)
+
+    spread_cap = 20
+    beta = 8.5
+
+    sc = np.clip(1 - (abs(spread) / spread_cap), 0, 1)
+
+    x = (0.65 * tq_norm + 0.35 * sc)
+    gq_raw = 1 / (1 + np.exp(-beta * (x - 0.5)))
+
+    gq = np.clip((1 + 9 * gq_raw) + 0.1, None, 10)
+    return gq.round(1)
+
 def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, current_year, current_week, save, time_outlet=None):
     # Example: pulling logos from your dictionary
     away_logo = team_logos[away_team]
@@ -3795,6 +3810,8 @@ def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, cur
     home_score = round((predicted_total + spread) / 2, 1)
     away_score = round((predicted_total - spread) / 2, 1)
 
+    gq_value = calculate_gq(home_pr, away_pr, spread, all_data['power_rating'].min(), all_data['power_rating'].max())
+
     def plot_logo(ax, img, xy, zoom=0.2):
         """Helper to plot a logo at given xy coords."""
         imagebox = OffsetImage(img, zoom=zoom)
@@ -3821,16 +3838,17 @@ def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, cur
     ax.text(0.5, 0.92, f'{time_outlet}', ha='center', fontsize=20, fontweight='bold', bbox=dict(facecolor='blue', alpha=0.0))
     ax.text(0.5, 0.57, f"{formatted_spread}", ha='center', fontsize=28, fontweight='bold', bbox=dict(facecolor='blue', alpha=0.0))
     ax.text(0.5, 0.625, f"O/U: {predicted_total}", ha='center', fontsize=28, fontweight='bold', bbox=dict(facecolor='blue', alpha=0.0))
+    ax.text(0.5, 0.68, f"GQI: {gq_value}", ha='center', fontsize=28, fontweight='bold', bbox=dict(facecolor='blue', alpha=0.0))
 
     ax.text(0.4, 0.89, f"WIN PROB (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
     ax.text(0.4, 0.84, f"{round(100-PEAR_home_prob,1)}", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
-    ax.text(0.4, 0.77, f"PROJ. POINTS", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
-    ax.text(0.4, 0.72, f"{away_score}", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
-    ax.text(0.5, 0.725, f"—", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+    ax.text(0.4, 0.785, f"PROJ. POINTS", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+    ax.text(0.4, 0.735, f"{away_score}", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+    ax.text(0.5, 0.74, f"—", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
     ax.text(0.6, 0.89, f"WIN PROB (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
     ax.text(0.6, 0.84, f"{round(PEAR_home_prob,1)}", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
-    ax.text(0.6, 0.77, f"PROJ. POINTS", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
-    ax.text(0.6, 0.72, f"{home_score}", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+    ax.text(0.6, 0.785, f"PROJ. POINTS", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+    ax.text(0.6, 0.735, f"{home_score}", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
 
 
     # ---------------------------
