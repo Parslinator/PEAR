@@ -420,13 +420,13 @@ import matplotlib.pyplot as plt
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from matplotlib.patches import Rectangle
 
-def calculate_gq(home_pr, away_pr, spread, min_pr, max_pr):
+def calculate_gq(home_pr, away_pr, min_pr, max_pr):
     tq = (home_pr + away_pr) / 2
     tq_norm = np.clip((tq - min_pr) / (max_pr - min_pr), 0, 1)
 
     spread_cap = 20
     beta = 8.5
-
+    spread = home_pr - away_pr
     sc = np.clip(1 - (abs(spread) / spread_cap), 0, 1)
 
     x = (0.65 * tq_norm + 0.35 * sc)
@@ -558,7 +558,7 @@ def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, cur
     home_score = round((predicted_total + spread) / 2, 1)
     away_score = round((predicted_total - spread) / 2, 1)
 
-    gq_value = calculate_gq(home_pr, away_pr, spread, all_data['power_rating'].min(), all_data['power_rating'].max())
+    gq_value = calculate_gq(home_pr, away_pr, all_data['power_rating'].min(), all_data['power_rating'].max())
 
     def plot_logo(ax, img, xy, zoom=0.2):
         """Helper to plot a logo at given xy coords."""
