@@ -3675,7 +3675,7 @@ def calculate_gq(home_pr, away_pr, min_pr, max_pr):
     tq = (home_pr + away_pr) / 2
     tq_norm = np.clip((tq - min_pr) / (max_pr - min_pr), 0, 1)
 
-    spread_cap = 20
+    spread_cap = 30
     beta = 8.5
     spread = home_pr - away_pr
     sc = np.clip(1 - (abs(spread) / spread_cap), 0, 1)
