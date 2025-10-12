@@ -1,0 +1,137 @@
+,team,power_rating,conference,week,year
+1,Ohio State,27.3,Big Ten,8,2025
+2,Indiana,25.5,Big Ten,8,2025
+3,Oregon,24.1,Big Ten,8,2025
+4,Notre Dame,23.6,FBS Independents,8,2025
+5,Alabama,23.1,SEC,8,2025
+6,Texas Tech,23.0,Big 12,8,2025
+7,Texas,22.7,SEC,8,2025
+8,Texas A&M,21.5,SEC,8,2025
+9,Miami,20.9,ACC,8,2025
+10,Georgia,20.3,SEC,8,2025
+11,Utah,19.9,Big 12,8,2025
+12,USC,18.9,Big Ten,8,2025
+13,Missouri,17.7,SEC,8,2025
+14,Oklahoma,17.4,SEC,8,2025
+15,LSU,17.2,SEC,8,2025
+16,Tennessee,17.0,SEC,8,2025
+17,Ole Miss,16.6,SEC,8,2025
+18,Vanderbilt,16.0,SEC,8,2025
+19,Michigan,15.5,Big Ten,8,2025
+20,Washington,15.4,Big Ten,8,2025
+21,Penn State,14.6,Big Ten,8,2025
+22,Iowa,14.3,Big Ten,8,2025
+23,BYU,13.8,Big 12,8,2025
+24,Nebraska,13.5,Big Ten,8,2025
+25,Auburn,13.5,SEC,8,2025
+26,Florida State,12.5,ACC,8,2025
+27,Clemson,12.2,ACC,8,2025
+28,Louisville,12.0,ACC,8,2025
+29,Illinois,11.9,Big Ten,8,2025
+30,Florida,11.6,SEC,8,2025
+31,Memphis,10.8,American Athletic,8,2025
+32,Cincinnati,10.5,Big 12,8,2025
+33,Pittsburgh,10.4,ACC,8,2025
+34,Georgia Tech,10.1,ACC,8,2025
+35,Iowa State,9.7,Big 12,8,2025
+36,South Carolina,9.7,SEC,8,2025
+37,TCU,9.6,Big 12,8,2025
+38,Kansas,9.3,Big 12,8,2025
+39,Arkansas,8.9,SEC,8,2025
+40,Duke,8.9,ACC,8,2025
+41,South Florida,8.4,American Athletic,8,2025
+42,Mississippi State,8.0,SEC,8,2025
+43,SMU,7.7,ACC,8,2025
+44,Virginia,7.5,ACC,8,2025
+45,Kansas State,6.9,Big 12,8,2025
+46,Arizona,6.4,Big 12,8,2025
+47,Baylor,6.2,Big 12,8,2025
+48,Arizona State,6.2,Big 12,8,2025
+49,Maryland,6.2,Big Ten,8,2025
+50,Boise State,4.7,Mountain West,8,2025
+51,Colorado,3.9,Big 12,8,2025
+52,Houston,3.8,Big 12,8,2025
+53,Rutgers,3.2,Big Ten,8,2025
+54,Tulane,3.0,American Athletic,8,2025
+55,Toledo,2.9,Mid-American,8,2025
+56,Kentucky,2.9,SEC,8,2025
+57,UCF,2.8,Big 12,8,2025
+58,NC State,2.8,ACC,8,2025
+59,East Carolina,2.2,American Athletic,8,2025
+60,Northwestern,2.1,Big Ten,8,2025
+61,Minnesota,2.1,Big Ten,8,2025
+62,UTSA,2.0,American Athletic,8,2025
+63,Old Dominion,1.9,Sun Belt,8,2025
+64,North Texas,1.2,American Athletic,8,2025
+65,San Diego State,1.1,Mountain West,8,2025
+66,James Madison,1.1,Sun Belt,8,2025
+67,Wake Forest,0.8,ACC,8,2025
+68,Navy,-0.2,American Athletic,8,2025
+69,UCLA,-0.3,Big Ten,8,2025
+70,Syracuse,-0.6,ACC,8,2025
+71,Wisconsin,-0.8,Big Ten,8,2025
+72,Michigan State,-0.8,Big Ten,8,2025
+73,UNLV,-1.4,Mountain West,8,2025
+74,UConn,-1.9,FBS Independents,8,2025
+75,West Virginia,-3.3,Big 12,8,2025
+76,Virginia Tech,-3.3,ACC,8,2025
+77,Purdue,-3.4,Big Ten,8,2025
+78,California,-3.4,ACC,8,2025
+79,Army,-4.9,American Athletic,8,2025
+80,Texas State,-5.3,Sun Belt,8,2025
+81,Marshall,-5.4,Sun Belt,8,2025
+82,Washington State,-5.6,Pac-12,8,2025
+83,Troy,-5.9,Sun Belt,8,2025
+84,Louisiana Tech,-6.1,Conference USA,8,2025
+85,Western Kentucky,-6.1,Conference USA,8,2025
+86,Western Michigan,-6.2,Mid-American,8,2025
+87,Fresno State,-6.4,Mountain West,8,2025
+88,Ohio,-6.5,Mid-American,8,2025
+89,Temple,-7.0,American Athletic,8,2025
+90,New Mexico,-7.3,Mountain West,8,2025
+91,Hawai'i,-7.4,Mountain West,8,2025
+92,Colorado State,-7.5,Mountain West,8,2025
+93,Boston College,-7.6,ACC,8,2025
+94,Bowling Green,-7.7,Mid-American,8,2025
+95,Miami (OH),-7.7,Mid-American,8,2025
+96,Southern Miss,-8.0,Sun Belt,8,2025
+97,Stanford,-8.1,ACC,8,2025
+98,Air Force,-8.3,Mountain West,8,2025
+99,North Carolina,-8.4,ACC,8,2025
+100,Utah State,-8.4,Mountain West,8,2025
+101,San José State,-9.2,Mountain West,8,2025
+102,Liberty,-9.2,Conference USA,8,2025
+103,Wyoming,-9.6,Mountain West,8,2025
+104,Kennesaw State,-10.3,Conference USA,8,2025
+105,Buffalo,-10.6,Mid-American,8,2025
+106,South Alabama,-10.6,Sun Belt,8,2025
+107,App State,-10.8,Sun Belt,8,2025
+108,Florida Atlantic,-10.8,American Athletic,8,2025
+109,Oregon State,-11.1,Pac-12,8,2025
+110,Louisiana,-11.1,Sun Belt,8,2025
+111,Delaware,-11.5,Conference USA,8,2025
+112,Jacksonville State,-12.4,Conference USA,8,2025
+113,Georgia Southern,-12.7,Sun Belt,8,2025
+114,Oklahoma State,-14.2,Big 12,8,2025
+115,Northern Illinois,-14.4,Mid-American,8,2025
+116,Coastal Carolina,-14.7,Sun Belt,8,2025
+117,Arkansas State,-15.1,Sun Belt,8,2025
+118,Missouri State,-16.0,Conference USA,8,2025
+119,Rice,-16.1,American Athletic,8,2025
+120,Central Michigan,-16.2,Mid-American,8,2025
+121,UL Monroe,-16.8,Sun Belt,8,2025
+122,UTEP,-16.8,Conference USA,8,2025
+123,Eastern Michigan,-17.0,Mid-American,8,2025
+124,Tulsa,-17.5,American Athletic,8,2025
+125,UAB,-17.8,American Athletic,8,2025
+126,Florida International,-18.4,Conference USA,8,2025
+127,New Mexico State,-18.5,Conference USA,8,2025
+128,Georgia State,-18.8,Sun Belt,8,2025
+129,Akron,-19.9,Mid-American,8,2025
+130,Nevada,-20.2,Mountain West,8,2025
+131,Charlotte,-21.2,American Athletic,8,2025
+132,Middle Tennessee,-21.8,Conference USA,8,2025
+133,Kent State,-22.1,Mid-American,8,2025
+134,Sam Houston,-22.4,Conference USA,8,2025
+135,Ball State,-22.7,Mid-American,8,2025
+136,Massachusetts,-29.9,Mid-American,8,2025

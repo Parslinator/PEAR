@@ -59,7 +59,7 @@ drives_api = cfbd.DrivesApi(api_client)
 
 from football_helper import modeling_data_import, build_power_ratings_multi_target, in_house_power_ratings, average_team_distribution, metric_creation, stats_formatting
 
-outputs = modeling_data_import(7)
+outputs = modeling_data_import(8)
 team_data = outputs["team_data"]
 opponent_adjustment_schedule = outputs["opponent_adjustment_schedule"]
 updated_metrics = outputs["updated_metrics"]
@@ -295,7 +295,7 @@ try:
     plt.savefig(os.path.join(folder_path, "composite_ranking"), bbox_inches='tight', dpi=300)
     print("Composite Done!")
 except Exception as e:
-    print(f"Error in code chunk: Most Deserving Ratings. Error: {e}")
+    print(f"Error in code chunk: Composite Ratings. Error: {e}")
 
 
 try:
@@ -419,6 +419,12 @@ try:
     print("All Most Deserving Done!")
 except Exception as e:
     print(f"Error in code chunk: All Most Deserving. Error: {e}")
+
+try:
+    all_136_teams(all_data, 'composite_score', False, team_logos, 3, current_week, f"Week {current_week} PEAR Composite Rankings - Combining MD, OFF, and DEF", folder_path, "all_composite_rankings")
+    print("All Composite Rankings Done!")
+except Exception as e:
+    print(f"Error in code chunk: All Composite Rankings. Error: {e}")
 
 try:
     start_week = current_week
@@ -940,17 +946,24 @@ except Exception as e:
 
 try:
     file_path = "power_rating_playoff"
-    draw_playoff_bracket_new(all_data, 'power_rating', team_logos, 'Projected College Football Playoff Bracket via PEAR Power Rating', True, folder_path, file_path)
+    draw_playoff_bracket_new(all_data, 'power_rating', team_logos, 'Current College Football Playoff Bracket via PEAR Power Rating', True, folder_path, file_path)
     print("Power Rating Playoff Done!")
 except Exception as e:
     print(f"Error occurred while drawing Power Rating Playoff: {e}")
 
 try:
     file_path = "most_deserving_playoff"
-    draw_playoff_bracket_new(all_data, 'most_deserving_wins', team_logos, 'Projected College Football Playoff Bracket via PEAR Most Deserving', True, folder_path, file_path)
+    draw_playoff_bracket_new(all_data, 'most_deserving_wins', team_logos, 'Current College Football Playoff Bracket via PEAR Most Deserving', True, folder_path, file_path)
     print("Most Deserving Playoff Done!")
 except Exception as e:
     print(f"Error occurred while drawing Most Deserving Playoff: {e}")
+
+try:
+    file_path = "composite_playoff"
+    draw_playoff_bracket_new(all_data, 'composite_score', team_logos, 'Current College Football Playoff Bracket via PEAR Composite Score', True, folder_path, file_path)
+    print("Composite Playoff Done!")
+except Exception as e:
+    print(f"Error occurred while drawing Composite Playoff: {e}")
 
 try:
     fig, ax = plt.subplots(figsize=(15, 9),dpi=125)
