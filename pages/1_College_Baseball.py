@@ -74,9 +74,9 @@ def process_result(row):
 
 def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
     if location != "Neutral":
-        home_pr += 0.8
+        home_pr += 0.3
     rating_diff = home_pr - away_pr
-    return round(1 / (1 + 10 ** (-rating_diff / 9.1)) * 100, 2)
+    return round(1 / (1 + 10 ** (-rating_diff / 6)) * 100, 2)
 
 if len(subset_games) > 0:
     subset_games['Result'] = subset_games['Result'].astype(str)
@@ -620,9 +620,9 @@ def grab_team_schedule(team_name, stats_df):
     if len(remaining_games) > 0:
         def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
             if location != "Neutral":
-                home_pr += 0.8
+                home_pr += 0.3
             rating_diff = home_pr - away_pr
-            return round(1 / (1 + 10 ** (-rating_diff / 9.1)) * 100, 2)
+            return round(1 / (1 + 10 ** (-rating_diff / 6)) * 100, 2)
         remaining_games['PEAR'] = remaining_games.apply(
             lambda row: find_spread(
                 row['Opponent'], row['Team'], row['Location']
@@ -673,7 +673,7 @@ def grab_team_schedule(team_name, stats_df):
 
     def PEAR_Win_Prob(home_pr, away_pr):
         rating_diff = home_pr - away_pr
-        win_prob = round(1 / (1 + 10 ** (-rating_diff / 9.1)) * 100, 2)
+        win_prob = round(1 / (1 + 10 ** (-rating_diff / 6)) * 100, 2)
         return win_prob
 
 
@@ -737,9 +737,9 @@ def simulate_best_of_three_series(team_a, team_b, ratings, location):
 
 def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
     if location != "Neutral":
-        home_pr += 0.8
+        home_pr += 0.3
     rating_diff = home_pr - away_pr
-    return round(1 / (1 + 10 ** (-rating_diff / 9.1)) * 100, 2)
+    return round(1 / (1 + 10 ** (-rating_diff / 6)) * 100, 2)
 
 def plot_tournament_odds_table(final_df, row_height_multiplier, conference, title_y, subtitle_y, cell_height):
     def normalize(value, min_val, max_val):
@@ -2562,7 +2562,7 @@ def simulate_tournament_home_field(teams, ratings):
     import random
     def PEAR_Win_Prob(home_pr, away_pr):
         rating_diff = home_pr - away_pr
-        return round(1 / (1 + 10 ** (-rating_diff / 9.1)), 4)
+        return round(1 / (1 + 10 ** (-rating_diff / 6)), 4)
 
     team_a, team_b, team_c, team_d = teams
     r = ratings
