@@ -3244,7 +3244,7 @@ with col1:
     modeling_stats_copy['TSR'] = modeling_stats_copy['PRR']
     modeling_stats_copy['ELO'] = modeling_stats_copy['ELO_Rank']
     with st.container(border=True, height=440):
-        st.dataframe(modeling_stats_copy[['NET', 'RPI', 'ELO', 'TSR', 'RQI', 'SOS', 'Q1', 'Q2', 'Q3', 'Q4', 'Conference']], use_container_width=True)
+        st.dataframe(modeling_stats_copy[['NET', 'RPI', 'ELO', 'TSR', 'RQI', 'SOS', 'Q1', 'Q2', 'Q3', 'Q4', 'Conference']], width='stretch')
     st.caption("NET - Mimicing the NCAA Evaluation Tool using TSR, RQI, SOS")
     st.caption("RPI - Warren Nolan's Live RPI, TSR - Team Strength Rank, RQI - Resume Quality Index, SOS - Strength of Schedule")
 with col2:
@@ -3258,7 +3258,7 @@ with col2:
 
     st.markdown(f'<h2 id="team-stats">Team Stats</h2>', unsafe_allow_html=True)
     with st.container(border=True, height=440):
-        st.dataframe(modeling_stats_copy[['WAR', 'WPOE', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], use_container_width=True)
+        st.dataframe(modeling_stats_copy[['WAR', 'WPOE', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference']], width='stretch')
     st.caption("WAR - Team WAR Rank, WPOE - Win Percentage Over Expectation (Luck), PYTHAG - Pythagorean Win Percentage, ERA - Earned Run Average, WHIP - Walks Hits Over Innings Pitched, KP9 - Strikeouts Per 9, RPG - Runs Score Per Game, BA - Batting Average, OBP - On Base Percentage, SLG - Slugging Percentage, OPS - On Base Plus Slugging")
 
 st.divider()
@@ -3334,7 +3334,7 @@ with col1:
     multibid = conference_counts[conference_counts > 1]
     st.markdown(f'<h2 id="tournament-outlook">Tournament Outlook</h2>', unsafe_allow_html=True)
     with st.container(border=True, height=440):
-        st.dataframe(formatted_df[['Host', '2 Seed', '3 Seed', '4 Seed']], use_container_width=True)
+        st.dataframe(formatted_df[['Host', '2 Seed', '3 Seed', '4 Seed']], width='stretch')
     st.caption(f"Last 4 In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}")
     st.caption(f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}")
     st.caption(f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}")
@@ -3383,7 +3383,7 @@ with col2:
             st.write("Upcoming Games")
             if len(schedule) > 0:
                 schedule.index = schedule.index + 1
-                st.dataframe(schedule[['Opponent', 'NET', 'Quad', 'GQI', 'PEAR', 'Date']], use_container_width=True)
+                st.dataframe(schedule[['Opponent', 'NET', 'Quad', 'GQI', 'PEAR', 'Date']], width='stretch')
                 st.caption('PEAR - Negative Value Indicates Favorites, Positive Value Indicates Underdog')
 
 st.divider()
@@ -3487,7 +3487,7 @@ if len(subset_games) > 0:
     subset_games['Home'] = subset_games['home_team']
     subset_games['Away'] = subset_games['away_team']
     with st.container(border=True, height=440):
-        st.dataframe(subset_games[['Home', 'Away', 'GQI', 'PEAR', 'Result']], use_container_width=True)
+        st.dataframe(subset_games[['Home', 'Away', 'GQI', 'PEAR', 'Result']], width='stretch')
 
 st.divider()
 
@@ -3503,7 +3503,7 @@ st.divider()
 #     display_df.index = display_df.index + 1
 #     with col:
 #         st.markdown(f"### {host} Super Regional")
-#         st.dataframe(display_df, use_container_width=True)
+#         st.dataframe(display_df, width='stretch')
 
 
 
@@ -3520,4 +3520,4 @@ st.divider()
 #     display_df.index = display_df.index + 1
 #     with col:
 #         st.markdown(f"### {host_team} Regional")
-#         st.dataframe(display_df, use_container_width=True)
+#         st.dataframe(display_df, width='stretch')
