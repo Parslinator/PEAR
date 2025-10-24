@@ -2832,7 +2832,7 @@ def plot_rating_vs_net(team_name, df):
     ax.set_facecolor('#CECEB2')
 
     x_start = 4
-    x_end = 5.5
+    x_end = 5
     y_start = 0.85
     y_end = 1
     box_width = x_end - x_start
