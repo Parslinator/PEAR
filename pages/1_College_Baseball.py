@@ -2961,7 +2961,7 @@ def find_spread_matchup_with_year(home_team, away_team, home_year, away_year, mo
     # else:
     #     rating_diff = home_pr - away_pr
     rating_diff = home_pr - away_pr
-    win_prob = round(1 / (1 + 10 ** (-rating_diff / 7.5)) * 100, 2)
+    win_prob = round(1 / (1 + 10 ** (-rating_diff / 6)) * 100, 2)
 
     if spread >= 0:
         return f"{home_year} {home_team} -{spread}", win_prob
