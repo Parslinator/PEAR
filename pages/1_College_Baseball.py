@@ -194,11 +194,7 @@ all_data['Normalized_Rating'] = all_data.groupby('Season')['Rating'].transform(
     lambda x: (x - x.mean()) / x.std()
 )
 
-current_range = all_data['Normalized_Rating'].max() - all_data['Normalized_Rating'].min()
-desired_range = 15
-scaling_factor = desired_range / current_range
-all_data['Normalized_Rating'] = round(all_data['Normalized_Rating'] * scaling_factor, 4)
-all_data['Normalized_Rating'] = all_data['Normalized_Rating'] - all_data['Normalized_Rating'].min()
+all_data['Normalized_Rating'] = all_data['Normalized_Rating'] * 2.5
 all_data['Normalized_Rating'] = round(all_data['Normalized_Rating'] - all_data['Normalized_Rating'].mean(),2)
 all_data['Normalized_Rating'] = round(all_data['Normalized_Rating'], 2)
 all_data = all_data.sort_values('Normalized_Rating', ascending=False).reset_index(drop=True)
@@ -235,11 +231,7 @@ all_data_full['Normalized_Rating'] = all_data_full.groupby('Season')['Rating'].t
     lambda x: (x - x.mean()) / x.std()
 )
 
-current_range = all_data_full['Normalized_Rating'].max() - all_data_full['Normalized_Rating'].min()
-desired_range = 15
-scaling_factor = desired_range / current_range
-all_data_full['Normalized_Rating'] = round(all_data_full['Normalized_Rating'] * scaling_factor, 4)
-all_data_full['Normalized_Rating'] = all_data_full['Normalized_Rating'] - all_data_full['Normalized_Rating'].min()
+all_data_full['Normalized_Rating'] = all_data_full['Normalized_Rating'] * 2.5
 all_data_full['Normalized_Rating'] = round(all_data_full['Normalized_Rating'] - all_data_full['Normalized_Rating'].mean(),2)
 all_data_full['Normalized_Rating'] = round(all_data_full['Normalized_Rating'], 2)
 all_data_full = all_data_full.sort_values('Normalized_Rating', ascending=False).reset_index(drop=True)
