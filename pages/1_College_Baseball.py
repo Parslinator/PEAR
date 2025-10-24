@@ -2839,9 +2839,9 @@ def plot_rating_vs_net(team_name, df):
     fig.patch.set_facecolor('#CECEB2')
     ax.set_facecolor('#CECEB2')
 
-    x_start = 3.5
-    x_end = 6
-    y_start = 0.9
+    x_start = 4
+    x_end = 5.5
+    y_start = 0.85
     y_end = 1
     box_width = x_end - x_start
     box_height = y_end - y_start
