@@ -62,24 +62,75 @@ export default function RatingsTable({ data }: Props) {
     );
   };
 
-  const getRankColor = (rank: number, total: number = 136) => {
-    const percentage = rank / total;
-    if (percentage <= 0.25) return 'bg-green-100 text-green-800';
-    if (percentage <= 0.5) return 'bg-blue-100 text-blue-800';
-    if (percentage <= 0.75) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-red-100 text-red-800';
+  const getRatingColor = (rating: number, allRatings: number[]) => {
+    const max = Math.max(...allRatings);
+    const min = Math.min(...allRatings);
+    const range = max - min;
+    const position = (rating - min) / range;
+    
+    if (position >= 0.75) return 'bg-blue-600 text-white';
+    if (position >= 0.5) return 'bg-blue-400 text-white';
+    if (position >= 0.25) return 'bg-gray-400 text-white';
+    return 'bg-red-600 text-white';
   };
+
+  const getStatColor = (rank: number, total: number = 136) => {
+    const percentage = rank / total;
+    if (percentage <= 0.25) return 'bg-blue-600 text-white';
+    if (percentage <= 0.5) return 'bg-blue-400 text-white';
+    if (percentage <= 0.75) return 'bg-gray-400 text-white';
+    return 'bg-red-600 text-white';
+  };
+
+  const downloadCSV = () => {
+    const headers = ['Rank', 'Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'PBR', 'DCE', 'DDE', 'CONF'];
+    const csvData = filteredData.map((item, index) => [
+      index + 1,
+      item.Team,
+      item.Rating.toFixed(2),
+      item.MD,
+      Math.round(item.SOS),
+      Math.round(item.SOR),
+      item.OFF,
+      item.DEF,
+      item.PBR,
+      item.DCE,
+      item.DDE,
+      item.CONF
+    ]);
+    
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pear_ratings.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const allRatings = data.map(d => d.Rating);
 
   return (
     <div>
-      <div className="mb-4">
+      <div className="mb-4 flex gap-4">
         <input
           type="text"
           placeholder="Search teams or conferences..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
+        <button
+          onClick={downloadCSV}
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+        >
+          Download CSV
+        </button>
       </div>
 
       <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
@@ -161,39 +212,47 @@ export default function RatingsTable({ data }: Props) {
                 <td className="px-4 py-3 text-gray-700 font-medium">{index + 1}</td>
                 <td className="px-4 py-3 font-semibold text-gray-900">{item.Team}</td>
                 <td className="px-4 py-3 text-center">
-                  <span className="inline-block px-3 py-1 rounded-full bg-blue-100 text-blue-800 font-semibold">
+                  <span className={`inline-block px-3 py-1 rounded-full font-semibold ${getRatingColor(item.Rating, allRatings)}`}>
                     {item.Rating.toFixed(2)}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className={`inline-block px-2 py-1 rounded ${getRankColor(item.MD)}`}>
+                  <span className={`inline-block px-2 py-1 rounded ${getStatColor(item.MD)}`}>
                     {item.MD}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-center text-gray-700">{item.SOS.toFixed(2)}</td>
-                <td className="px-4 py-3 text-center text-gray-700">{item.SOR.toFixed(2)}</td>
                 <td className="px-4 py-3 text-center">
-                  <span className={`inline-block px-2 py-1 rounded text-xs ${getRankColor(item.OFF)}`}>
+                  <span className={`inline-block px-2 py-1 rounded ${getStatColor(Math.round(item.SOS))}`}>
+                    {Math.round(item.SOS)}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <span className={`inline-block px-2 py-1 rounded ${getStatColor(Math.round(item.SOR))}`}>
+                    {Math.round(item.SOR)}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <span className={`inline-block px-2 py-1 rounded text-xs ${getStatColor(item.OFF)}`}>
                     {item.OFF}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className={`inline-block px-2 py-1 rounded text-xs ${getRankColor(item.DEF)}`}>
+                  <span className={`inline-block px-2 py-1 rounded text-xs ${getStatColor(item.DEF)}`}>
                     {item.DEF}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className={`inline-block px-2 py-1 rounded text-xs ${getRankColor(item.PBR)}`}>
+                  <span className={`inline-block px-2 py-1 rounded text-xs ${getStatColor(item.PBR)}`}>
                     {item.PBR}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className={`inline-block px-2 py-1 rounded text-xs ${getRankColor(item.DCE)}`}>
+                  <span className={`inline-block px-2 py-1 rounded text-xs ${getStatColor(item.DCE)}`}>
                     {item.DCE}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className={`inline-block px-2 py-1 rounded text-xs ${getRankColor(item.DDE)}`}>
+                  <span className={`inline-block px-2 py-1 rounded text-xs ${getStatColor(item.DDE)}`}>
                     {item.DDE}
                   </span>
                 </td>

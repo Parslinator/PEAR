@@ -54,11 +54,8 @@ export default function Home() {
             <h1 className="text-5xl md:text-6xl font-bold mb-4 tracking-tight">
               {currentSeason.year} CFB PEAR
             </h1>
-            <p className="text-xl md:text-2xl text-blue-200 mb-2">
-              Performance Evaluation and Analytics Rating
-            </p>
-            <p className="text-lg text-blue-300">
-              Week {currentSeason.week} • Advanced College Football Analytics
+            <p className="text-lg text-blue-300 mt-4">
+              Week {currentSeason.week} • College Football Analytics
             </p>
           </div>
         </div>
@@ -91,14 +88,14 @@ export default function Home() {
             </div>
           </a>
           
-          <a href="#archive" className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+          <a href="#images" className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
             <div className="flex items-center space-x-4">
               <div className="bg-purple-100 rounded-full p-3">
                 <History className="w-6 h-6 text-purple-600" />
               </div>
               <div>
-                <h3 className="font-bold text-lg text-gray-900">Historical Data</h3>
-                <p className="text-gray-600 text-sm">Archive since 2014</p>
+                <h3 className="font-bold text-lg text-gray-900">Game Previews</h3>
+                <p className="text-gray-600 text-sm">View matchup graphics</p>
               </div>
             </div>
           </a>
@@ -173,7 +170,7 @@ export default function Home() {
         </div>
 
         {/* Image Galleries */}
-        <section className="mb-16">
+        <section id="images" className="mb-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <ImageGallery
               title="Game Previews"
@@ -212,8 +209,12 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-slate-900 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-slate-400">© {currentSeason.year} PEAR Ratings. Advanced College Football Analytics.</p>
-          <p className="text-slate-500 text-sm mt-2">@PEARatings</p>
+          <p className="text-slate-400">© {currentSeason.year} PEAR Ratings. College Football Analytics.</p>
+          <p className="text-slate-500 text-sm mt-2">
+            <a href="https://x.com/PEARatings" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 transition-colors">
+              @PEARatings
+            </a>
+          </p>
         </div>
       </footer>
     </div>

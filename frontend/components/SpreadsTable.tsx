@@ -40,6 +40,32 @@ export default function SpreadsTable({ data }: Props) {
     return 'bg-green-100 text-green-800 border-green-300';
   };
 
+  const downloadCSV = () => {
+    const headers = ['Away Team', 'Home Team', 'PEAR', 'PEAR Raw', 'Vegas', 'Difference', 'GQI'];
+    const csvData = sortedData.map(item => [
+      item.away_team,
+      item.home_team,
+      item.PEAR,
+      item.pr_spread,
+      item.Vegas,
+      item.difference.toFixed(1),
+      item.GQI.toFixed(1)
+    ]);
+    
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pear_spreads.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
     <div>
       <div className="mb-4 flex gap-2">
@@ -63,6 +89,12 @@ export default function SpreadsTable({ data }: Props) {
         >
           Sort by Game Quality
         </button>
+        <button
+          onClick={downloadCSV}
+          className="ml-auto px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+        >
+          Download CSV
+        </button>
       </div>
 
       <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
@@ -71,6 +103,7 @@ export default function SpreadsTable({ data }: Props) {
             <tr>
               <th className="px-4 py-3 text-left font-semibold text-gray-700">Matchup</th>
               <th className="px-4 py-3 text-center font-semibold text-gray-700">PEAR</th>
+              <th className="px-4 py-3 text-center font-semibold text-gray-700">PEAR Raw</th>
               <th className="px-4 py-3 text-center font-semibold text-gray-700">Vegas</th>
               <th className="px-4 py-3 text-center font-semibold text-gray-700">Diff</th>
               <th className="px-4 py-3 text-center font-semibold text-gray-700">GQI</th>
@@ -86,6 +119,11 @@ export default function SpreadsTable({ data }: Props) {
                 <td className="px-4 py-3 text-center">
                   <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded font-medium">
                     {item.PEAR}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <span className="inline-block px-3 py-1 bg-purple-100 text-purple-800 rounded font-medium">
+                    {item.pr_spread}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-center">
