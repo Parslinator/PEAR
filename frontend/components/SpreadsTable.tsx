@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 interface SpreadData {
   home_team: string;
@@ -16,15 +17,52 @@ interface Props {
   data: SpreadData[];
 }
 
+type SortField = 'matchup' | 'difference' | 'GQI' | 'pr_spread';
+
 export default function SpreadsTable({ data }: Props) {
-  const [sortBy, setSortBy] = useState<'difference' | 'GQI'>('difference');
+  const [sortBy, setSortBy] = useState<SortField>('difference');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  const handleSort = (field: SortField) => {
+    if (sortBy === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortDirection('desc');
+    }
+  };
 
   const sortedData = [...data].sort((a, b) => {
-    if (sortBy === 'difference') {
-      return b.difference - a.difference;
+    let aVal, bVal;
+    
+    if (sortBy === 'matchup') {
+      aVal = a.away_team;
+      bVal = b.away_team;
+      return sortDirection === 'asc' 
+        ? aVal.localeCompare(bVal)
+        : bVal.localeCompare(aVal);
+    } else if (sortBy === 'difference') {
+      aVal = a.difference;
+      bVal = b.difference;
+    } else if (sortBy === 'GQI') {
+      aVal = a.GQI;
+      bVal = b.GQI;
+    } else {
+      aVal = a.pr_spread;
+      bVal = b.pr_spread;
     }
-    return b.GQI - a.GQI;
+    
+    return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
   });
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortBy !== field) return null;
+    return sortDirection === 'asc' ? (
+      <ChevronUp className="w-4 h-4 inline ml-1" />
+    ) : (
+      <ChevronDown className="w-4 h-4 inline ml-1" />
+    );
+  };
 
   const getGQIColor = (gqi: number) => {
     if (gqi >= 8) return 'bg-green-600 text-white';
@@ -68,45 +106,45 @@ export default function SpreadsTable({ data }: Props) {
 
   return (
     <div>
-      <div className="mb-4 flex gap-2">
-        <button
-          onClick={() => setSortBy('difference')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            sortBy === 'difference'
-              ? 'bg-green-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          Sort by Difference
-        </button>
-        <button
-          onClick={() => setSortBy('GQI')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            sortBy === 'GQI'
-              ? 'bg-green-600 text-white'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          }`}
-        >
-          Sort by Game Quality
-        </button>
+      <div className="mb-4 flex justify-end">
         <button
           onClick={downloadCSV}
-          className="ml-auto px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+          className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
         >
           Download CSV
         </button>
       </div>
 
-      <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+      <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 sticky top-0">
             <tr>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700">Matchup</th>
+              <th 
+                className="px-4 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                onClick={() => handleSort('matchup')}
+              >
+                Matchup <SortIcon field="matchup" />
+              </th>
               <th className="px-4 py-3 text-center font-semibold text-gray-700">PEAR</th>
-              <th className="px-4 py-3 text-center font-semibold text-gray-700">PEAR Raw</th>
+              <th 
+                className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                onClick={() => handleSort('pr_spread')}
+              >
+                PEAR Raw <SortIcon field="pr_spread" />
+              </th>
               <th className="px-4 py-3 text-center font-semibold text-gray-700">Vegas</th>
-              <th className="px-4 py-3 text-center font-semibold text-gray-700">Diff</th>
-              <th className="px-4 py-3 text-center font-semibold text-gray-700">GQI</th>
+              <th 
+                className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                onClick={() => handleSort('difference')}
+              >
+                Diff <SortIcon field="difference" />
+              </th>
+              <th 
+                className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                onClick={() => handleSort('GQI')}
+              >
+                GQI <SortIcon field="GQI" />
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
