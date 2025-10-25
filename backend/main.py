@@ -506,18 +506,41 @@ def get_ratings(year: int, week: int):
     """Get power ratings for a specific year and week"""
     ratings, all_data = load_data(year, week)
     
-    all_data['OFF'] = all_data['offensive_rank']
-    all_data['DEF'] = all_data['defensive_rank']
-    all_data['MD'] = all_data.get('most_deserving', '')
     all_data['Rating'] = all_data['power_rating']
     all_data['Team'] = all_data['team']
     all_data['CONF'] = all_data.get('conference', '')
-    all_data['ST'] = all_data.get('STM_rank', '')
-    all_data['PBR'] = all_data.get('PBR_rank', '')
-    all_data['DCE'] = all_data.get('DCE_rank', '')
-    all_data['DDE'] = all_data.get('DDE_rank', '')
+    all_data['MD'] = all_data.get('most_deserving', '')
     
-    result = all_data[['Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'PBR', 'DCE', 'DDE', 'CONF']].to_dict('records')
+    result = all_data[['Team', 'Rating', 'offensive_rating', 'defensive_rating', 'MD', 'SOS', 'SOR', 'CONF']].to_dict('records')
+    
+    return {"data": result, "year": year, "week": week}
+
+@app.get("/api/team-stats/{year}/{week}")
+def get_team_stats(year: int, week: int):
+    """Get detailed team statistics for offense and defense"""
+    ratings, all_data = load_data(year, week)
+    
+    # Select required columns
+    stats_columns = [
+        'team',
+        'power_rating',
+        'offensive_rating',
+        'Offense_successRate_adj',
+        'Offense_ppa_adj',
+        'Offense_rushing_adj',
+        'Offense_passing_adj',
+        'adj_offense_ppo',
+        'adj_offense_drive_quality',
+        'defensive_rating',
+        'Defense_successRate_adj',
+        'Defense_ppa_adj',
+        'Defense_rushing_adj',
+        'Defense_passing_adj',
+        'adj_defense_ppo',
+        'adj_defense_drive_quality'
+    ]
+    
+    result = all_data[stats_columns].to_dict('records')
     
     return {"data": result, "year": year, "week": week}
 

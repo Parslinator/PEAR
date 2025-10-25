@@ -2,28 +2,39 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import StatsTable from '@/components/StatsTable';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export default function StatsPage() {
   const [currentSeason, setCurrentSeason] = useState({ year: 2025, week: 1 });
+  const [stats, setStats] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchSeasonData();
+    fetchData();
   }, []);
 
-  const fetchSeasonData = async () => {
+  const fetchData = async () => {
     try {
       const seasonRes = await axios.get(`${API_URL}/api/current-season`);
       setCurrentSeason(seasonRes.data);
+
+      const statsRes = await axios.get(
+        `${API_URL}/api/team-stats/${seasonRes.data.year}/${seasonRes.data.week}`
+      );
+      setStats(statsRes.data.data);
+
+      setLoading(false);
     } catch (error) {
-      console.error('Error fetching season data:', error);
+      console.error('Error fetching data:', error);
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Team Statistics</h1>
@@ -32,14 +43,27 @@ export default function StatsPage() {
           </p>
         </div>
 
-        {/* Placeholder */}
+        {/* Stats Table */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="p-12 text-center">
-            <div className="text-6xl mb-4">📊</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Stats Page Coming Soon</h2>
-            <p className="text-gray-600">
-              This page will display detailed team statistics and analytics.
-            </p>
+          <div className="p-6">
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <p className="mt-4 text-gray-600">Loading statistics...</p>
+              </div>
+            ) : (
+              <>
+                <StatsTable data={stats} />
+                <div className="mt-6 text-sm text-gray-600 space-y-1 border-t pt-4">
+                  <p><strong>Success Rate</strong> - Percentage of successful plays</p>
+                  <p><strong>PPA</strong> - Predicted Points Added per play</p>
+                  <p><strong>Rush/Pass</strong> - Rushing and Passing efficiency metrics</p>
+                  <p><strong>PPO</strong> - Points Per Opportunity</p>
+                  <p><strong>Drive Q</strong> - Drive Quality rating</p>
+                  <p className="mt-3 font-semibold">All stats are opponent-adjusted</p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

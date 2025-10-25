@@ -6,14 +6,11 @@ import { ChevronUp, ChevronDown } from 'lucide-react';
 interface RatingData {
   Team: string;
   Rating: number;
+  offensive_rating: number;
+  defensive_rating: number;
   MD: number;
   SOS: number;
   SOR: number;
-  OFF: number;
-  DEF: number;
-  PBR: number;
-  DCE: number;
-  DDE: number;
   CONF: string;
 }
 
@@ -31,7 +28,9 @@ export default function RatingsTable({ data }: Props) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      setSortDirection('desc');
+      // For lower-is-better columns, default to ascending
+      const lowerIsBetter = ['defensive_rating', 'MD', 'SOS', 'SOR'].includes(field);
+      setSortDirection(lowerIsBetter ? 'asc' : 'desc');
     }
   };
 
@@ -62,40 +61,59 @@ export default function RatingsTable({ data }: Props) {
     );
   };
 
-  const getRatingColor = (rating: number, allRatings: number[]) => {
-    const max = Math.max(...allRatings);
-    const min = Math.min(...allRatings);
+  const getRatingColor = (value: number, allValues: number[], higherIsBetter: boolean = true) => {
+    const max = Math.max(...allValues);
+    const min = Math.min(...allValues);
     const range = max - min;
-    const position = (rating - min) / range;
+    let normalized = (value - min) / range; // 0 to 1
     
-    if (position >= 0.75) return 'bg-blue-600 text-white';
-    if (position >= 0.5) return 'bg-blue-400 text-white';
-    if (position >= 0.25) return 'bg-gray-400 text-white';
-    return 'bg-red-600 text-white';
+    // If lower is better (defense), invert the normalization
+    if (!higherIsBetter) {
+      normalized = 1 - normalized;
+    }
+    
+    // Colors: Dark Blue #00008B (0, 0, 139), Light Gray #D3D3D3 (211, 211, 211), Dark Red #8B0000 (139, 0, 0)
+    if (normalized >= 0.5) {
+      // Top half: Gray to Dark Blue
+      const t = (normalized - 0.5) * 2; // 0 to 1 in top half
+      const r = Math.round(211 + (0 - 211) * t);
+      const g = Math.round(211 + (0 - 211) * t);
+      const b = Math.round(211 + (139 - 211) * t);
+      return `rgb(${r}, ${g}, ${b})`;
+    } else {
+      // Bottom half: Dark Red to Gray
+      const t = normalized * 2; // 0 to 1 in bottom half
+      const r = Math.round(139 + (211 - 139) * t);
+      const g = Math.round(0 + (211 - 0) * t);
+      const b = Math.round(0 + (211 - 0) * t);
+      return `rgb(${r}, ${g}, ${b})`;
+    }
   };
 
-  const getStatColor = (rank: number, total: number = 136) => {
-    const percentage = rank / total;
-    if (percentage <= 0.25) return 'bg-blue-600 text-white';
-    if (percentage <= 0.5) return 'bg-blue-400 text-white';
-    if (percentage <= 0.75) return 'bg-gray-400 text-white';
-    return 'bg-red-600 text-white';
+  const getTextColor = (bgColor: string) => {
+    const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+    if (!match) return 'white';
+    
+    const r = parseInt(match[1]);
+    const g = parseInt(match[2]);
+    const b = parseInt(match[3]);
+    
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    
+    return luminance > 0.5 ? 'black' : 'white';
   };
 
   const downloadCSV = () => {
-    const headers = ['Rank', 'Team', 'Rating', 'MD', 'SOS', 'SOR', 'OFF', 'DEF', 'PBR', 'DCE', 'DDE', 'CONF'];
+    const headers = ['Rank', 'Team', 'Rating', 'OFF', 'DEF', 'MD', 'SOR', 'SOS', 'CONF'];
     const csvData = filteredData.map((item, index) => [
       index + 1,
       item.Team,
-      item.Rating.toFixed(2),
+      item.Rating.toFixed(1),
+      item.offensive_rating.toFixed(1),
+      item.defensive_rating.toFixed(1),
       item.MD,
-      Math.round(item.SOS),
       Math.round(item.SOR),
-      item.OFF,
-      item.DEF,
-      item.PBR,
-      item.DCE,
-      item.DDE,
+      Math.round(item.SOS),
       item.CONF
     ]);
     
@@ -112,8 +130,6 @@ export default function RatingsTable({ data }: Props) {
     a.click();
     window.URL.revokeObjectURL(url);
   };
-
-  const allRatings = data.map(d => d.Rating);
 
   return (
     <div>
@@ -152,15 +168,21 @@ export default function RatingsTable({ data }: Props) {
               </th>
               <th
                 className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('MD')}
+                onClick={() => handleSort('offensive_rating')}
               >
-                MD <SortIcon field="MD" />
+                OFF <SortIcon field="offensive_rating" />
               </th>
               <th
                 className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('SOS')}
+                onClick={() => handleSort('defensive_rating')}
               >
-                SOS <SortIcon field="SOS" />
+                DEF <SortIcon field="defensive_rating" />
+              </th>
+              <th
+                className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                onClick={() => handleSort('MD')}
+              >
+                MD <SortIcon field="MD" />
               </th>
               <th
                 className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
@@ -170,33 +192,9 @@ export default function RatingsTable({ data }: Props) {
               </th>
               <th
                 className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('OFF')}
+                onClick={() => handleSort('SOS')}
               >
-                OFF <SortIcon field="OFF" />
-              </th>
-              <th
-                className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('DEF')}
-              >
-                DEF <SortIcon field="DEF" />
-              </th>
-              <th
-                className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('PBR')}
-              >
-                PBR <SortIcon field="PBR" />
-              </th>
-              <th
-                className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('DCE')}
-              >
-                DCE <SortIcon field="DCE" />
-              </th>
-              <th
-                className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort('DDE')}
-              >
-                DDE <SortIcon field="DDE" />
+                SOS <SortIcon field="SOS" />
               </th>
               <th
                 className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
@@ -207,58 +205,73 @@ export default function RatingsTable({ data }: Props) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {filteredData.map((item, index) => (
-              <tr key={index} className="hover:bg-gray-50">
-                <td className="px-4 py-3 text-gray-700 font-medium">{index + 1}</td>
-                <td className="px-4 py-3 font-semibold text-gray-900">{item.Team}</td>
-                <td className="px-4 py-3 text-center">
-                  <span className={`inline-block px-3 py-1 rounded-full font-semibold ${getRatingColor(item.Rating, allRatings)}`}>
-                    {item.Rating.toFixed(2)}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <span className={`inline-block px-2 py-1 rounded ${getStatColor(item.MD)}`}>
-                    {item.MD}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <span className={`inline-block px-2 py-1 rounded ${getStatColor(Math.round(item.SOS))}`}>
-                    {Math.round(item.SOS)}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <span className={`inline-block px-2 py-1 rounded ${getStatColor(Math.round(item.SOR))}`}>
-                    {Math.round(item.SOR)}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <span className={`inline-block px-2 py-1 rounded text-xs ${getStatColor(item.OFF)}`}>
-                    {item.OFF}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <span className={`inline-block px-2 py-1 rounded text-xs ${getStatColor(item.DEF)}`}>
-                    {item.DEF}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <span className={`inline-block px-2 py-1 rounded text-xs ${getStatColor(item.PBR)}`}>
-                    {item.PBR}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <span className={`inline-block px-2 py-1 rounded text-xs ${getStatColor(item.DCE)}`}>
-                    {item.DCE}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <span className={`inline-block px-2 py-1 rounded text-xs ${getStatColor(item.DDE)}`}>
-                    {item.DDE}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center text-xs text-gray-600">{item.CONF}</td>
-              </tr>
-            ))}
+            {filteredData.map((item, index) => {
+              // Higher is better: Rating, OFF
+              const ratingBg = getRatingColor(item.Rating, data.map(d => d.Rating), true);
+              const offBg = getRatingColor(item.offensive_rating, data.map(d => d.offensive_rating), true);
+              
+              // Lower is better: DEF, SOS, MD, SOR
+              const defBg = getRatingColor(item.defensive_rating, data.map(d => d.defensive_rating), false);
+              const mdBg = getRatingColor(item.MD, data.map(d => d.MD), false);
+              const sosBg = getRatingColor(item.SOS, data.map(d => d.SOS), false);
+              const sorBg = getRatingColor(item.SOR, data.map(d => d.SOR), false);
+
+              return (
+                <tr key={index} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 text-gray-700 font-medium">{index + 1}</td>
+                  <td className="px-4 py-3 font-semibold text-gray-900">{item.Team}</td>
+                  <td className="px-4 py-3 text-center">
+                    <span 
+                      className="inline-block px-3 py-1 rounded-full font-semibold text-xs"
+                      style={{ backgroundColor: ratingBg, color: getTextColor(ratingBg) }}
+                    >
+                      {item.Rating.toFixed(1)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span 
+                      className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                      style={{ backgroundColor: offBg, color: getTextColor(offBg) }}
+                    >
+                      {item.offensive_rating.toFixed(1)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span 
+                      className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                      style={{ backgroundColor: defBg, color: getTextColor(defBg) }}
+                    >
+                      {item.defensive_rating.toFixed(1)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span 
+                      className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                      style={{ backgroundColor: mdBg, color: getTextColor(mdBg) }}
+                    >
+                      {item.MD}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span 
+                      className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                      style={{ backgroundColor: sorBg, color: getTextColor(sorBg) }}
+                    >
+                      {Math.round(item.SOR)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span 
+                      className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                      style={{ backgroundColor: sosBg, color: getTextColor(sosBg) }}
+                    >
+                      {Math.round(item.SOS)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center text-xs text-gray-600">{item.CONF}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
