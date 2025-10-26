@@ -773,6 +773,994 @@ def get_image(year: int, week: int, image_type: str, filename: str):
     
     return FileResponse(file_path)
 
+# ========================================
+# BASEBALL (CBASE) ENDPOINTS
+# ========================================
+
+BASEBALL_BASE_PATH = os.path.join(os.path.dirname(BACKEND_DIR), "PEAR", "PEAR Baseball")
+BASEBALL_CURRENT_SEASON = 2025
+BASEBALL_HFA = 0.3  # Home field advantage in runs for baseball
+
+print(f"Baseball base path: {BASEBALL_BASE_PATH}")
+print(f"Baseball base path exists: {os.path.exists(BASEBALL_BASE_PATH)}")
+
+class BaseballSpreadRequest(BaseModel):
+    away_team: str
+    home_team: str
+    neutral: bool = False
+
+class RegionalRequest(BaseModel):
+    team_1: str
+    team_2: str
+    team_3: str
+    team_4: str
+    simulations: int = 1000
+
+def load_baseball_data():
+    """Load the most recent baseball data file"""
+    try:
+        folder_path = os.path.join(BASEBALL_BASE_PATH, f"y{BASEBALL_CURRENT_SEASON}", "Data")
+        
+        if not os.path.exists(folder_path):
+            raise HTTPException(status_code=404, detail=f"Baseball data folder not found: {folder_path}")
+        
+        # Find all baseball CSV files
+        csv_files = [f for f in os.listdir(folder_path) 
+                    if f.startswith("baseball_") and f.endswith(".csv")]
+        
+        if not csv_files:
+            raise HTTPException(status_code=404, detail="No baseball data files found")
+        
+        # Extract dates and find most recent
+        def extract_date(filename):
+            try:
+                return datetime.strptime(filename.replace("baseball_", "").replace(".csv", ""), "%m_%d_%Y")
+            except ValueError:
+                return None
+        
+        date_files = {extract_date(f): f for f in csv_files if extract_date(f) is not None}
+        
+        if not date_files:
+            raise HTTPException(status_code=404, detail="No valid date files found")
+        
+        sorted_dates = sorted(date_files.keys(), reverse=True)
+        latest_date = sorted_dates[0]
+        latest_file = date_files[latest_date]
+        
+        file_path = os.path.join(folder_path, latest_file)
+        modeling_stats = pd.read_csv(file_path)
+        
+        # If file doesn't have expected number of teams, try previous day
+        if len(modeling_stats) < 290 and len(sorted_dates) > 1:
+            previous_date = sorted_dates[1]
+            previous_file = date_files[previous_date]
+            file_path = os.path.join(folder_path, previous_file)
+            modeling_stats = pd.read_csv(file_path)
+            latest_date = previous_date
+        
+        formatted_date = latest_date.strftime("%B %d, %Y")
+        
+        return modeling_stats, formatted_date
+    
+    except Exception as e:
+        print(f"Error loading baseball data: {e}")
+        raise HTTPException(status_code=500, detail=f"Error loading baseball data: {str(e)}")
+
+def load_baseball_schedule():
+    """Load the current season schedule"""
+    try:
+        schedule_path = os.path.join(BASEBALL_BASE_PATH, f"y{BASEBALL_CURRENT_SEASON}", 
+                                     f"schedule_{BASEBALL_CURRENT_SEASON}.csv")
+        
+        if not os.path.exists(schedule_path):
+            raise HTTPException(status_code=404, detail="Schedule file not found")
+        
+        schedule_df = pd.read_csv(schedule_path)
+        schedule_df["Date"] = pd.to_datetime(schedule_df["Date"])
+        
+        return schedule_df
+    
+    except Exception as e:
+        print(f"Error loading schedule: {e}")
+        raise HTTPException(status_code=500, detail=f"Error loading schedule: {str(e)}")
+
+def baseball_win_prob(home_pr, away_pr, location="Neutral"):
+    """Calculate win probability for baseball"""
+    if location != "Neutral":
+        home_pr += BASEBALL_HFA
+    rating_diff = home_pr - away_pr
+    return round(1 / (1 + 10 ** (-rating_diff / 6)) * 100, 2)
+
+def adjust_home_pr_baseball(home_win_prob):
+    """Adjust home power rating based on ELO win probability"""
+    return ((home_win_prob - 50) / 50) * 0.9
+
+def calculate_baseball_spread(home_pr, away_pr, home_elo, away_elo, location):
+    """Calculate spread for baseball matchup"""
+    if location != "Neutral":
+        home_pr += BASEBALL_HFA
+    
+    elo_win_prob = round((10**((home_elo - away_elo) / 400)) / 
+                        ((10**((home_elo - away_elo) / 400)) + 1) * 100, 2)
+    
+    spread = round(adjust_home_pr_baseball(elo_win_prob) + home_pr - away_pr, 2)
+    
+    return spread, elo_win_prob
+
+def calculate_gqi_baseball(home_pr, away_pr, min_pr, max_pr):
+    """Calculate Game Quality Index for baseball"""
+    # Team quality
+    tq = (home_pr + away_pr) / 2
+    tq_norm = np.clip((tq - min_pr) / (max_pr - min_pr), 0, 1)
+    
+    # Spread competitiveness
+    spread_cap = 8  # Adjusted for baseball
+    beta = 8.5
+    spread = abs(home_pr - away_pr)
+    sc = np.clip(1 - (spread / spread_cap), 0, 1)
+    
+    # Combine factors
+    x = (0.65 * tq_norm + 0.35 * sc)
+    gqi_raw = 1 / (1 + np.exp(-beta * (x - 0.5)))
+    
+    gqi = np.clip((1 + 9 * gqi_raw) + 0.1, None, 10)
+    return round(gqi, 1)
+
+@app.get("/api/cbase/ratings")
+def get_baseball_ratings():
+    """Get current baseball team ratings"""
+    try:
+        modeling_stats, data_date = load_baseball_data()
+        
+        # Prepare data for frontend
+        teams = modeling_stats[[
+            'Team', 'Rating', 'NET', 'NET_Score', 'SOS', 'SOR', 
+            'Conference', 'ELO', 'RPI', 'PRR', 'RQI'
+        ]].copy()
+        
+        teams = teams.rename(columns={
+            'Rating': 'power_rating',
+            'NET_Score': 'net_score'
+        })
+        
+        teams = teams.sort_values('power_rating', ascending=False).reset_index(drop=True)
+        
+        return {
+            "teams": teams.to_dict('records'),
+            "date": data_date,
+            "count": len(teams)
+        }
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error in get_baseball_ratings: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/cbase/stats")
+def get_baseball_stats():
+    """Get comprehensive baseball team statistics"""
+    try:
+        modeling_stats, data_date = load_baseball_data()
+        
+        # All the stats columns
+        stats_columns = [
+            'Team', 'Conference', 'Rating', 'NET', 'RPI', 'ELO', 'ELO_Rank', 'PRR', 'RQI', 
+            'SOS', 'SOR', 'Q1', 'Q2', 'Q3', 'Q4',
+            'fWAR', 'oWAR_z', 'pWAR_z', 'WPOE', 'PYTHAG',
+            'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS'
+        ]
+        
+        available_columns = [col for col in stats_columns if col in modeling_stats.columns]
+        stats = modeling_stats[available_columns].copy()
+        
+        # If ELO_Rank doesn't exist, use ELO column as the rank
+        if 'ELO_Rank' not in stats.columns and 'ELO' in stats.columns:
+            stats['ELO_Rank'] = stats['ELO']
+        
+        stats = stats.sort_values('Rating', ascending=False).reset_index(drop=True)
+        
+        return {
+            "stats": stats.to_dict('records'),
+            "date": data_date
+        }
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error in get_baseball_stats: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/cbase/teams")
+def get_baseball_teams():
+    """Get list of all baseball teams"""
+    try:
+        modeling_stats, _ = load_baseball_data()
+        teams = sorted(modeling_stats['Team'].unique().tolist())
+        return {"teams": teams}
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error in get_baseball_teams: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.post("/api/cbase/calculate-spread")
+def calculate_baseball_matchup_spread(request: BaseballSpreadRequest):
+    """Calculate spread for baseball matchup"""
+    try:
+        modeling_stats, _ = load_baseball_data()
+        
+        home_team_data = modeling_stats[modeling_stats['Team'] == request.home_team]
+        away_team_data = modeling_stats[modeling_stats['Team'] == request.away_team]
+        
+        if home_team_data.empty or away_team_data.empty:
+            raise HTTPException(status_code=404, detail="Team not found")
+        
+        home_pr = home_team_data['Rating'].values[0]
+        away_pr = away_team_data['Rating'].values[0]
+        home_elo = home_team_data['ELO'].values[0]
+        away_elo = away_team_data['ELO'].values[0]
+        
+        location = "Neutral" if request.neutral else "Home"
+        spread, elo_win_prob = calculate_baseball_spread(home_pr, away_pr, home_elo, away_elo, location)
+        win_prob = baseball_win_prob(home_pr, away_pr, location)
+        
+        gqi = calculate_gqi_baseball(
+            home_pr, away_pr, 
+            modeling_stats['Rating'].min(), 
+            modeling_stats['Rating'].max()
+        )
+        
+        if spread >= 0:
+            formatted_spread = f"{request.home_team} -{spread}"
+        else:
+            formatted_spread = f"{request.away_team} {abs(spread)}"
+        
+        return {
+            "spread": spread,
+            "formatted_spread": formatted_spread,
+            "home_win_prob": win_prob,
+            "away_win_prob": round(100 - win_prob, 2),
+            "elo_win_prob": elo_win_prob,
+            "game_quality": gqi,
+            "home_pr": round(home_pr, 2),
+            "away_pr": round(away_pr, 2),
+            "home_elo": round(home_elo, 0),
+            "away_elo": round(away_elo, 0)
+        }
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error calculating baseball spread: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/cbase/schedule/today")
+def get_todays_baseball_games():
+    """Get today's baseball games"""
+    try:
+        schedule_df = load_baseball_schedule()
+        
+        cst = pytz.timezone('America/Chicago')
+        today = datetime.now(cst).date()
+        
+        today_games = schedule_df[schedule_df['Date'].dt.date == today].copy()
+        
+        if len(today_games) == 0:
+            return {"games": [], "date": today.strftime("%B %d, %Y")}
+        
+        # Process results
+        today_games = today_games[[
+            'home_team', 'away_team', 'PEAR', 'GQI', 'Date', 'Result'
+        ]].copy()
+        
+        today_games = today_games.sort_values('GQI', ascending=False).reset_index(drop=True)
+        
+        return {
+            "games": today_games.to_dict('records'),
+            "date": today.strftime("%B %d, %Y"),
+            "count": len(today_games)
+        }
+    
+    except Exception as e:
+        print(f"Error getting today's games: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/cbase/team/{team_name}")
+def get_baseball_team_info(team_name: str):
+    """Get detailed information for a specific baseball team"""
+    try:
+        modeling_stats, data_date = load_baseball_data()
+        schedule_df = load_baseball_schedule()
+        
+        team_data = modeling_stats[modeling_stats['Team'] == team_name]
+        
+        if team_data.empty:
+            raise HTTPException(status_code=404, detail="Team not found")
+        
+        # Get team schedule
+        team_schedule = schedule_df[
+            (schedule_df['home_team'] == team_name) | 
+            (schedule_df['away_team'] == team_name)
+        ].copy()
+        
+        cst = pytz.timezone('America/Chicago')
+        today = datetime.now(cst).date()
+        
+        # Upcoming games
+        upcoming = team_schedule[team_schedule['Date'].dt.date >= today].copy()
+        upcoming = upcoming.sort_values('Date').head(10)
+        
+        # Recent results
+        completed = team_schedule[
+            (team_schedule['Date'].dt.date < today) & 
+            (team_schedule['Result'].notna())
+        ].copy()
+        completed = completed.sort_values('Date', ascending=False).head(10)
+        
+        return {
+            "team": team_data.to_dict('records')[0],
+            "upcoming_games": upcoming.to_dict('records') if len(upcoming) > 0 else [],
+            "recent_games": completed.to_dict('records') if len(completed) > 0 else [],
+            "date": data_date
+        }
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error getting team info: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/cbase/conferences")
+def get_baseball_conferences():
+    """Get list of all conferences"""
+    try:
+        modeling_stats, _ = load_baseball_data()
+        conferences = sorted(modeling_stats['Conference'].unique().tolist())
+        # Remove "Independent" if present
+        conferences = [c for c in conferences if c != "Independent"]
+        return {"conferences": conferences}
+    
+    except Exception as e:
+        print(f"Error getting conferences: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/cbase/conference/{conference_name}")
+def get_conference_standings(conference_name: str):
+    """Get standings for a specific conference"""
+    try:
+        modeling_stats, data_date = load_baseball_data()
+        
+        conf_teams = modeling_stats[modeling_stats['Conference'] == conference_name].copy()
+        
+        if conf_teams.empty:
+            raise HTTPException(status_code=404, detail="Conference not found")
+        
+        conf_teams = conf_teams.sort_values('Rating', ascending=False).reset_index(drop=True)
+        
+        return {
+            "teams": conf_teams.to_dict('records'),
+            "conference": conference_name,
+            "date": data_date
+        }
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error getting conference standings: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+def calculate_series_probabilities(win_prob):
+    """Calculate series win probabilities for 3-game series"""
+    # Team A win probabilities
+    P_A_0 = (1 - win_prob) ** 3
+    P_A_1 = 3 * win_prob * (1 - win_prob) ** 2
+    P_A_2 = 3 * win_prob ** 2 * (1 - win_prob)
+    P_A_3 = win_prob ** 3
+
+    # Team B win probabilities
+    lose_prob = 1 - win_prob
+    P_B_0 = win_prob ** 3
+    P_B_1 = 3 * lose_prob * win_prob ** 2
+    P_B_2 = 3 * lose_prob ** 2 * win_prob
+    P_B_3 = lose_prob ** 3
+
+    # Summing for at least conditions
+    P_A_at_least_1 = 1 - P_A_0
+    P_A_at_least_2 = P_A_2 + P_A_3
+    P_B_at_least_1 = 1 - P_B_0
+    P_B_at_least_2 = P_B_2 + P_B_3
+
+    return [P_A_at_least_1, P_A_at_least_2, P_A_3], [P_B_at_least_1, P_B_at_least_2, P_B_3]
+
+def get_total_record(row):
+    """Get total record from quadrant records"""
+    try:
+        wins = sum(int(str(row[col]).split("-")[0]) for col in ["Q1", "Q2", "Q3", "Q4"])
+        losses = sum(int(str(row[col]).split("-")[1]) for col in ["Q1", "Q2", "Q3", "Q4"])
+        return f"{wins}-{losses}"
+    except:
+        return "0-0"
+
+def get_text_color_for_bubble(color_rgba):
+    """Determine if text should be black or white based on background color luminance"""
+    # Extract RGB values (color_rgba is a tuple of (r, g, b, a) with values 0-1)
+    r, g, b = color_rgba[0], color_rgba[1], color_rgba[2]
+    
+    # Calculate relative luminance
+    luminance = 0.299 * r + 0.587 * g + 0.114 * b
+    
+    # Return 'white' for dark backgrounds, 'black' for light backgrounds
+    return 'white' if luminance < 0.5 else 'black'
+
+def darken_color(color, factor=0.3):
+    """Darken a color for edge effects"""
+    color = mcolors.to_rgba(color)
+    darkened_color = [max(c - factor, 0) for c in color[:3]]
+    return mcolors.rgb2hex(darkened_color)
+
+@app.post("/api/cbase/matchup-image")
+def generate_matchup_image(request: BaseballSpreadRequest):
+    """Generate matchup comparison image"""
+    try:
+        modeling_stats, _ = load_baseball_data()
+        
+        away_team = request.away_team
+        home_team = request.home_team
+        location = "Neutral" if request.neutral else "Home"
+        
+        # Get team data
+        team1_data = modeling_stats[modeling_stats['Team'] == home_team]
+        team2_data = modeling_stats[modeling_stats['Team'] == away_team]
+        
+        if team1_data.empty or team2_data.empty:
+            raise HTTPException(status_code=404, detail="Team not found")
+        
+        # Load team logos
+        logo_folder = os.path.join(BASEBALL_BASE_PATH, "logos")
+        team1_logo = None
+        team2_logo = None
+        
+        if os.path.exists(logo_folder):
+            # Try to find logos for both teams (keep spaces, don't replace with underscores)
+            team1_logo_path = os.path.join(logo_folder, f"{home_team}.png")
+            team2_logo_path = os.path.join(logo_folder, f"{away_team}.png")
+            
+            if os.path.exists(team1_logo_path):
+                team1_logo = Image.open(team1_logo_path).convert("RGBA")
+            if os.path.exists(team2_logo_path):
+                team2_logo = Image.open(team2_logo_path).convert("RGBA")
+        
+        # Percentile columns
+        percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 
+                             'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
+        custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'WAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
+        
+        # Extract team 1 (home) data
+        team1_record = get_total_record(team1_data.iloc[0])
+        team1_proj_record = team1_data['Projected_Record'].values[0] if 'Projected_Record' in team1_data.columns else "N/A"
+        team1_rating = team1_data['Rating'].values[0]
+        team1_net = team1_data['NET'].values[0]
+        team1_Q1 = team1_data['Q1'].values[0]
+        team1_Q2 = team1_data['Q2'].values[0]
+        team1_Q3 = team1_data['Q3'].values[0]
+        team1_Q4 = team1_data['Q4'].values[0]
+        
+        # Extract team 2 (away) data
+        team2_record = get_total_record(team2_data.iloc[0])
+        team2_proj_record = team2_data['Projected_Record'].values[0] if 'Projected_Record' in team2_data.columns else "N/A"
+        team2_rating = team2_data['Rating'].values[0]
+        team2_net = team2_data['NET'].values[0]
+        team2_Q1 = team2_data['Q1'].values[0]
+        team2_Q2 = team2_data['Q2'].values[0]
+        team2_Q3 = team2_data['Q3'].values[0]
+        team2_Q4 = team2_data['Q4'].values[0]
+        
+        # Get available percentile columns
+        available_percentile_cols = [col for col in percentile_columns if col in modeling_stats.columns]
+        
+        team1_percentiles = team1_data[available_percentile_cols].values[0] if available_percentile_cols else [50] * len(percentile_columns)
+        team2_percentiles = team2_data[available_percentile_cols].values[0] if available_percentile_cols else [50] * len(percentile_columns)
+        
+        # Calculate win probabilities
+        home_pr = team1_rating
+        away_pr = team2_rating
+        home_elo = team1_data['ELO'].values[0] if 'ELO' in team1_data.columns else 1200
+        away_elo = team2_data['ELO'].values[0] if 'ELO' in team2_data.columns else 1200
+        
+        spread, elo_win_prob = calculate_baseball_spread(home_pr, away_pr, home_elo, away_elo, location)
+        win_prob = baseball_win_prob(home_pr, away_pr, location)
+        
+        # Format spread
+        if spread >= 0:
+            spread_text = f"{home_team} -{abs(spread)}"
+        else:
+            spread_text = f"{away_team} -{abs(spread)}"
+        
+        # Calculate GQI
+        max_net = 299
+        w_tq = 0.70
+        w_wp = 0.20
+        w_ned = 0.10
+        avg_net = (team1_net + team2_net) / 2
+        tq = (max_net - avg_net) / (max_net - 1)
+        wp_calc = 1 - 2 * np.abs((win_prob / 100) - 0.5)
+        ned = 1 - (np.abs(team2_net - team1_net) / (max_net - 1))
+        gqi = round(10 * (w_tq * tq + w_wp * wp_calc + w_ned * ned), 1)
+        
+        # Calculate series probabilities
+        team1_win_prob = win_prob / 100
+        team2_win_prob = 1 - team1_win_prob
+        team1_probs, team2_probs = calculate_series_probabilities(team1_win_prob)
+        
+        # Calculate win quality
+        bubble_team_rating = modeling_stats['Rating'].quantile(0.90)
+        team1_quality = 1 - baseball_win_prob(team2_rating, bubble_team_rating, location) / 100
+        team1_win_quality = 1 - team1_quality
+        team1_loss_quality = -team1_quality
+        
+        team2_quality = baseball_win_prob(bubble_team_rating, team1_rating, location) / 100
+        team2_win_quality = 1 - team2_quality
+        team2_loss_quality = -team2_quality
+        
+        # Create the visualization
+        fig, ax = plt.subplots(figsize=(8, 10))
+        fig.patch.set_facecolor('#CECEB2')
+        ax.set_facecolor('#CECEB2')
+        
+        # Calculate differences for center bars
+        percentile_diffs = [team1_percentiles[i] - team2_percentiles[i] for i in range(len(team1_percentiles))]
+        
+        # Create colormap
+        cmap = plt.get_cmap('seismic')
+        colors = [cmap(abs(p) / 100) for p in percentile_diffs]
+        colors1 = [cmap(p / 100) for p in team1_percentiles]
+        colors2 = [cmap(p / 100) for p in team2_percentiles]
+        
+        # Create darkened colors for edges
+        darkened_colors = [darken_color(c) for c in colors]
+        darkened_colors1 = [darken_color(c) for c in colors1]
+        darkened_colors2 = [darken_color(c) for c in colors2]
+        
+        # Draw background gray bars
+        ax.barh(range(len(percentile_diffs)), 99, color='gray', height=0.1, left=0)
+        ax.barh(range(len(percentile_diffs)), -99, color='gray', height=0.1, left=0)
+        
+        # Draw main bars
+        bars = ax.barh(range(len(percentile_diffs)), percentile_diffs, color=colors, height=0.3, 
+                       edgecolor=darkened_colors, linewidth=3)
+        bars1 = ax.barh(range(len(team1_percentiles)), team1_percentiles, color=colors1, height=0.3, 
+                        edgecolor=darkened_colors1, linewidth=3)
+        bars2 = ax.barh(range(len(team2_percentiles)), [-p for p in team2_percentiles], color=colors2, height=0.3, 
+                        edgecolor=darkened_colors2, linewidth=3)
+        
+        # Add labels for team1 (home)
+        for i, (bar, percentile) in enumerate(zip(bars1, team1_percentiles)):
+            text_color = get_text_color_for_bubble(colors1[i])
+            ax.text(bar.get_width(), bar.get_y() + bar.get_height() / 2, 
+                   str(int(percentile)), ha='center', va='center',
+                   fontsize=16, fontweight='bold', color=text_color, zorder=2,
+                   bbox=dict(facecolor=colors1[i], edgecolor=darkened_colors1[i], 
+                            boxstyle='circle,pad=0.4', linewidth=3))
+            ax.text(0, bar.get_y() - 0.35, custom_labels[i], fontsize=12, 
+                   fontweight='bold', ha='center', va='center')
+        
+        # Add labels for team2 (away)
+        for i, (bar, percentile) in enumerate(zip(bars2, team2_percentiles)):
+            text_color = get_text_color_for_bubble(colors2[i])
+            ax.text(bar.get_width(), bar.get_y() + bar.get_height() / 2, 
+                   str(int(percentile)), ha='center', va='center',
+                   fontsize=16, fontweight='bold', color=text_color, zorder=2,
+                   bbox=dict(facecolor=colors2[i], edgecolor=darkened_colors2[i], 
+                            boxstyle='circle,pad=0.4', linewidth=3))
+        
+        # Add labels for difference bars
+        for i, (bar, diff) in enumerate(zip(bars, percentile_diffs)):
+            text_color = get_text_color_for_bubble(colors[i])
+            ax.text(bar.get_width(), bar.get_y() + bar.get_height() / 2, 
+                   str(int(abs(diff))), ha='center', va='center',
+                   fontsize=14, fontweight='bold', color=text_color, zorder=2,
+                   bbox=dict(facecolor=colors[i], edgecolor=darkened_colors[i], 
+                            boxstyle='circle,pad=0.3', linewidth=3))
+        
+        ax.set_xlim(-104, 104)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.invert_yaxis()
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+        
+        # Add title and info
+        plt.text(0, -1.7, f"#{team2_net} {away_team} vs. #{team1_net} {home_team}", 
+                ha='center', fontsize=20, fontweight='bold')
+        plt.text(0, -1.25, f"Game Quality: {gqi}", ha='center', fontsize=16, fontweight='bold')
+        plt.text(0, -0.8, spread_text, ha='center', fontsize=16, fontweight='bold')
+        plt.text(0, 12.8, "@PEARatings", ha='center', fontsize=16, fontweight='bold')
+        
+        # Team 2 (away) info - left side
+        plt.text(-135, 0.5, away_team, ha='center', fontsize=16, fontweight='bold')
+        plt.text(-135, 1.0, team2_record, ha='center', fontsize=16)
+        plt.text(-135, 2.0, "Single Game", ha='center', fontsize=16, fontweight='bold')
+        plt.text(-135, 2.5, f"{round(team2_win_prob * 100)}%", ha='center', fontsize=16)
+        plt.text(-135, 3.5, "Series", ha='center', fontsize=16, fontweight='bold')
+        plt.text(-135, 4.0, f"Win 1: {round(team2_probs[0] * 100)}%", ha='center', fontsize=16)
+        plt.text(-135, 4.5, f"Win 2: {round(team2_probs[1] * 100)}%", ha='center', fontsize=16)
+        plt.text(-135, 5.0, f"Win 3: {round(team2_probs[2] * 100)}%", ha='center', fontsize=16)
+        plt.text(-135, 6.0, "NET Quads", ha='center', fontsize=16, fontweight='bold')
+        plt.text(-150, 6.5, f"Q1: {team2_Q1}", ha='left', fontsize=16)
+        plt.text(-150, 7.0, f"Q2: {team2_Q2}", ha='left', fontsize=16)
+        plt.text(-150, 7.5, f"Q3: {team2_Q3}", ha='left', fontsize=16)
+        plt.text(-150, 8.0, f"Q4: {team2_Q4}", ha='left', fontsize=16)
+        plt.text(-135, 9.0, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
+        plt.text(-135, 9.5, team2_proj_record, ha='center', fontsize=16)
+        plt.text(-135, 10.5, "Win Quality", ha='center', fontsize=16, fontweight='bold')
+        plt.text(-160, 11.0, f"{team2_win_quality:.2f}", ha='left', fontsize=16, 
+                color='green', fontweight='bold')
+        plt.text(-110, 11.0, f"{team2_loss_quality:.2f}", ha='right', fontsize=16, 
+                color='red', fontweight='bold')
+        
+        # Team 1 (home) info - right side
+        plt.text(135, 0.5, home_team, ha='center', fontsize=16, fontweight='bold')
+        plt.text(135, 1.0, team1_record, ha='center', fontsize=16)
+        plt.text(135, 2.0, "Single Game", ha='center', fontsize=16, fontweight='bold')
+        plt.text(135, 2.5, f"{round(team1_win_prob * 100)}%", ha='center', fontsize=16)
+        plt.text(135, 3.5, "Series", ha='center', fontsize=16, fontweight='bold')
+        plt.text(135, 4.0, f"Win 1: {round(team1_probs[0] * 100)}%", ha='center', fontsize=16)
+        plt.text(135, 4.5, f"Win 2: {round(team1_probs[1] * 100)}%", ha='center', fontsize=16)
+        plt.text(135, 5.0, f"Win 3: {round(team1_probs[2] * 100)}%", ha='center', fontsize=16)
+        plt.text(135, 6.0, "NET Quads", ha='center', fontsize=16, fontweight='bold')
+        plt.text(121, 6.5, f"Q1: {team1_Q1}", ha='left', fontsize=16)
+        plt.text(121, 7.0, f"Q2: {team1_Q2}", ha='left', fontsize=16)
+        plt.text(121, 7.5, f"Q3: {team1_Q3}", ha='left', fontsize=16)
+        plt.text(121, 8.0, f"Q4: {team1_Q4}", ha='left', fontsize=16)
+        plt.text(135, 9.0, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
+        plt.text(135, 9.5, team1_proj_record, ha='center', fontsize=16)
+        plt.text(135, 10.5, "Win Quality", ha='center', fontsize=16, fontweight='bold')
+        plt.text(110, 11.0, f"{team1_win_quality:.2f}", ha='left', fontsize=16, 
+                color='green', fontweight='bold')
+        plt.text(160, 11.0, f"{team1_loss_quality:.2f}", ha='right', fontsize=16, 
+                color='red', fontweight='bold')
+        
+        # Add explanation text
+        plt.text(-150, 13.2, "Middle Bubble is Difference Between Team Percentiles", 
+                ha='left', fontsize=12)
+        plt.text(150, 13.2, "Series Percentages are the Chance to Win __ Games", 
+                ha='right', fontsize=12)
+        plt.text(-150, 13.6, "NET - PEAR's Ranking System, Combining TSR and RQI", 
+                ha='left', fontsize=12)
+        plt.text(150, 13.6, "TSR - Team Strength Rating, How Good Your Team Is", 
+                ha='right', fontsize=12)
+        plt.text(-150, 14.0, "RQI - Resume Quality Index, How Good Your Wins Are", 
+                ha='left', fontsize=12)
+        plt.text(150, 14.0, "PWP - Pythagorean Win Percent, Expected Win Rate", 
+                ha='right', fontsize=12)
+        
+        # Add team logos if available
+        if team1_logo:
+            ax_img1 = fig.add_axes([0.94, 0.83, 0.15, 0.15])
+            ax_img1.imshow(team1_logo)
+            ax_img1.axis("off")
+        
+        if team2_logo:
+            ax_img2 = fig.add_axes([-0.065, 0.83, 0.15, 0.15])
+            ax_img2.imshow(team2_logo)
+            ax_img2.axis("off")
+        
+        # Save to BytesIO
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
+        buf.seek(0)
+        plt.close()
+        
+        return StreamingResponse(buf, media_type="image/png")
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error generating matchup image: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+from collections import Counter, defaultdict
+
+def get_conference(team, stats_df):
+    """Get conference for a team"""
+    return stats_df.loc[stats_df["Team"] == team, "Conference"].values[0]
+
+def count_conflict_conferences(teams, stats_df):
+    """Count conference conflicts in a regional"""
+    conferences = [get_conference(team, stats_df) for team in teams]
+    return sum(count - 1 for count in Counter(conferences).values() if count > 1)
+
+def resolve_conflicts(formatted_df, stats_df):
+    """Resolve conference conflicts by swapping seeds between regionals"""
+    seed_cols = ["seed_2", "seed_3", "seed_4"]
+
+    for seed_col in seed_cols:
+        num_regionals = len(formatted_df)
+
+        for i in range(num_regionals):
+            row = formatted_df.iloc[i]
+            teams_i = [row["seed_1"], row["seed_2"], row["seed_3"], row["seed_4"]]
+            conflict_i = count_conflict_conferences(teams_i, stats_df)
+
+            if conflict_i == 0:
+                continue
+
+            current_team = row[seed_col]
+
+            for j in range(num_regionals):
+                if i == j:
+                    continue
+
+                alt_team = formatted_df.at[j, seed_col]
+                if alt_team == current_team:
+                    continue
+
+                row_j = formatted_df.iloc[j]
+                teams_j = [row_j["seed_1"], row_j["seed_2"], row_j["seed_3"], row_j["seed_4"]]
+
+                temp_i = teams_i.copy()
+                temp_j = teams_j.copy()
+                temp_i[seed_cols.index(seed_col) + 1] = alt_team
+                temp_j[seed_cols.index(seed_col) + 1] = current_team
+
+                new_conflict_i = count_conflict_conferences(temp_i, stats_df)
+                new_conflict_j = count_conflict_conferences(temp_j, stats_df)
+
+                if (new_conflict_i + new_conflict_j) < (conflict_i + count_conflict_conferences(teams_j, stats_df)):
+                    formatted_df.at[i, seed_col] = alt_team
+                    formatted_df.at[j, seed_col] = current_team
+                    break
+
+    return formatted_df
+
+@app.get("/api/cbase/tournament-outlook")
+def get_tournament_outlook():
+    """Generate projected NCAA Tournament bracket"""
+    try:
+        modeling_stats, _ = load_baseball_data()
+        
+        # Hardcoded lists from the streamlit app
+        aq_list = ["Binghamton", "East Carolina", "Stetson", "Rhode Island", "North Carolina", "Arizona",
+                "Creighton", "USC Upstate", "Nebraska", "Cal Poly", "Northeastern", "Western Ky.", "Wright St.",
+                "Columbia", "Fairfield", "Miami (OH)", "Murray St.", "Fresno St.",
+                "Central Conn. St.", "Little Rock", "Holy Cross", "Vanderbilt", "Houston Christian",
+                "ETSU", "Bethune-Cookman", "North Dakota St.", "Coastal Carolina", "Saint Mary's (CA)", "Utah Valley", "Oregon St."]
+        
+        host_seeds_list = ["Georgia", "Auburn", "Texas", "LSU", "North Carolina", "Clemson", "Coastal Carolina", "Oregon St.",
+                    "Oregon", "Arkansas", "Southern Miss.", "Tennessee", "UCLA", "Vanderbilt", "Ole Miss", "Florida St."]
+        
+        # Get automatic qualifiers and host seeds
+        automatic_qualifiers = (
+            modeling_stats[modeling_stats["Team"].isin(aq_list)]
+            .sort_values("NET")
+        )
+        
+        host_seeds = (
+            modeling_stats[modeling_stats["Team"].isin(host_seeds_list)]
+            .sort_values("NET")
+        )
+        
+        # Calculate at-large bids
+        amount_of_at_large = 64 - len(set(automatic_qualifiers["Team"]) - set(host_seeds["Team"])) - len(host_seeds)
+        
+        at_large = modeling_stats.drop(automatic_qualifiers.index)
+        at_large = at_large[~at_large["Team"].isin(host_seeds_list)]
+        automatic_qualifiers = automatic_qualifiers[~automatic_qualifiers["Team"].isin(host_seeds_list)]
+        at_large = at_large.nsmallest(amount_of_at_large, "NET")
+        
+        # Get bubble teams
+        last_four_in = at_large[-4:].reset_index()
+        next_8 = modeling_stats.drop(automatic_qualifiers.index)
+        next_8 = next_8[~next_8["Team"].isin(host_seeds_list)]
+        next_8_teams = next_8.nsmallest(amount_of_at_large + 8, "NET").iloc[amount_of_at_large:].reset_index(drop=True)
+        
+        # Build tournament bracket
+        remaining_teams = pd.concat([automatic_qualifiers, at_large]).sort_values("NET").reset_index(drop=True)
+        
+        seed_1_df = host_seeds.sort_values("NET").reset_index(drop=True)
+        seed_2_df = remaining_teams.iloc[0:16].sort_values("NET", ascending=False).copy()
+        seed_3_df = remaining_teams.iloc[16:32].copy()
+        seed_4_df = remaining_teams.iloc[32:48].sort_values("NET", ascending=False).copy()
+        
+        # Create formatted dataframe
+        formatted_df = pd.DataFrame({
+            'host': seed_1_df['Team'].values,
+            'seed_1': seed_1_df['Team'].values,
+            'seed_2': seed_2_df['Team'].values,
+            'seed_3': seed_3_df['Team'].values,
+            'seed_4': seed_4_df['Team'].values
+        })
+        
+        # Resolve conflicts
+        formatted_df = resolve_conflicts(formatted_df, modeling_stats)
+        
+        # Get multi-bid conferences
+        all_teams = pd.unique(formatted_df[["seed_1", "seed_2", "seed_3", "seed_4"]].values.ravel())
+        bracket_teams = modeling_stats[modeling_stats["Team"].isin(all_teams)]
+        conference_counts = bracket_teams["Conference"].value_counts()
+        multibid = conference_counts[conference_counts > 1]
+        
+        # Format response
+        regionals = []
+        for i, row in formatted_df.iterrows():
+            regionals.append({
+                "regional_number": i + 1,
+                "host": row["host"],
+                "seed_1": row["seed_1"],
+                "seed_2": row["seed_2"],
+                "seed_3": row["seed_3"],
+                "seed_4": row["seed_4"]
+            })
+        
+        return {
+            "regionals": regionals,
+            "last_four_in": last_four_in['Team'].tolist(),
+            "first_four_out": next_8_teams.iloc[0:4]['Team'].tolist(),
+            "next_four_out": next_8_teams.iloc[4:8]['Team'].tolist(),
+            "multibid_conferences": multibid.to_dict()
+        }
+    
+    except Exception as e:
+        print(f"Error generating tournament outlook: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+def simulate_tournament_home_field(teams, ratings):
+    """Simulate a single double-elimination regional tournament"""
+    import random
+    
+    def PEAR_Win_Prob(home_pr, away_pr):
+        rating_diff = home_pr - away_pr
+        return round(1 / (1 + 10 ** (-rating_diff / 6)), 4)
+
+    team_a, team_b, team_c, team_d = teams
+    r = ratings
+
+    def adjusted(team):
+        return r[team] + 0.3 if team == team_a else r[team]
+
+    # Game 1: #1 vs #4
+    w1, l1 = (team_a, team_d) if random.random() < PEAR_Win_Prob(adjusted(team_a), adjusted(team_d)) else (team_d, team_a)
+    # Game 2: #2 vs #3
+    w2, l2 = (team_b, team_c) if random.random() < PEAR_Win_Prob(adjusted(team_b), adjusted(team_c)) else (team_c, team_b)
+    # Game 3: Loser's bracket
+    w3 = l2 if random.random() < PEAR_Win_Prob(adjusted(l2), adjusted(l1)) else l1
+    # Game 4: Winner's bracket
+    w4, l4 = (w1, w2) if random.random() < PEAR_Win_Prob(adjusted(w1), adjusted(w2)) else (w2, w1)
+    # Game 5: Loser's bracket final
+    w5 = l4 if random.random() < PEAR_Win_Prob(adjusted(l4), adjusted(w3)) else w3
+    # Game 6: Championship
+    game6_prob = PEAR_Win_Prob(adjusted(w4), adjusted(w5))
+    w6 = w4 if random.random() < game6_prob else w5
+
+    # If from loser's bracket, need to win twice
+    return w6 if w6 == w4 else (w4 if random.random() < game6_prob else w5)
+
+def run_simulation_home_field(team_a, team_b, team_c, team_d, stats_and_metrics, num_simulations=5000):
+    """Run multiple simulations of a regional tournament"""
+    teams = [team_a, team_b, team_c, team_d]
+    ratings = {team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].iloc[0] for team in teams}
+    results = defaultdict(int)
+
+    for _ in range(num_simulations):
+        winner = simulate_tournament_home_field(teams, ratings)
+        results[winner] += 1
+
+    total = num_simulations
+    return defaultdict(float, {team: round(count / total, 3) for team, count in results.items()})
+
+class RegionalSimulationRequest(BaseModel):
+    seed_1: str
+    seed_2: str
+    seed_3: str
+    seed_4: str
+
+@app.post("/api/cbase/simulate-regional")
+def simulate_regional(request: RegionalSimulationRequest):
+    """Simulate a regional tournament and return visualization"""
+    try:
+        modeling_stats, _ = load_baseball_data()
+        
+        team_a = request.seed_1  # Host
+        team_b = request.seed_2
+        team_c = request.seed_3
+        team_d = request.seed_4
+        
+        # Verify all teams exist
+        for team in [team_a, team_b, team_c, team_d]:
+            if team not in modeling_stats['Team'].values:
+                raise HTTPException(status_code=404, detail=f"Team not found: {team}")
+        
+        # Run simulation
+        output = run_simulation_home_field(team_a, team_b, team_c, team_d, modeling_stats)
+        
+        # Format results
+        regional_prob = pd.DataFrame(list(output.items()), columns=["Team", "Win Regional"])
+        seed_map = {
+            team_a: f"#1 {team_a}",
+            team_b: f"#2 {team_b}",
+            team_c: f"#3 {team_c}",
+            team_d: f"#4 {team_d}",
+        }
+        regional_prob["Team"] = regional_prob["Team"].map(seed_map)
+        regional_prob['Win Regional'] = regional_prob['Win Regional'] * 100
+        seed_order = [seed_map[team_a], seed_map[team_b], seed_map[team_c], seed_map[team_d]]
+        regional_prob["SeedOrder"] = regional_prob["Team"].apply(lambda x: seed_order.index(x))
+        regional_prob = regional_prob.sort_values("SeedOrder").drop(columns="SeedOrder")
+
+        # Normalize values for color gradient
+        min_value = regional_prob.iloc[:, 1:].replace(0, np.nan).min().min()
+        max_value = regional_prob.iloc[:, 1:].max().max()
+
+        def normalize(value, min_val, max_val):
+            if pd.isna(value) or value == 0:
+                return 0
+            return (value - min_val) / (max_val - min_val)
+
+        # Create visualization
+        from matplotlib.colors import LinearSegmentedColormap
+        cmap = LinearSegmentedColormap.from_list('custom_green', ['#d5f5e3', '#006400'])
+
+        fig, ax = plt.subplots(figsize=(4, 4), dpi=125)
+        fig.patch.set_facecolor('#CECEB2')
+
+        ax.axis('tight')
+        ax.axis('off')
+
+        # Create table
+        table = ax.table(
+            cellText=regional_prob.values,
+            colLabels=regional_prob.columns,
+            cellLoc='center',
+            loc='center',
+            colColours=['#CECEB2'] * len(regional_prob.columns)
+        )
+        
+        for (i, j), cell in table.get_celld().items():
+            cell.set_edgecolor('black')
+            cell.set_linewidth(1.2)
+            if i == 0:
+                cell.set_facecolor('#CECEB2')
+                cell.set_text_props(fontsize=14, weight='bold', color='black')
+            elif j == 0:
+                cell.set_facecolor('#CECEB2')
+                cell.set_text_props(fontsize=14, weight='bold', color='black')
+            else:
+                value = regional_prob.iloc[i-1, j]
+                normalized_value = normalize(value, min_value, max_value)
+                color = cmap(normalized_value)
+                cell.set_facecolor(color)
+                cell.set_text_props(fontsize=14, weight='bold', color='black')
+                if value == 0:
+                    cell.get_text().set_text("<1%")
+                else:
+                    cell.get_text().set_text(f"{value:.1f}%")
+            cell.set_height(0.2)
+
+        plt.text(0, 0.07, f'{team_a} Regional', fontsize=16, fontweight='bold', ha='center')
+        plt.text(0, 0.06, f"@PEARatings", fontsize=12, fontweight='bold', ha='center')
+
+        # Save to BytesIO
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
+        buf.seek(0)
+        plt.close()
+
+        return StreamingResponse(buf, media_type="image/png")
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error simulating regional: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

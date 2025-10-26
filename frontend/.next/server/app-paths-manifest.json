@@ -1,4 +1,10 @@
 {
+  "/not-found": "app/not-found.js",
   "/page": "app/page.js",
-  "/stats/page": "app/stats/page.js"
+  "/cbase/matchups/page": "app/cbase/matchups/page.js",
+  "/cbase/page": "app/cbase/page.js",
+  "/cbase/stats/page": "app/cbase/stats/page.js",
+  "/cbase/tournament/page": "app/cbase/tournament/page.js",
+  "/stats/page": "app/stats/page.js",
+  "/matchups/page": "app/matchups/page.js"
 }
