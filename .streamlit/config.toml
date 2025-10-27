@@ -1,0 +1,2 @@
+[runner]
+preRunScript = ".streamlit/cleanup.sh"
