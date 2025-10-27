@@ -17,6 +17,8 @@ interface TeamStats {
   ELO_Rank: number;
   PRR: number;
   RQI: number;
+  resume_quality: number;
+  avg_expected_wins: number;
   SOS: number;
   SOR: number;
   Q1: string;
@@ -145,16 +147,16 @@ export default function CbasePage() {
     });
 
   const downloadCSV = () => {
-    const headers = ['Rank', 'Team', 'TSR', 'NET', 'RPI', 'ELO', 'RQI', 'SOS', 'Q1', 'Q2', 'Q3', 'Q4', 'Conference'];
+    const headers = ['Rank', 'Team', 'NET', 'TSR', 'RQI', 'SOS', 'ELO', 'RPI', 'Q1', 'Q2', 'Q3', 'Q4', 'Conference'];
     const csvData = filteredAndSortedStats.map((team, index) => [
       index + 1,
       team.Team,
-      team.Rating?.toFixed(2) || '',
       team.NET_Score?.toFixed(3) || '',
+      team.Rating?.toFixed(2) || '',
+      team.resume_quality?.toFixed(3) || '',
+      team.avg_expected_wins?.toFixed(3) || '',
+      team.ELO?.toFixed(1) || '',
       team.RPI,
-      team.ELO_Rank,
-      team.RQI,
-      team.SOS,
       team.Q1,
       team.Q2,
       team.Q3,
@@ -238,7 +240,7 @@ export default function CbasePage() {
                     <table className="w-full text-sm">
                       <thead className="bg-gray-50 sticky top-0">
                         <tr>
-                          <th className="px-3 py-3 text-left font-semibold text-gray-700">Rank</th>
+                          <th className="px-2 py-2 text-left font-semibold text-gray-700">Rank</th>
                           <th 
                             className="px-3 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                             onClick={() => handleSort('Team')}
@@ -246,67 +248,62 @@ export default function CbasePage() {
                             Team {sortField === 'Team' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
                           <th 
-                            className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
-                            onClick={() => handleSort('Rating')}
-                          >
-                            TSR {sortField === 'Rating' && (sortDirection === 'asc' ? '↑' : '↓')}
-                          </th>
-                          <th 
-                            className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                            className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                             onClick={() => handleSort('NET_Score')}
                           >
                             NET {sortField === 'NET_Score' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
                           <th 
-                            className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                            className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                            onClick={() => handleSort('Rating')}
+                          >
+                            TSR {sortField === 'Rating' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </th>
+                          <th 
+                            className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                            onClick={() => handleSort('resume_quality')}
+                          >
+                            RQI {sortField === 'resume_quality' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </th>
+                          <th 
+                            className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                            onClick={() => handleSort('avg_expected_wins')}
+                          >
+                            SOS {sortField === 'avg_expected_wins' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </th>
+                          <th 
+                            className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                            onClick={() => handleSort('ELO')}
+                          >
+                            ELO {sortField === 'ELO' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          </th>
+                          <th 
+                            className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                             onClick={() => handleSort('RPI')}
                           >
                             RPI {sortField === 'RPI' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
-                          <th 
-                            className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
-                            onClick={() => handleSort('ELO_Rank')}
-                          >
-                            ELO {sortField === 'ELO_Rank' && (sortDirection === 'asc' ? '↑' : '↓')}
-                          </th>
-                          <th 
-                            className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
-                            onClick={() => handleSort('RQI')}
-                          >
-                            RQI {sortField === 'RQI' && (sortDirection === 'asc' ? '↑' : '↓')}
-                          </th>
-                          <th 
-                            className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
-                            onClick={() => handleSort('SOS')}
-                          >
-                            SOS {sortField === 'SOS' && (sortDirection === 'asc' ? '↑' : '↓')}
-                          </th>
-                          <th 
-                            className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                          <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                             onClick={() => handleSort('Q1')}
                           >
                             Q1 {sortField === 'Q1' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
-                          <th 
-                            className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                          <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                             onClick={() => handleSort('Q2')}
                           >
                             Q2 {sortField === 'Q2' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
-                          <th 
-                            className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                          <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                             onClick={() => handleSort('Q3')}
                           >
                             Q3 {sortField === 'Q3' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
-                          <th 
-                            className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                          <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                             onClick={() => handleSort('Q4')}
                           >
                             Q4 {sortField === 'Q4' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
-                          <th 
-                            className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                          <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                             onClick={() => handleSort('Conference')}
                           >
                             Conf {sortField === 'Conference' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -315,49 +312,76 @@ export default function CbasePage() {
                       </thead>
                       <tbody className="divide-y divide-gray-200">
                         {filteredAndSortedStats.map((team, index) => {
-                          // Calculate background colors for TSR and NET
-                          const tsrBg = getRatingColor(team.Rating || 0, stats.map(s => s.Rating || 0).filter(v => v !== null), true);
+                          // Calculate background colors
                           const netBg = getRatingColor(team.NET_Score || 0, stats.map(s => s.NET_Score || 0).filter(v => v !== null), true);
+                          const tsrBg = getRatingColor(team.Rating || 0, stats.map(s => s.Rating || 0).filter(v => v !== null), true);
+                          const rqiBg = getRatingColor(team.resume_quality || 0, stats.map(s => s.resume_quality || 0).filter(v => v !== null), true);
+                          const sosBg = getRatingColor(team.avg_expected_wins || 0, stats.map(s => s.avg_expected_wins || 0).filter(v => v !== null), false);
+                          const eloBg = getRatingColor(team.ELO || 0, stats.map(s => s.ELO || 0).filter(v => v !== null), true);
+                          const rpiBg = getRatingColor(team.RPI || 0, stats.map(s => s.RPI || 0).filter(v => v !== null), false);
 
-                          // Get national ranks for TSR and NET
-                          const tsrRank = getNationalRank(team.Rating, 'Rating', true);
+                          // Get national ranks
                           const netRank = getNationalRank(team.NET_Score, 'NET_Score', true);
+                          const tsrRank = getNationalRank(team.Rating, 'Rating', true);
+                          const rqiRank = getNationalRank(team.resume_quality, 'resume_quality', true);
+                          const sosRank = getNationalRank(team.avg_expected_wins, 'avg_expected_wins', false);
+                          const eloRank = getNationalRank(team.ELO, 'ELO', true);
+                          const rpiRank = getNationalRank(team.RPI, 'RPI', false);
 
                           return (
                             <tr key={index} className="hover:bg-gray-50">
-                              <td className="px-3 py-3 text-gray-700 font-medium">{index + 1}</td>
-                              <td className="px-3 py-3 font-semibold text-gray-900">{team.Team}</td>
-                              <td className="px-3 py-3 text-center">
-                                <div className="flex flex-col items-center gap-0.5">
-                                  <span 
-                                    className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                    style={{ backgroundColor: tsrBg, color: getTextColor(tsrBg) }}
-                                  >
-                                    {team.Rating?.toFixed(2)}
-                                  </span>
-                                  <span className="text-[10px] text-gray-500">#{tsrRank}</span>
-                                </div>
-                              </td>
-                              <td className="px-3 py-3 text-center">
-                                <div className="flex flex-col items-center gap-0.5">
-                                  <span 
-                                    className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                    style={{ backgroundColor: netBg, color: getTextColor(netBg) }}
-                                  >
+                              <td className="px-2 py-2 text-gray-700 font-medium text-sm">{index + 1}</td>
+                              <td className="px-2 py-2 font-semibold text-gray-900 text-sm">{team.Team}</td>
+                              <td className="px-1 py-2 text-center">
+                                <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                  <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                                     {team.NET_Score?.toFixed(3)}
                                   </span>
-                                  <span className="text-[10px] text-gray-500">#{netRank}</span>
+                                  <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: netBg, color: getTextColor(netBg) }}>{netRank}</span>
                                 </div>
                               </td>
-                              <td className="px-3 py-3 text-center text-gray-700">{team.RPI}</td>
-                              <td className="px-3 py-3 text-center text-gray-700">{team.ELO_Rank}</td>
-                              <td className="px-3 py-3 text-center text-gray-700">{team.RQI}</td>
-                              <td className="px-3 py-3 text-center text-gray-700">{team.SOS}</td>
-                              <td className="px-3 py-3 text-center text-xs text-gray-600">{team.Q1}</td>
-                              <td className="px-3 py-3 text-center text-xs text-gray-600">{team.Q2}</td>
-                              <td className="px-3 py-3 text-center text-xs text-gray-600">{team.Q3}</td>
-                              <td className="px-3 py-3 text-center text-xs text-gray-600">{team.Q4}</td>
-                              <td className="px-3 py-3 text-center text-xs text-gray-600">{team.Conference}</td>
+                              <td className="px-1 py-2 text-center">
+                                <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                  <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
+                                    {team.Rating?.toFixed(2)}
+                                  </span>
+                                  <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: tsrBg, color: getTextColor(tsrBg) }}>{tsrRank}</span>
+                                </div>
+                              </td>
+                              <td className="px-1 py-2 text-center">
+                                <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                  <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
+                                    {team.resume_quality?.toFixed(3)}
+                                  </span>
+                                  <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: rqiBg, color: getTextColor(rqiBg) }}>{rqiRank}</span>
+                                </div>
+                              </td>
+                              <td className="px-1 py-2 text-center">
+                                <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                  <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
+                                    {team.avg_expected_wins?.toFixed(3)}
+                                  </span>
+                                  <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: sosBg, color: getTextColor(sosBg) }}>{sosRank}</span>
+                                </div>
+                              </td>
+                              <td className="px-1 py-2 text-center">
+                                <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                  <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
+                                    {team.ELO?.toFixed(1)}
+                                  </span>
+                                  <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: eloBg, color: getTextColor(eloBg) }}>{eloRank}</span>
+                                </div>
+                              </td>
+                              <td className="px-1 py-2 text-center">
+                                <div className="flex items-center justify-center gap-1 min-w-[50px] mx-auto">
+                                  <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: rpiBg, color: getTextColor(rpiBg) }}>{rpiRank}</span>
+                                </div>
+                              </td>
+                              <td className="px-1 py-2 text-center text-xs text-gray-600">{team.Q1}</td>
+                              <td className="px-1 py-2 text-center text-xs text-gray-600">{team.Q2}</td>
+                              <td className="px-1 py-2 text-center text-xs text-gray-600">{team.Q3}</td>
+                              <td className="px-1 py-2 text-center text-xs text-gray-600">{team.Q4}</td>
+                              <td className="px-1 py-2 text-center text-xs text-gray-600">{team.Conference}</td>
                             </tr>
                           );
                         })}

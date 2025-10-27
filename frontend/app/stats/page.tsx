@@ -55,11 +55,8 @@ export default function StatsPage() {
               <>
                 <StatsTable data={stats} />
                 <div className="mt-6 text-sm text-gray-600 space-y-1 border-t pt-4">
-                  <p><strong>Success Rate</strong> - Percentage of successful plays</p>
-                  <p><strong>PPA</strong> - Predicted Points Added per play</p>
-                  <p><strong>Rush/Pass</strong> - Rushing and Passing efficiency metrics</p>
-                  <p><strong>PPO</strong> - Points Per Opportunity</p>
-                  <p><strong>Drive Q</strong> - Drive Quality rating</p>
+                  <p><strong>Success Rate</strong> - Percentage of successful plays | <strong>PPA</strong> - Predicted Points Added per play</p>
+                  <p><strong>Rush/Pass</strong> - Rushing and Passing efficiency metrics | <strong>PPO</strong> - Points Per Opportunity | <strong>Drive Q</strong> - Drive Quality rating</p>
                   <p className="mt-3 font-semibold">All stats are opponent-adjusted</p>
                 </div>
               </>

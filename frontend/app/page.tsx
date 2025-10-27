@@ -56,9 +56,7 @@ export default function Home() {
                 <RatingsTable data={ratings} />
                 <div className="mt-6 text-sm text-gray-600 space-y-1 border-t pt-4">
                   <p><strong>MD</strong> - Most Deserving (PEAR's 'AP' Ballot)</p>
-                  <p><strong>SOS</strong> - Strength of Schedule | <strong>SOR</strong> - Strength of Record</p>
-                  <p><strong>OFF</strong> - Offense | <strong>DEF</strong> - Defense</p>
-                  <p><strong>PBR</strong> - Penalty Burden Ratio | <strong>DCE</strong> - Drive Control Efficiency | <strong>DDE</strong> - Drive Disruption Efficiency</p>
+                  <p><strong>SOS</strong> - Strength of Schedule | <strong>OFF</strong> - Offense | <strong>DEF</strong> - Defense</p>
                 </div>
               </>
             )}

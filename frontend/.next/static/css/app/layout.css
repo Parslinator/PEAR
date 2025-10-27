@@ -751,8 +751,53 @@ video {
 .w-full {
   width: 100%;
 }
+.w-\[35px\] {
+  width: 35px;
+}
+.w-\[32px\] {
+  width: 32px;
+}
 .min-w-\[200px\] {
   min-width: 200px;
+}
+.min-w-\[85px\] {
+  min-width: 85px;
+}
+.min-w-\[80px\] {
+  min-width: 80px;
+}
+.min-w-\[75px\] {
+  min-width: 75px;
+}
+.min-w-\[38px\] {
+  min-width: 38px;
+}
+.min-w-\[30px\] {
+  min-width: 30px;
+}
+.min-w-\[70px\] {
+  min-width: 70px;
+}
+.min-w-\[65px\] {
+  min-width: 65px;
+}
+.min-w-\[95px\] {
+  min-width: 95px;
+}
+.min-w-\[45px\] {
+  min-width: 45px;
+}
+.min-w-\[25px\] {
+  min-width: 25px;
+}
+.min-w-\[50px\] {
+  min-width: 50px;
+}
+.min-w-\[10px\] {
+  min-width: 10px;
+}
+.min-w-\[35px\] {
+  min-width: 35px;
 }
 .max-w-4xl {
   max-width: 56rem;
@@ -833,6 +878,9 @@ video {
 .gap-8 {
   gap: 2rem;
 }
+.gap-1 {
+  gap: 0.25rem;
+}
 .space-x-1 > :not([hidden]) ~ :not([hidden]) {
   --tw-space-x-reverse: 0;
   margin-right: calc(0.25rem * var(--tw-space-x-reverse));
@@ -900,6 +948,9 @@ video {
 }
 .overflow-y-auto {
   overflow-y: auto;
+}
+.whitespace-nowrap {
+  white-space: nowrap;
 }
 .rounded {
   border-radius: 0.25rem;
@@ -1224,6 +1275,10 @@ video {
   padding-top: 2rem;
   padding-bottom: 2rem;
 }
+.px-1 {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
 .pb-4 {
   padding-bottom: 1rem;
 }
@@ -1244,6 +1299,9 @@ video {
 }
 .text-center {
   text-align: center;
+}
+.text-right {
+  text-align: right;
 }
 .text-2xl {
   font-size: 1.5rem;
@@ -1275,6 +1333,15 @@ video {
 .text-xs {
   font-size: 0.75rem;
   line-height: 1rem;
+}
+.text-\[8px\] {
+  font-size: 8px;
+}
+.text-\[11px\] {
+  font-size: 11px;
+}
+.text-\[9px\] {
+  font-size: 9px;
 }
 .font-bold {
   font-weight: 700;
@@ -1431,10 +1498,6 @@ video {
   --tw-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   --tw-shadow-colored: 0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-}
-.invert {
-  --tw-invert: invert(100%);
-  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
 .filter {
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);

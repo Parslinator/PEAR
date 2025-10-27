@@ -236,75 +236,63 @@ export default function CbaseStatsPage() {
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 sticky top-0">
                       <tr>
-                        <th className="px-3 py-3 text-left font-semibold text-gray-700">Rank</th>
-                        <th 
-                          className="px-3 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                        <th className="px-2 py-2 text-left font-semibold text-gray-700">Rank</th>
+                        <th className="px-2 py-2 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                           onClick={() => handleSort('Team')}
                         >
                           Team {sortField === 'Team' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
-                        <th 
-                          className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                        <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                           onClick={() => handleSort('fWAR')}
                         >
                           WAR {sortField === 'fWAR' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
-                        <th 
-                          className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                        <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                           onClick={() => handleSort('PYTHAG')}
                         >
                           PYTHAG {sortField === 'PYTHAG' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
-                        <th 
-                          className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                        <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                           onClick={() => handleSort('ERA')}
                         >
                           ERA {sortField === 'ERA' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
-                        <th 
-                          className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                        <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                           onClick={() => handleSort('WHIP')}
                         >
                           WHIP {sortField === 'WHIP' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
-                        <th 
-                          className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                        <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                           onClick={() => handleSort('KP9')}
                         >
                           K/9 {sortField === 'KP9' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
-                        <th 
-                          className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                        <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                           onClick={() => handleSort('RPG')}
                         >
                           RPG {sortField === 'RPG' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
-                        <th 
-                          className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                        <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                           onClick={() => handleSort('BA')}
                         >
                           BA {sortField === 'BA' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
-                        <th 
-                          className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                        <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                           onClick={() => handleSort('OBP')}
                         >
                           OBP {sortField === 'OBP' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
-                        <th 
-                          className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                        <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                           onClick={() => handleSort('SLG')}
                         >
                           SLG {sortField === 'SLG' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
-                        <th 
-                          className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                        <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                           onClick={() => handleSort('OPS')}
                         >
                           OPS {sortField === 'OPS' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
-                        <th 
-                          className="px-3 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                        <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                           onClick={() => handleSort('Conference')}
                         >
                           Conf {sortField === 'Conference' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -338,119 +326,89 @@ export default function CbaseStatsPage() {
 
                         return (
                           <tr key={index} className="hover:bg-gray-50">
-                            <td className="px-3 py-3 text-gray-700 font-medium">{index + 1}</td>
-                            <td className="px-3 py-3 font-semibold text-gray-900">{team.Team}</td>
-                            <td className="px-3 py-3 text-center">
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span 
-                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                  style={{ backgroundColor: warBg, color: getTextColor(warBg) }}
-                                >
+                            <td className="px-2 py-2 text-gray-700 font-medium text-sm">{index + 1}</td>
+                            <td className="px-2 py-2 font-semibold text-gray-900 text-sm">{team.Team}</td>
+                            <td className="px-1 py-2 text-center">
+                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                                   {team.fWAR?.toFixed(2)}
                                 </span>
-                                <span className="text-[10px] text-gray-500">#{warRank}</span>
+                                <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: warBg, color: getTextColor(warBg) }}>{warRank}</span>
                               </div>
                             </td>
-                            <td className="px-3 py-3 text-center">
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span 
-                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                  style={{ backgroundColor: pythagBg, color: getTextColor(pythagBg) }}
-                                >
+                            <td className="px-1 py-2 text-center">
+                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                                   {team.PYTHAG?.toFixed(3)}
                                 </span>
-                                <span className="text-[10px] text-gray-500">#{pythagRank}</span>
+                                <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: pythagBg, color: getTextColor(pythagBg) }}>{pythagRank}</span>
                               </div>
                             </td>
-                            <td className="px-3 py-3 text-center">
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span 
-                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                  style={{ backgroundColor: eraBg, color: getTextColor(eraBg) }}
-                                >
+                            <td className="px-1 py-2 text-center">
+                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                                   {team.ERA?.toFixed(2)}
                                 </span>
-                                <span className="text-[10px] text-gray-500">#{eraRank}</span>
+                                <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: eraBg, color: getTextColor(eraBg) }}>{eraRank}</span>
                               </div>
                             </td>
-                            <td className="px-3 py-3 text-center">
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span 
-                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                  style={{ backgroundColor: whipBg, color: getTextColor(whipBg) }}
-                                >
+                            <td className="px-1 py-2 text-center">
+                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                                   {team.WHIP?.toFixed(2)}
                                 </span>
-                                <span className="text-[10px] text-gray-500">#{whipRank}</span>
+                                <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: whipBg, color: getTextColor(whipBg) }}>{whipRank}</span>
                               </div>
                             </td>
-                            <td className="px-3 py-3 text-center">
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span 
-                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                  style={{ backgroundColor: kp9Bg, color: getTextColor(kp9Bg) }}
-                                >
+                            <td className="px-1 py-2 text-center">
+                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                                   {team.KP9?.toFixed(1)}
                                 </span>
-                                <span className="text-[10px] text-gray-500">#{kp9Rank}</span>
+                                <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: kp9Bg, color: getTextColor(kp9Bg) }}>{kp9Rank}</span>
                               </div>
                             </td>
-                            <td className="px-3 py-3 text-center">
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span 
-                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                  style={{ backgroundColor: rpgBg, color: getTextColor(rpgBg) }}
-                                >
+                            <td className="px-1 py-2 text-center">
+                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                                   {team.RPG?.toFixed(1)}
                                 </span>
-                                <span className="text-[10px] text-gray-500">#{rpgRank}</span>
+                                <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: rpgBg, color: getTextColor(rpgBg) }}>{rpgRank}</span>
                               </div>
                             </td>
-                            <td className="px-3 py-3 text-center">
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span 
-                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                  style={{ backgroundColor: baBg, color: getTextColor(baBg) }}
-                                >
+                            <td className="px-1 py-2 text-center">
+                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                                   {team.BA?.toFixed(3)}
                                 </span>
-                                <span className="text-[10px] text-gray-500">#{baRank}</span>
+                                <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: baBg, color: getTextColor(baBg) }}>{baRank}</span>
                               </div>
                             </td>
-                            <td className="px-3 py-3 text-center">
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span 
-                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                  style={{ backgroundColor: obpBg, color: getTextColor(obpBg) }}
-                                >
+                            <td className="px-1 py-2 text-center">
+                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                                   {team.OBP?.toFixed(3)}
                                 </span>
-                                <span className="text-[10px] text-gray-500">#{obpRank}</span>
+                                <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: obpBg, color: getTextColor(obpBg) }}>{obpRank}</span>
                               </div>
                             </td>
-                            <td className="px-3 py-3 text-center">
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span 
-                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                  style={{ backgroundColor: slgBg, color: getTextColor(slgBg) }}
-                                >
+                            <td className="px-1 py-2 text-center">
+                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                                   {team.SLG?.toFixed(3)}
                                 </span>
-                                <span className="text-[10px] text-gray-500">#{slgRank}</span>
+                                <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: slgBg, color: getTextColor(slgBg) }}>{slgRank}</span>
                               </div>
                             </td>
-                            <td className="px-3 py-3 text-center">
-                              <div className="flex flex-col items-center gap-0.5">
-                                <span 
-                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                  style={{ backgroundColor: opsBg, color: getTextColor(opsBg) }}
-                                >
+                            <td className="px-1 py-2 text-center">
+                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                                   {team.OPS?.toFixed(3)}
                                 </span>
-                                <span className="text-[10px] text-gray-500">#{opsRank}</span>
+                                <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: opsBg, color: getTextColor(opsBg) }}>{opsRank}</span>
                               </div>
                             </td>
-                            <td className="px-3 py-3 text-center text-xs text-gray-600">{team.Conference}</td>
+                            <td className="px-1 py-2 text-center text-xs text-gray-600">{team.Conference}</td>
                           </tr>
                         );
                       })}

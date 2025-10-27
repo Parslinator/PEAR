@@ -509,9 +509,10 @@ def get_ratings(year: int, week: int):
     all_data['Rating'] = all_data['power_rating']
     all_data['Team'] = all_data['team']
     all_data['CONF'] = all_data.get('conference', '')
-    all_data['MD'] = all_data.get('most_deserving', '')
+    all_data['MD'] = all_data.get('most_deserving_wins', 0)
+    all_data['SOS'] = all_data.get('avg_expected_wins', 0)
     
-    result = all_data[['Team', 'Rating', 'offensive_rating', 'defensive_rating', 'MD', 'SOS', 'SOR', 'CONF']].to_dict('records')
+    result = all_data[['Team', 'Rating', 'offensive_rating', 'defensive_rating', 'MD', 'SOS', 'CONF']].to_dict('records')
     
     return {"data": result, "year": year, "week": week}
 
@@ -950,7 +951,7 @@ def get_baseball_stats():
         # All the stats columns
         stats_columns = [
             'Team', 'Conference', 'Rating', 'NET', 'NET_Score', 'RPI', 'ELO', 'ELO_Rank', 'PRR', 'RQI', 
-            'SOS', 'SOR', 'Q1', 'Q2', 'Q3', 'Q4',
+            'resume_quality', 'avg_expected_wins', 'SOS', 'SOR', 'Q1', 'Q2', 'Q3', 'Q4',
             'fWAR', 'oWAR_z', 'pWAR_z', 'WPOE', 'PYTHAG',
             'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS'
         ]

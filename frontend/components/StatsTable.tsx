@@ -365,128 +365,128 @@ export default function StatsTable({ data }: Props) {
 
               return (
                 <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 text-gray-700 font-medium border-r-2 border-gray-300">{index + 1}</td>
-                  <td className="px-3 py-2 font-semibold text-gray-900">{item.team}</td>
-                  <td className="px-2 py-2 text-center border-r-2 border-gray-300">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="inline-block px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: ratingBg, color: ratingText }}>
+                  <td className="px-2 py-2 text-gray-700 font-medium border-r-2 border-gray-300">{index + 1}</td>
+                  <td className="px-2 py-2 font-semibold text-gray-900 text-sm">{item.team}</td>
+                  <td className="px-1 py-2 text-center border-r-2 border-gray-300">
+                    <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                      <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                         {item.power_rating.toFixed(1)}
                       </span>
-                      <span className="text-[10px] text-gray-500">#{ratingRank}</span>
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: ratingBg, color: ratingText }}>{ratingRank}</span>
                     </div>
                   </td>
                   
-                  <td className="px-2 py-2 text-center">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="inline-block px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: offRatingBg, color: getTextColor(offRatingBg) }}>
+                  <td className="px-1 py-2 text-center">
+                    <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                      <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                         {item.offensive_rating.toFixed(1)}
                       </span>
-                      <span className="text-[10px] text-gray-500">#{offRatingRank}</span>
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: offRatingBg, color: getTextColor(offRatingBg) }}>{offRatingRank}</span>
                     </div>
                   </td>
-                  <td className="px-2 py-2 text-center">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="inline-block px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: offSuccessBg, color: getTextColor(offSuccessBg) }}>
+                  <td className="px-1 py-2 text-center">
+                    <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                      <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                         {item.Offense_successRate_adj.toFixed(2)}
                       </span>
-                      <span className="text-[10px] text-gray-500">#{offSuccessRank}</span>
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: offSuccessBg, color: getTextColor(offSuccessBg) }}>{offSuccessRank}</span>
                     </div>
                   </td>
-                  <td className="px-2 py-2 text-center">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="inline-block px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: offPPABg, color: getTextColor(offPPABg) }}>
+                  <td className="px-1 py-2 text-center">
+                    <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                      <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                         {item.Offense_ppa_adj.toFixed(2)}
                       </span>
-                      <span className="text-[10px] text-gray-500">#{offPPARank}</span>
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: offPPABg, color: getTextColor(offPPABg) }}>{offPPARank}</span>
                     </div>
                   </td>
-                  <td className="px-2 py-2 text-center">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="inline-block px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: offRushBg, color: getTextColor(offRushBg) }}>
+                  <td className="px-1 py-2 text-center">
+                    <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                      <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                         {item.Offense_rushing_adj.toFixed(2)}
                       </span>
-                      <span className="text-[10px] text-gray-500">#{offRushRank}</span>
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: offRushBg, color: getTextColor(offRushBg) }}>{offRushRank}</span>
                     </div>
                   </td>
-                  <td className="px-2 py-2 text-center">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="inline-block px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: offPassBg, color: getTextColor(offPassBg) }}>
+                  <td className="px-1 py-2 text-center">
+                    <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                      <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                         {item.Offense_passing_adj.toFixed(2)}
                       </span>
-                      <span className="text-[10px] text-gray-500">#{offPassRank}</span>
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: offPassBg, color: getTextColor(offPassBg) }}>{offPassRank}</span>
                     </div>
                   </td>
-                  <td className="px-2 py-2 text-center">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="inline-block px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: offPPOBg, color: getTextColor(offPPOBg) }}>
+                  <td className="px-1 py-2 text-center">
+                    <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                      <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                         {item.adj_offense_ppo.toFixed(2)}
                       </span>
-                      <span className="text-[10px] text-gray-500">#{offPPORank}</span>
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: offPPOBg, color: getTextColor(offPPOBg) }}>{offPPORank}</span>
                     </div>
                   </td>
-                  <td className="px-2 py-2 text-center border-r-2 border-gray-300">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="inline-block px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: offDQBg, color: getTextColor(offDQBg) }}>
+                  <td className="px-1 py-2 text-center border-r-2 border-gray-300">
+                    <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                      <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                         {item.adj_offense_drive_quality.toFixed(1)}
                       </span>
-                      <span className="text-[10px] text-gray-500">#{offDQRank}</span>
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: offDQBg, color: getTextColor(offDQBg) }}>{offDQRank}</span>
                     </div>
                   </td>
                   
-                  <td className="px-2 py-2 text-center">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="inline-block px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: defRatingBg, color: getTextColor(defRatingBg) }}>
+                  <td className="px-1 py-2 text-center">
+                    <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                      <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                         {item.defensive_rating.toFixed(1)}
                       </span>
-                      <span className="text-[10px] text-gray-500">#{defRatingRank}</span>
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: defRatingBg, color: getTextColor(defRatingBg) }}>{defRatingRank}</span>
                     </div>
                   </td>
-                  <td className="px-2 py-2 text-center">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="inline-block px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: defSuccessBg, color: getTextColor(defSuccessBg) }}>
+                  <td className="px-1 py-2 text-center">
+                    <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                      <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                         {item.Defense_successRate_adj.toFixed(2)}
                       </span>
-                      <span className="text-[10px] text-gray-500">#{defSuccessRank}</span>
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: defSuccessBg, color: getTextColor(defSuccessBg) }}>{defSuccessRank}</span>
                     </div>
                   </td>
-                  <td className="px-2 py-2 text-center">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="inline-block px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: defPPABg, color: getTextColor(defPPABg) }}>
+                  <td className="px-1 py-2 text-center">
+                    <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                      <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                         {item.Defense_ppa_adj.toFixed(2)}
                       </span>
-                      <span className="text-[10px] text-gray-500">#{defPPARank}</span>
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: defPPABg, color: getTextColor(defPPABg) }}>{defPPARank}</span>
                     </div>
                   </td>
-                  <td className="px-2 py-2 text-center">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="inline-block px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: defRushBg, color: getTextColor(defRushBg) }}>
+                  <td className="px-1 py-2 text-center">
+                    <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                      <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                         {item.Defense_rushing_adj.toFixed(2)}
                       </span>
-                      <span className="text-[10px] text-gray-500">#{defRushRank}</span>
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: defRushBg, color: getTextColor(defRushBg) }}>{defRushRank}</span>
                     </div>
                   </td>
-                  <td className="px-2 py-2 text-center">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="inline-block px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: defPassBg, color: getTextColor(defPassBg) }}>
+                  <td className="px-1 py-2 text-center">
+                    <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                      <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                         {item.Defense_passing_adj.toFixed(2)}
                       </span>
-                      <span className="text-[10px] text-gray-500">#{defPassRank}</span>
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: defPassBg, color: getTextColor(defPassBg) }}>{defPassRank}</span>
                     </div>
                   </td>
-                  <td className="px-2 py-2 text-center">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="inline-block px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: defPPOBg, color: getTextColor(defPPOBg) }}>
+                  <td className="px-1 py-2 text-center">
+                    <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                      <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                         {item.adj_defense_ppo.toFixed(2)}
                       </span>
-                      <span className="text-[10px] text-gray-500">#{defPPORank}</span>
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: defPPOBg, color: getTextColor(defPPOBg) }}>{defPPORank}</span>
                     </div>
                   </td>
-                  <td className="px-2 py-2 text-center">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="inline-block px-2 py-1 rounded text-xs font-semibold" style={{ backgroundColor: defDQBg, color: getTextColor(defDQBg) }}>
+                  <td className="px-1 py-2 text-center">
+                    <div className="flex items-center justify-center gap-1 min-w-[80px] mx-auto">
+                      <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
                         {item.adj_defense_drive_quality.toFixed(1)}
                       </span>
-                      <span className="text-[10px] text-gray-500">#{defDQRank}</span>
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: defDQBg, color: getTextColor(defDQBg) }}>{defDQRank}</span>
                     </div>
                   </td>
                 </tr>

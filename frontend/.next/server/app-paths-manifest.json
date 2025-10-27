@@ -1,7 +1,9 @@
 {
-  "/page": "app/page.js",
   "/stats/page": "app/stats/page.js",
-  "/cbase/page": "app/cbase/page.js",
   "/spreads/page": "app/spreads/page.js",
-  "/cbase/stats/page": "app/cbase/stats/page.js"
+  "/matchups/page": "app/matchups/page.js",
+  "/cbase/stats/page": "app/cbase/stats/page.js",
+  "/cbase/page": "app/cbase/page.js",
+  "/cbase/tournament/page": "app/cbase/tournament/page.js",
+  "/page": "app/page.js"
 }
