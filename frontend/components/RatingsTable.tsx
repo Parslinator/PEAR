@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 
 interface RatingData {
@@ -22,6 +22,13 @@ export default function RatingsTable({ data }: Props) {
   const [sortField, setSortField] = useState<keyof RatingData>('Rating');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [filter, setFilter] = useState('');
+  const [conferenceFilter, setConferenceFilter] = useState('All');
+
+  // Get unique conferences from data
+  const conferences = useMemo(() => {
+    const uniqueConfs = Array.from(new Set(data.map(item => item.CONF))).sort();
+    return ['All', ...uniqueConfs];
+  }, [data]);
 
   const handleSort = (field: keyof RatingData) => {
     if (sortField === field) {
@@ -32,6 +39,18 @@ export default function RatingsTable({ data }: Props) {
       const lowerIsBetter = ['defensive_rating', 'MD', 'SOS', 'SOR'].includes(field);
       setSortDirection(lowerIsBetter ? 'asc' : 'desc');
     }
+  };
+
+  // Calculate national rank for a team's stat value
+  const getNationalRank = (value: number, field: keyof RatingData, higherIsBetter: boolean = true): number => {
+    if (value === null || value === undefined) return data.length;
+    
+    const sortedValues = data
+      .map(d => d[field] as number)
+      .filter(v => v !== null && v !== undefined)
+      .sort((a, b) => higherIsBetter ? b - a : a - b);
+    
+    return sortedValues.indexOf(value) + 1;
   };
 
   const sortedData = [...data].sort((a, b) => {
@@ -47,10 +66,12 @@ export default function RatingsTable({ data }: Props) {
       : String(bVal).localeCompare(String(aVal));
   });
 
-  const filteredData = sortedData.filter(item =>
-    item.Team.toLowerCase().includes(filter.toLowerCase()) ||
-    item.CONF.toLowerCase().includes(filter.toLowerCase())
-  );
+  const filteredData = sortedData.filter(item => {
+    const matchesSearch = item.Team.toLowerCase().includes(filter.toLowerCase()) ||
+      item.CONF.toLowerCase().includes(filter.toLowerCase());
+    const matchesConference = conferenceFilter === 'All' || item.CONF === conferenceFilter;
+    return matchesSearch && matchesConference;
+  });
 
   const SortIcon = ({ field }: { field: keyof RatingData }) => {
     if (sortField !== field) return null;
@@ -141,6 +162,17 @@ export default function RatingsTable({ data }: Props) {
           onChange={(e) => setFilter(e.target.value)}
           className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
+        <select
+          value={conferenceFilter}
+          onChange={(e) => setConferenceFilter(e.target.value)}
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+        >
+          {conferences.map(conf => (
+            <option key={conf} value={conf}>
+              {conf === 'All' ? 'All Conferences' : conf}
+            </option>
+          ))}
+        </select>
         <button
           onClick={downloadCSV}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
@@ -216,33 +248,47 @@ export default function RatingsTable({ data }: Props) {
               const sosBg = getRatingColor(item.SOS, data.map(d => d.SOS), false);
               const sorBg = getRatingColor(item.SOR, data.map(d => d.SOR), false);
 
+              // Get national ranks for Rating, OFF, and DEF only
+              const ratingRank = getNationalRank(item.Rating, 'Rating', true);
+              const offRank = getNationalRank(item.offensive_rating, 'offensive_rating', true);
+              const defRank = getNationalRank(item.defensive_rating, 'defensive_rating', false);
+
               return (
                 <tr key={index} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-gray-700 font-medium">{index + 1}</td>
                   <td className="px-4 py-3 font-semibold text-gray-900">{item.Team}</td>
                   <td className="px-4 py-3 text-center">
-                    <span 
-                      className="inline-block px-3 py-1 rounded-full font-semibold text-xs"
-                      style={{ backgroundColor: ratingBg, color: getTextColor(ratingBg) }}
-                    >
-                      {item.Rating.toFixed(1)}
-                    </span>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span 
+                        className="inline-block px-3 py-1 rounded-full font-semibold text-xs"
+                        style={{ backgroundColor: ratingBg, color: getTextColor(ratingBg) }}
+                      >
+                        {item.Rating.toFixed(1)}
+                      </span>
+                      <span className="text-[10px] text-gray-500">#{ratingRank}</span>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span 
-                      className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                      style={{ backgroundColor: offBg, color: getTextColor(offBg) }}
-                    >
-                      {item.offensive_rating.toFixed(1)}
-                    </span>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span 
+                        className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                        style={{ backgroundColor: offBg, color: getTextColor(offBg) }}
+                      >
+                        {item.offensive_rating.toFixed(1)}
+                      </span>
+                      <span className="text-[10px] text-gray-500">#{offRank}</span>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span 
-                      className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                      style={{ backgroundColor: defBg, color: getTextColor(defBg) }}
-                    >
-                      {item.defensive_rating.toFixed(1)}
-                    </span>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span 
+                        className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                        style={{ backgroundColor: defBg, color: getTextColor(defBg) }}
+                      >
+                        {item.defensive_rating.toFixed(1)}
+                      </span>
+                      <span className="text-[10px] text-gray-500">#{defRank}</span>
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span 

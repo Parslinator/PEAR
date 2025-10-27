@@ -66,6 +66,18 @@ export default function CbaseStatsPage() {
     }
   };
 
+  // Calculate national rank for a team's stat value
+  const getNationalRank = (value: number, field: SortField, higherIsBetter: boolean = true): number => {
+    if (value === null || value === undefined) return stats.length;
+    
+    const sortedValues = stats
+      .map(s => s[field] as number)
+      .filter(v => v !== null && v !== undefined)
+      .sort((a, b) => higherIsBetter ? b - a : a - b);
+    
+    return sortedValues.indexOf(value) + 1;
+  };
+
   const getRatingColor = (value: number, allValues: number[], higherIsBetter: boolean = true) => {
     const max = Math.max(...allValues);
     const min = Math.min(...allValues);
@@ -76,18 +88,20 @@ export default function CbaseStatsPage() {
       normalized = 1 - normalized;
     }
     
-    // Blue (good) to Grey to Red (bad)
+    // Colors: Dark Blue #00008B (0, 0, 139), Light Gray #D3D3D3 (211, 211, 211), Dark Red #8B0000 (139, 0, 0)
     if (normalized >= 0.5) {
+      // Top 50%: Light Gray to Dark Blue
       const t = (normalized - 0.5) * 2;
-      const r = Math.round(128 + (0 - 128) * t);
-      const g = Math.round(128 + (100 - 128) * t);
-      const b = Math.round(128 + (200 - 128) * t);
+      const r = Math.round(211 + (0 - 211) * t);
+      const g = Math.round(211 + (0 - 211) * t);
+      const b = Math.round(211 + (139 - 211) * t);
       return `rgb(${r}, ${g}, ${b})`;
     } else {
+      // Bottom 50%: Dark Red to Light Gray
       const t = normalized * 2;
-      const r = Math.round(200 + (128 - 200) * t);
-      const g = Math.round(50 + (128 - 50) * t);
-      const b = Math.round(50 + (128 - 50) * t);
+      const r = Math.round(139 + (211 - 139) * t);
+      const g = Math.round(0 + (211 - 0) * t);
+      const b = Math.round(0 + (211 - 0) * t);
       return `rgb(${r}, ${g}, ${b})`;
     }
   };
@@ -162,68 +176,63 @@ export default function CbaseStatsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center mb-4">
-            <Trophy className="w-12 h-12 text-yellow-400 mr-3" />
-            <h1 className="text-4xl font-bold">Advanced Team Statistics</h1>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Team Statistics</h1>
           {dataDate && (
-            <p className="text-center text-blue-200">Data as of {dataDate}</p>
+            <p className="text-lg text-gray-600">Data as of {dataDate}</p>
           )}
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-white">Team Stats</h2>
-              <p className="text-green-100 text-sm mt-1">Advanced offensive and pitching metrics</p>
+        {/* Controls */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search teams..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
+            
+            <select
+              value={selectedConference}
+              onChange={(e) => setSelectedConference(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            >
+              {conferences.map(conf => (
+                <option key={conf} value={conf}>
+                  {conf === 'All' ? 'All Conferences' : conf}
+                </option>
+              ))}
+            </select>
+            
             <button
               onClick={downloadCSV}
-              className="flex items-center space-x-2 bg-white text-green-600 px-4 py-2 rounded-lg hover:bg-green-50 transition-colors font-semibold"
+              className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
             >
-              <Download className="w-4 h-4" />
-              <span>Download CSV</span>
+              <Download className="w-5 h-5" />
+              Download CSV
             </button>
           </div>
+        </div>
 
+        {/* Stats Table */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="p-6">
-            {/* Filters */}
-            <div className="mb-6 flex gap-4 flex-wrap items-center">
-              <div className="flex-1 min-w-[200px] relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search teams..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-              <select
-                value={selectedConference}
-                onChange={(e) => setSelectedConference(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              >
-                {conferences.map(conf => (
-                  <option key={conf} value={conf}>{conf}</option>
-                ))}
-              </select>
-            </div>
-
             {loading ? (
               <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
                 <p className="mt-4 text-gray-600">Loading statistics...</p>
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="bg-gray-50 sticky top-0">
                       <tr>
@@ -315,89 +324,131 @@ export default function CbaseStatsPage() {
                         const slgBg = getRatingColor(team.SLG || 0, stats.map(s => s.SLG || 0).filter(v => v !== null), true);
                         const opsBg = getRatingColor(team.OPS || 0, stats.map(s => s.OPS || 0).filter(v => v !== null), true);
 
+                        // Get national ranks
+                        const warRank = getNationalRank(team.fWAR, 'fWAR', true);
+                        const pythagRank = getNationalRank(team.PYTHAG, 'PYTHAG', true);
+                        const eraRank = getNationalRank(team.ERA, 'ERA', false);
+                        const whipRank = getNationalRank(team.WHIP, 'WHIP', false);
+                        const kp9Rank = getNationalRank(team.KP9, 'KP9', true);
+                        const rpgRank = getNationalRank(team.RPG, 'RPG', true);
+                        const baRank = getNationalRank(team.BA, 'BA', true);
+                        const obpRank = getNationalRank(team.OBP, 'OBP', true);
+                        const slgRank = getNationalRank(team.SLG, 'SLG', true);
+                        const opsRank = getNationalRank(team.OPS, 'OPS', true);
+
                         return (
                           <tr key={index} className="hover:bg-gray-50">
                             <td className="px-3 py-3 text-gray-700 font-medium">{index + 1}</td>
                             <td className="px-3 py-3 font-semibold text-gray-900">{team.Team}</td>
                             <td className="px-3 py-3 text-center">
-                              <span 
-                                className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                style={{ backgroundColor: warBg, color: getTextColor(warBg) }}
-                              >
-                                {team.fWAR?.toFixed(2)}
-                              </span>
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span 
+                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                                  style={{ backgroundColor: warBg, color: getTextColor(warBg) }}
+                                >
+                                  {team.fWAR?.toFixed(2)}
+                                </span>
+                                <span className="text-[10px] text-gray-500">#{warRank}</span>
+                              </div>
                             </td>
                             <td className="px-3 py-3 text-center">
-                              <span 
-                                className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                style={{ backgroundColor: pythagBg, color: getTextColor(pythagBg) }}
-                              >
-                                {team.PYTHAG?.toFixed(3)}
-                              </span>
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span 
+                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                                  style={{ backgroundColor: pythagBg, color: getTextColor(pythagBg) }}
+                                >
+                                  {team.PYTHAG?.toFixed(3)}
+                                </span>
+                                <span className="text-[10px] text-gray-500">#{pythagRank}</span>
+                              </div>
                             </td>
                             <td className="px-3 py-3 text-center">
-                              <span 
-                                className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                style={{ backgroundColor: eraBg, color: getTextColor(eraBg) }}
-                              >
-                                {team.ERA?.toFixed(2)}
-                              </span>
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span 
+                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                                  style={{ backgroundColor: eraBg, color: getTextColor(eraBg) }}
+                                >
+                                  {team.ERA?.toFixed(2)}
+                                </span>
+                                <span className="text-[10px] text-gray-500">#{eraRank}</span>
+                              </div>
                             </td>
                             <td className="px-3 py-3 text-center">
-                              <span 
-                                className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                style={{ backgroundColor: whipBg, color: getTextColor(whipBg) }}
-                              >
-                                {team.WHIP?.toFixed(2)}
-                              </span>
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span 
+                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                                  style={{ backgroundColor: whipBg, color: getTextColor(whipBg) }}
+                                >
+                                  {team.WHIP?.toFixed(2)}
+                                </span>
+                                <span className="text-[10px] text-gray-500">#{whipRank}</span>
+                              </div>
                             </td>
                             <td className="px-3 py-3 text-center">
-                              <span 
-                                className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                style={{ backgroundColor: kp9Bg, color: getTextColor(kp9Bg) }}
-                              >
-                                {team.KP9?.toFixed(1)}
-                              </span>
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span 
+                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                                  style={{ backgroundColor: kp9Bg, color: getTextColor(kp9Bg) }}
+                                >
+                                  {team.KP9?.toFixed(1)}
+                                </span>
+                                <span className="text-[10px] text-gray-500">#{kp9Rank}</span>
+                              </div>
                             </td>
                             <td className="px-3 py-3 text-center">
-                              <span 
-                                className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                style={{ backgroundColor: rpgBg, color: getTextColor(rpgBg) }}
-                              >
-                                {team.RPG?.toFixed(1)}
-                              </span>
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span 
+                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                                  style={{ backgroundColor: rpgBg, color: getTextColor(rpgBg) }}
+                                >
+                                  {team.RPG?.toFixed(1)}
+                                </span>
+                                <span className="text-[10px] text-gray-500">#{rpgRank}</span>
+                              </div>
                             </td>
                             <td className="px-3 py-3 text-center">
-                              <span 
-                                className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                style={{ backgroundColor: baBg, color: getTextColor(baBg) }}
-                              >
-                                {team.BA?.toFixed(3)}
-                              </span>
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span 
+                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                                  style={{ backgroundColor: baBg, color: getTextColor(baBg) }}
+                                >
+                                  {team.BA?.toFixed(3)}
+                                </span>
+                                <span className="text-[10px] text-gray-500">#{baRank}</span>
+                              </div>
                             </td>
                             <td className="px-3 py-3 text-center">
-                              <span 
-                                className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                style={{ backgroundColor: obpBg, color: getTextColor(obpBg) }}
-                              >
-                                {team.OBP?.toFixed(3)}
-                              </span>
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span 
+                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                                  style={{ backgroundColor: obpBg, color: getTextColor(obpBg) }}
+                                >
+                                  {team.OBP?.toFixed(3)}
+                                </span>
+                                <span className="text-[10px] text-gray-500">#{obpRank}</span>
+                              </div>
                             </td>
                             <td className="px-3 py-3 text-center">
-                              <span 
-                                className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                style={{ backgroundColor: slgBg, color: getTextColor(slgBg) }}
-                              >
-                                {team.SLG?.toFixed(3)}
-                              </span>
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span 
+                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                                  style={{ backgroundColor: slgBg, color: getTextColor(slgBg) }}
+                                >
+                                  {team.SLG?.toFixed(3)}
+                                </span>
+                                <span className="text-[10px] text-gray-500">#{slgRank}</span>
+                              </div>
                             </td>
                             <td className="px-3 py-3 text-center">
-                              <span 
-                                className="inline-block px-2 py-1 rounded text-xs font-semibold"
-                                style={{ backgroundColor: opsBg, color: getTextColor(opsBg) }}
-                              >
-                                {team.OPS?.toFixed(3)}
-                              </span>
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span 
+                                  className="inline-block px-2 py-1 rounded text-xs font-semibold"
+                                  style={{ backgroundColor: opsBg, color: getTextColor(opsBg) }}
+                                >
+                                  {team.OPS?.toFixed(3)}
+                                </span>
+                                <span className="text-[10px] text-gray-500">#{opsRank}</span>
+                              </div>
                             </td>
                             <td className="px-3 py-3 text-center text-xs text-gray-600">{team.Conference}</td>
                           </tr>

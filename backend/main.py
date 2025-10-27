@@ -520,6 +520,9 @@ def get_team_stats(year: int, week: int):
     """Get detailed team statistics for offense and defense"""
     ratings, all_data = load_data(year, week)
     
+    # Add conference field if it exists
+    all_data['conference'] = all_data.get('conference', '')
+    
     # Select required columns
     stats_columns = [
         'team',
@@ -537,7 +540,8 @@ def get_team_stats(year: int, week: int):
         'Defense_rushing_adj',
         'Defense_passing_adj',
         'adj_defense_ppo',
-        'adj_defense_drive_quality'
+        'adj_defense_drive_quality',
+        'conference'
     ]
     
     result = all_data[stats_columns].to_dict('records')
@@ -945,7 +949,7 @@ def get_baseball_stats():
         
         # All the stats columns
         stats_columns = [
-            'Team', 'Conference', 'Rating', 'NET', 'RPI', 'ELO', 'ELO_Rank', 'PRR', 'RQI', 
+            'Team', 'Conference', 'Rating', 'NET', 'NET_Score', 'RPI', 'ELO', 'ELO_Rank', 'PRR', 'RQI', 
             'SOS', 'SOR', 'Q1', 'Q2', 'Q3', 'Q4',
             'fWAR', 'oWAR_z', 'pWAR_z', 'WPOE', 'PYTHAG',
             'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS'

@@ -11,45 +11,45 @@
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
     ],
-    "/matchups/page": [
+    "/stats/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/matchups/page.js"
+      "static/chunks/app/stats/page.js"
     ],
     "/cbase/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/cbase/page.js"
     ],
-    "/cbase/matchups/page": [
+    "/cbase/stats/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/cbase/matchups/page.js"
-    ],
-    "/stats/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/stats/page.js"
+      "static/chunks/app/cbase/stats/page.js"
     ],
     "/spreads/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/spreads/page.js"
     ],
-    "/cbase/stats/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/cbase/stats/page.js"
-    ],
     "/cbase/tournament/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/cbase/tournament/page.js"
     ],
-    "/not-found": [
+    "/cbase/matchups/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/not-found.js"
+      "static/chunks/app/cbase/matchups/page.js"
+    ],
+    "/matchups/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/matchups/page.js"
+    ],
+    "/previews/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/previews/page.js"
     ]
   }
 }
