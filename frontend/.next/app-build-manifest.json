@@ -26,11 +26,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/cbase/stats/page.js"
     ],
-    "/spreads/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/spreads/page.js"
-    ],
     "/cbase/tournament/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -40,11 +35,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/cbase/matchups/page.js"
-    ],
-    "/matchups/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/matchups/page.js"
     ],
     "/not-found": [
       "static/chunks/webpack.js",
