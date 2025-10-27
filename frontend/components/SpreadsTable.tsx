@@ -79,7 +79,7 @@ export default function SpreadsTable({ data }: Props) {
   };
 
   const downloadCSV = () => {
-    const headers = ['Away Team', 'Home Team', 'PEAR', 'PEAR Raw', 'Vegas', 'Difference', 'GQI'];
+    const headers = ['Away Team', 'Home Team', 'PEAR', 'Vegas', 'PEAR Raw', 'Difference', 'GQI'];
     const csvData = sortedData.map(item => [
       item.away_team,
       item.home_team,
@@ -125,14 +125,24 @@ export default function SpreadsTable({ data }: Props) {
               >
                 Matchup <SortIcon field="matchup" />
               </th>
-              <th className="px-4 py-3 text-center font-semibold text-gray-700">PEAR</th>
+                            <th 
+                className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                onClick={() => handleSort('pr_spread')}
+              >
+                PEAR <SortIcon field="pr_spread" />
+              </th>
               <th 
+                className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                onClick={() => handleSort('pr_spread')}
+              >
+                Vegas <SortIcon field="pr_spread" />
+              </th>
+                            <th 
                 className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort('pr_spread')}
               >
                 PEAR Raw <SortIcon field="pr_spread" />
               </th>
-              <th className="px-4 py-3 text-center font-semibold text-gray-700">Vegas</th>
               <th 
                 className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
                 onClick={() => handleSort('difference')}
@@ -160,13 +170,13 @@ export default function SpreadsTable({ data }: Props) {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className="inline-block px-3 py-1 bg-purple-100 text-purple-800 rounded font-medium">
-                    {item.pr_spread}
+                  <span className="inline-block px-3 py-1 bg-gray-100 text-gray-800 rounded font-medium">
+                    {item.Vegas}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className="inline-block px-3 py-1 bg-gray-100 text-gray-800 rounded font-medium">
-                    {item.Vegas}
+                  <span className="inline-block px-3 py-1 bg-purple-100 text-purple-800 rounded font-medium">
+                    {item.pr_spread}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-center">
@@ -188,6 +198,7 @@ export default function SpreadsTable({ data }: Props) {
       <div className="mt-4 text-xs text-gray-600 space-y-1">
         <p><strong>GQI</strong> - Game Quality Index (1-10 scale, higher is better)</p>
         <p><strong>Diff</strong> - Absolute difference between PEAR and Vegas spreads</p>
+        <p><strong>PEAR Raw</strong> - Raw PEAR spread before formatting</p>
       </div>
     </div>
   );

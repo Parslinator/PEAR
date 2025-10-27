@@ -54,11 +54,6 @@ export default function SpreadsPage() {
             ) : spreads.length > 0 ? (
               <>
                 <SpreadsTable data={spreads} />
-                <div className="mt-6 text-sm text-gray-600 space-y-1 border-t pt-4">
-                  <p><strong>GQI</strong> - Game Quality Index (1-10 scale, higher is better)</p>
-                  <p><strong>Diff</strong> - Absolute difference between PEAR and Vegas spreads</p>
-                  <p><strong>PEAR Raw</strong> - Raw PEAR spread before formatting</p>
-                </div>
               </>
             ) : (
               <div className="text-center py-12 text-gray-600">
