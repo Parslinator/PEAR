@@ -1,0 +1,28 @@
+# Skip entire frontend and backend folders
+frontend/
+backend/
+
+# Ignore Python cache and build artifacts
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore dev/config folders
+.devcontainer/
+.vscode/
+.idea/
+.DS_Store
+
+# Ignore Git-related files
+.git/
+.gitignore
+
+# Ignore environment files and virtual environments
+.env
+*.env
+.venv/
+venv/
+
+# Optional: ignore logs and temporary files
+*.log
+*.tmp
