@@ -1606,7 +1606,8 @@ def get_tournament_outlook():
             "last_four_in": last_four_in['Team'].tolist(),
             "first_four_out": next_8_teams.iloc[0:4]['Team'].tolist(),
             "next_four_out": next_8_teams.iloc[4:8]['Team'].tolist(),
-            "multibid_conferences": multibid.to_dict()
+            "multibid_conferences": multibid.to_dict(),
+            "automatic_qualifiers": aq_list
         }
     
     except Exception as e:

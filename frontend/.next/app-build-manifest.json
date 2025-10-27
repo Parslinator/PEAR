@@ -36,10 +36,20 @@
       "static/chunks/main-app.js",
       "static/chunks/app/cbase/matchups/page.js"
     ],
-    "/not-found": [
+    "/matchups/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/not-found.js"
+      "static/chunks/app/matchups/page.js"
+    ],
+    "/previews/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/previews/page.js"
+    ],
+    "/spreads/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/spreads/page.js"
     ]
   }
 }

@@ -179,35 +179,30 @@ export default function CbasePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Ratings and Resume</h1>
-          {dataDate && (
-            <p className="text-lg text-gray-600">Data as of {dataDate}</p>
-          )}
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Simple Header with Export */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Ratings and Resume</h1>
+            {dataDate && (
+              <p className="text-sm text-gray-600 mt-1">Data as of {dataDate}</p>
+            )}
+          </div>
+          <button
+            onClick={downloadCSV}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Export CSV
+          </button>
         </div>
 
         <section>
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-white"></h2>
-                <p className="text-blue-100 text-sm mt-1">Current season rankings and resume metrics</p>
-              </div>
-              <button
-                onClick={downloadCSV}
-                className="flex items-center space-x-2 bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors font-semibold"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download CSV</span>
-              </button>
-            </div>
-
-            <div className="p-6">
-              {/* Filters */}
-              <div className="mb-6 flex gap-4 flex-wrap items-center">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            {/* Search and Filter Controls */}
+            <div className="p-4 border-b border-gray-200">
+              <div className="flex gap-4 flex-wrap items-center">
                 <div className="flex-1 min-w-[200px] relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
@@ -228,7 +223,10 @@ export default function CbasePage() {
                   ))}
                 </select>
               </div>
+            </div>
 
+            {/* Table Container */}
+            <div className="p-6">
               {loading ? (
                 <div className="text-center py-12">
                   <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -400,20 +398,6 @@ export default function CbasePage() {
           </div>
         </section>
       </div>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-300 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <p className="text-sm">
-              © {new Date().getFullYear()} CBASE PEAR. All rights reserved.
-            </p>
-            <p className="text-xs mt-2 text-gray-400">
-              Performance Evaluation and Analytics Rating System
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

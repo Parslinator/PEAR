@@ -1,9 +1,10 @@
 {
-  "/not-found": "app/not-found.js",
+  "/cbase/page": "app/cbase/page.js",
+  "/spreads/page": "app/spreads/page.js",
+  "/cbase/tournament/page": "app/cbase/tournament/page.js",
+  "/cbase/stats/page": "app/cbase/stats/page.js",
   "/page": "app/page.js",
   "/stats/page": "app/stats/page.js",
-  "/cbase/page": "app/cbase/page.js",
-  "/cbase/stats/page": "app/cbase/stats/page.js",
-  "/cbase/tournament/page": "app/cbase/tournament/page.js",
-  "/cbase/matchups/page": "app/cbase/matchups/page.js"
+  "/matchups/page": "app/matchups/page.js",
+  "/previews/page": "app/previews/page.js"
 }

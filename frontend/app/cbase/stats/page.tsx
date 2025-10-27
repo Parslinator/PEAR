@@ -176,18 +176,27 @@ export default function CbaseStatsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Team Statistics</h1>
-          {dataDate && (
-            <p className="text-lg text-gray-600">Data as of {dataDate}</p>
-          )}
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Simple Header with Export */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Team Statistics</h1>
+            {dataDate && (
+              <p className="text-sm text-gray-600 mt-1">Data as of {dataDate}</p>
+            )}
+          </div>
+          <button
+            onClick={downloadCSV}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Export CSV
+          </button>
         </div>
 
-        {/* Controls */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        {/* Search and Filter Controls */}
+        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -211,14 +220,6 @@ export default function CbaseStatsPage() {
                 </option>
               ))}
             </select>
-            
-            <button
-              onClick={downloadCSV}
-              className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
-            >
-              <Download className="w-5 h-5" />
-              Download CSV
-            </button>
           </div>
         </div>
 
