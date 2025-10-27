@@ -23,6 +23,10 @@ export default function SpreadCalculator() {
   const [teams, setTeams] = useState<string[]>([]);
   const [awayTeam, setAwayTeam] = useState('');
   const [homeTeam, setHomeTeam] = useState('');
+  const [awaySearch, setAwaySearch] = useState('');
+  const [homeSearch, setHomeSearch] = useState('');
+  const [showAwayDropdown, setShowAwayDropdown] = useState(false);
+  const [showHomeDropdown, setShowHomeDropdown] = useState(false);
   const [neutral, setNeutral] = useState(false);
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -33,6 +37,20 @@ export default function SpreadCalculator() {
     fetchTeams();
   }, []);
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.relative')) {
+        setShowAwayDropdown(false);
+        setShowHomeDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const fetchTeams = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/teams`);
@@ -40,6 +58,26 @@ export default function SpreadCalculator() {
     } catch (error) {
       console.error('Error fetching teams:', error);
     }
+  };
+
+  // Filter teams based on search input
+  const getFilteredTeams = (searchTerm: string) => {
+    if (!searchTerm) return teams;
+    return teams.filter(team => 
+      team.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
+  const handleAwayTeamSelect = (team: string) => {
+    setAwayTeam(team);
+    setAwaySearch(team);
+    setShowAwayDropdown(false);
+  };
+
+  const handleHomeTeamSelect = (team: string) => {
+    setHomeTeam(team);
+    setHomeSearch(team);
+    setShowHomeDropdown(false);
   };
 
   const calculateSpread = async (e: React.FormEvent) => {
@@ -102,40 +140,70 @@ export default function SpreadCalculator() {
   return (
     <div>
       <form onSubmit={calculateSpread} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Away Team
-          </label>
-          <select
-            value={awayTeam}
-            onChange={(e) => setAwayTeam(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          >
-            <option value="">Select Away Team</option>
-            {teams.map((team) => (
-              <option key={team} value={team}>
-                {team}
-              </option>
-            ))}
-          </select>
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Away Team
+            </label>
+            <input
+              type="text"
+              value={awaySearch}
+              onChange={(e) => {
+                setAwaySearch(e.target.value);
+                setAwayTeam('');
+                setShowAwayDropdown(true);
+              }}
+              onFocus={() => setShowAwayDropdown(true)}
+              placeholder="Search for away team..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            {showAwayDropdown && getFilteredTeams(awaySearch).length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {getFilteredTeams(awaySearch).map((team) => (
+                  <button
+                    key={team}
+                    type="button"
+                    onClick={() => handleAwayTeamSelect(team)}
+                    className="w-full text-left px-4 py-2 hover:bg-purple-50 transition-colors"
+                  >
+                    {team}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Home Team
-          </label>
-          <select
-            value={homeTeam}
-            onChange={(e) => setHomeTeam(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          >
-            <option value="">Select Home Team</option>
-            {teams.map((team) => (
-              <option key={team} value={team}>
-                {team}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Home Team
+            </label>
+            <input
+              type="text"
+              value={homeSearch}
+              onChange={(e) => {
+                setHomeSearch(e.target.value);
+                setHomeTeam('');
+                setShowHomeDropdown(true);
+              }}
+              onFocus={() => setShowHomeDropdown(true)}
+              placeholder="Search for home team..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            {showHomeDropdown && getFilteredTeams(homeSearch).length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {getFilteredTeams(homeSearch).map((team) => (
+                  <button
+                    key={team}
+                    type="button"
+                    onClick={() => handleHomeTeamSelect(team)}
+                    className="w-full text-left px-4 py-2 hover:bg-purple-50 transition-colors"
+                  >
+                    {team}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center space-x-2">

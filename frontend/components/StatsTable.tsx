@@ -43,6 +43,24 @@ export default function StatsTable({ data }: Props) {
     return ['All', ...uniqueConfs];
   }, [data]);
 
+  // Map conference names to shorthand
+  const getConferenceShorthand = (conf: string): string => {
+    const shorthandMap: { [key: string]: string } = {
+      'American Athletic': 'AAC',
+      'Conference USA': 'CUSA',
+      'FBS Independents': 'IND',
+      'Mid-American': 'MAC',
+      'Mountain West': 'MW',
+      'Atlantic Coast': 'ACC',
+      'Big 12': 'Big 12',
+      'Big Ten': 'Big Ten',
+      'Pac-12': 'Pac-12',
+      'Southeastern': 'SEC',
+      'Sun Belt': 'Sun Belt',
+    };
+    return shorthandMap[conf] || conf;
+  };
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -185,26 +203,32 @@ export default function StatsTable({ data }: Props) {
           onChange={(e) => setFilter(e.target.value)}
           className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
-        {conferences.length > 1 && (
-          <select
-            value={conferenceFilter}
-            onChange={(e) => setConferenceFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-          >
-            {conferences.map(conf => (
-              <option key={conf} value={conf}>
-                {conf === 'All' ? 'All Conferences' : conf}
-              </option>
-            ))}
-          </select>
-        )}
         <button
           onClick={downloadCSV}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold whitespace-nowrap"
         >
           Download CSV
         </button>
       </div>
+
+      {/* Conference Filter Buttons */}
+      {conferences.length > 1 && (
+        <div className="mb-4 flex flex-wrap gap-2 justify-center">
+          {conferences.map(conf => (
+            <button
+              key={conf}
+              onClick={() => setConferenceFilter(conf)}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                conferenceFilter === conf
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {conf === 'All' ? 'All' : getConferenceShorthand(conf)}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
         <table className="w-full text-sm">

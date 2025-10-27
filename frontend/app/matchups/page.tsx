@@ -35,12 +35,6 @@ export default function MatchupsPage() {
 
         {/* Calculator */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4">
-            <h2 className="text-2xl font-bold text-white">Create Matchup Preview</h2>
-            <p className="text-purple-100 text-sm mt-1">
-              Select teams and location to generate a full matchup analysis
-            </p>
-          </div>
           <div className="p-6">
             <SpreadCalculator />
           </div>

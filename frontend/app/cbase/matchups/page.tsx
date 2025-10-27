@@ -126,87 +126,86 @@ export default function CbaseMatchupsPage() {
         </div>
 
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4">
-            <h2 className="text-xl font-bold text-white">Team Selection</h2>
-          </div>
-
           <div className="p-6">
             <form onSubmit={calculateSpread} className="space-y-6">
-              {/* Away Team */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Away Team
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={awayTeam || awaySearchTerm}
-                    onChange={(e) => {
-                      setAwaySearchTerm(e.target.value);
-                      setAwayTeam('');
-                      setShowAwayDropdown(true);
-                    }}
-                    onFocus={() => setShowAwayDropdown(true)}
-                    onBlur={() => setTimeout(() => setShowAwayDropdown(false), 200)}
-                    placeholder="Search for a team..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
-                  />
-                  {showAwayDropdown && filteredAwayTeams.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      {filteredAwayTeams.map(team => (
-                        <div
-                          key={team}
-                          onClick={() => {
-                            setAwayTeam(team);
-                            setAwaySearchTerm('');
-                            setShowAwayDropdown(false);
-                          }}
-                          className="px-4 py-3 hover:bg-purple-50 cursor-pointer text-gray-900"
-                        >
-                          {team}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+              {/* Team Selectors - Side by Side */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Away Team */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Away Team
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={awayTeam || awaySearchTerm}
+                      onChange={(e) => {
+                        setAwaySearchTerm(e.target.value);
+                        setAwayTeam('');
+                        setShowAwayDropdown(true);
+                      }}
+                      onFocus={() => setShowAwayDropdown(true)}
+                      onBlur={() => setTimeout(() => setShowAwayDropdown(false), 200)}
+                      placeholder="Search for a team..."
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                    />
+                    {showAwayDropdown && filteredAwayTeams.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {filteredAwayTeams.map(team => (
+                          <div
+                            key={team}
+                            onClick={() => {
+                              setAwayTeam(team);
+                              setAwaySearchTerm('');
+                              setShowAwayDropdown(false);
+                            }}
+                            className="px-4 py-3 hover:bg-purple-50 cursor-pointer text-gray-900"
+                          >
+                            {team}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              {/* Home Team */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Home Team
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={homeTeam || homeSearchTerm}
-                    onChange={(e) => {
-                      setHomeSearchTerm(e.target.value);
-                      setHomeTeam('');
-                      setShowHomeDropdown(true);
-                    }}
-                    onFocus={() => setShowHomeDropdown(true)}
-                    onBlur={() => setTimeout(() => setShowHomeDropdown(false), 200)}
-                    placeholder="Search for a team..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
-                  />
-                  {showHomeDropdown && filteredHomeTeams.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                      {filteredHomeTeams.map(team => (
-                        <div
-                          key={team}
-                          onClick={() => {
-                            setHomeTeam(team);
-                            setHomeSearchTerm('');
-                            setShowHomeDropdown(false);
-                          }}
-                          className="px-4 py-3 hover:bg-purple-50 cursor-pointer text-gray-900"
-                        >
-                          {team}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                {/* Home Team */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Home Team
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={homeTeam || homeSearchTerm}
+                      onChange={(e) => {
+                        setHomeSearchTerm(e.target.value);
+                        setHomeTeam('');
+                        setShowHomeDropdown(true);
+                      }}
+                      onFocus={() => setShowHomeDropdown(true)}
+                      onBlur={() => setTimeout(() => setShowHomeDropdown(false), 200)}
+                      placeholder="Search for a team..."
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                    />
+                    {showHomeDropdown && filteredHomeTeams.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {filteredHomeTeams.map(team => (
+                          <div
+                            key={team}
+                            onClick={() => {
+                              setHomeTeam(team);
+                              setHomeSearchTerm('');
+                              setShowHomeDropdown(false);
+                            }}
+                            className="px-4 py-3 hover:bg-purple-50 cursor-pointer text-gray-900"
+                          >
+                            {team}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
