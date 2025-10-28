@@ -216,10 +216,10 @@ export default function CbaseTournamentPage() {
         badge: 'bg-blue-600'
       },
       orange: {
-        bg: 'bg-orange-50',
-        border: 'border-orange-500',
-        text: 'text-orange-600',
-        badge: 'bg-orange-600'
+        bg: 'bg-orange-100',
+        border: 'border-orange-600',
+        text: 'text-orange-700',
+        badge: 'bg-orange-700'
       }
     };
 
@@ -239,9 +239,13 @@ export default function CbaseTournamentPage() {
           <div className={`flex items-center gap-2 ${colorClasses[seed1Color].bg} border-l-4 ${colorClasses[seed1Color].border} px-3 py-2 rounded`}>
             <span className={`font-bold ${colorClasses[seed1Color].text} text-sm w-6`}>1</span>
             <span className="font-bold text-gray-900 flex-1">{regional.seed_1}</span>
-            <span className={`text-xs ${colorClasses[seed1Color].badge} text-white px-2 py-0.5 rounded font-semibold`}>
-              {seed1Color === 'green' ? 'AQ' : 'HOST'}
-            </span>
+            {seed1Color === 'green' ? (
+              <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
+            ) : seed1Color === 'orange' ? (
+              <span className="text-xs bg-orange-700 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
+            ) : (
+              <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded font-semibold">HOST</span>
+            )}
           </div>
 
           {/* 2 Seed */}
@@ -250,6 +254,9 @@ export default function CbaseTournamentPage() {
             <span className="text-gray-900 flex-1">{regional.seed_2}</span>
             {seed2Color === 'green' && (
               <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
+            )}
+            {seed2Color === 'orange' && (
+              <span className="text-xs bg-orange-700 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
             )}
           </div>
 
@@ -260,6 +267,9 @@ export default function CbaseTournamentPage() {
             {seed3Color === 'green' && (
               <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
             )}
+            {seed3Color === 'orange' && (
+              <span className="text-xs bg-orange-700 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
+            )}
           </div>
 
           {/* 4 Seed */}
@@ -268,6 +278,9 @@ export default function CbaseTournamentPage() {
             <span className="text-gray-900 flex-1">{regional.seed_4}</span>
             {seed4Color === 'green' && (
               <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
+            )}
+            {seed4Color === 'orange' && (
+              <span className="text-xs bg-orange-700 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
             )}
           </div>
         </div>
@@ -291,7 +304,7 @@ export default function CbaseTournamentPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Simple Header with Export */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Tournament Projection</h1>
+          <h1 className="text-3xl font-bold text-gray-900">PEAR's Tournament Projection</h1>
           <button
             onClick={downloadCSV}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors"
@@ -334,8 +347,8 @@ export default function CbaseTournamentPage() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-md border-t-4 border-green-600">
               <div className="p-6 border-b border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900">Projected Regional Hosts</h2>
-                <p className="text-sm text-gray-600 mt-1">64-team field • 16 regional hosts • Top 16 national seeds</p>
+                <h2 className="text-2xl font-bold text-gray-900">PEAR's Projected Regionals</h2>
+                <p className="text-sm text-gray-600 mt-1">64-team field • Top 16 national seeds</p>
                 <div className="flex gap-4 mt-3 text-xs">
                   <div className="flex items-center gap-1">
                     <div className="w-3 h-3 bg-green-600 rounded"></div>

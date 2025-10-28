@@ -173,11 +173,11 @@ export default function RatingsTable({ data }: Props) {
           placeholder="Search teams or conferences..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
         />
         <button
           onClick={downloadCSV}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold whitespace-nowrap"
+          className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold whitespace-nowrap"
         >
           Download CSV
         </button>
@@ -191,8 +191,8 @@ export default function RatingsTable({ data }: Props) {
             onClick={() => setConferenceFilter(conf)}
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
               conferenceFilter === conf
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-blue-600 dark:bg-blue-500 text-white'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
           >
             {conf === 'All' ? 'All' : getConferenceShorthand(conf)}
@@ -202,54 +202,54 @@ export default function RatingsTable({ data }: Props) {
 
       <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 sticky top-0 z-10">
+          <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10">
             <tr>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700">Rank</th>
+              <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">Rank</th>
               <th
-                className="px-4 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                 onClick={() => handleSort('Team')}
               >
                 Team <SortIcon field="Team" />
               </th>
               <th
-                className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                 onClick={() => handleSort('Rating')}
               >
                 Rating <SortIcon field="Rating" />
               </th>
               <th
-                className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                 onClick={() => handleSort('offensive_rating')}
               >
                 OFF <SortIcon field="offensive_rating" />
               </th>
               <th
-                className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                 onClick={() => handleSort('defensive_rating')}
               >
                 DEF <SortIcon field="defensive_rating" />
               </th>
               <th
-                className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                 onClick={() => handleSort('MD')}
               >
                 MD <SortIcon field="MD" />
               </th>
               <th
-                className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                 onClick={() => handleSort('SOS')}
               >
                 SOS <SortIcon field="SOS" />
               </th>
               <th
-                className="px-4 py-3 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                 onClick={() => handleSort('CONF')}
               >
                 CONF <SortIcon field="CONF" />
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {filteredData.map((item, index) => {
               // Higher is better: Rating, OFF, MD
               const ratingBg = getRatingColor(item.Rating, data.map(d => d.Rating), true);
@@ -268,12 +268,12 @@ export default function RatingsTable({ data }: Props) {
               const sosRank = getNationalRank(item.SOS, 'SOS', false);
 
               return (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-700 font-medium">{index + 1}</td>
-                  <td className="px-4 py-3 font-semibold text-gray-900">{item.Team}</td>
+                <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium">{index + 1}</td>
+                  <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">{item.Team}</td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2 min-w-[80px] mx-auto">
-                      <span className="text-[11px] font-medium text-gray-700 text-right w-[35px]">
+                      <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300 text-right w-[35px]">
                         {item.Rating.toFixed(1)}
                       </span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded-full text-[10px] font-semibold min-w-[38px]" style={{ backgroundColor: ratingBg, color: getTextColor(ratingBg) }}>{ratingRank}</span>
@@ -281,7 +281,7 @@ export default function RatingsTable({ data }: Props) {
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2 min-w-[80px] mx-auto">
-                      <span className="text-[11px] font-medium text-gray-700 text-right w-[35px]">
+                      <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300 text-right w-[35px]">
                         {item.offensive_rating.toFixed(1)}
                       </span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[10px] font-semibold min-w-[38px]" style={{ backgroundColor: offBg, color: getTextColor(offBg) }}>{offRank}</span>
@@ -289,7 +289,7 @@ export default function RatingsTable({ data }: Props) {
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2 min-w-[80px] mx-auto">
-                      <span className="text-[11px] font-medium text-gray-700 text-right w-[35px]">
+                      <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300 text-right w-[35px]">
                         {item.defensive_rating.toFixed(1)}
                       </span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[10px] font-semibold min-w-[38px]" style={{ backgroundColor: defBg, color: getTextColor(defBg) }}>{defRank}</span>
@@ -297,7 +297,7 @@ export default function RatingsTable({ data }: Props) {
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2 min-w-[80px] mx-auto">
-                      <span className="text-[11px] font-medium text-gray-700 text-right w-[35px]">
+                      <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300 text-right w-[35px]">
                         {item.MD.toFixed(3)}
                       </span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[10px] font-semibold min-w-[38px]" style={{ backgroundColor: mdBg, color: getTextColor(mdBg) }}>{mdRank}</span>
@@ -305,13 +305,13 @@ export default function RatingsTable({ data }: Props) {
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2 min-w-[80px] mx-auto">
-                      <span className="text-[11px] font-medium text-gray-700 text-right w-[35px]">
+                      <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300 text-right w-[35px]">
                         {item.SOS.toFixed(2)}
                       </span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[10px] font-semibold min-w-[38px]" style={{ backgroundColor: sosBg, color: getTextColor(sosBg) }}>{sosRank}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-center text-xs text-gray-600">{item.CONF}</td>
+                  <td className="px-4 py-3 text-center text-xs text-gray-600 dark:text-gray-400">{item.CONF}</td>
                 </tr>
               );
             })}

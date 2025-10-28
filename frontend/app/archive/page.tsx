@@ -105,19 +105,19 @@ export default function ArchivePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white">
+      <div className="bg-gradient-to-r from-slate-700 to-slate-800 dark:from-slate-800 dark:to-slate-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <Link href="/" className="inline-flex items-center text-slate-300 hover:text-white mb-6 transition-colors">
+          <Link href="/" className="inline-flex items-center text-slate-300 dark:text-slate-400 hover:text-white dark:hover:text-slate-200 mb-6 transition-colors">
             <ArrowLeft className="w-5 h-5 mr-2" />
             Back to Current Ratings
           </Link>
           <div className="flex items-center space-x-4">
-            <History className="w-12 h-12 text-slate-300" />
+            <History className="w-12 h-12 text-slate-300 dark:text-slate-400" />
             <div>
               <h1 className="text-4xl md:text-5xl font-bold mb-2">Historical Archive</h1>
-              <p className="text-slate-300 text-lg">CFB PEAR Ratings • 2014-2024</p>
+              <p className="text-slate-300 dark:text-slate-400 text-lg">CFB PEAR Ratings • 2014-2024</p>
             </div>
           </div>
         </div>
@@ -126,7 +126,7 @@ export default function ArchivePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Year Normalized Ratings */}
         <section className="mb-12">
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
             <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4">
               <h2 className="text-2xl font-bold text-white">Year Normalized Ratings</h2>
               <p className="text-purple-100 text-sm mt-1">All-time rankings across seasons</p>
@@ -134,31 +134,31 @@ export default function ArchivePage() {
             <div className="p-6">
               {loading ? (
                 <div className="text-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-                  <p className="mt-4 text-gray-600">Loading historical data...</p>
+                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 dark:border-purple-400"></div>
+                  <p className="mt-4 text-gray-600 dark:text-gray-400">Loading historical data...</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-50 sticky top-0">
+                    <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">
                       <tr>
-                        <th className="px-4 py-3 text-left font-semibold text-gray-700">Rank</th>
-                        <th className="px-4 py-3 text-left font-semibold text-gray-700">Team</th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700">Normalized Rating</th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700">Season</th>
+                        <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Rank</th>
+                        <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Team</th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">Normalized Rating</th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">Season</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                       {historicalData.slice(0, 100).map((item, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
+                        <tr key={index} className="hover:bg-gray-50 dark:bg-gray-700">
                           <td className="px-4 py-3 text-gray-700 font-medium">{index + 1}</td>
-                          <td className="px-4 py-3 font-semibold text-gray-900">{item.Team}</td>
+                          <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">{item.Team}</td>
                           <td className="px-4 py-3 text-center">
-                            <span className="inline-block px-3 py-1 rounded-full bg-purple-100 text-purple-800 font-semibold">
+                            <span className="inline-block px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 font-semibold">
                               {item['Normalized Rating'].toFixed(2)}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-center text-gray-700">{item.Season}</td>
+                          <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300">{item.Season}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -173,7 +173,7 @@ export default function ArchivePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           {/* Team History Lookup */}
           <section>
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
               <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
                 <h2 className="text-2xl font-bold text-white">Team History Lookup</h2>
                 <p className="text-blue-100 text-sm mt-1">View a specific team's historical stats</p>
@@ -186,7 +186,7 @@ export default function ArchivePage() {
                   <select
                     value={selectedTeam}
                     onChange={(e) => handleTeamSelect(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Choose a team...</option>
                     {teams.map((team) => (
@@ -199,34 +199,34 @@ export default function ArchivePage() {
 
                 {teamLoading && (
                   <div className="text-center py-8">
-                    <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                    <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 dark:border-blue-400"></div>
                   </div>
                 )}
 
                 {!teamLoading && teamHistory.length > 0 && (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50">
+                      <thead className="bg-gray-50 dark:bg-gray-700">
                         <tr>
-                          <th className="px-3 py-2 text-left font-semibold text-gray-700">Year</th>
-                          <th className="px-3 py-2 text-center font-semibold text-gray-700">Rating</th>
-                          <th className="px-3 py-2 text-center font-semibold text-gray-700">MD</th>
-                          <th className="px-3 py-2 text-center font-semibold text-gray-700">OFF</th>
-                          <th className="px-3 py-2 text-center font-semibold text-gray-700">DEF</th>
+                          <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300">Year</th>
+                          <th className="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300">Rating</th>
+                          <th className="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300">MD</th>
+                          <th className="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300">OFF</th>
+                          <th className="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300">DEF</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200">
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                         {teamHistory.map((item, index) => (
-                          <tr key={index} className="hover:bg-gray-50">
-                            <td className="px-3 py-2 font-semibold text-gray-900">{item.Season}</td>
+                          <tr key={index} className="hover:bg-gray-50 dark:bg-gray-700">
+                            <td className="px-3 py-2 font-semibold text-gray-900 dark:text-white">{item.Season}</td>
                             <td className="px-3 py-2 text-center">
-                              <span className="inline-block px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs font-semibold">
+                              <span className="inline-block px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 text-xs font-semibold">
                                 {item['Normalized Rating'].toFixed(2)}
                               </span>
                             </td>
-                            <td className="px-3 py-2 text-center text-gray-700">{item.most_deserving}</td>
-                            <td className="px-3 py-2 text-center text-gray-700">{item.offensive_rank}</td>
-                            <td className="px-3 py-2 text-center text-gray-700">{item.defensive_rank}</td>
+                            <td className="px-3 py-2 text-center text-gray-700 dark:text-gray-300">{item.most_deserving}</td>
+                            <td className="px-3 py-2 text-center text-gray-700 dark:text-gray-300">{item.offensive_rank}</td>
+                            <td className="px-3 py-2 text-center text-gray-700 dark:text-gray-300">{item.defensive_rank}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -239,7 +239,7 @@ export default function ArchivePage() {
 
           {/* Year Selector */}
           <section>
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
               <div className="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
                 <h2 className="text-2xl font-bold text-white">Season Ratings</h2>
                 <p className="text-green-100 text-sm mt-1">View final ratings by year</p>
@@ -252,7 +252,7 @@ export default function ArchivePage() {
                   <select
                     value={selectedYear || ''}
                     onChange={(e) => handleYearSelect(e.target.value ? Number(e.target.value) : null)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   >
                     <option value="">Choose a season...</option>
                     {years.map((year) => (
@@ -265,27 +265,27 @@ export default function ArchivePage() {
 
                 {yearLoading && (
                   <div className="text-center py-8">
-                    <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
+                    <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-green-600 dark:border-green-400"></div>
                   </div>
                 )}
 
                 {!yearLoading && yearRatings.length > 0 && (
                   <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50 sticky top-0">
+                      <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">
                         <tr>
-                          <th className="px-3 py-2 text-left font-semibold text-gray-700">Rank</th>
-                          <th className="px-3 py-2 text-left font-semibold text-gray-700">Team</th>
-                          <th className="px-3 py-2 text-center font-semibold text-gray-700">Rating</th>
+                          <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300">Rank</th>
+                          <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300">Team</th>
+                          <th className="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300">Rating</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200">
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                         {yearRatings.slice(0, 25).map((item, index) => (
-                          <tr key={index} className="hover:bg-gray-50">
+                          <tr key={index} className="hover:bg-gray-50 dark:bg-gray-700">
                             <td className="px-3 py-2 text-gray-700 font-medium">{index + 1}</td>
-                            <td className="px-3 py-2 font-semibold text-gray-900">{item.Team}</td>
+                            <td className="px-3 py-2 font-semibold text-gray-900 dark:text-white">{item.Team}</td>
                             <td className="px-3 py-2 text-center">
-                              <span className="inline-block px-2 py-1 rounded bg-green-100 text-green-800 font-semibold">
+                              <span className="inline-block px-2 py-1 rounded bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 font-semibold">
                                 {item.Rating.toFixed(2)}
                               </span>
                             </td>
@@ -302,8 +302,8 @@ export default function ArchivePage() {
 
         {/* Year by Year Sections */}
         <section>
-          <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center">
-            <TrendingUp className="w-8 h-8 mr-3 text-blue-600" />
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+            <TrendingUp className="w-8 h-8 mr-3 text-blue-600 dark:text-blue-400" />
             Season by Season Breakdown
           </h2>
           
@@ -316,10 +316,10 @@ export default function ArchivePage() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-white py-8 mt-12">
+      <footer className="bg-slate-900 dark:bg-slate-950 text-white py-8 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-slate-400">© 2025 PEAR Ratings. Advanced College Football Analytics.</p>
-          <p className="text-slate-500 text-sm mt-2">@PEARatings</p>
+          <p className="text-slate-400 dark:text-slate-500">© 2025 PEAR Ratings. Advanced College Football Analytics.</p>
+          <p className="text-slate-500 dark:text-slate-600 text-sm mt-2">@PEARatings</p>
         </div>
       </footer>
     </div>
@@ -349,10 +349,10 @@ function YearRatingsSection({ year, week }: { year: number; week: number }) {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full bg-gradient-to-r from-slate-600 to-slate-700 px-6 py-4 text-left hover:from-slate-700 hover:to-slate-800 transition-all"
+        className="w-full bg-gradient-to-r from-slate-600 to-slate-700 dark:from-slate-700 dark:to-slate-800 px-6 py-4 text-left hover:from-slate-700 hover:to-slate-800 dark:hover:from-slate-800 dark:hover:to-slate-900 transition-all"
       >
         <div className="flex items-center justify-between">
           <h3 className="text-2xl font-bold text-white">{year} Season Ratings</h3>
@@ -360,41 +360,41 @@ function YearRatingsSection({ year, week }: { year: number; week: number }) {
             {expanded ? '−' : '+'}
           </span>
         </div>
-        <p className="text-slate-300 text-sm mt-1">Week {week} Final Rankings</p>
+        <p className="text-slate-300 dark:text-slate-400 text-sm mt-1">Week {week} Final Rankings</p>
       </button>
       
       {expanded && (
         <div className="p-6">
           {loading ? (
             <div className="text-center py-8">
-              <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-slate-600"></div>
+              <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-slate-600 dark:border-slate-400"></div>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Rank</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-700">Team</th>
-                    <th className="px-4 py-3 text-center font-semibold text-gray-700">Rating</th>
-                    <th className="px-4 py-3 text-center font-semibold text-gray-700">MD</th>
-                    <th className="px-4 py-3 text-center font-semibold text-gray-700">SOS</th>
-                    <th className="px-4 py-3 text-center font-semibold text-gray-700">Conference</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Rank</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">Team</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">Rating</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">MD</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">SOS</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">Conference</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {data.slice(0, 25).map((item, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
+                    <tr key={index} className="hover:bg-gray-50 dark:bg-gray-700">
                       <td className="px-4 py-3 text-gray-700 font-medium">{index + 1}</td>
-                      <td className="px-4 py-3 font-semibold text-gray-900">{item.Team}</td>
+                      <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">{item.Team}</td>
                       <td className="px-4 py-3 text-center">
-                        <span className="inline-block px-3 py-1 rounded-full bg-slate-100 text-slate-800 font-semibold">
+                        <span className="inline-block px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold">
                           {item.Rating.toFixed(2)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center text-gray-700">{item.MD}</td>
-                      <td className="px-4 py-3 text-center text-gray-700">{item.SOS.toFixed(2)}</td>
-                      <td className="px-4 py-3 text-center text-xs text-gray-600">{item.CONF}</td>
+                      <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300">{item.MD}</td>
+                      <td className="px-4 py-3 text-center text-gray-700 dark:text-gray-300">{item.SOS.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-center text-xs text-gray-600 dark:text-gray-400">{item.CONF}</td>
                     </tr>
                   ))}
                 </tbody>

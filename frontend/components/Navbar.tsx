@@ -2,12 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Trophy, ChevronDown } from 'lucide-react';
+import { ChevronDown, Coffee, Moon, Sun } from 'lucide-react';
 import { useState } from 'react';
+import Image from 'next/image';
+import { useTheme } from '../app/contexts/ThemeContext';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export default function Navbar() {
   const pathname = usePathname();
   const [sportDropdownOpen, setSportDropdownOpen] = useState(false);
+  const { darkMode, toggleDarkMode } = useTheme();
 
   // Determine current sport from pathname
   const isCBASE = pathname.startsWith('/cbase');
@@ -20,7 +25,6 @@ export default function Navbar() {
     { name: 'Spreads', path: '/spreads' },
     { name: 'Matchups', path: '/matchups' },
     { name: 'Previews', path: '/previews' },
-    { name: 'Archive', path: '/archive' },
   ];
 
   const baseballNavItems = [
@@ -35,7 +39,7 @@ export default function Navbar() {
   const navItems = isCBASE ? baseballNavItems : footballNavItems;
 
   return (
-    <nav className="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-900 text-white shadow-lg sticky top-0 z-50">
+    <nav className="text-gray-900 shadow-lg sticky top-0 z-50" style={{ backgroundColor: '#CECEB2' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo/Brand with Sport Switcher */}
@@ -44,12 +48,19 @@ export default function Navbar() {
               href={isCBASE ? '/cbase' : '/'} 
               className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
             >
-              <Trophy className="w-8 h-8 text-yellow-400" />
+              <Image 
+                src={`${API_URL}/api/logo`}
+                alt="PEAR Logo"
+                width={40}
+                height={40}
+                className="rounded"
+                unoptimized
+              />
               <div>
-                <div className="text-xl font-bold">
+                <div className="text-xl font-bold text-gray-900">
                   {isCBASE ? 'CBASE PEAR' : 'CFB PEAR'}
                 </div>
-                <div className="text-xs text-blue-200">
+                <div className="text-xs text-gray-700">
                   {isCBASE ? 'College Baseball Analytics' : 'College Football Analytics'}
                 </div>
               </div>
@@ -59,7 +70,7 @@ export default function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setSportDropdownOpen(!sportDropdownOpen)}
-                className="flex items-center space-x-1 px-3 py-2 bg-blue-800 hover:bg-blue-700 rounded-lg transition-colors"
+                className="flex items-center space-x-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
               >
                 <span className="text-sm font-semibold">
                   {isCBASE ? 'Baseball' : 'Football'}
@@ -91,7 +102,7 @@ export default function Navbar() {
           </div>
 
           {/* Navigation Links */}
-          <div className="hidden md:flex space-x-1">
+          <div className="hidden md:flex items-center space-x-1">
             {navItems.map((item) => {
               const isActive = pathname === item.path;
               return (
@@ -100,19 +111,39 @@ export default function Navbar() {
                   href={item.path}
                   className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                     isActive
-                      ? 'bg-blue-700 text-white'
-                      : 'text-blue-100 hover:bg-blue-800 hover:text-white'
+                      ? 'bg-gray-700 text-white'
+                      : 'text-gray-700 hover:bg-gray-600 hover:text-white'
                   }`}
                 >
                   {item.name}
                 </Link>
               );
             })}
+            
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={toggleDarkMode}
+              className="ml-2 p-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-white transition-all"
+              aria-label="Toggle dark mode"
+            >
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+            
+            {/* Buy Me a Coffee Button */}
+            <a
+              href="https://buymeacoffee.com/PEARatings"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-2 flex items-center space-x-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-gray-900 rounded-lg font-semibold transition-all"
+            >
+              <Coffee className="w-4 h-4" />
+              <span>Support</span>
+            </a>
           </div>
 
           {/* Mobile Menu Button */}
           <div className="md:hidden">
-            <button className="text-blue-100 hover:text-white p-2">
+            <button className="text-gray-700 hover:text-gray-900 p-2">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
@@ -131,14 +162,43 @@ export default function Navbar() {
                   href={item.path}
                   className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                     isActive
-                      ? 'bg-blue-700 text-white'
-                      : 'text-blue-100 hover:bg-blue-800 hover:text-white'
+                      ? 'bg-gray-700 text-white'
+                      : 'text-gray-700 hover:bg-gray-600 hover:text-white'
                   }`}
                 >
                   {item.name}
                 </Link>
               );
             })}
+            
+            {/* Dark Mode Toggle - Mobile */}
+            <button
+              onClick={toggleDarkMode}
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-all"
+            >
+              {darkMode ? (
+                <>
+                  <Sun className="w-4 h-4" />
+                  <span>Light Mode</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-4 h-4" />
+                  <span>Dark Mode</span>
+                </>
+              )}
+            </button>
+            
+            {/* Buy Me a Coffee Button - Mobile */}
+            <a
+              href="https://buymeacoffee.com/PEARatings"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-gray-900 rounded-lg font-semibold transition-all"
+            >
+              <Coffee className="w-4 h-4" />
+              <span>Support on Buy Me a Coffee</span>
+            </a>
           </div>
         </div>
       </div>

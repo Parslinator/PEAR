@@ -789,6 +789,17 @@ def get_image(year: int, week: int, image_type: str, filename: str):
     
     return FileResponse(file_path)
 
+@app.get("/api/logo")
+def get_logo():
+    """Serve the PEAR logo"""
+    # Path to the logo on your local machine
+    logo_path = r"C:\Users\wpars\OneDrive\Documents\Post-School\Family Feud Data\PEAR\pear_logo.jpg"
+    
+    if not os.path.exists(logo_path):
+        raise HTTPException(status_code=404, detail="Logo not found")
+    
+    return FileResponse(logo_path, media_type="image/jpeg")
+
 # ========================================
 # BASEBALL (CBASE) ENDPOINTS
 # ========================================
@@ -1565,17 +1576,17 @@ def generate_matchup_image(request: BaseballSpreadRequest):
                 color='red', fontweight='bold')
         
         # Add explanation text
-        plt.text(-150, 13.2, "Middle Bubble is Difference Between Team Percentiles", 
+        plt.text(-155, 13.2, "Middle Bubble is Difference Between Team Percentiles", 
                 ha='left', fontsize=12)
-        plt.text(150, 13.2, "Series Percentages are the Chance to Win __ Games", 
+        plt.text(155, 13.2, "Series Percentages are the Chance to Win __ Games", 
                 ha='right', fontsize=12)
-        plt.text(-150, 13.6, "NET - PEAR's Ranking System, Combining TSR and RQI", 
+        plt.text(-155, 13.6, "NET - PEAR's Ranking System, Combining TSR and RQI", 
                 ha='left', fontsize=12)
-        plt.text(150, 13.6, "TSR - Team Strength Rating, How Good Your Team Is", 
+        plt.text(155, 13.6, "TSR - Team Strength Rating, How Good Your Team Is", 
                 ha='right', fontsize=12)
-        plt.text(-150, 14.0, "RQI - Resume Quality Index, How Good Your Wins Are", 
+        plt.text(-155, 14.0, "RQI - Resume Quality Index, How Good Your Wins Are", 
                 ha='left', fontsize=12)
-        plt.text(150, 14.0, "PWP - Pythagorean Win Percent, Expected Win Rate", 
+        plt.text(155, 14.0, "PWP - Pythagorean Win Percent, Expected Win Rate", 
                 ha='right', fontsize=12)
         
         # Add team logos if available

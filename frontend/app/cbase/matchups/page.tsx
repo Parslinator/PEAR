@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Trophy, Calculator } from 'lucide-react';
+import Image from 'next/image';
 import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -34,10 +35,23 @@ export default function CbaseMatchupsPage() {
   const [homeSearchTerm, setHomeSearchTerm] = useState('');
   const [showAwayDropdown, setShowAwayDropdown] = useState(false);
   const [showHomeDropdown, setShowHomeDropdown] = useState(false);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTeams();
   }, []);
+
+  // Handle escape key for fullscreen modal
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && fullscreenImage) {
+        setFullscreenImage(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [fullscreenImage]);
 
   const fetchTeams = async () => {
     try {
@@ -270,17 +284,48 @@ export default function CbaseMatchupsPage() {
                   <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">Matchup Comparison</h3>
                   
                   <div className="flex justify-center">
-                    <img 
-                      src={imageUrl} 
-                      alt="Matchup Comparison" 
-                      className="max-w-full h-auto rounded-lg shadow-lg"
-                    />
+                    <div 
+                      className="cursor-pointer"
+                      onClick={() => setFullscreenImage(imageUrl)}
+                    >
+                      <img 
+                        src={imageUrl} 
+                        alt="Matchup Comparison" 
+                        className="max-w-full h-auto rounded-lg shadow-lg hover:opacity-90 transition-opacity"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             )}
           </div>
         </div>
+
+        {/* Fullscreen Modal */}
+        {fullscreenImage && (
+          <div
+            className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center p-4"
+            onClick={() => setFullscreenImage(null)}
+          >
+            <button
+              onClick={() => setFullscreenImage(null)}
+              className="absolute top-4 right-4 text-white hover:text-gray-300 text-4xl font-bold z-10"
+              aria-label="Close fullscreen"
+            >
+              ×
+            </button>
+            <div className="relative max-w-full max-h-full">
+              <Image
+                src={fullscreenImage}
+                alt="Fullscreen view"
+                width={2000}
+                height={2000}
+                className="max-w-full max-h-[95vh] w-auto h-auto object-contain"
+                unoptimized
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

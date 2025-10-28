@@ -15,6 +15,7 @@ export default function TeamAnalysisPage() {
   const [filteredTeams, setFilteredTeams] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -34,6 +35,18 @@ export default function TeamAnalysisPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Handle escape key for fullscreen modal
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && fullscreenImage) {
+        setFullscreenImage(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [fullscreenImage]);
 
   // Filter teams based on input
   useEffect(() => {
@@ -304,13 +317,13 @@ export default function TeamAnalysisPage() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
               </div>
             ) : profileImage ? (
-              <div className="relative w-full">
+              <div className="relative w-full cursor-pointer" onClick={() => setFullscreenImage(profileImage)}>
                 <Image
                   src={profileImage}
                   alt="Team Profile"
                   width={800}
                   height={1000}
-                  className="w-full h-auto rounded-lg"
+                  className="w-full h-auto rounded-lg hover:opacity-90 transition-opacity"
                   unoptimized
                 />
               </div>
@@ -349,13 +362,13 @@ export default function TeamAnalysisPage() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
               </div>
             ) : historicalImage ? (
-              <div className="relative w-full">
+              <div className="relative w-full cursor-pointer" onClick={() => setFullscreenImage(historicalImage)}>
                 <Image
                   src={historicalImage}
                   alt="Historical Performance"
                   width={1000}
                   height={700}
-                  className="w-full h-auto rounded-lg"
+                  className="w-full h-auto rounded-lg hover:opacity-90 transition-opacity"
                   unoptimized
                 />
               </div>
@@ -386,6 +399,32 @@ export default function TeamAnalysisPage() {
             </p>
           </div>
         </div>
+
+        {/* Fullscreen Modal */}
+        {fullscreenImage && (
+          <div
+            className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center p-4"
+            onClick={() => setFullscreenImage(null)}
+          >
+            <button
+              onClick={() => setFullscreenImage(null)}
+              className="absolute top-4 right-4 text-white hover:text-gray-300 text-4xl font-bold z-10"
+              aria-label="Close fullscreen"
+            >
+              ×
+            </button>
+            <div className="relative max-w-full max-h-full">
+              <Image
+                src={fullscreenImage}
+                alt="Fullscreen view"
+                width={2000}
+                height={2000}
+                className="max-w-full max-h-[95vh] w-auto h-auto object-contain"
+                unoptimized
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

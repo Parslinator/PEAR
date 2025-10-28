@@ -33,30 +33,30 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">FBS Power Ratings</h1>
-          <p className="text-lg text-gray-600">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">FBS Power Ratings</h1>
+          <p className="text-lg text-gray-600 dark:text-gray-400">
             {currentSeason.year} Season • Week {currentSeason.week}
           </p>
         </div>
 
         {/* Ratings Table */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
           <div className="p-6">
             {loading ? (
               <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <p className="mt-4 text-gray-600">Loading ratings...</p>
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                <p className="mt-4 text-gray-600 dark:text-gray-400">Loading ratings...</p>
               </div>
             ) : (
               <>
                 <RatingsTable data={ratings} />
-                <div className="mt-6 text-sm text-gray-600 space-y-1 border-t pt-4">
-                  <p><strong>MD</strong> - Most Deserving (PEAR's 'AP' Ballot)</p>
-                  <p><strong>SOS</strong> - Strength of Schedule | <strong>OFF</strong> - Offense | <strong>DEF</strong> - Defense</p>
+                <div className="mt-6 text-sm text-gray-600 dark:text-gray-400 space-y-1 border-t dark:border-gray-700 pt-4">
+                  <p><strong className="dark:text-gray-300">MD</strong> - Most Deserving (PEAR's 'AP' Ballot)</p>
+                  <p><strong className="dark:text-gray-300">SOS</strong> - Strength of Schedule | <strong className="dark:text-gray-300">OFF</strong> - Offense | <strong className="dark:text-gray-300">DEF</strong> - Defense</p>
                 </div>
               </>
             )}

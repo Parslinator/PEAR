@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import axios from 'axios';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -22,6 +23,7 @@ export default function ImageGallery({ title, type, year, week }: Props) {
   const [filteredImages, setFilteredImages] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedDropdownIndex, setSelectedDropdownIndex] = useState(-1);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -34,13 +36,25 @@ export default function ImageGallery({ title, type, year, week }: Props) {
     if (searchTerm.trim() === '') {
       setFilteredImages(images);
     } else {
-      const filtered = images.filter((image) =>
-        image.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      const filtered = images.filter((image) => {
+        const imageName = image.toLowerCase();
+        const searchLower = searchTerm.toLowerCase();
+        
+        if (type === 'games') {
+          // For games, split by common separators (vs, @, -, _)
+          const parts = imageName.split(/[\s_-]+(?:vs|@)[\s_-]+/i);
+          
+          // Check if search term matches any part of the matchup
+          return parts.some(part => part.includes(searchLower)) || imageName.includes(searchLower);
+        } else {
+          // For profiles, simple search
+          return imageName.includes(searchLower);
+        }
+      });
       setFilteredImages(filtered);
     }
     setSelectedDropdownIndex(-1);
-  }, [searchTerm, images]);
+  }, [searchTerm, images, type]);
 
   // Handle click outside dropdown
   useEffect(() => {
@@ -53,6 +67,18 @@ export default function ImageGallery({ title, type, year, week }: Props) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Handle escape key for fullscreen modal
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && fullscreenImage) {
+        setFullscreenImage(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [fullscreenImage]);
 
   const fetchImages = async () => {
     setLoading(true);
@@ -145,13 +171,13 @@ export default function ImageGallery({ title, type, year, week }: Props) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 px-6 py-4">
           <h2 className="text-xl font-bold text-white">{title}</h2>
         </div>
         <div className="p-6 text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading images...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading images...</p>
         </div>
       </div>
     );
@@ -159,11 +185,11 @@ export default function ImageGallery({ title, type, year, week }: Props) {
 
   if (images.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 px-6 py-4">
           <h2 className="text-xl font-bold text-white">{title}</h2>
         </div>
-        <div className="p-6 text-center text-gray-600">
+        <div className="p-6 text-center text-gray-600 dark:text-gray-400">
           No images available for this week
         </div>
       </div>
@@ -173,105 +199,121 @@ export default function ImageGallery({ title, type, year, week }: Props) {
   const imageUrl = `${API_URL}/api/image/${year}/${week}/${type}/${selectedImage}`;
 
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 px-6 py-4">
         <h2 className="text-xl font-bold text-white">{title}</h2>
       </div>
       
       <div className="p-6">
-        {type === 'profiles' ? (
-          // Searchable dropdown for profiles
-          <div className="mb-4 relative" ref={dropdownRef}>
-            <input
-              ref={inputRef}
-              type="text"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              onFocus={() => setShowDropdown(true)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type to search team profiles..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              autoComplete="off"
-            />
-            
-            {/* Dropdown menu */}
-            {showDropdown && filteredImages.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
-                {filteredImages.map((image, index) => (
-                  <div
-                    key={image}
-                    onClick={() => handleImageSelect(image)}
-                    className={`px-4 py-2 cursor-pointer ${
-                      index === selectedDropdownIndex
-                        ? 'bg-blue-100'
-                        : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    {image.replace('.png', '').replace(/_/g, ' ')}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* No results message */}
-            {showDropdown && filteredImages.length === 0 && searchTerm && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
-                <div className="px-4 py-2 text-gray-500">No profiles found</div>
-              </div>
-            )}
-          </div>
-        ) : (
-          // Regular select dropdown for games
-          <div className="mb-4">
-            <select
-              value={selectedImage}
-              onChange={(e) => handleImageChange(e.target.value, images.indexOf(e.target.value))}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              {images.map((image, index) => (
-                <option key={image} value={image}>
-                  {image.replace('.png', '').replace(/_/g, ' ')}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        <div className="relative bg-gray-100 rounded-lg overflow-hidden">
-          <img
-            src={imageUrl}
-            alt={selectedImage}
-            className="w-full h-auto"
-            onError={(e) => {
-              e.currentTarget.src = '/placeholder-image.png';
-            }}
+        {/* Searchable dropdown for both games and profiles */}
+        <div className="mb-4 relative" ref={dropdownRef}>
+          <input
+            ref={inputRef}
+            type="text"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            onFocus={() => setShowDropdown(true)}
+            onKeyDown={handleKeyDown}
+            placeholder={type === 'games' ? "Type to search games..." : "Type to search team profiles..."}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+            autoComplete="off"
           />
+          
+          {/* Dropdown menu */}
+          {showDropdown && filteredImages.length > 0 && (
+            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto">
+              {filteredImages.map((image, index) => (
+                <div
+                  key={image}
+                  onClick={() => handleImageSelect(image)}
+                  className={`px-4 py-2 cursor-pointer text-gray-900 dark:text-white ${
+                    index === selectedDropdownIndex
+                      ? 'bg-blue-100 dark:bg-blue-900/50'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {image.replace('.png', '').replace(/_/g, ' ')}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* No results message */}
+          {showDropdown && filteredImages.length === 0 && searchTerm && (
+            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
+              <div className="px-4 py-2 text-gray-500 dark:text-gray-400">
+                {type === 'games' ? 'No games found' : 'No profiles found'}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="relative bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
+          <div 
+            className="cursor-pointer"
+            onClick={() => setFullscreenImage(imageUrl)}
+          >
+            <img
+              src={imageUrl}
+              alt={selectedImage}
+              className="w-full h-auto hover:opacity-90 transition-opacity"
+              onError={(e) => {
+                e.currentTarget.src = '/placeholder-image.png';
+              }}
+            />
+          </div>
           
           {images.length > 1 && (
             <>
               <button
                 onClick={handlePrevious}
                 disabled={currentIndex === 0}
-                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 p-2 rounded-full shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all z-10"
               >
-                <ChevronLeft className="w-6 h-6 text-gray-700" />
+                <ChevronLeft className="w-6 h-6 text-gray-700 dark:text-gray-200" />
               </button>
               
               <button
                 onClick={handleNext}
                 disabled={currentIndex === images.length - 1}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 p-2 rounded-full shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all z-10"
               >
-                <ChevronRight className="w-6 h-6 text-gray-700" />
+                <ChevronRight className="w-6 h-6 text-gray-700 dark:text-gray-200" />
               </button>
             </>
           )}
         </div>
 
-        <div className="mt-3 text-center text-sm text-gray-600">
+        <div className="mt-3 text-center text-sm text-gray-600 dark:text-gray-400">
           Image {currentIndex + 1} of {images.length}
         </div>
       </div>
+
+      {/* Fullscreen Modal */}
+      {fullscreenImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black bg-opacity-90 dark:bg-opacity-95 flex items-center justify-center p-4"
+          onClick={() => setFullscreenImage(null)}
+        >
+          <button
+            onClick={() => setFullscreenImage(null)}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 dark:hover:text-gray-400 text-4xl font-bold z-10"
+            aria-label="Close fullscreen"
+          >
+            ×
+          </button>
+          <div className="relative max-w-full max-h-full">
+            <Image
+              src={fullscreenImage}
+              alt="Fullscreen view"
+              width={2000}
+              height={2000}
+              className="max-w-full max-h-[95vh] w-auto h-auto object-contain"
+              unoptimized
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

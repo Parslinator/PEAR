@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import axios from 'axios';
 import { Calculator, TrendingUp, TrendingDown } from 'lucide-react';
 
@@ -32,6 +33,7 @@ export default function SpreadCalculator() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTeams();
@@ -50,6 +52,18 @@ export default function SpreadCalculator() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Handle escape key for fullscreen modal
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && fullscreenImage) {
+        setFullscreenImage(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [fullscreenImage]);
 
   const fetchTeams = async () => {
     try {
@@ -142,7 +156,7 @@ export default function SpreadCalculator() {
       <form onSubmit={calculateSpread} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Away Team
             </label>
             <input
@@ -155,16 +169,16 @@ export default function SpreadCalculator() {
               }}
               onFocus={() => setShowAwayDropdown(true)}
               placeholder="Search for away team..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             />
             {showAwayDropdown && getFilteredTeams(awaySearch).length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                 {getFilteredTeams(awaySearch).map((team) => (
                   <button
                     key={team}
                     type="button"
                     onClick={() => handleAwayTeamSelect(team)}
-                    className="w-full text-left px-4 py-2 hover:bg-purple-50 transition-colors"
+                    className="w-full text-left px-4 py-2 hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors text-gray-900 dark:text-white"
                   >
                     {team}
                   </button>
@@ -174,7 +188,7 @@ export default function SpreadCalculator() {
           </div>
 
           <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Home Team
             </label>
             <input
@@ -187,16 +201,16 @@ export default function SpreadCalculator() {
               }}
               onFocus={() => setShowHomeDropdown(true)}
               placeholder="Search for home team..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             />
             {showHomeDropdown && getFilteredTeams(homeSearch).length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                 {getFilteredTeams(homeSearch).map((team) => (
                   <button
                     key={team}
                     type="button"
                     onClick={() => handleHomeTeamSelect(team)}
-                    className="w-full text-left px-4 py-2 hover:bg-purple-50 transition-colors"
+                    className="w-full text-left px-4 py-2 hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors text-gray-900 dark:text-white"
                   >
                     {team}
                   </button>
@@ -212,15 +226,15 @@ export default function SpreadCalculator() {
             id="neutral"
             checked={neutral}
             onChange={(e) => setNeutral(e.target.checked)}
-            className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+            className="w-4 h-4 text-purple-600 border-gray-300 dark:border-gray-600 rounded focus:ring-purple-500 dark:bg-gray-700"
           />
-          <label htmlFor="neutral" className="text-sm font-medium text-gray-700">
+          <label htmlFor="neutral" className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Neutral Site Game
           </label>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
             {error}
           </div>
         )}
@@ -228,7 +242,7 @@ export default function SpreadCalculator() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+          className="w-full bg-purple-600 dark:bg-purple-500 hover:bg-purple-700 dark:hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
         >
           {loading ? (
             <>
@@ -246,11 +260,14 @@ export default function SpreadCalculator() {
 
       {imageUrl && (
         <div className="mt-6">
-          <div className="bg-white rounded-lg border-2 border-purple-200 overflow-hidden">
+          <div 
+            className="bg-white dark:bg-gray-700 rounded-lg border-2 border-purple-200 dark:border-purple-700 overflow-hidden cursor-pointer"
+            onClick={() => setFullscreenImage(imageUrl)}
+          >
             <img 
               src={imageUrl} 
               alt="Matchup Preview" 
-              className="w-full h-auto"
+              className="w-full h-auto hover:opacity-90 transition-opacity"
             />
           </div>
           <button
@@ -260,10 +277,36 @@ export default function SpreadCalculator() {
               a.download = `${awayTeam}_vs_${homeTeam}_matchup.png`;
               a.click();
             }}
-            className="mt-3 w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold"
+            className="mt-3 w-full px-4 py-2 bg-purple-600 dark:bg-purple-500 text-white rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors font-semibold"
           >
             Download Image
           </button>
+        </div>
+      )}
+
+      {/* Fullscreen Modal */}
+      {fullscreenImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black bg-opacity-90 dark:bg-opacity-95 flex items-center justify-center p-4"
+          onClick={() => setFullscreenImage(null)}
+        >
+          <button
+            onClick={() => setFullscreenImage(null)}
+            className="absolute top-4 right-4 text-white hover:text-gray-300 dark:hover:text-gray-400 text-4xl font-bold z-10"
+            aria-label="Close fullscreen"
+          >
+            ×
+          </button>
+          <div className="relative max-w-full max-h-full">
+            <Image
+              src={fullscreenImage}
+              alt="Fullscreen view"
+              width={2000}
+              height={2000}
+              className="max-w-full max-h-[95vh] w-auto h-auto object-contain"
+              unoptimized
+            />
+          </div>
         </div>
       )}
     </div>

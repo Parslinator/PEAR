@@ -33,30 +33,30 @@ export default function SpreadsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Week {currentSeason.week} Spreads</h1>
-          <p className="text-lg text-gray-600">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Week {currentSeason.week} Spreads</h1>
+          <p className="text-lg text-gray-600 dark:text-gray-400">
             PEAR Predictions vs Vegas Lines • {currentSeason.year} Season
           </p>
         </div>
 
         {/* Spreads Table */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
           <div className="p-6">
             {loading ? (
               <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-                <p className="mt-4 text-gray-600">Loading spreads...</p>
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 dark:border-green-400"></div>
+                <p className="mt-4 text-gray-600 dark:text-gray-400">Loading spreads...</p>
               </div>
             ) : spreads.length > 0 ? (
               <>
                 <SpreadsTable data={spreads} />
               </>
             ) : (
-              <div className="text-center py-12 text-gray-600">
+              <div className="text-center py-12 text-gray-600 dark:text-gray-400">
                 <p className="text-lg">No spreads data available for this week.</p>
               </div>
             )}
