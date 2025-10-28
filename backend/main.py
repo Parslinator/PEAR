@@ -18,6 +18,12 @@ from io import BytesIO
 import matplotlib.colors as mcolors
 from datetime import datetime
 import pytz
+from bs4 import BeautifulSoup
+import matplotlib.patheffects as pe
+from matplotlib.patches import FancyBboxPatch
+import matplotlib.patches as mpatches
+import glob
+import re
 
 app = FastAPI(title="PEAR Ratings API")
 
@@ -60,6 +66,11 @@ else:
         CURRENT_WEEK += weeks_since
 
 CURRENT_YEAR = 2025
+
+# Calculate current date for baseball
+cst = pytz.timezone('America/Chicago')
+formatted_date = datetime.now(cst).strftime('%m_%d_%Y')
+current_season = datetime.today().year
 
 # Load team logos
 team_logos = {}
@@ -850,6 +861,132 @@ def load_baseball_data():
     except Exception as e:
         print(f"Error loading baseball data: {e}")
         raise HTTPException(status_code=500, detail=f"Error loading baseball data: {str(e)}")
+    
+def load_elo():
+    try:    
+        # URL of the page to scrape
+        url = 'https://www.warrennolan.com/baseball/2025/elo'
+
+        # Fetch the webpage content
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        # Find the table with the specified class
+        table = soup.find('table', class_='normal-grid alternating-rows stats-table')
+
+        if table:
+            # Extract table headers
+            headers = [th.text.strip() for th in table.find('thead').find_all('th')]
+            headers.insert(1, "Team Link")  # Adding extra column for team link
+
+            # Extract table rows
+            data = []
+            for row in table.find('tbody').find_all('tr'):
+                cells = row.find_all('td')
+                row_data = []
+                for i, cell in enumerate(cells):
+                    # If it's the first cell, extract team name and link from 'name-subcontainer'
+                    if i == 0:
+                        name_container = cell.find('div', class_='name-subcontainer')
+                        if name_container:
+                            team_name = name_container.text.strip()
+                            team_link_tag = name_container.find('a')
+                            team_link = team_link_tag['href'] if team_link_tag else ''
+                        else:
+                            team_name = cell.text.strip()
+                            team_link = ''
+                        row_data.append(team_name)
+                        row_data.append(team_link)  # Add team link separately
+                    else:
+                        row_data.append(cell.text.strip())
+                data.append(row_data)
+
+
+            elo_data = pd.DataFrame(data, columns=[headers])
+            elo_data.columns = elo_data.columns.get_level_values(0)
+            elo_data = elo_data.drop_duplicates(subset='Team', keep='first')
+            elo_data = elo_data.astype({col: 'str' for col in elo_data.columns if col not in ['ELO', 'Rank']})
+            elo_data['ELO'] = elo_data['ELO'].astype(float, errors='ignore')
+            elo_data['Rank'] = elo_data['Rank'].astype(int, errors='ignore')
+
+        else:
+            print("Table not found on the page.")
+
+        # Define mapping for team name replacements
+        team_replacements = {
+            'North Carolina St.': 'NC State',
+            'Southern Miss': 'Southern Miss.',
+            'USC': 'Southern California',
+            'Dallas Baptist': 'DBU',
+            'Charleston': 'Col. of Charleston',
+            'Georgia Southern': 'Ga. Southern',
+            'UNCG': 'UNC Greensboro',
+            'East Tennessee St.': 'ETSU',
+            'Lamar': 'Lamar University',
+            "Saint Mary's College": "Saint Mary's (CA)",
+            'Western Kentucky': 'Western Ky.',
+            'FAU': 'Fla. Atlantic',
+            'Connecticut': 'UConn',
+            'Southeast Missouri': 'Southeast Mo. St.',
+            'Alcorn St.': 'Alcorn',
+            'Appalachian St.': 'App State',
+            'Arkansas-Pine Bluff': 'Ark.-Pine Bluff',
+            'Army': 'Army West Point',
+            'Cal St. Bakersfield': 'CSU Bakersfield',
+            'Cal St. Northridge': 'CSUN',
+            'Central Arkansas': 'Central Ark.',
+            'Central Michigan': 'Central Mich.',
+            'Charleston Southern': 'Charleston So.',
+            'Eastern Illinois': 'Eastern Ill.',
+            'Eastern Kentucky': 'Eastern Ky.',
+            'Eastern Michigan': 'Eastern Mich.',
+            'Fairleigh Dickinson': 'FDU',
+            'Grambling St.': 'Grambling',
+            'Incarnate Word': 'UIW',
+            'Long Island': 'LIU',
+            'Maryland Eastern Shore': 'UMES',
+            'Middle Tennessee': 'Middle Tenn.',
+            'Mississippi Valley St.': 'Mississippi Val.',
+            "Mount Saint Mary's": "Mount St. Mary's",
+            'North Alabama': 'North Ala.',
+            'North Carolina A&T': 'N.C. A&T',
+            'Northern Colorado': 'Northern Colo.',
+            'Northern Kentucky': 'Northern Ky.',
+            'Prairie View A&M': 'Prairie View',
+            'Presbyterian College': 'Presbyterian',
+            'Saint Bonaventure': 'St. Bonaventure',
+            "Saint John's": "St. John's (NY)",
+            'Sam Houston St.': 'Sam Houston',
+            'Seattle University': 'Seattle U',
+            'South Carolina Upstate': 'USC Upstate',
+            'South Florida': 'South Fla.',
+            'Southeastern Louisiana': 'Southeastern La.',
+            'Southern': 'Southern U.',
+            'Southern Illinois': 'Southern Ill.',
+            'Stephen F. Austin': 'SFA',
+            'Tennessee-Martin': 'UT Martin',
+            'Texas A&M-Corpus Christi': 'A&M-Corpus Christi',
+            'UMass-Lowell': 'UMass Lowell',
+            'UTA': 'UT Arlington',
+            'Western Carolina': 'Western Caro.',
+            'Western Illinois': 'Western Ill.',
+            'Western Michigan': 'Western Mich.',
+            'Albany': 'UAlbany',
+            'Southern Indiana': 'Southern Ind.',
+            'Queens': 'Queens (NC)',
+            'Central Connecticut': 'Central Conn. St.',
+            'Saint Thomas': 'St. Thomas (MN)',
+            'Northern Illinois': 'NIU',
+            'UMass':'Massachusetts',
+            'Loyola-Marymount':'LMU (CA)'
+        }
+
+        elo_data['Team'] = elo_data['Team'].str.replace('State', 'St.', regex=False)
+        elo_data['Team'] = elo_data['Team'].replace(team_replacements)
+        return elo_data
+    except Exception as e:
+        print(f"Error loading elo: {e}")
+        raise HTTPException(status_code=500, detail=f"Error loading elo: {str(e)}")
 
 def load_baseball_schedule():
     """Load the current season schedule"""
@@ -1765,6 +1902,726 @@ def simulate_regional(request: RegionalSimulationRequest):
         print(f"Error simulating regional: {e}")
         import traceback
         traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+# =====================================================================
+# NEW: Team Profile and Historical Performance Endpoints
+# =====================================================================
+
+class TeamProfileRequest(BaseModel):
+    team_name: str
+
+class HistoricalPerformanceRequest(BaseModel):
+    team_name: str
+
+def load_schedule_data():
+    """Load schedule data for baseball"""
+    try:
+        baseball_path = os.path.join(os.path.dirname(BACKEND_DIR), "PEAR", "PEAR Baseball")
+        schedule_path = os.path.join(baseball_path, f"y{current_season}", f"schedule_{current_season}.csv")
+        schedule_df = pd.read_csv(schedule_path)
+        schedule_df["Date"] = pd.to_datetime(schedule_df["Date"])
+        return schedule_df
+    except Exception as e:
+        print(f"Error loading schedule: {e}")
+        raise HTTPException(status_code=500, detail=f"Error loading schedule: {str(e)}")
+
+def load_historical_data():
+    """Load all historical baseball data"""
+    try:
+        baseball_path = os.path.join(os.path.dirname(BACKEND_DIR), "PEAR", "PEAR Baseball")
+        seasons = [2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017,
+                   2018, 2019, 2021, 2022, 2023, 2024, 2025]
+        
+        all_data_list = []
+        date_pattern = re.compile(r"baseball_(\d{2}_\d{2}_\d{4})\.csv")
+        
+        for year in seasons:
+            folder = os.path.join(baseball_path, f"y{year}", "Data")
+            pattern = os.path.join(folder, "baseball_*.csv")
+            files = glob.glob(pattern)
+            
+            valid_files = []
+            for f in files:
+                filename = os.path.basename(f)
+                match = date_pattern.match(filename)
+                if match:
+                    date_str = match.group(1)
+                    try:
+                        file_date = datetime.strptime(date_str, "%m_%d_%Y")
+                        if file_date.month >= 6:
+                            valid_files.append((f, file_date))
+                    except ValueError:
+                        continue
+            
+            if not valid_files:
+                continue
+            
+            latest_file = max(valid_files, key=lambda x: x[1])[0]
+            
+            try:
+                df = pd.read_csv(latest_file)
+                df["Season"] = year
+                all_data_list.append(df)
+            except Exception as e:
+                print(f"Error loading {latest_file}: {e}")
+                continue
+        
+
+        all_data = pd.concat(all_data_list, ignore_index=True)
+        all_data['Normalized_Rating'] = all_data.groupby('Season')['Rating'].transform(
+            lambda x: (x - x.mean()) / x.std()
+        )
+
+        all_data['Normalized_Rating'] = all_data['Normalized_Rating'] * 2.5
+        all_data['Normalized_Rating'] = round(all_data['Normalized_Rating'] - all_data['Normalized_Rating'].mean(),2)
+        all_data['Normalized_Rating'] = round(all_data['Normalized_Rating'], 2)
+        all_data = all_data.sort_values('Normalized_Rating', ascending=False).reset_index(drop=True)
+        all_data['Season'] = all_data['Season'].astype(int)
+        return all_data
+        
+    except Exception as e:
+        print(f"Error loading historical data: {e}")
+        raise HTTPException(status_code=500, detail=f"Error loading historical data: {str(e)}")
+
+def PEAR_Win_Prob_Baseball(home_pr, away_pr, location="Neutral"):
+    """Baseball-specific win probability calculation"""
+    if location != "Neutral":
+        home_pr += 0.3
+    rating_diff = home_pr - away_pr
+    return round(1 / (1 + 10 ** (-rating_diff / 6)) * 100, 2)
+
+def get_total_record(row):
+    """Calculate total win-loss record from quad records"""
+    wins = sum(int(str(row[col]).split("-")[0]) for col in ["Q1", "Q2", "Q3", "Q4"])
+    losses = sum(int(str(row[col]).split("-")[1]) for col in ["Q1", "Q2", "Q3", "Q4"])
+    return f"{wins}-{losses}"
+
+def get_location_records(team, schedule_df):
+    """Get home, away, and neutral records for a team"""
+    df = schedule_df[
+        ((schedule_df['home_team'] == team) | (schedule_df['away_team'] == team)) &
+        (schedule_df['Result'].str.startswith(('W', 'L')))
+    ].copy()
+    
+    def get_loc(row):
+        if row['Location'] == 'Neutral':
+            return 'Neutral'
+        elif row['home_team'] == team:
+            return 'Home'
+        else:
+            return 'Away'
+    
+    df['loc'] = df.apply(get_loc, axis=1)
+    df['is_win'] = df['Result'].str.startswith('W')
+    
+    records = {}
+    for loc in ['Home', 'Away', 'Neutral']:
+        group = df[df['loc'] == loc]
+        wins = group['is_win'].sum()
+        losses = len(group) - wins
+        records[loc] = f"{int(wins)}-{int(losses)}"
+    
+    return records
+
+def get_conference_record(team, schedule_df, stats_and_metrics):
+    """Calculate conference record for a team"""
+    team_to_conf = stats_and_metrics.set_index('Team')['Conference'].to_dict()
+    team_conf = team_to_conf.get(team)
+    schedule_df['home_conf'] = schedule_df['home_team'].map(team_to_conf)
+    schedule_df['away_conf'] = schedule_df['away_team'].map(team_to_conf)
+    schedule_df["matchup"] = schedule_df["home_team"] + " vs " + schedule_df["away_team"]
+    matchup = schedule_df["matchup"].values
+    home_conf = schedule_df["home_conf"].values
+    away_conf = schedule_df["away_conf"].values
+    
+    match0 = matchup[:-2]
+    match1 = matchup[1:-1]
+    match2 = matchup[2:]
+    conf_check_0 = home_conf[:-2] == away_conf[:-2]
+    conf_check_1 = home_conf[1:-1] == away_conf[1:-1]
+    conf_check_2 = home_conf[2:] == away_conf[2:]
+    valid_series = (
+        (match0 == match1) & (match1 == match2) &
+        conf_check_0 & conf_check_1 & conf_check_2
+    )
+    base_indices = np.where(valid_series)[0]
+    valid_indices = np.unique(np.concatenate([base_indices, base_indices + 1, base_indices + 2]))
+    df = schedule_df.iloc[valid_indices].reset_index(drop=True)
+    
+    conf_games = df[
+        (df['home_conf'] == team_conf) &
+        (df['away_conf'] == team_conf) &
+        (df['Result'].str.startswith(('W', 'L')))
+    ]
+    wins = conf_games['Result'].str.startswith('W')
+    wins_count = int(wins.sum())
+    games_count = int(len(conf_games))
+    
+    return f"{wins_count}-{games_count - wins_count}"
+
+def get_metric_values(teams, column):
+    values = []
+    for team in teams:
+        try:
+            val = team[column].values[0]
+            values.append(int(val))
+        except:
+            values.append("N/A")
+    return values
+
+def simulate_team_win_distribution(schedule_df, comparison_date, team_name, num_simulations=1000):
+    # Ensure "Date" is datetime
+    schedule_df["Date"] = pd.to_datetime(schedule_df["Date"])
+
+    # --- Step 1: Filter to games involving the specified team ---
+    team_games = schedule_df[schedule_df['Team'] == team_name].reset_index(drop=True).copy()
+
+    # --- Step 2: Split into completed and remaining games ---
+    completed_games = team_games[
+        (team_games["Date"] <= comparison_date) & (team_games["home_score"].notnull()) & (team_games["away_score"].notnull())
+    ].copy()
+
+    remaining_games = team_games[
+        (team_games["Date"] >= comparison_date) & (team_games["home_win_prob"].notnull() & (team_games['home_score'] == team_games['away_score']))
+    ].copy()
+
+    # --- Step 3: Calculate current win total ---
+    completed_games["winner"] = np.where(
+        completed_games["home_score"] > completed_games["away_score"],
+        completed_games["home_team"],
+        completed_games["away_team"]
+    )
+    current_wins = (completed_games["winner"] == team_name).sum()
+
+    # --- Step 4: Simulate outcomes of remaining games ---
+    home_teams = remaining_games["home_team"].values
+    away_teams = remaining_games["away_team"].values
+    home_win_probs = remaining_games["home_win_prob"].values
+
+    simulations = []
+    for _ in range(num_simulations):
+        random_vals = np.random.rand(len(remaining_games))
+        home_wins = random_vals < home_win_probs
+        winners = np.where(home_wins, home_teams, away_teams)
+
+        sim_wins = (winners == team_name).sum()
+        total_wins = current_wins + sim_wins
+        simulations.append(total_wins)
+
+    simulations = np.array(simulations)
+
+    # Output: Series with counts of each win total
+    win_distribution = pd.Series(simulations).value_counts().sort_index()
+
+    return win_distribution
+
+@app.post("/api/cbase/team-profile")
+def team_profile(request: TeamProfileRequest):
+    """Generate team profile visualization"""
+    try:
+        stats_and_metrics, comparison_date = load_baseball_data()
+        schedule_df = load_schedule_data()
+        team_name = request.team_name
+        
+        BASE_URL = "https://www.warrennolan.com"
+        completed_schedule = schedule_df[
+            (schedule_df["Date"] <= comparison_date) & (schedule_df["home_score"] != schedule_df["away_score"])
+        ].reset_index(drop=True)
+        team_schedule = schedule_df[schedule_df['Team'] == team_name].reset_index(drop=True)
+        team_data = stats_and_metrics[stats_and_metrics['Team'] == team_name]
+        team_net = team_data['NET'].values[0]
+        team_conference = team_data['Conference'].values[0]
+        team_record = get_total_record(team_data.iloc[0])
+        Conf_Record = get_conference_record(team_name, team_schedule, stats_and_metrics)
+        team_Q1 = team_data['Q1'].values[0]
+        team_Q2 = team_data['Q2'].values[0]
+        team_Q3 = team_data['Q3'].values[0]
+        team_Q4 = team_data['Q4'].values[0]
+        team_rpi = team_data['RPI'].values[0]
+        team_elo = int(team_data['ELO_Rank'].values[0])
+        team_rqi = team_data['RQI'].values[0]
+        team_tsr = team_data['PRR'].values[0]
+        team_sos = team_data['SOS'].values[0]
+        record = get_location_records(team_name, team_schedule)
+        home_record = record['Home']
+        away_record = record['Away']
+        neutral_record = record['Neutral']
+        
+        fig, ax = plt.subplots(figsize=(8, 10), dpi=500) # , dpi=500
+        fig.patch.set_facecolor('#CECEB2')
+        ax.set_facecolor('#CECEB2')
+
+        # percentile sliders code
+        percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
+        team_data = team_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
+        cmap = plt.get_cmap('seismic')
+        colors = [cmap(p / 100) for p in team_data['Percentile']]
+        def darken_color(color, factor=0.3):
+            color = mcolors.hex2color(color)
+            darkened_color = [max(c - factor, 0) for c in color]
+            return mcolors.rgb2hex(darkened_color)
+        darkened_colors = [darken_color(c) for c in colors]
+        ax.barh(team_data['Metric'], 99, color='gray', height=0.1, left=0)
+        bars = ax.barh(team_data['Metric'], team_data['Percentile'], color=colors, height=0.6, edgecolor=darkened_colors, linewidth=3)
+        i = 0
+        for idx, (bar, percentile) in enumerate(zip(bars, team_data['Percentile'])):
+            text = ax.text(bar.get_width(), bar.get_y() + bar.get_height()/2, 
+                        str(percentile), ha='center', va='center', 
+                        fontsize=16, fontweight='bold', color='white', zorder=2,
+                        bbox=dict(facecolor=colors[i], edgecolor=darkened_colors[i], boxstyle='circle,pad=0.4', linewidth=3))
+            text.set_path_effects([
+                pe.withStroke(linewidth=2, foreground='black')
+            ])
+            if idx == 4 or idx == 8:  # Check if the index is 5th or 9th bar (0-based index)
+                y_position = bar.get_y() + bar.get_height() + 0.185
+                ax.hlines(y_position, 0, 99,
+                        colors='black', linestyles='dashed', linewidth=2, zorder=1)
+                    
+            i = i + 1
+        ax.set_xlim(0, 102)
+        ax.set_xticks([])
+        custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'fWAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
+        ax.set_yticks(range(len(custom_labels)))
+        ax.set_yticklabels(custom_labels, fontweight='bold', fontsize=16)
+        ax.tick_params(axis='y', which='both', length=0, pad=14)
+        ax.invert_yaxis()
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+
+        # team logo - must stay above all text calls
+        logo_folder = os.path.join(BASEBALL_BASE_PATH, "logos")
+        logo_path = os.path.join(logo_folder, f"{team_name}.png")
+        img = Image.open(logo_path).convert("RGBA")
+        ax_img1 = fig.add_axes([0.04, 0.85, 0.2, 0.2])
+        ax_img1.imshow(img)
+        ax_img1.axis("off")
+
+        ### PLOT TITLE
+        plt.text(0.18, 1.16, f'#{team_net} {team_name}', fontsize=34, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
+        plt.text(0.18, 1.11, f"{team_record} ({Conf_Record})", fontsize=24, ha='left', va='center', transform=ax.transAxes)
+        plt.text(0.18, 1.06, f'@PEARatings', fontsize=24, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
+        plt.text(0.18, 1.01, f'Team Profile', fontsize=24, ha='left', va='center', transform=ax.transAxes)
+
+        ### TEAM SCHEDULE
+        def get_opponent_net(row, team):
+            if row['home_team'] == team:
+                return row['away_net']
+            elif row['away_team'] == team:
+                return row['home_net']
+            else:
+                return np.nan
+
+        team_schedule['opponent_net'] = team_schedule.apply(lambda row: get_opponent_net(row, team_name), axis=1)
+
+        conditions = [
+            ((team_schedule["Location"] == "Home") & (team_schedule["opponent_net"] <= 25)) |
+            ((team_schedule["Location"] == "Neutral") & (team_schedule["opponent_net"] <= 40)) |
+            ((team_schedule["Location"] == "Away") & (team_schedule["home_net"] <= 60)),
+
+            ((team_schedule["Location"] == "Home") & (team_schedule["opponent_net"] <= 50)) |
+            ((team_schedule["Location"] == "Neutral") & (team_schedule["opponent_net"] <= 80)) |
+            ((team_schedule["Location"] == "Away") & (team_schedule["opponent_net"] <= 120)),
+
+            ((team_schedule["Location"] == "Home") & (team_schedule["opponent_net"] <= 100)) |
+            ((team_schedule["Location"] == "Neutral") & (team_schedule["opponent_net"] <= 160)) |
+            ((team_schedule["Location"] == "Away") & (team_schedule["opponent_net"] <= 240))
+        ]
+
+        # Define corresponding quadrant labels
+        quadrants = ["Q1", "Q2", "Q3"]
+
+        # Assign Quadrant values
+        team_schedule["Quad"] = np.select(conditions, quadrants, default="Q4")
+        num_items = len(team_schedule)
+        schedule_x = 0.9
+        schedule_y = 0.95
+        schedule_size = 15
+        counter = 0
+        columns = 0
+        best_rq_row = None
+        worst_rq_row = None
+        max_rq = float('-inf')
+        min_rq = float('inf')
+        for idx, (_, row) in enumerate(team_schedule.iterrows()):
+            if row['resume_quality'] > max_rq and row['Result'].startswith("W"):
+                max_rq = row['resume_quality']
+                best_rq_row = row
+            if row['resume_quality'] < min_rq and row['Result'].startswith("L"):
+                min_rq = row['resume_quality']
+                worst_rq_row = row
+            if counter % 15 == 0:
+                schedule_x +=0.35
+                schedule_y = 0.95
+                columns += 1
+            if row['home_team'] == team_name:
+                opponent = row['away_team']
+                net = row['away_net']
+                win_prob = row['home_win_prob']
+                symbol = ""
+            else:
+                opponent = row['home_team']
+                net = row['home_net']
+                win_prob = 1 - row['home_win_prob']
+                symbol = "@"
+            if row['Location'] == "Neutral":
+                symbol = "vs"
+            if "Non Div I" in opponent:
+                opponent = "Non Div I"
+            if pd.notna(net):
+                net = int(net)
+            if row['resume_quality'] < 0:
+                color = '#8B0000' #red
+            else:
+                color = '#2C5E00' #green
+            # # ax.text(0.5, 0.8, opponent, ha='center', va='center', fontsize=40, fontweight='bold', color=color)
+            # # ax.text(0.1, 0.3, f'#{net}', ha='left', va='center', fontsize=32)
+            # # ax.text(0.5, 0.5, row['Quad'], ha='right', va='center', fontsize=32, fontweight='bold')
+            result_first_letter = row['Result'][0].upper() if row['Result'][0].upper() in ['W', 'L'] else ''
+
+            if result_first_letter:
+                if (row['home_team'] == team_name) & (row['Location'] == "Home"):
+                    plt.text(schedule_x, schedule_y, f'{opponent}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color=color, transform=ax.transAxes)
+                else:
+                    plt.text(schedule_x, schedule_y, f'{symbol} {opponent}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color=color, transform=ax.transAxes)
+                ax.text(schedule_x, schedule_y-0.026, f'{row["Quad"]} | {round(win_prob*100)}% | {row["resume_quality"]:.2f}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color=color, transform=ax.transAxes)
+            else:
+                if (row['home_team'] == team_name) & (row['Location'] == "Home"):
+                    ax.text(schedule_x, schedule_y, f'{opponent}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color='#555555', transform=ax.transAxes)
+                else:
+                    ax.text(schedule_x, schedule_y, f'{symbol} {opponent}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color='#555555', transform=ax.transAxes)
+                ax.text(schedule_x, schedule_y-0.026, f'{row["Quad"]} | {round(win_prob*100)}% | {1 - abs(row["resume_quality"]):.2f}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color='#555555', transform=ax.transAxes)
+            schedule_y = schedule_y - 0.062
+            counter += 1
+
+        ### TOP TEXT
+
+        team_completed = completed_schedule[completed_schedule['Team'] == team_name].reset_index(drop=True)
+        num_rows = len(team_completed)
+        last_n_games = team_completed['Result'].iloc[-10 if num_rows >= 10 else -num_rows:]
+        wins = last_n_games.str.count('W').sum()
+        losses = (10 if num_rows >= 10 else num_rows) - wins
+        last_ten = f'{wins}-{losses}'
+        team_completed['is_home'] = team_completed['home_team'] == team_name
+        team_completed['runs_scored'] = team_completed.apply(
+            lambda row: row['home_score'] if row['is_home'] else row['away_score'], axis=1
+        )
+        team_completed['runs_allowed'] = team_completed.apply(
+            lambda row: row['away_score'] if row['is_home'] else row['home_score'], axis=1
+        )
+        run_diff = team_completed['runs_scored'].sub(team_completed['runs_allowed']).mean()
+
+        if columns == 4:
+            plt.text(1.20, 0.00, f"Best: {best_rq_row['Quad']} {best_rq_row['Opponent']} {best_rq_row['resume_quality']:.2f}", ha='left', va='center', fontsize=15, fontweight='bold', color='#2C5E00', transform=ax.transAxes)
+            plt.text(2.35, 0.00, f"Worst: {worst_rq_row['Quad']} {worst_rq_row['Opponent']} {worst_rq_row['resume_quality']:.2f}", ha='right', va='center', fontsize=15, fontweight='bold', color='#8B0000', transform=ax.transAxes)
+            plt.text(1.25, 1.16, f"RPI: {team_rpi}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.60, 1.16, f"ELO: {team_elo}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.95, 1.16, f"RQI: {team_rqi}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.30, 1.16, f"TSR: {team_tsr}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.25, 1.11, f"H: {home_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.60, 1.11, f"A: {away_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.95, 1.11, f"N: {neutral_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.30, 1.11, f"SOS: {team_sos}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.25, 1.06, f"Q1: {team_Q1}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.60, 1.06, f"Q2: {team_Q2}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.95, 1.06, f"Q3: {team_Q3}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.30, 1.06, f"Q4: {team_Q4}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.25, 1.01, f"L10: {last_ten}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.30, 1.01, f"MOV: {run_diff:.1f}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.775, 1.005, "Quad | Win Prob | Resume Points", fontsize=16, ha='center', va='center', transform=ax.transAxes)
+        elif columns == 5:
+            plt.text(1.20, 0.00, f"Best: {best_rq_row['Quad']} {best_rq_row['Opponent']} {best_rq_row['resume_quality']:.2f}", ha='left', va='center', fontsize=15, fontweight='bold', color='#2C5E00', transform=ax.transAxes)
+            plt.text(2.70, 0.00, f"Worst: {worst_rq_row['Quad']} {worst_rq_row['Opponent']} {worst_rq_row['resume_quality']:.2f}", ha='right', va='center', fontsize=15, fontweight='bold', color='#8B0000', transform=ax.transAxes)
+            plt.text(1.425, 1.16, f"RPI: {team_rpi}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.775, 1.16, f"ELO: {team_elo}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.125, 1.16, f"RQI: {team_rqi}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.475, 1.16, f"TSR: {team_tsr}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.425, 1.11, f"H: {home_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.775, 1.11, f"A: {away_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.125, 1.11, f"N: {neutral_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.475, 1.11, f"SOS: {team_sos}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.425, 1.06, f"Q1: {team_Q1}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.775, 1.06, f"Q2: {team_Q2}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.125, 1.06, f"Q3: {team_Q3}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.475, 1.06, f"Q4: {team_Q4}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.425, 1.01, f"L10: {last_ten}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.475, 1.01, f"MOV: {run_diff:.1f}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.95, 1.005, "Quad | Win Prob | Resume Points", fontsize=16, ha='center', va='center', transform=ax.transAxes)
+
+
+        automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
+        at_large = stats_and_metrics.drop(automatic_qualifiers.index)
+        at_large = at_large.nsmallest(34, "NET")
+        last_four_in = at_large[-8:].reset_index()
+        next_4_teams = stats_and_metrics.drop(automatic_qualifiers.index).nsmallest(38, "NET").iloc[34:].reset_index(drop=True)
+        projected = ""
+        if team_net <= 16:
+            projected = "Host"
+        elif team_name in last_four_in['Team'].values:
+            projected = "Last Four In"
+        elif team_name in at_large['Team'].values:
+            projected = "At-Large"
+        elif team_name in automatic_qualifiers['Team'].values:
+            projected = "Autobid"
+        elif team_name in next_4_teams['Team'].values:
+            projected = "First Four Out"
+        else:
+            projected = "Miss"
+        if columns == 4:
+            plt.text(0.82, 1.06, f"Projection:", fontsize=24, fontweight='bold', ha='center', va='center', transform=ax.transAxes)
+            plt.text(0.82, 1.01, f"{projected}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+        elif columns == 5:
+            plt.text(0.92, 1.06, f"Projection:", fontsize=24, fontweight='bold', ha='center', va='center', transform=ax.transAxes)
+            plt.text(0.92, 1.01, f"{projected}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+
+        ### PREVIOUS YEARS DATA
+        data_2022 = pd.read_csv(f"{BASEBALL_BASE_PATH}/y2022/Data/baseball_06_26_2022.csv")
+        team_2022 = data_2022[data_2022['Team'] == team_name]
+        data_2023 = pd.read_csv(f"{BASEBALL_BASE_PATH}/y2023/Data/baseball_06_26_2023.csv")
+        team_2023 = data_2023[data_2023['Team'] == team_name]
+        data_2024 = pd.read_csv(f"{BASEBALL_BASE_PATH}/y2024/Data/baseball_06_25_2024.csv")
+        team_2024 = data_2024[data_2024['Team'] == team_name]
+        # Column labels
+        plt.text(-0.11, -0.06, "2024", fontsize=20, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
+        plt.text(-0.11, -0.12, "2023", fontsize=20, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
+        plt.text(-0.11, -0.18, "2022", fontsize=20, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
+
+        def draw_metric_column(x, label, values, y_start=0.00, y_step=-0.06):
+            plt.text(x, y_start, label, fontsize=20, fontweight='bold', ha='center', va='center', transform=ax.transAxes)
+
+            # Find the lowest numeric value
+            numeric_values = [(i, v) for i, v in enumerate(values) if isinstance(v, (int, float, float))]
+            bold_index = min(numeric_values, key=lambda t: t[1])[0] if numeric_values else -1
+
+            for i, val in enumerate(values):
+                y = y_start + y_step * (i + 1)
+                if val == "N/A":
+                    display_val = "N/A"
+                else:
+                    display_val = f"{int(val)}"
+                fontweight = 'bold' if i == bold_index else 'normal'
+                color = '#9932CC' if i == bold_index else 'black'
+                plt.text(x, y, display_val, fontsize=20, fontweight=fontweight, ha='center', va='center', color=color, transform=ax.transAxes)
+
+        teams = [team_2024, team_2023, team_2022]
+        draw_metric_column(0.1, "NET", get_metric_values(teams, "NET"))
+        draw_metric_column(0.3, "RPI", get_metric_values(teams, "RPI"))
+        draw_metric_column(0.5, "ELO", get_metric_values(teams, "ELO_Rank"))
+        draw_metric_column(0.7, "RQI", get_metric_values(teams, "RQI"))
+        draw_metric_column(0.9, "TSR", get_metric_values(teams, "PRR"))
+
+        ### PROJECTED WINS
+        projected_wins = simulate_team_win_distribution(schedule_df, comparison_date, team_name)
+        peak = projected_wins.idxmax()
+        start = max(0, peak - 4)
+        end = peak + 5
+        while (end - start + 1) < 10:
+            end += 1
+        full_range = range(start, end + 1)
+        filled_distribution = projected_wins.reindex(full_range, fill_value=0)
+
+        stat_rankings = stats_and_metrics.copy()
+        higher = ["TB", "SLG", "KP9", "BB", "RS", "H", "BA", "PCT", "HBP", "OBP", "OPS", 
+                "PYTHAG", "wOBA", "wRAA", "ISO", "BB%", "LOB%", "K/BB"]
+        lower = ["WP9", "ERA", "E", "RA9", "FIP", "WHIP"]
+        all_ranked_stats = higher + lower
+        stat_rankings[higher] = stat_rankings[higher].rank(ascending=False, method="min")
+        stat_rankings[lower] = stat_rankings[lower].rank(ascending=True, method="min")
+        team_stats = stat_rankings[stat_rankings['Team'] == team_name].squeeze()
+        team_stats = team_stats[all_ranked_stats]
+        team_stats = pd.to_numeric(team_stats, errors='coerce')
+        best_stats = team_stats.nsmallest(3)
+        worst_stats = team_stats.nlargest(3)
+        plt.text(1.4,-0.06, "Best Stats", fontsize=20, ha='center', va='center', fontweight='bold', transform=ax.transAxes)
+        plt.text(1.2,-0.12, f'{best_stats.index[0]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+        plt.text(1.2,-0.18, f'{int(best_stats.values[0])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+        plt.text(1.4,-0.12, f'{best_stats.index[1]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+        plt.text(1.4,-0.18, f'{int(best_stats.values[1])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+        plt.text(1.6,-0.12, f'{best_stats.index[2]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+        plt.text(1.6,-0.18, f'{int(best_stats.values[2])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+        if columns == 4:
+            plt.text(2.1,-0.06, "Worst Stats", fontsize=20, ha='center', va='center', fontweight='bold', transform=ax.transAxes)
+            plt.text(1.9,-0.12, f'{worst_stats.index[2]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.9,-0.18, f'{int(worst_stats.values[2])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.1,-0.12, f'{worst_stats.index[1]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.1,-0.18, f'{int(worst_stats.values[1])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.3,-0.12, f'{worst_stats.index[0]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.3,-0.18, f'{int(worst_stats.values[0])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+        elif columns == 5:
+            plt.text(2.5,-0.06, "Worst Stats", fontsize=20, ha='center', va='center', fontweight='bold', transform=ax.transAxes)
+            plt.text(2.3,-0.12, f'{worst_stats.index[2]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.3,-0.18, f'{int(worst_stats.values[2])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.5,-0.12, f'{worst_stats.index[1]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.5,-0.18, f'{int(worst_stats.values[1])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.7,-0.12, f'{worst_stats.index[0]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.7,-0.18, f'{int(worst_stats.values[0])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+
+        plt.tight_layout()
+            
+        # Save to BytesIO
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
+        buf.seek(0)
+        plt.close()
+        
+        return StreamingResponse(buf, media_type="image/png")
+        
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error generating team profile: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.post("/api/cbase/historical-performance")
+def historical_performance(request: HistoricalPerformanceRequest):
+    """Generate historical team performance visualization"""
+    try:
+        all_data = load_historical_data()
+        team_name = request.team_name
+        
+        team_data = all_data[all_data['Team'] == team_name].copy()
+        
+        if team_data.empty:
+            raise HTTPException(status_code=404, detail=f"No historical data found for team: {team_name}")
+        
+        team_data['Season'] = team_data['Season'].astype(int)
+        team_data = team_data.sort_values('Season')
+        team_avg_rating = team_data['Normalized_Rating'].mean()
+        team_avg_net = team_data['NET_Score'].mean()
+        
+        seasons = sorted(team_data['Season'].unique())
+        
+        # Create visualization
+        fig, ax = plt.subplots(figsize=(10, 7), dpi=150)
+        fig.patch.set_facecolor('#CECEB2')
+        ax.set_facecolor('#CECEB2')
+        
+        # Add elite box
+        x_start = 4
+        x_end = 5
+        y_start = 0.85
+        y_end = 1
+        box_width = x_end - x_start
+        box_height = y_end - y_start
+        
+        elite_box = FancyBboxPatch((x_start, y_start),
+                                width=box_width,
+                                height=box_height,
+                                boxstyle="round,pad=0.02,rounding_size=0.05",
+                                edgecolor="#D51F1F",
+                                facecolor="#C8416E",
+                                linewidth=2,
+                                alpha=0.35,
+                                mutation_scale=0.05,
+                                zorder=1)
+        ax.add_patch(elite_box)
+        
+        for spine in ax.spines.values():
+            spine.set_edgecolor('black')
+            spine.set_linewidth(1)
+        
+        # Highlight national champions
+        champions = [
+            ("Fresno St.", 2008), ("LSU", 2009), ("South Carolina", 2010), ("South Carolina", 2011),
+            ('Arizona', 2012), ('UCLA', 2013), ('Vanderbilt', 2014), ('Virginia', 2015),
+            ('Coastal Carolina', 2016), ('Florida', 2017), ('Oregon St.', 2018),
+            ('Vanderbilt', 2019), ("Mississippi St.", 2021), ('Ole Miss', 2022), 
+            ('LSU', 2023), ('Tennessee', 2024), ('LSU', 2025)
+        ]
+        champ_df = all_data[all_data.apply(lambda row: (row['Team'], row['Season']) in champions, axis=1)]
+        
+        if not champ_df.empty:
+            ax.scatter(champ_df['Normalized_Rating'], champ_df['NET_Score'],
+                      color='gold', edgecolor='black', s=200, zorder=5, alpha=0.3)
+            for _, row in champ_df.iterrows():
+                ax.text(row['Normalized_Rating'], row['NET_Score'], str(row['Season'])[2:],
+                       fontsize=7, ha='center', va='center', color='black', fontweight='bold')
+        
+        # Plot team seasons
+        for season in seasons:
+            season_data = team_data[team_data['Season'] == season]
+            ax.scatter(season_data['Normalized_Rating'], season_data['NET_Score'],
+                      color='darkgreen', edgecolor='black', s=400, label=str(season), alpha=0.7)
+        
+        for _, row in team_data.iterrows():
+            ax.text(row['Normalized_Rating'], row['NET_Score'], str(row['Season'])[2:],
+                   fontsize=9, ha='center', va='center', color='black', fontweight='bold')
+        
+        # Add labels and styling
+        plt.title(f"Team Strength vs NET for {team_name} Since 2008 (excl. '20)", 
+                 fontsize=18, color='black', pad=30, fontweight='bold')
+        plt.suptitle("@PEARatings", y=0.865, fontsize=16, ha='center', va='center')
+        ax.set_xlabel('Team Strength', color='black', fontsize=14)
+        ax.set_ylabel('NET Score', color='black', fontsize=14)
+        ax.tick_params(colors='black')
+        ax.grid(True, linestyle='--', alpha=0.4, color='gray')
+        
+        # Add average lines
+        x_mean = all_data['Normalized_Rating'].mean()
+        y_mean = all_data['NET_Score'].mean()
+        
+        if team_data['Normalized_Rating'].min() < x_mean:
+            ax.axvline(x_mean, linestyle='--', linewidth=1, color='red')
+            ax.text(x_mean-0.02, ax.get_ylim()[1]-0.02, f'Avg Rating', 
+                   color='red', fontsize=10, ha='right', va='top', rotation=90)
+        
+        if team_data['NET_Score'].min() < y_mean:
+            ax.axhline(y_mean, linestyle='--', linewidth=1, color='red')
+            ax.text(ax.get_xlim()[1]-0.02, y_mean-0.005, f'Avg NET', 
+                   color='red', fontsize=10, ha='right', va='top')
+        
+        # Add legend
+        avg_rating_patch = mpatches.Patch(color='none', label=f'Average Rating is 0', linewidth=0)
+        team_rating_patch = mpatches.Patch(color='none', label=f"{team_name} avg: {team_avg_rating:.2f}")
+        avg_net_patch = mpatches.Patch(color='none', label=f'Average NET is 0.56', linewidth=0)
+        team_net_patch = mpatches.Patch(color='none', label=f"{team_name} avg: {team_avg_net:.2f}")
+        
+        leg = ax.legend(handles=[avg_rating_patch, team_rating_patch, avg_net_patch, team_net_patch],
+                       fontsize=11,
+                       title_fontsize=12,
+                       loc='best',
+                       frameon=True,
+                       facecolor='#4B5320',
+                       edgecolor='black',
+                       handlelength=0,
+                       handletextpad=0,
+                       borderpad=1,
+                       labelspacing=0.6)
+        
+        for text in leg.get_texts():
+            text.set_ha('center')
+        
+        plt.tight_layout()
+        
+        # Save to BytesIO
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
+        buf.seek(0)
+        plt.close()
+        
+        return StreamingResponse(buf, media_type="image/png")
+        
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error generating historical performance: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/cbase/teams")
+def get_teams():
+    """Get list of all teams"""
+    try:
+        modeling_stats, _ = load_baseball_data()
+        teams = sorted(modeling_stats['Team'].unique().tolist())
+        return {"teams": teams}
+    except Exception as e:
+        print(f"Error getting teams: {e}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 if __name__ == "__main__":

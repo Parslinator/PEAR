@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -18,10 +18,41 @@ export default function ImageGallery({ title, type, year, week }: Props) {
   const [selectedImage, setSelectedImage] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredImages, setFilteredImages] = useState<string[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedDropdownIndex, setSelectedDropdownIndex] = useState(-1);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchImages();
   }, [year, week, type]);
+
+  // Filter images based on search term
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredImages(images);
+    } else {
+      const filtered = images.filter((image) =>
+        image.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredImages(filtered);
+    }
+    setSelectedDropdownIndex(-1);
+  }, [searchTerm, images]);
+
+  // Handle click outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchImages = async () => {
     setLoading(true);
@@ -30,9 +61,11 @@ export default function ImageGallery({ title, type, year, week }: Props) {
       const response = await axios.get(`${API_URL}/api/${endpoint}/${year}/${week}`);
       const imageList = response.data.images;
       setImages(imageList);
+      setFilteredImages(imageList);
       if (imageList.length > 0) {
         setSelectedImage(imageList[0]);
         setCurrentIndex(0);
+        setSearchTerm('');
       }
     } catch (error) {
       console.error('Error fetching images:', error);
@@ -44,6 +77,54 @@ export default function ImageGallery({ title, type, year, week }: Props) {
   const handleImageChange = (image: string, index: number) => {
     setSelectedImage(image);
     setCurrentIndex(index);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setShowDropdown(true);
+  };
+
+  const handleImageSelect = (image: string) => {
+    const index = images.indexOf(image);
+    setSelectedImage(image);
+    setCurrentIndex(index);
+    setSearchTerm(image.replace('.png', '').replace(/_/g, ' '));
+    setShowDropdown(false);
+    setSelectedDropdownIndex(-1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showDropdown) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        setShowDropdown(true);
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedDropdownIndex((prev) =>
+          prev < filteredImages.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedDropdownIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedDropdownIndex >= 0 && selectedDropdownIndex < filteredImages.length) {
+          handleImageSelect(filteredImages[selectedDropdownIndex]);
+        } else if (filteredImages.length === 1) {
+          handleImageSelect(filteredImages[0]);
+        }
+        break;
+      case 'Escape':
+        setShowDropdown(false);
+        setSelectedDropdownIndex(-1);
+        break;
+    }
   };
 
   const handlePrevious = () => {
@@ -98,19 +179,63 @@ export default function ImageGallery({ title, type, year, week }: Props) {
       </div>
       
       <div className="p-6">
-        <div className="mb-4">
-          <select
-            value={selectedImage}
-            onChange={(e) => handleImageChange(e.target.value, images.indexOf(e.target.value))}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            {images.map((image, index) => (
-              <option key={image} value={image}>
-                {image.replace('.png', '').replace(/_/g, ' ')}
-              </option>
-            ))}
-          </select>
-        </div>
+        {type === 'profiles' ? (
+          // Searchable dropdown for profiles
+          <div className="mb-4 relative" ref={dropdownRef}>
+            <input
+              ref={inputRef}
+              type="text"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onFocus={() => setShowDropdown(true)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type to search team profiles..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              autoComplete="off"
+            />
+            
+            {/* Dropdown menu */}
+            {showDropdown && filteredImages.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                {filteredImages.map((image, index) => (
+                  <div
+                    key={image}
+                    onClick={() => handleImageSelect(image)}
+                    className={`px-4 py-2 cursor-pointer ${
+                      index === selectedDropdownIndex
+                        ? 'bg-blue-100'
+                        : 'hover:bg-gray-100'
+                    }`}
+                  >
+                    {image.replace('.png', '').replace(/_/g, ' ')}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* No results message */}
+            {showDropdown && filteredImages.length === 0 && searchTerm && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+                <div className="px-4 py-2 text-gray-500">No profiles found</div>
+              </div>
+            )}
+          </div>
+        ) : (
+          // Regular select dropdown for games
+          <div className="mb-4">
+            <select
+              value={selectedImage}
+              onChange={(e) => handleImageChange(e.target.value, images.indexOf(e.target.value))}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {images.map((image, index) => (
+                <option key={image} value={image}>
+                  {image.replace('.png', '').replace(/_/g, ' ')}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="relative bg-gray-100 rounded-lg overflow-hidden">
           <img
