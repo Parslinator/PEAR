@@ -830,7 +830,7 @@ def get_image(year: int, week: int, image_type: str, filename: str):
 def get_logo():
     """Serve the PEAR logo"""
     # Path to the logo on your local machine
-    logo_path = os.path.join(BACKEND_DIR, "PEAR", "pear_logo.jpg")
+    logo_path = os.path.join(os.path.dirname(BACKEND_DIR), "PEAR", "pear_logo.jpg")
     
     if not os.path.exists(logo_path):
         raise HTTPException(status_code=404, detail="Logo not found")
