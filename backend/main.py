@@ -33,14 +33,14 @@ app = FastAPI(title="PEAR Ratings API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",  # Local development
-        "https://your-frontend-name.onrender.com",  # Production (update after deploying)
+        "http://localhost:3000",
+        "http://129.212.189.128",  # Add your droplet IP
+        "https://your-domain.com",  # Add when you get a domain
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # Global constants
 GLOBAL_HFA = 3
 
