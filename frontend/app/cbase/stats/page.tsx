@@ -331,7 +331,7 @@ export default function CbaseStatsPage() {
                             <td className="px-2 py-2 font-semibold text-gray-900 dark:text-white text-sm">
                               <div className="flex items-center gap-2">
                                 <img 
-                                  src={`http://localhost:8000/api/baseball-logo/${encodeURIComponent(team.Team)}`}
+                                  src={`${API_URL}/api/baseball-logo/${encodeURIComponent(team.Team)}`}
                                   alt={`${team.Team} logo`}
                                   className="w-6 h-6 object-contain"
                                   onError={(e) => {

@@ -3,6 +3,8 @@
 import { useState, useMemo } from 'react';
 import { ChevronUp, ChevronDown, Download } from 'lucide-react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 interface RatingData {
   Team: string;
   Rating: number;
@@ -274,7 +276,7 @@ export default function RatingsTable({ data }: Props) {
                   <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">
                     <div className="flex items-center gap-2">
                       <img 
-                        src={`http://localhost:8000/api/football-logo/${encodeURIComponent(item.Team)}`}
+                        src={`${API_URL}/api/football-logo/${encodeURIComponent(item.Team)}`}
                         alt={`${item.Team} logo`}
                         className="w-6 h-6 object-contain"
                         onError={(e) => {

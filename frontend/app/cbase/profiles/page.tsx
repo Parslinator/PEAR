@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export default function TeamAnalysisPage() {
   const [teamName, setTeamName] = useState("");
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -65,7 +67,7 @@ export default function TeamAnalysisPage() {
     if (teamsLoaded) return;
     
     try {
-      const response = await fetch("http://localhost:8000/api/cbase/teams");
+      const response = await fetch(`${API_URL}/api/cbase/teams`);
       if (!response.ok) {
         throw new Error("Failed to load teams");
       }
@@ -134,7 +136,7 @@ export default function TeamAnalysisPage() {
     setError(null);
 
     try {
-      const response = await fetch("http://localhost:8000/api/cbase/team-profile", {
+      const response = await fetch(`${API_URL}/api/cbase/team-profile`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -171,7 +173,7 @@ export default function TeamAnalysisPage() {
     setError(null);
 
     try {
-      const response = await fetch("http://localhost:8000/api/cbase/historical-performance", {
+      const response = await fetch(`${API_URL}/api/cbase/historical-performance`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

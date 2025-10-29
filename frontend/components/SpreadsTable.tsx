@@ -3,6 +3,8 @@
 import { useState, useMemo } from 'react';
 import { Download, X } from 'lucide-react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 interface SpreadData {
   start_date: string;
   start_time: string;
@@ -97,13 +99,13 @@ export default function SpreadsBoxes({ data, year, week }: Props) {
 
   const getGamePreviewUrl = (homeTeam: string, awayTeam: string) => {
     const filename = `${homeTeam} vs ${awayTeam}`;
-    const url = `http://localhost:8000/api/game-preview/${year}/${week}/${encodeURIComponent(filename)}`;
+    const url = `${API_URL}/api/game-preview/${year}/${week}/${encodeURIComponent(filename)}`;
     console.log('Game preview URL:', url);
     return url;
   };
 
   const getLogoUrl = (teamName: string) => {
-    const url = `http://localhost:8000/api/football-logo/${encodeURIComponent(teamName)}`;
+    const url = `${API_URL}/api/football-logo/${encodeURIComponent(teamName)}`;
     return url;
   };
 

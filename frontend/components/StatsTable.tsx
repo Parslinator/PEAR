@@ -3,6 +3,8 @@
 import { useState, useMemo } from 'react';
 import { ChevronUp, ChevronDown, Download } from 'lucide-react';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 interface StatsData {
   team: string;
   power_rating: number;
@@ -394,7 +396,7 @@ export default function StatsTable({ data }: Props) {
                   <td className="px-2 py-2 font-semibold text-gray-900 dark:text-white text-sm">
                     <div className="flex items-center gap-2">
                       <img 
-                        src={`http://localhost:8000/api/football-logo/${encodeURIComponent(item.team)}`}
+                        src={`${API_URL}/api/football-logo/${encodeURIComponent(item.team)}`}
                         alt={`${item.team} logo`}
                         className="w-6 h-6 object-contain"
                         onError={(e) => {

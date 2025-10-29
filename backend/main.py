@@ -32,7 +32,10 @@ app = FastAPI(title="PEAR Ratings API")
 # CORS middleware to allow frontend to call backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your domain
+    allow_origins=[
+        "http://localhost:3000",  # Local development
+        "https://your-frontend-name.onrender.com",  # Production (update after deploying)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
