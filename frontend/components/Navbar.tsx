@@ -1,24 +1,28 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { ChevronDown, DollarSign, Moon, Sun } from 'lucide-react';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { DollarSign, Moon, Sun } from 'lucide-react';
 import Image from 'next/image';
+import { useTheme } from '../app/contexts/ThemeContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-interface ThemeContextType {
-  darkMode: boolean;
-  toggleDarkMode: () => void;
-}
-
-export default function Navbar({ darkMode, toggleDarkMode }: ThemeContextType) {
+export default function Navbar() {
   const pathname = usePathname();
-  const [sportDropdownOpen, setSportDropdownOpen] = useState(false);
+  const router = useRouter();
+  const { darkMode, toggleDarkMode } = useTheme();
 
   // Determine current sport from pathname
   const isCBASE = pathname.startsWith('/cbase');
+
+  const toggleSport = () => {
+    if (isCBASE) {
+      router.push('/');
+    } else {
+      router.push('/cbase');
+    }
+  };
 
   // Navigation items for each sport
   const footballNavItems = [
@@ -35,13 +39,12 @@ export default function Navbar({ darkMode, toggleDarkMode }: ThemeContextType) {
     { name: 'Tournament', path: '/cbase/tournament' },
     { name: 'Matchups', path: '/cbase/matchups' },
     { name: 'Profiles', path: '/cbase/profiles' },
-    { name: 'Conferences', path: '/cbase/conferences' },
   ];
 
   const navItems = isCBASE ? baseballNavItems : footballNavItems;
 
   return (
-    <nav className="text-gray-900 shadow-lg fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: '#CECEB2' }}>
+    <nav className="text-gray-900 dark:text-gray-100 shadow-lg fixed top-0 left-0 right-0 z-50 bg-[#CECEB2] dark:bg-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo/Brand with Sport Switcher */}
@@ -59,51 +62,22 @@ export default function Navbar({ darkMode, toggleDarkMode }: ThemeContextType) {
                 unoptimized
               />
               <div>
-                <div className="text-xl font-bold text-gray-900">
+                <div className="text-xl font-bold text-gray-900 dark:text-gray-100">
                   {isCBASE ? 'CBASE PEAR' : 'CFB PEAR'}
                 </div>
-                <div className="text-xs text-gray-700">
+                <div className="text-xs text-gray-700 dark:text-gray-300">
                   {isCBASE ? 'College Baseball Analytics' : 'College Football Analytics'}
                 </div>
               </div>
             </Link>
 
-            {/* Sport Switcher Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setSportDropdownOpen(!sportDropdownOpen)}
-                className="flex items-center space-x-1 px-4 py-2 rounded-lg transition-colors text-white font-semibold"
-                style={{ backgroundColor: '#fc8884' }}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5645f'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fc8884'}
-              >
-                <span>
-                  {isCBASE ? 'Baseball' : 'Football'}
-                </span>
-                <ChevronDown className="w-4 h-4" />
-              </button>
-
-              {sportDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-xl overflow-hidden z-50">
-                  <Link
-                    href="/"
-                    onClick={() => setSportDropdownOpen(false)}
-                    className="block px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors"
-                  >
-                    <div className="font-semibold">Football</div>
-                    <div className="text-xs text-gray-500">CFB PEAR</div>
-                  </Link>
-                  <Link
-                    href="/cbase"
-                    onClick={() => setSportDropdownOpen(false)}
-                    className="block px-4 py-3 text-gray-700 hover:bg-blue-50 transition-colors border-t border-gray-100"
-                  >
-                    <div className="font-semibold">Baseball</div>
-                    <div className="text-xs text-gray-500">CBASE PEAR</div>
-                  </Link>
-                </div>
-              )}
-            </div>
+            {/* Sport Switcher Toggle Button */}
+            <button
+              onClick={toggleSport}
+              className="px-4 py-2 rounded-lg transition-colors text-white font-semibold bg-[#fc8884] hover:bg-[#f5645f]"
+            >
+              {isCBASE ? 'Baseball' : 'Football'}
+            </button>
           </div>
 
           {/* Navigation Links */}
@@ -117,7 +91,7 @@ export default function Navbar({ darkMode, toggleDarkMode }: ThemeContextType) {
                   className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                     isActive
                       ? 'bg-gray-700 text-white'
-                      : 'text-gray-700 hover:bg-gray-600 hover:text-white'
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-gray-600 hover:text-white'
                   }`}
                 >
                   {item.name}
@@ -148,7 +122,7 @@ export default function Navbar({ darkMode, toggleDarkMode }: ThemeContextType) {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden">
-            <button className="text-gray-700 hover:text-gray-900 p-2">
+            <button className="text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white p-2">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
@@ -168,13 +142,21 @@ export default function Navbar({ darkMode, toggleDarkMode }: ThemeContextType) {
                   className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                     isActive
                       ? 'bg-gray-700 text-white'
-                      : 'text-gray-700 hover:bg-gray-600 hover:text-white'
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-gray-600 hover:text-white'
                   }`}
                 >
                   {item.name}
                 </Link>
               );
             })}
+            
+            {/* Sport Switcher - Mobile */}
+            <button
+              onClick={toggleSport}
+              className="flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-semibold transition-colors text-white bg-[#fc8884] hover:bg-[#f5645f]"
+            >
+              <span>{isCBASE ? '⚾ Switch to Football' : '🏈 Switch to Baseball'}</span>
+            </button>
             
             {/* Dark Mode Toggle - Mobile */}
             <button

@@ -24,6 +24,8 @@ from matplotlib.patches import FancyBboxPatch
 import matplotlib.patches as mpatches
 import glob
 import re
+import random
+from matplotlib.colors import LinearSegmentedColormap
 
 app = FastAPI(title="PEAR Ratings API")
 
@@ -44,9 +46,9 @@ BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 # Go up one level to get the parent directory, then into PEAR
 BASE_PATH = os.path.join(os.path.dirname(BACKEND_DIR), "PEAR", "PEAR Football")
 
-print(f"Backend directory: {BACKEND_DIR}")
-print(f"Base path for data: {BASE_PATH}")
-print(f"Base path exists: {os.path.exists(BASE_PATH)}")
+# print(f"Backend directory: {BACKEND_DIR}")
+# print(f"Base path for data: {BASE_PATH}")
+# print(f"Base path exists: {os.path.exists(BASE_PATH)}")
 
 # Calculate current week
 central = pytz.timezone("US/Central")
@@ -75,8 +77,8 @@ current_season = datetime.today().year
 # Load team logos
 team_logos = {}
 logo_folder = os.path.join(BASE_PATH, "logos")
-print(f"Logo folder path: {logo_folder}")
-print(f"Logo folder exists: {os.path.exists(logo_folder)}")
+# print(f"Logo folder path: {logo_folder}")
+# print(f"Logo folder exists: {os.path.exists(logo_folder)}")
 
 if os.path.exists(logo_folder):
     for filename in os.listdir(logo_folder):
@@ -95,9 +97,9 @@ def get_football_logo(team_name: str):
     logo_filename = f"{team_name.replace(' ', '_')}.png"
     logo_path = os.path.join(logo_folder, logo_filename)
     
-    print(f"Looking for logo at: {logo_path}")
-    print(f"Logo folder: {logo_folder}")
-    print(f"File exists: {os.path.exists(logo_path)}")
+    # print(f"Looking for logo at: {logo_path}")
+    # print(f"Logo folder: {logo_folder}")
+    # print(f"File exists: {os.path.exists(logo_path)}")
     
     if not os.path.exists(logo_path):
         raise HTTPException(status_code=404, detail=f"Logo not found at: {logo_path}")
@@ -111,8 +113,8 @@ def get_game_preview(year: int, week: int, filename: str):
     image_filename = f"{filename}.png"
     image_path = os.path.join(BASE_PATH, f"y{year}", "Visuals", f"week_{week}", "Games", image_filename)
     
-    print(f"Looking for game preview at: {image_path}")
-    print(f"File exists: {os.path.exists(image_path)}")
+    # print(f"Looking for game preview at: {image_path}")
+    # print(f"File exists: {os.path.exists(image_path)}")
     
     if not os.path.exists(image_path):
         raise HTTPException(status_code=404, detail=f"Game preview not found at: {image_path}")
@@ -137,10 +139,10 @@ def load_data(year: int, week: int):
         ratings_path = os.path.join(BASE_PATH, f"y{year}", "Ratings", f"PEAR_week{week}.csv")
         data_path = os.path.join(BASE_PATH, f"y{year}", "Data", f"team_data_week{week}.csv")
         
-        print(f"Attempting to load ratings from: {ratings_path}")
-        print(f"Attempting to load data from: {data_path}")
-        print(f"Ratings file exists: {os.path.exists(ratings_path)}")
-        print(f"Data file exists: {os.path.exists(data_path)}")
+        # print(f"Attempting to load ratings from: {ratings_path}")
+        # print(f"Attempting to load data from: {data_path}")
+        # print(f"Ratings file exists: {os.path.exists(ratings_path)}")
+        # print(f"Data file exists: {os.path.exists(data_path)}")
         
         if not os.path.exists(ratings_path):
             raise HTTPException(status_code=404, detail=f"Ratings file not found at: {ratings_path}")
@@ -596,8 +598,8 @@ def get_spreads(year: int, week: int):
     """Get weekly spreads"""
     try:
         spreads_path = os.path.join(BASE_PATH, f"y{year}", "Spreads", f"spreads_tracker_week{week}.xlsx")
-        print(f"Attempting to load spreads from: {spreads_path}")
-        print(f"Spreads file exists: {os.path.exists(spreads_path)}")
+        # print(f"Attempting to load spreads from: {spreads_path}")
+        # print(f"Spreads file exists: {os.path.exists(spreads_path)}")
         
         if not os.path.exists(spreads_path):
             raise HTTPException(status_code=404, detail=f"Spreads file not found at: {spreads_path}")
@@ -736,8 +738,8 @@ def get_historical_ratings():
     """Get normalized ratings across all years"""
     try:
         hist_path = os.path.join(BASE_PATH, "normalized_power_rating_across_years.csv")
-        print(f"Attempting to load historical data from: {hist_path}")
-        print(f"File exists: {os.path.exists(hist_path)}")
+        # print(f"Attempting to load historical data from: {hist_path}")
+        # print(f"File exists: {os.path.exists(hist_path)}")
         
         if not os.path.exists(hist_path):
             raise HTTPException(status_code=404, detail=f"Historical data file not found at: {hist_path}")
@@ -840,8 +842,24 @@ BASEBALL_BASE_PATH = os.path.join(os.path.dirname(BACKEND_DIR), "PEAR", "PEAR Ba
 BASEBALL_CURRENT_SEASON = 2025
 BASEBALL_HFA = 0.3  # Home field advantage in runs for baseball
 
-print(f"Baseball base path: {BASEBALL_BASE_PATH}")
-print(f"Baseball base path exists: {os.path.exists(BASEBALL_BASE_PATH)}")
+# print(f"Baseball base path: {BASEBALL_BASE_PATH}")
+# print(f"Baseball base path exists: {os.path.exists(BASEBALL_BASE_PATH)}")
+
+@app.get("/api/baseball-logo/{team_name}")
+def get_baseball_logo(team_name: str):
+    """Serve team logo"""
+    # Replace spaces with underscores for the filename
+    logo_filename = f"{team_name}.png"
+    logo_path = os.path.join(BASEBALL_BASE_PATH, "logos", logo_filename)
+
+    # print(f"Looking for logo at: {logo_path}")
+    # print(f"Logo folder: {logo_folder}")
+    # print(f"File exists: {os.path.exists(logo_path)}")
+    
+    if not os.path.exists(logo_path):
+        raise HTTPException(status_code=404, detail=f"Logo not found at: {logo_path}")
+    
+    return FileResponse(logo_path, media_type="image/png")
 
 class BaseballSpreadRequest(BaseModel):
     away_team: str
@@ -2665,6 +2683,984 @@ def get_teams():
         return {"teams": teams}
     except Exception as e:
         print(f"Error getting teams: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+    
+@app.get("/api/cbase/conferences")
+def get_baseball_conferences():
+    """Get list of all conferences"""
+    try:
+        modeling_stats, _ = load_baseball_data()
+        conferences = sorted(modeling_stats['Conference'].unique().tolist())
+        return {"conferences": conferences}
+    except Exception as e:
+        print(f"Error getting conferences: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+###################################
+## CONFERENCE TOURNAMENT SECTION ##
+###################################
+
+def Baseball_PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
+    if location != "Neutral":
+        home_pr += 0.3
+    rating_diff = home_pr - away_pr
+    return round(1 / (1 + 10 ** (-rating_diff / 6)) * 100, 2)
+
+def get_rating(team, stats_df):
+    RATING_ADJUSTMENTS = {
+        "Liberty": 0.3, "Xavier": 0.3, "Southeastern La.": 0.3, "UTRGV": 0.3,
+        "Yale": 0.3, "Omaha": 0.3, "Stetson": 0.3, "Duke": 0.3,
+        "Georgetown": 0.3, "High Point": 0.3, "Col. of Charleston": 0.3,
+        "Illinois St.": 0.3, "Cal St. Fullerton": 0.3, "Wright St.": 0.3
+    }
+    base_rating = stats_df.loc[stats_df["Team"] == team, "Rating"].values[0]
+    return base_rating + RATING_ADJUSTMENTS.get(team, 0)
+
+def simulate_game(team_a, team_b, ratings, location="Neutral"):
+    prob = Baseball_PEAR_Win_Prob(ratings[team_a], ratings[team_b], location=location) / 100
+    return team_a if random.random() < prob else team_b
+
+def simulate_best_of_three_series(team_a, team_b, ratings, location):
+    """
+    Simulate a best-of-three series with team_a as the home team.
+    Returns the winner.
+    """
+    wins = {team_a: 0, team_b: 0}
+    while wins[team_a] < 2 and wins[team_b] < 2:
+        winner = simulate_game(team_a, team_b, ratings, location=location)
+        wins[winner] += 1
+    return team_a if wins[team_a] == 2 else team_b
+
+def plot_tournament_odds_table(final_df, row_height_multiplier, conference, title_y, subtitle_y, cell_height):
+    def normalize(value, min_val, max_val):
+        """Normalize values between 0 and 1 for colormap."""
+        if pd.isna(value) or value == 0:
+            return 0
+        return (value - min_val) / (max_val - min_val)
+
+    min_value = final_df.iloc[:, 1:].replace(0, np.nan).min().min()
+    max_value = final_df.iloc[:, 1:].max().max()
+    
+    cmap = LinearSegmentedColormap.from_list('custom_green', ['#d5f5e3', '#006400'])
+
+    fig, ax = plt.subplots(figsize=(8, len(final_df) * row_height_multiplier), dpi=125)
+    fig.patch.set_facecolor('#CECEB2')
+    ax.axis('tight')
+    ax.axis('off')
+
+    table = ax.table(
+        cellText=final_df.values,
+        colLabels=final_df.columns,
+        cellLoc='center',
+        loc='center',
+        colColours=['#CECEB2'] * len(final_df.columns)
+    )
+
+    for (i, j), cell in table.get_celld().items():
+        cell.set_edgecolor('black')
+        cell.set_linewidth(1.2)
+
+        if i == 0:  # Header row
+            cell.set_facecolor('#CECEB2')
+            cell.set_text_props(fontsize=16, weight='bold', color='black')
+        elif j == 0:  # Team names column
+            cell.set_facecolor('#CECEB2')
+            cell.set_text_props(fontsize=16, weight='bold', color='black')
+        else:
+            value = final_df.iloc[i-1, j]
+            normalized_value = normalize(value, min_value, max_value)
+            cell.set_facecolor(cmap(normalized_value))
+            cell.set_text_props(fontsize=16, weight='bold', color='black')
+            if value <= 0.9:
+                cell.get_text().set_text("<1%")
+            else:
+                cell.get_text().set_text(f"{value:.1f}%")
+        
+        cell.set_height(cell_height)
+
+    plt.text(0, title_y, f'Odds to Win {conference} Tournament', fontsize=24, fontweight='bold', ha='center')
+    plt.text(0, subtitle_y, "@PEARatings", fontsize=16, fontweight='bold', ha='center')
+    return fig
+
+def double_elimination_bracket(teams, stats_and_metrics, num_simulations=1000):
+    """
+    Simulate a 4-team double elimination bracket and return win probabilities.
+    Teams must be provided in seeding order: [seed1, seed2, seed3, seed4]
+    """
+    results = defaultdict(int)
+    r = {team: get_rating(team, stats_and_metrics) for team in teams}
+
+    for _ in range(num_simulations):
+        t1, t2, t3, t4 = teams
+        w1 = simulate_game(t1, t4, r)
+        l1 = t4 if w1 == t1 else t1
+        w2 = simulate_game(t2, t3, r)
+        l2 = t3 if w2 == t2 else t2
+        w3 = simulate_game(l2, l1, r)
+        w4 = simulate_game(w1, w2, r)
+        l4 = w2 if w4 == w1 else w1
+        w5 = simulate_game(l4, w3, r)
+        final_prob = Baseball_PEAR_Win_Prob(r[w4], r[w5]) / 100
+        w6 = w4 if random.random() < final_prob else w5
+
+        # Double-elim logic: if w4 loses once, play again
+        champion = w6 if w6 == w4 else (w4 if random.random() < final_prob else w5)
+        results[champion] += 1
+
+    return defaultdict(float, {team: round(results[team] / num_simulations, 3) for team in teams})
+
+def simulate_overall_tournament(bracket_one_probs, bracket_two_probs, stats_and_metrics, num_simulations=1000):
+    """
+    Simulate a final between two bracket winners using weighted probabilities.
+    Returns a defaultdict with tournament win percentages.
+    """
+    final_results = defaultdict(int)
+
+    bracket_one_teams = list(bracket_one_probs.keys())
+    bracket_two_teams = list(bracket_two_probs.keys())
+    ratings = {team: get_rating(team, stats_and_metrics) for team in bracket_one_teams + bracket_two_teams}
+
+    for _ in range(num_simulations):
+        # Draw winners from each bracket based on their win probabilities
+        winner_one = random.choices(bracket_one_teams, weights=[bracket_one_probs[t] for t in bracket_one_teams])[0]
+        winner_two = random.choices(bracket_two_teams, weights=[bracket_two_probs[t] for t in bracket_two_teams])[0]
+
+        # Simulate the final
+        champ = simulate_best_of_three_series(winner_one, winner_two, ratings, "Neutral")
+        final_results[champ] += 1
+
+    return defaultdict(float, {team: round(wins / num_simulations, 3) for team, wins in final_results.items()})
+
+def two_playin_games_to_four_team_double_elimination(teams, stats_and_metrics, num_simulations=1000):
+    """
+    Simulates a 6-team hybrid tournament:
+    - Seeds 3-6 play two play-in games.
+    - Two winners join seeds 1-2 in a 4-team double elimination bracket.
+    Returns a DataFrame with each team's odds of reaching double elimination and winning the tournament.
+    """
+    made_double_elim = defaultdict(int)
+    tournament_wins = defaultdict(int)
+    r = {team: get_rating(team, stats_and_metrics) for team in teams}
+
+    seeds = {i + 1: teams[i] for i in range(6)}
+
+    for _ in range(num_simulations):
+        # Play-in round
+        gA_winner = simulate_game(seeds[3], seeds[6], r)
+        gB_winner = simulate_game(seeds[4], seeds[5], r)
+
+        double_elim_teams = {seeds[1], seeds[2], gA_winner, gB_winner}
+
+        # Track double elim appearances
+        for team in double_elim_teams:
+            made_double_elim[team] += 1
+
+        # Reseed play-in winners
+        playin_winners = [(s, t) for s, t in seeds.items() if t in [gA_winner, gB_winner]]
+        sorted_winners = sorted(playin_winners, key=lambda x: x[0])
+        lowest_seed_team = sorted_winners[0][1]
+        higher_seed_team = sorted_winners[1][1]
+
+        # Simulate bracket
+        bracket_result = double_elimination_bracket(
+            [seeds[1], seeds[2], lowest_seed_team, higher_seed_team],
+            stats_and_metrics,
+            num_simulations=1
+        )
+        winner = max(bracket_result.items(), key=lambda x: x[1])[0]
+        tournament_wins[winner] += 1
+
+    # Final result formatting
+    results = []
+    for team in teams:
+        reach_double = 1.0 if team in teams[:2] else made_double_elim[team] / num_simulations
+        win_tourney = tournament_wins[team] / num_simulations
+        results.append({
+            "Team": team,
+            "Make Double Elim": round(reach_double * 100, 1),
+            "Win Tournament": round(win_tourney * 100, 1)
+        })
+
+    return pd.DataFrame(results)
+
+def simulate_and_run_8_team_double_elim(teams, stats_and_metrics, num_simulations=1000): 
+    results = defaultdict(int)
+    ratings = {team: get_rating(team, stats_and_metrics) for team in teams}
+
+    for _ in range(num_simulations):
+        # Round 1 matchups (seed-style: 1v8, 2v7, etc.)
+        matchups = [(teams[0], teams[7]), (teams[3], teams[4]), (teams[2], teams[5]), (teams[1], teams[6])]
+
+        # Round 1 (WB)
+        wb_round1_winners = []
+        lb_round1_losers = []
+        for t1, t2 in matchups:
+            winner = simulate_game(t1, t2, ratings, location="Neutral")
+            loser = t2 if winner == t1 else t1
+            wb_round1_winners.append(winner)
+            lb_round1_losers.append(loser)
+
+        # Round 2A (WB)
+        wb_sf1 = simulate_game(wb_round1_winners[0], wb_round1_winners[1], ratings, location="Neutral")
+        wb_sf2 = simulate_game(wb_round1_winners[2], wb_round1_winners[3], ratings, location="Neutral")
+        wb_losers = [t for t in wb_round1_winners if t != wb_sf1 and t != wb_sf2]
+
+        # LB Round 1 (elimination)
+        lb_r1_1 = simulate_game(lb_round1_losers[0], lb_round1_losers[1], ratings, location="Neutral")
+        lb_r1_2 = simulate_game(lb_round1_losers[2], lb_round1_losers[3], ratings, location="Neutral")
+
+        # LB Round 2
+        lb_r2_1 = simulate_game(lb_r1_1, wb_losers[0], ratings, location="Neutral")
+        lb_r2_2 = simulate_game(lb_r1_2, wb_losers[1], ratings, location="Neutral")
+
+        # LB Semifinal
+        lb_sf = simulate_game(lb_r2_1, lb_r2_2, ratings, location="Neutral")
+
+        # WB Final
+        wb_final = simulate_game(wb_sf1, wb_sf2, ratings, location="Neutral")
+        wb_final_loser = wb_sf2 if wb_final == wb_sf1 else wb_sf1
+
+        # LB Final
+        lb_final = simulate_game(lb_sf, wb_final_loser, ratings, location="Neutral")
+
+        # Championship
+        champ = simulate_game(wb_final, lb_final, ratings, location="Neutral")
+
+        results[champ] += 1
+
+    # Return the results in a DataFrame
+    df = pd.DataFrame([
+        {"Team": team, "Win Tournament": round(results[team] / num_simulations * 100, 1)}
+        for team in teams
+    ])
+
+    return df
+
+def single_elimination_16_teams(seed_order, stats_and_metrics, num_simulations=1000):
+    rounds = ["Round 1", "Round 2", "Quarterfinals", "Semifinals", "Final", "Champion"]
+    team_stats = {team: {r: 0 for r in rounds} for team in seed_order}
+    
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
+
+    for _ in range(num_simulations):
+        progress = {team: None for team in seed_order}
+
+        # Round 1 (Play-in)
+        play_in_pairs = [(8, 15), (9, 14), (10, 13), (11, 12)]
+        round1_winners = [simulate_game(seed_order[a], seed_order[b], ratings, location="Neutral") for a, b in play_in_pairs]
+        for winner, (a, b) in zip(round1_winners, play_in_pairs):
+            progress[seed_order[a]] = progress[seed_order[b]] = "Round 1"
+            progress[winner] = "Round 2"
+
+        # Round 2
+        round2_winners = [simulate_game(seed_order[seed], round1_winners[i], ratings, location="Neutral") for i, seed in enumerate([4, 5, 6, 7])]
+        for winner, seed in zip(round2_winners, [4, 5, 6, 7]):
+            progress[seed_order[seed]] = progress[round1_winners[seed-4]] = "Round 2"
+            progress[winner] = "Quarterfinals"
+
+        # Quarterfinals
+        qf_winners = [simulate_game(seed_order[seed], round2_winners[i], ratings, location="Neutral") for i, seed in enumerate([0, 1, 2, 3])]
+        for winner, seed in zip(qf_winners, [0, 1, 2, 3]):
+            progress[seed_order[seed]] = progress[round2_winners[seed]] = "Quarterfinals"
+            progress[winner] = "Semifinals"
+
+        # Semifinals
+        sf_winners = [simulate_game(qf_winners[i], qf_winners[i+1], ratings, location="Neutral") for i in [0, 2]]
+        for winner in sf_winners:
+            progress[winner] = "Final"
+
+        # Final
+        winner = simulate_game(sf_winners[0], sf_winners[1], ratings, location="Neutral")
+        progress[winner] = "Champion"
+
+        # Record outcomes
+        for team, reached in progress.items():
+            if reached:
+                for i in range(rounds.index(reached) + 1):
+                    team_stats[team][rounds[i]] += 1
+
+    # Convert counts to percentages
+    result_df = pd.DataFrame.from_dict(team_stats, orient="index")
+    result_df = result_df.applymap(lambda x: round(100 * x / num_simulations, 1))
+    result_df = result_df.drop(columns=["Round 1"]).reset_index().rename(columns={"index": "Team"})
+    
+    return result_df
+
+def single_elimination_14_teams(seed_order, stats_and_metrics, num_simulations=1000):
+    rounds = ["Round 1", "Quarterfinals", "Semifinals", "Final", "Champion"]
+    team_stats = {team: {r: 0 for r in rounds} for team in seed_order}
+    
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
+
+    for _ in range(num_simulations):
+        progress = {team: None for team in seed_order}
+
+        # Round 1: Seeds 5–12 play-in
+        play_in_pairs = [(4, 11), (5, 10), (6, 9), (7, 8)]
+        round1_winners = [simulate_game(seed_order[a], seed_order[b], ratings, location="Neutral") for a, b in play_in_pairs]
+        for winner, (a, b) in zip(round1_winners, play_in_pairs):
+            progress[seed_order[a]] = progress[seed_order[b]] = "Round 1"
+            progress[winner] = "Quarterfinals"
+
+        # Quarterfinals: Seeds 1–4 vs Round 1 winners
+        qf_winners = [simulate_game(seed_order[seed], round1_winners[i], ratings, location="Neutral") for i, seed in enumerate([0, 1, 2, 3])]
+        for winner, seed in zip(qf_winners, [0, 1, 2, 3]):
+            progress[seed_order[seed]] = progress[round1_winners[seed-4]] = "Quarterfinals"
+            progress[winner] = "Semifinals"
+
+        # Semifinals
+        sf_winners = [simulate_game(qf_winners[i], qf_winners[i+1], ratings, location="Neutral") for i in [0, 2]]
+        for winner in sf_winners:
+            progress[winner] = "Final"
+
+        # Final
+        winner = simulate_game(sf_winners[0], sf_winners[1], ratings, location="Neutral")
+        progress[winner] = "Champion"
+
+        # Record outcomes
+        for team, reached in progress.items():
+            if reached:
+                for i in range(rounds.index(reached) + 1):
+                    team_stats[team][rounds[i]] += 1
+
+    # Format result as DataFrame
+    result_df = pd.DataFrame.from_dict(team_stats, orient="index")
+    result_df = result_df.applymap(lambda x: round(100 * x / num_simulations, 1))
+    result_df = result_df.drop(columns=["Round 1"]).reset_index().rename(columns={"index": "Team"})
+
+    return result_df
+
+def double_elimination_7_teams(seed_order, stats_and_metrics, num_simulations=1000):
+    rounds = ["Double Elim", "Win Tournament"]
+    team_stats = {team: {r: 0 for r in rounds} for team in seed_order}
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
+
+    for _ in range(num_simulations):
+        progress = defaultdict(lambda: {"Double Elim": 0, "Win Tournament": 0})
+        winners_r1 = [simulate_game(seed_order[1], seed_order[6], ratings, location="Neutral"),
+                      simulate_game(seed_order[2], seed_order[5], ratings, location="Neutral"),
+                      simulate_game(seed_order[3], seed_order[4], ratings, location="Neutral")]
+        losers_r1 = [team for team in [seed_order[1], seed_order[6], seed_order[2], seed_order[5], seed_order[3], seed_order[4]] if team not in winners_r1]
+
+        # Round 1 - Mark all teams
+        for t in winners_r1 + losers_r1 + [seed_order[0]]:
+            progress[t]["Double Elim"] += 1
+
+        # Round 2 (Winners Bracket)
+        wb2_winners = [simulate_game(seed_order[0], winners_r1[0], ratings, location="Neutral"),
+                       simulate_game(winners_r1[1], winners_r1[2], ratings, location="Neutral")]
+
+        # Loser's bracket games
+        lb1 = simulate_game(losers_r1[0], losers_r1[1], ratings, location="Neutral")
+        lb2 = simulate_game(losers_r1[2], wb2_winners[0], ratings, location="Neutral")
+        lb3 = simulate_game(wb2_winners[1], lb1, ratings, location="Neutral")
+
+        # Loser's Bracket Final
+        lb_final = simulate_game(lb2, lb3, ratings, location="Neutral")
+
+        # Winner's Bracket Final
+        wb_final = simulate_game(wb2_winners[0], wb2_winners[1], ratings, location="Neutral")
+
+        # Championship
+        champ = simulate_game(wb_final, lb_final, ratings, location="Neutral") if wb_final != lb_final else wb_final
+
+        progress[champ]["Win Tournament"] += 1
+
+        # Record outcomes
+        for team in progress:
+            for r in rounds:
+                team_stats[team][r] += progress[team][r]
+
+    # Format result as DataFrame
+    df = pd.DataFrame.from_dict(team_stats, orient="index")
+    df = df.applymap(lambda x: round(100 * x / num_simulations, 1)).reset_index().rename(columns={"index": "Team"}).drop(columns=["Double Elim"])
+    return df
+
+def double_elimination_6_teams(seed_order, stats_and_metrics, num_simulations=1000):
+    rounds = ["Double Elim", "Win Tournament"]
+    team_stats = {team: {r: 0 for r in rounds} for team in seed_order}
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
+
+    for _ in range(num_simulations):
+        progress = defaultdict(lambda: {"Double Elim": 0, "Win Tournament": 0})
+
+        # Round 1: #3 vs #6, #4 vs #5
+        winners_r1 = [simulate_game(seed_order[2], seed_order[5], ratings, location="Neutral"),
+                      simulate_game(seed_order[3], seed_order[4], ratings, location="Neutral")]
+        losers_r1 = [team for team in [seed_order[2], seed_order[5], seed_order[3], seed_order[4]] if team not in winners_r1]
+
+        # Mark all teams in Round 1
+        for t in winners_r1 + losers_r1 + [seed_order[0], seed_order[1]]:
+            progress[t]["Double Elim"] += 1
+
+        # Round 2: Winners Bracket
+        wb2_winners = [simulate_game(seed_order[0], winners_r1[0], ratings, location="Neutral"),
+                       simulate_game(seed_order[1], winners_r1[1], ratings, location="Neutral")]
+
+        # Elimination games
+        lb1 = simulate_game(losers_r1[0], losers_r1[1], ratings, location="Neutral")
+        lb2 = simulate_game(wb2_winners[0], lb1, ratings, location="Neutral")
+        lb3 = simulate_game(wb2_winners[1], lb2, ratings, location="Neutral")
+
+        # Loser's Bracket Final
+        lb_final = lb3
+
+        # Winner's Bracket Final
+        wb_final = simulate_game(wb2_winners[0], wb2_winners[1], ratings, location="Neutral")
+
+        # Championship
+        champ = simulate_game(wb_final, lb_final, ratings, location="Neutral") if wb_final != lb_final else wb_final
+
+        progress[champ]["Win Tournament"] += 1
+
+        # Record outcomes
+        for team in progress:
+            for r in rounds:
+                team_stats[team][r] += progress[team][r]
+
+    # Format result as DataFrame
+    df = pd.DataFrame.from_dict(team_stats, orient="index")
+    df = df.applymap(lambda x: round(100 * x / num_simulations, 1)).reset_index().rename(columns={"index": "Team"}).drop(columns=['Double Elim'])
+    return df
+
+def simulate_pool_play_tournament(seed_order, stats_and_metrics, num_simulations=1000):
+    pools = {
+        "A": [seed_order[0], seed_order[7], seed_order[11]],
+        "B": [seed_order[1], seed_order[6], seed_order[10]],
+        "C": [seed_order[2], seed_order[5], seed_order[9]],
+        "D": [seed_order[3], seed_order[4], seed_order[8]],
+    }
+    rounds = ["Win Pool", "Make Final", "Win Tournament"]
+    team_stats = {team: {r: 0 for r in rounds} for team in seed_order}
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
+
+    for _ in range(num_simulations):
+        pool_winners = {}
+
+        # Simulate pool play
+        for pool_name, teams in pools.items():
+            wins = {team: 0 for team in teams}
+            matchups = [(teams[0], teams[1]), (teams[0], teams[2]), (teams[1], teams[2])]
+            for team_a, team_b in matchups:
+                winner = simulate_game(team_a, team_b, ratings, location="Neutral")
+                wins[winner] += 1
+
+            pool_winner = max(wins, key=lambda team: (wins[team], -seed_order.index(team)))
+            pool_winners[pool_name] = pool_winner
+            team_stats[pool_winner]["Win Pool"] += 1
+
+        # Semifinals: A vs D, B vs C
+        finalists = [simulate_game(pool_winners["A"], pool_winners["D"], ratings, location="Neutral"),
+                    simulate_game(pool_winners["B"], pool_winners["C"], ratings, location="Neutral")]
+        for winner in finalists:
+            team_stats[winner]["Make Final"] += 1
+
+        # Final
+        final_winner = simulate_game(finalists[0], finalists[1], ratings, location="Neutral")
+        team_stats[final_winner]["Win Tournament"] += 1
+
+    df = pd.DataFrame.from_dict(team_stats, orient="index")
+    df = df.applymap(lambda x: round(100 * x / num_simulations, 1)).reset_index().rename(columns={"index": "Team"})
+    return df
+
+def simulate_playin_double_elim(seed_order, stats_and_metrics, num_simulations=1000):
+    team_stats = {team: {"Double Elim": 0, "Win Tournament": 0} for team in seed_order}
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
+
+    for _ in range(num_simulations):
+        # Play-in between #4 and #5
+        playin_winner = simulate_game(seed_order[3], seed_order[4], ratings, location="Neutral")
+        team_stats[playin_winner]["Double Elim"] += 1
+
+        # 4-team double elimination bracket
+        bracket_teams = [seed_order[0], seed_order[1], seed_order[2], playin_winner]
+        bracket_result = double_elimination_bracket(bracket_teams, stats_and_metrics, num_simulations=1)
+        champion = max(bracket_result.items(), key=lambda x: x[1])[0]
+        team_stats[champion]["Win Tournament"] += 1
+
+    # Format results
+    df = pd.DataFrame.from_dict(team_stats, orient="index").reset_index().rename(columns={"index": "Team"})
+    df["Double Elim"] = df["Double Elim"].apply(lambda x: round(100 * x / num_simulations, 1))
+    df["Win Tournament"] = df["Win Tournament"].apply(lambda x: round(100 * x / num_simulations, 1))
+    for i in range(3):
+        df.loc[df["Team"] == seed_order[i], "Double Elim"] = 100.0
+    return df
+
+def simulate_playins_to_6team_double_elim(seed_order, stats_and_metrics, num_simulations=1000):
+    team_stats = {team: {"Double Elim": 0, "Win Tournament": 0} for team in seed_order}
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
+
+    for _ in range(num_simulations):
+        # Simulate play-in games
+        winner_5_8 = simulate_game(seed_order[4], seed_order[7], ratings, location="Neutral")
+        winner_6_7 = simulate_game(seed_order[5], seed_order[6], ratings, location="Neutral")
+
+        # Build 6-team bracket
+        advancing_teams = seed_order[:4] + [winner_5_8, winner_6_7]
+        for team in advancing_teams:
+            team_stats[team]["Double Elim"] += 1
+
+        # Run one sim of 6-team double elimination
+        result_df = double_elimination_6_teams(advancing_teams, stats_and_metrics, num_simulations=1)
+        result_df["Win Tournament"] = result_df["Win Tournament"] / 100  # Undo percentage scaling
+        champ = result_df.loc[result_df["Win Tournament"] == 1.0, "Team"].values[0]
+        team_stats[champ]["Win Tournament"] += 1
+
+    # Final formatting
+    df = pd.DataFrame.from_dict(team_stats, orient="index").reset_index().rename(columns={"index": "Team"})
+    df["Double Elim"] = df["Double Elim"].apply(lambda x: round(100 * x / num_simulations, 1))
+    df["Win Tournament"] = df["Win Tournament"].apply(lambda x: round(100 * x / num_simulations, 1))
+    return df
+
+def simulate_mvc_tournament(seed_order, stats_and_metrics, num_simulations=1000):
+    assert len(seed_order) == 8, "Seed order must have exactly 8 teams."
+
+    def remove_team_with_two_losses(losses):
+        for team, loss_count in list(losses.items()):
+            if loss_count >= 2:
+                del losses[team]
+
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
+    
+    make_de_stats = defaultdict(int)
+    win_stats = defaultdict(int)
+
+    for _ in range(num_simulations):
+        # Day 1 - Single elimination: 5 vs 8 and 6 vs 7
+        team5, team6, team7, team8 = seed_order[4], seed_order[5], seed_order[6], seed_order[7]
+
+        winner_5v8 = simulate_game(team5, team8, ratings, location="Neutral")
+        winner_6v7 = simulate_game(team6, team7, ratings, location="Neutral")
+        if winner_5v8 == team5:
+            playin_winners = [winner_5v8, winner_6v7]
+        else:
+            playin_winners = [winner_6v7, winner_5v8]
+
+        for team in playin_winners:
+            make_de_stats[team] += 1
+
+        for team in seed_order[:4]:
+            make_de_stats[team] += 1  # Top 4 seeds always make DE
+
+        # Day 2 - Start double elimination (6 teams)
+        de_teams = seed_order[:4] + playin_winners
+        r = {team: ratings[team] for team in de_teams}
+        losses = {team: 0 for team in de_teams}
+
+        w3 = simulate_game(de_teams[2], de_teams[3], r)
+        w4 = simulate_game(de_teams[0], de_teams[5], r)
+        w5 = simulate_game(de_teams[1], de_teams[4], r)
+        l3 = de_teams[3] if w3 == de_teams[2] else de_teams[2]
+        l4 = de_teams[5] if w4 == de_teams[0] else de_teams[0]
+        l5 = de_teams[4] if w5 == de_teams[1] else de_teams[1]
+        losses[l3] += 1
+        losses[l4] += 1
+        losses[l5] += 1
+        remove_team_with_two_losses(losses)
+
+        w6 = simulate_game(l5, l4, r)
+        w7 = simulate_game(l3, w4, r)
+        w8 = simulate_game(w3, w5, r)
+        l6 = l5 if w6 == l4 else l4
+        l7 = l3 if w7 == w4 else w4
+        l8 = w3 if w8 == w5 else w5
+        losses[l6] += 1
+        losses[l7] += 1
+        losses[l8] += 1
+        remove_team_with_two_losses(losses)
+
+        if len(losses) == 4:
+            w9 = simulate_game(w6, l8, r)
+            l9 = w6 if w9 == l8 else l8
+            losses[l9] += 1
+            remove_team_with_two_losses(losses)
+
+            w10 = simulate_game(w7, w8, r)
+            l10 = w7 if w10 == w8 else w8
+            losses[l10] += 1
+            remove_team_with_two_losses(losses)
+
+            w11 = simulate_game(w9, l10, r)
+            l11 = w9 if w11 == l10 else l10
+            losses[l11] += 1
+            remove_team_with_two_losses(losses)
+
+            w12 = simulate_game(w11, w10, r)
+            l12 = w11 if w12 == w10 else w10
+            losses[l12] += 1
+            remove_team_with_two_losses(losses)
+
+            if len(losses) == 1:
+                champion = w12
+            else:
+                champion = simulate_game(w12, l12, r)
+        else:
+            w9 = simulate_game(l7, l8, r)
+            l9 = l7 if w9 == l8 else l8
+            losses[l9] += 1
+            remove_team_with_two_losses(losses)
+
+            w10 = simulate_game(w6, w7, r)
+            l10 = w6 if w10 == w7 else w7
+            losses[l10] += 1
+            remove_team_with_two_losses(losses)
+
+            w11 = simulate_game(w9, w8, r)
+            l11 = w9 if w11 == w8 else w8
+            losses[l11] += 1
+            remove_team_with_two_losses(losses)
+
+            if len(losses) == 2:
+                w12 = simulate_game(w11, w10, r)
+                l12 = w11 if w12 == w10 else w10
+                losses[l12] += 1
+                remove_team_with_two_losses(losses)
+
+                if len(losses) == 1:
+                    champion = w12
+                else:
+                    champion = simulate_game(w12, l12, r)  
+            else:
+                w12 = simulate_game(l11, w10, r)
+                l12 = l11 if w12 == w10 else w10
+                losses[l12] += 1
+                remove_team_with_two_losses(losses)
+
+                champion = simulate_game(w12, w11, r)
+
+        win_stats[champion] += 1
+
+    result = pd.DataFrame({
+        "Team": seed_order,
+        "Double Elim": [round(100 * make_de_stats[t] / num_simulations, 1) for t in seed_order],
+        "Win Tournament": [round(100 * win_stats[t] / num_simulations, 1) for t in seed_order]
+    })
+
+    return result
+
+def simulate_two_playin_rounds_to_double_elim(seed_order, stats_and_metrics, num_simulations=1000):
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
+    tracker = {team: {"Round 2": 0, "Make Double Elim": 0, "Win Tournament": 0} for team in seed_order}
+
+    for _ in range(num_simulations):
+        # Round 1 Play-ins
+        win_5v8 = simulate_game(seed_order[4], seed_order[7], ratings, location="Neutral")
+        win_6v7 = simulate_game(seed_order[5], seed_order[6], ratings, location="Neutral")
+
+        tracker[win_5v8]["Round 2"] += 1
+        tracker[win_6v7]["Round 2"] += 1
+
+        # Round 2
+        win_4 = simulate_game(seed_order[3], win_5v8, ratings, location="Neutral")
+        win_3 = simulate_game(seed_order[2], win_6v7, ratings, location="Neutral")
+
+        for team in [win_3, win_4, seed_order[0], seed_order[1]]:
+            tracker[team]["Make Double Elim"] += 1
+
+        # Double elimination bracket
+        de_teams = [seed_order[0], seed_order[1], win_4, win_3]
+        bracket_result = double_elimination_bracket(de_teams, stats_and_metrics, num_simulations=1)
+        winner = max(bracket_result.items(), key=lambda x: x[1])[0]
+        tracker[winner]["Win Tournament"] += 1
+
+    df = pd.DataFrame.from_dict(tracker, orient="index").reset_index().rename(columns={"index": "Team"})
+    df["Round 2"] = df["Round 2"].astype(float) * 100 / num_simulations
+    df["Make Double Elim"] = df["Make Double Elim"].astype(float) * 100 / num_simulations
+    df["Win Tournament"] = df["Win Tournament"].astype(float) * 100 / num_simulations
+
+    for team in seed_order[:4]:
+        df.loc[df["Team"] == team, "Round 2"] = 100.0
+    for team in seed_order[:2]:
+        df.loc[df["Team"] == team, "Make Double Elim"] = 100.0
+
+    return df
+
+def simulate_best_of_three_tournament(seed_order, stats_and_metrics, num_simulations=1000):
+    assert len(seed_order) == 4, "This format requires exactly 4 teams"
+
+    rounds = ["Make Final", "Win Tournament"]
+    stats = {team: {r: 0 for r in rounds} for team in seed_order}
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
+
+    for _ in range(num_simulations):
+        semi1 = simulate_best_of_three_series(seed_order[0], seed_order[3], ratings, "Home")
+        semi2 = simulate_best_of_three_series(seed_order[1], seed_order[2], ratings, "Home")
+        stats[semi1]["Make Final"] += 1
+        stats[semi2]["Make Final"] += 1
+
+        home_finalist, away_finalist = (
+            (semi1, semi2) if seed_order.index(semi1) < seed_order.index(semi2)
+            else (semi2, semi1)
+        )
+        champ = simulate_best_of_three_series(home_finalist, away_finalist, ratings, "Home")
+        stats[champ]["Win Tournament"] += 1
+
+    df = pd.DataFrame.from_dict(stats, orient="index").reset_index().rename(columns={"index": "Team"})
+    df.loc[:, rounds] = df[rounds].applymap(lambda x: round(100 * x / num_simulations, 1))
+    return df
+
+def simulate_two_playin_to_two_double_elim(seed_order, stats_and_metrics, num_simulations=1000):
+    results = {team: {"Double Elim": 0, "Make Finals": 0, "Win Tournament": 0} for team in seed_order}
+    ratings = {team: get_rating(team, stats_and_metrics) for team in seed_order}
+
+    for _ in range(num_simulations):
+
+        # Play-ins: 7 vs 10 and 8 vs 9
+        win_7v10 = simulate_game(seed_order[6], seed_order[9], ratings)
+        win_8v9 = simulate_game(seed_order[7], seed_order[8], ratings)
+
+        # Higher seed is the one earlier in seed_order
+        high_seed, low_seed = sorted([win_7v10, win_8v9], key=seed_order.index)
+
+        # Assign brackets
+        bracket1 = [seed_order[0], seed_order[3], seed_order[4], high_seed]
+        bracket2 = [seed_order[1], seed_order[2], seed_order[5], low_seed]
+
+        for t in bracket1 + bracket2:
+            results[t]["Double Elim"] += 1
+
+        # Simulate each double elim bracket
+        bracket1 = double_elimination_bracket(bracket1, stats_and_metrics, 1)
+        bracket2 = double_elimination_bracket(bracket2, stats_and_metrics, 1)
+        finalist_1 = max(bracket1.items(), key=lambda x: x[1])[0]
+        finalist_2 = max(bracket2.items(), key=lambda x: x[1])[0]
+
+        results[finalist_1]["Make Finals"] += 1
+        results[finalist_2]["Make Finals"] += 1
+
+        champ = simulate_game(finalist_1, finalist_2, ratings)
+        results[champ]["Win Tournament"] += 1
+
+    df = pd.DataFrame.from_dict(results, orient="index").reset_index().rename(columns={"index": "Team"})
+    for col in df.columns[1:]:
+        df[col] = df[col].apply(lambda x: round(100 * x / num_simulations, 1))
+    return df
+
+def get_conference_win_percentage(team, schedule_df, stats_and_metrics):
+    # Map team to conference
+    team_to_conf = stats_and_metrics.set_index('Team')['Conference'].to_dict()
+    team_conf = team_to_conf.get(team)
+    schedule_df['home_conf'] = schedule_df['home_team'].map(team_to_conf)
+    schedule_df['away_conf'] = schedule_df['away_team'].map(team_to_conf)
+    schedule_df["matchup"] = schedule_df["home_team"] + " vs " + schedule_df["away_team"]
+    matchup = schedule_df["matchup"].values
+    home_conf = schedule_df["home_conf"].values
+    away_conf = schedule_df["away_conf"].values
+
+    # Create 3-row rolling windows
+    match0 = matchup[:-2]
+    match1 = matchup[1:-1]
+    match2 = matchup[2:]
+    conf_check_0 = home_conf[:-2] == away_conf[:-2]
+    conf_check_1 = home_conf[1:-1] == away_conf[1:-1]
+    conf_check_2 = home_conf[2:] == away_conf[2:]
+    valid_series = (
+        (match0 == match1) & (match1 == match2) &
+        conf_check_0 & conf_check_1 & conf_check_2
+    )
+    base_indices = np.where(valid_series)[0]
+    valid_indices = np.unique(np.concatenate([base_indices, base_indices + 1, base_indices + 2]))
+    df = schedule_df.iloc[valid_indices].reset_index(drop=True)
+
+    # Filter for conference games
+    conf_games = df[
+        (df['home_conf'] == team_conf) &
+        (df['away_conf'] == team_conf) &
+        (df['Result'].str.startswith(('W', 'L')))
+    ]
+    wins = conf_games['Result'].str.startswith('W')
+    wins_count = int(wins.sum())
+    games_count = int(len(conf_games))
+    
+    return wins_count / (games_count)
+
+def simulate_conference_tournaments(conference):
+
+    num_simulations = 1000
+    stats_and_metrics, comparison_date = load_baseball_data()
+    schedule_df = load_schedule_data()
+
+    conference_teams = stats_and_metrics[stats_and_metrics['Conference'] == conference]['Team'].tolist()
+    team_win_pcts = []
+    for team in conference_teams:
+        team_schedule = schedule_df[schedule_df['Team'] == team].reset_index(drop=True)
+        win_pct = get_conference_win_percentage(team, team_schedule, stats_and_metrics)
+        team_win_pcts.append((team, win_pct))
+    team_win_pcts.sort(key=lambda x: x[1], reverse=True)
+
+    if conference in ['SEC', 'ACC']:
+        seed_order = [team for team, _ in team_win_pcts[:16]]
+        if conference == 'ACC':
+            seed_order = ['Georgia Tech', 'Florida St.', 'North Carolina', 'NC State',
+                          'Clemson', 'Virginia', 'Duke', 'Wake Forest', 'Miami (FL)',
+                          'Louisville', 'Notre Dame', 'Virginia Tech', 'Stanford',
+                          'Boston College', 'Pittsburgh', 'California']
+        elif conference == 'SEC':
+            seed_order = ['Texas', 'Arkansas', 'LSU', 'Vanderbilt',
+                          'Georgia', 'Auburn', 'Ole Miss', 'Tennessee',
+                          'Alabama', 'Florida', 'Mississippi St.', 'Oklahoma',
+                          'Kentucky', 'Texas A&M', 'South Carolina', 'Missouri']
+        final_df = single_elimination_16_teams(seed_order, stats_and_metrics, num_simulations=1000)
+        fig = plot_tournament_odds_table(final_df, 0.3, conference, 0.106, 0.098, 0.1)
+    elif conference == "Big 12":
+        seed_order = [team for team, _ in team_win_pcts[:12]]
+        if conference == 'Big 12':
+            seed_order = ['West Virginia', 'Kansas', 'TCU', 'Arizona',
+                          'Arizona St.', 'Kansas St.', 'Oklahoma St.', 'Cincinnati',
+                          'Texas Tech', 'Baylor', 'Houston', 'BYU']
+        result_df = single_elimination_14_teams(seed_order, stats_and_metrics, 1000)
+        fig = plot_tournament_odds_table(result_df, 0.6, conference, 0.066, 0.06, 0.08)
+    elif conference in ["Conference USA", "American Athletic", "Southland", "SWAC"]:
+        seed_order = [team for team, _ in team_win_pcts[:8]]
+        if conference == 'Southland':
+            seed_order = ['Southeastern La.', 'UTRGV', 'Lamar University', 'Northwestern St.', 'McNeese', 'Houston Christian', 'A&M-Corpus Christi', 'New Orleans']
+        elif conference == 'American Athletic':
+            seed_order = ["UTSA", "Charlotte", "South Fla.", "Fla. Atlantic", "Tulane", "East Carolina", "Wichita St.", "Rice"]
+        elif conference == 'Conference USA':
+            seed_order = ['DBU', 'Western Ky.', 'Kennesaw St.', 'Jacksonville St.', 'Louisiana Tech', 'FIU', 'New Mexico St.', 'Liberty']
+        elif conference == 'SWAC':
+            seed_order = ['Bethune-Cookman', 'Florida A&M', 'Alabama St.', 'Ark.-Pine Bluff', 'Grambling', 'Jackson St.', 'Southern U.', 'Texas Southern']
+        output = double_elimination_bracket([seed_order[0], seed_order[3], seed_order[4], seed_order[7]], stats_and_metrics, num_simulations)
+        bracket_one = pd.DataFrame(list(output.items()), columns=["Team", "Win Regional"])
+        output = double_elimination_bracket([seed_order[1], seed_order[2], seed_order[5], seed_order[6]], stats_and_metrics, num_simulations)
+        bracket_two = pd.DataFrame(list(output.items()), columns=["Team", "Win Regional"])
+        championship_results = simulate_overall_tournament(
+            bracket_one.set_index("Team")["Win Regional"].to_dict(),
+            bracket_two.set_index("Team")["Win Regional"].to_dict(),
+            stats_and_metrics,
+            num_simulations=num_simulations
+        )
+        championship_df = pd.DataFrame(list(championship_results.items()), columns=["Team", "Win Tournament"])
+        regional_results = pd.concat([bracket_one.set_index("Team"), bracket_two.set_index("Team")], axis=0)
+        final_df = pd.merge(regional_results.reset_index(), championship_df, on="Team", how="outer")
+        final_df = final_df[['Team', 'Win Regional', 'Win Tournament']]
+        final_df = final_df.rename(columns={'Win Regional': 'Win Group'})
+        final_df[['Win Group', 'Win Tournament']] = final_df[['Win Group', 'Win Tournament']] * 100
+        final_df = final_df[['Team', 'Win Group', 'Win Tournament']]
+        seed_df = pd.DataFrame({'Team': seed_order})
+        seed_df['Seed_Order'] = range(len(seed_order))
+        final_df = pd.merge(seed_df, final_df, on='Team', how='left')
+        final_df = final_df.sort_values('Seed_Order').drop(columns='Seed_Order').reset_index(drop=True)
+        fig = plot_tournament_odds_table(final_df, 1, conference, 0.057, 0.052, 0.1)
+    elif conference in ['America East', 'Mountain West', 'West Coast']:
+        seed_order = [team for team, _ in team_win_pcts[:6]]
+        if conference == 'America East':
+            seed_order = ['Bryant', 'NJIT', 'Binghamton', 'Maine', 'UAlbany', 'UMBC']
+        elif conference == 'Mountain West':
+            seed_order = ['Nevada', 'Fresno St.', 'New Mexico', 'UNLV', 'San Diego St.', 'San Jose St.']
+        elif conference == 'West Coast':
+            seed_order = ['San Diego', 'Gonzaga', "Saint Mary's (CA)", 'LMU (CA)', 'Portland', 'San Francisco']
+        final_df = two_playin_games_to_four_team_double_elimination(seed_order, stats_and_metrics, num_simulations=1000)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.134, 0.122, 0.3)
+    elif conference == 'ASUN':
+        seed_order = [team for team, _ in team_win_pcts[:8]]
+        if conference == 'ASUN':
+            seed_order = ['Austin Peay', 'Stetson', 'Lipscomb', 'Jacksonville', 'North Ala.', 'FGCU', 'Central Ark.', 'North Florida']
+        final_df = simulate_and_run_8_team_double_elim(seed_order, stats_and_metrics)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.115, 0.105, 0.2)
+    elif conference == "Atlantic 10":
+        seed_order = [team for team, _ in team_win_pcts[:7]]
+        if conference == 'Atlantic 10':
+            seed_order = ['Rhode Island', 'George Mason', 'Saint Louis', 'Davidson', "Saint Joseph's", 'Fordham', 'Dayton']
+        final_df = double_elimination_7_teams(seed_order, stats_and_metrics, num_simulations=1000)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.105, 0.093, 0.2)
+    elif conference in ['Big East', 'Ivy League', 'Northeast', 'The Summit League']:
+        seed_order = [team for team, _ in team_win_pcts[:4]]
+        if conference == 'Ivy League':
+            seed_order = ['Yale', 'Columbia', 'Penn', 'Harvard']
+        elif conference == 'Big East':
+            seed_order = ['Creighton', 'UConn', 'Xavier', "St. John's (NY)"]
+        elif conference == 'Northeast':
+            seed_order = ['LIU', 'Wagner', 'Central Conn. St.', 'FDU']
+        elif conference == 'The Summit League':
+            seed_order = ['Oral Roberts', 'North Dakota St.', 'Omaha', 'South Dakota St.']
+        output = double_elimination_bracket([seed_order[0], seed_order[1], seed_order[2], seed_order[3]], stats_and_metrics, num_simulations)
+        final_df = pd.DataFrame(list(output.items()), columns=["Team", "Win Tournament"])
+        final_df["Win Tournament"] = final_df["Win Tournament"] * 100
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.143, 0.12, 0.4)
+    elif conference in ['Big South', 'Coastal Athletic', 'Horizon League', 'Mid-American']:
+        seed_order = [team for team, _ in team_win_pcts[:6]]
+        if conference == 'Coastal Athletic':
+            seed_order = ['Northeastern', 'UNCW', 'Campbell', 'Col. of Charleston', 'William & Mary', 'Elon']
+        elif conference == 'Big South':
+            seed_order = ['USC Upstate', 'High Point', 'Charleston So.', 'Radford', 'Winthrop', 'Presbyterian']
+        elif conference == 'Horizon League':
+            seed_order = ['Wright St.', 'Northern Ky.', 'Milwaukee', 'Youngstown St.', 'Oakland', 'Purdue Fort Wayne']
+        elif conference == 'Mid-American':
+            seed_order = ['Miami (OH)', 'Kent St.', 'Ball St.', 'Bowling Green', 'Toledo', 'Eastern Mich.']
+        final_df = double_elimination_6_teams(seed_order, stats_and_metrics, num_simulations=1000)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.117, 0.103, 0.25)
+    elif conference == 'Big Ten':
+        seed_order = [team for team, _ in team_win_pcts[:12]]
+        if conference == 'Big Ten':
+            seed_order = ['Oregon', 'UCLA', 'Iowa', 'Southern California',
+                          'Washington', 'Indiana', 'Michigan', 'Nebraska',
+                          'Penn St.', 'Rutgers', 'Illinois', 'Michigan St.']
+        final_df = simulate_pool_play_tournament(seed_order, stats_and_metrics, num_simulations=500)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.082, 0.075, 0.1)
+    elif conference == 'Big West':
+        seed_order = [team for team, _ in team_win_pcts[:5]]
+        if conference == 'Big West':
+            seed_order = ['UC Irvine', 'Cal Poly', 'Cal St. Fullerton', 'UC Santa Barbara', 'Hawaii']
+        final_df = simulate_playin_double_elim(seed_order, stats_and_metrics)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.16, 0.14, 0.4)
+    elif conference in ['MAAC', 'Southern', 'Western Athletic']:
+        seed_order = [team for team, _ in team_win_pcts[:8]]
+        if conference == 'MAAC':
+            seed_order = ['Rider', 'Fairfield', 'Sacred Heart', 'Siena', 'Quinnipiac', "Mount St. Mary's", 'Marist', 'Niagara']
+        elif conference == 'Southern':
+            seed_order = ['ETSU', 'Samford', 'The Citadel', 'Mercer', 'Western Caro.', 'UNC Greensboro', 'Wofford', 'VMI']
+        elif conference == 'Western Athletic':
+            seed_order = ['Sacramento St.', 'Abilene Christian', 'Utah Valley', 'Grand Canyon', 'California Baptist', 'Tarleton St.', 'UT Arlington', 'Utah Tech']
+        final_df = simulate_playins_to_6team_double_elim(seed_order, stats_and_metrics, 1000)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.113, 0.103, 0.2)
+    elif conference == 'Missouri Valley':
+        seed_order = [team for team, _ in team_win_pcts[:8]]
+        if conference == 'Missouri Valley':
+            seed_order = ['Murray St.', 'Missouri St.', 'Southern Ill.', 'UIC', 'Illinois St.', 'Belmont', 'Bradley', 'Indiana St.']
+        final_df = simulate_mvc_tournament(seed_order, stats_and_metrics, 1000)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.113, 0.103, 0.2)
+    elif conference == 'Ohio Valley':
+        seed_order = [team for team, _ in team_win_pcts[:8]]
+        if conference == 'Ohio Valley':
+            seed_order = ['Eastern Ill.', 'SIUE', 'Tennessee Tech', 'Southeast Mo. St.', 'UT Martin', 'Little Rock', 'Western Ill.', 'Morehead St.']
+        final_df = simulate_two_playin_rounds_to_double_elim(seed_order, stats_and_metrics, 1000)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.113, 0.103, 0.2)
+    elif conference == 'Patriot League':
+        seed_order = [team for team, _ in team_win_pcts[:4]]
+        seed_order = ['Yale', 'Navy', 'Army West Point', 'Lehigh']
+        final_df = simulate_best_of_three_tournament(seed_order, stats_and_metrics, 1000)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.17, 0.15, 0.5)
+    elif conference == 'Sun Belt':
+        seed_order = [team for team, _ in team_win_pcts[:10]]
+        if conference == 'Sun Belt':
+            seed_order = ['Coastal Carolina', 'Southern Miss.', 'Troy', 'Marshall', 'Louisiana', 'Old Dominion', 'Texas St.', 'Arkansas St.', 'Ga. Southern', 'App State']
+        final_df = simulate_two_playin_to_two_double_elim(seed_order, stats_and_metrics, 500)
+        fig = plot_tournament_odds_table(final_df, 0.5, conference, 0.104, 0.095, 0.15)
+    return fig
+
+@app.post("/api/cbase/simulate-conference-tournament")
+def simulate_conference_tournament_endpoint(conference_data: dict):
+    """Simulate a conference tournament"""
+    try:
+        conference = conference_data.get('conference')
+        
+        if not conference:
+            raise HTTPException(status_code=400, detail="Conference is required")
+        
+        # Call your simulate_conference_tournaments function
+        fig = simulate_conference_tournaments(conference)
+        
+        # Convert the matplotlib figure to an image
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
+        buf.seek(0)
+        plt.close(fig)
+        
+        return StreamingResponse(buf, media_type="image/png")
+        
+    except Exception as e:
+        print(f"Error simulating conference tournament: {e}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 if __name__ == "__main__":

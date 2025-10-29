@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Trophy, Download, Filter, Search, Calendar, TrendingUp, AlertCircle, Target } from 'lucide-react';
+import Image from 'next/image';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -27,19 +28,31 @@ interface SimulationResult {
   win_probability: number;
 }
 
+interface ConferenceTournamentResult {
+  conference: string;
+  image: string;
+}
+
 export default function CbaseTournamentPage() {
   const [teams, setTeams] = useState<string[]>([]);
+  const [conferences, setConferences] = useState<string[]>([]);
   const [tournamentOutlook, setTournamentOutlook] = useState<TournamentOutlook | null>(null);
   const [simulationResult, setSimulationResult] = useState<SimulationResult[] | null>(null);
   const [simulationImage, setSimulationImage] = useState<string | null>(null);
+  const [conferenceTournamentImage, setConferenceTournamentImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [simulationLoading, setSimulationLoading] = useState(false);
+  const [conferenceTournamentLoading, setConferenceTournamentLoading] = useState(false);
   const [error, setError] = useState('');
 
   const [seed1, setSeed1] = useState('');
   const [seed2, setSeed2] = useState('');
   const [seed3, setSeed3] = useState('');
   const [seed4, setSeed4] = useState('');
+
+  const [selectedConference, setSelectedConference] = useState('');
+  const [conferenceSearchTerm, setConferenceSearchTerm] = useState('');
+  const [showConferenceDropdown, setShowConferenceDropdown] = useState(false);
 
   const [seed1SearchTerm, setSeed1SearchTerm] = useState('');
   const [seed2SearchTerm, setSeed2SearchTerm] = useState('');
@@ -50,9 +63,12 @@ export default function CbaseTournamentPage() {
   const [showSeed3Dropdown, setShowSeed3Dropdown] = useState(false);
   const [showSeed4Dropdown, setShowSeed4Dropdown] = useState(false);
 
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+
   useEffect(() => {
     fetchTournamentData();
     fetchTeams();
+    fetchConferences();
   }, []);
 
   const fetchTeams = async () => {
@@ -61,6 +77,15 @@ export default function CbaseTournamentPage() {
       setTeams(response.data.teams);
     } catch (error) {
       console.error('Error fetching teams:', error);
+    }
+  };
+
+  const fetchConferences = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/cbase/conferences`);
+      setConferences(response.data.conferences);
+    } catch (error) {
+      console.error('Error fetching conferences:', error);
     }
   };
 
@@ -116,6 +141,35 @@ export default function CbaseTournamentPage() {
     }
   };
 
+  const simulateConferenceTournament = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedConference) {
+      setError('Please select a conference');
+      return;
+    }
+
+    setConferenceTournamentLoading(true);
+    setError('');
+    setConferenceTournamentImage(null);
+
+    try {
+      const response = await axios.post(`${API_URL}/api/cbase/simulate-conference-tournament`, {
+        conference: selectedConference
+      }, {
+        responseType: 'blob'
+      });
+
+      const imageObjectUrl = URL.createObjectURL(response.data);
+      setConferenceTournamentImage(imageObjectUrl);
+    } catch (error) {
+      setError('Error simulating conference tournament. Please try again.');
+      console.error('Error:', error);
+    } finally {
+      setConferenceTournamentLoading(false);
+    }
+  };
+
   const filteredSeed1Teams = teams.filter(team =>
     team.toLowerCase().includes(seed1SearchTerm.toLowerCase())
   );
@@ -130,6 +184,10 @@ export default function CbaseTournamentPage() {
 
   const filteredSeed4Teams = teams.filter(team =>
     team.toLowerCase().includes(seed4SearchTerm.toLowerCase())
+  );
+
+  const filteredConferences = conferences.filter(conference =>
+    conference.toLowerCase().includes(conferenceSearchTerm.toLowerCase())
   );
 
   const downloadCSV = () => {
@@ -187,35 +245,84 @@ export default function CbaseTournamentPage() {
     return pairs;
   };
 
+  const colorClasses = {
+    green: {
+      bg: 'bg-green-50 dark:bg-green-900/20',
+      border: 'border-green-600 dark:border-green-500',
+      text: 'text-green-700 dark:text-green-400',
+      badge: 'bg-green-600 dark:bg-green-500'
+    },
+    blue: {
+      bg: 'bg-blue-50 dark:bg-blue-900/20',
+      border: 'border-blue-500 dark:border-blue-400',
+      text: 'text-blue-600 dark:text-blue-400',
+      badge: 'bg-blue-600 dark:bg-blue-500'
+    },
+    orange: {
+      bg: 'bg-orange-100 dark:bg-orange-900/20',
+      border: 'border-orange-600 dark:border-orange-500',
+      text: 'text-orange-700 dark:text-orange-400',
+      badge: 'bg-orange-700 dark:bg-orange-600'
+    }
+  };
+
+  const TeamRow = ({ seed, team, color }: { seed: number; team: string; color: string }) => (
+    <div className={`flex items-center gap-2 ${colorClasses[color].bg} border-l-4 ${colorClasses[color].border} px-3 py-2 rounded`}>
+      <span className={`font-bold ${colorClasses[color].text} text-sm w-6`}>{seed}</span>
+      <Image 
+        src={`${API_URL}/api/baseball-logo/${encodeURIComponent(team)}`}
+        alt={`${team} logo`}
+        width={24}
+        height={24}
+        className="rounded"
+        unoptimized
+      />
+      <span className="font-bold text-gray-900 dark:text-white flex-1">{team}</span>
+      {color === 'green' ? (
+        <span className="text-xs bg-green-600 dark:bg-green-500 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
+      ) : color === 'orange' ? (
+        <span className="text-xs bg-orange-700 dark:bg-orange-600 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
+      ) : seed === 1 ? (
+        <span className="text-xs bg-blue-600 dark:bg-blue-500 text-white px-2 py-0.5 rounded font-semibold">HOST</span>
+      ) : null}
+    </div>
+  );
+
   const RegionalCard = ({ regional }: { regional: any }) => {
     const seed1Color = getTeamColor(regional.seed_1);
     const seed2Color = getTeamColor(regional.seed_2);
     const seed3Color = getTeamColor(regional.seed_3);
     const seed4Color = getTeamColor(regional.seed_4);
 
-    const colorClasses = {
-      green: {
-        bg: 'bg-green-50 dark:bg-green-900/20',
-        border: 'border-green-600 dark:border-green-500',
-        text: 'text-green-700 dark:text-green-400',
-        badge: 'bg-green-600 dark:bg-green-500'
-      },
-      blue: {
-        bg: 'bg-blue-50 dark:bg-blue-900/20',
-        border: 'border-blue-500 dark:border-blue-400',
-        text: 'text-blue-600 dark:text-blue-400',
-        badge: 'bg-blue-600 dark:bg-blue-500'
-      },
-      orange: {
-        bg: 'bg-orange-100 dark:bg-orange-900/20',
-        border: 'border-orange-600 dark:border-orange-500',
-        text: 'text-orange-700 dark:text-orange-400',
-        badge: 'bg-orange-700 dark:bg-orange-600'
+    const handleRegionalClick = async () => {
+      setSimulationLoading(true);
+      setError('');
+
+      try {
+        const response = await axios.post(`${API_URL}/api/cbase/simulate-regional`, {
+          seed_1: regional.seed_1,
+          seed_2: regional.seed_2,
+          seed_3: regional.seed_3,
+          seed_4: regional.seed_4
+        }, {
+          responseType: 'blob'
+        });
+
+        const imageObjectUrl = URL.createObjectURL(response.data);
+        setFullscreenImage(imageObjectUrl);
+      } catch (error) {
+        setError('Error simulating regional. Please try again.');
+        console.error('Error:', error);
+      } finally {
+        setSimulationLoading(false);
       }
     };
 
     return (
-      <div className="border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all">
+      <div 
+        className="border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all cursor-pointer"
+        onClick={handleRegionalClick}
+      >
         <div className="bg-gradient-to-r from-gray-800 to-gray-700 dark:from-gray-900 dark:to-gray-800 text-white px-4 py-2 rounded-t-lg">
           <div className="flex items-center justify-between">
             <span className="font-bold">{regional.host} Regional</span>
@@ -224,50 +331,10 @@ export default function CbaseTournamentPage() {
         </div>
 
         <div className="p-3 space-y-1 bg-white dark:bg-gray-800">
-          <div className={`flex items-center gap-2 ${colorClasses[seed1Color].bg} border-l-4 ${colorClasses[seed1Color].border} px-3 py-2 rounded`}>
-            <span className={`font-bold ${colorClasses[seed1Color].text} text-sm w-6`}>1</span>
-            <span className="font-bold text-gray-900 dark:text-white flex-1">{regional.seed_1}</span>
-            {seed1Color === 'green' ? (
-              <span className="text-xs bg-green-600 dark:bg-green-500 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
-            ) : seed1Color === 'orange' ? (
-              <span className="text-xs bg-orange-700 dark:bg-orange-600 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
-            ) : (
-              <span className="text-xs bg-blue-600 dark:bg-blue-500 text-white px-2 py-0.5 rounded font-semibold">HOST</span>
-            )}
-          </div>
-
-          <div className={`flex items-center gap-2 ${colorClasses[seed2Color].bg} border-l-4 ${colorClasses[seed2Color].border} px-3 py-2 rounded`}>
-            <span className={`font-bold ${colorClasses[seed2Color].text} text-sm w-6`}>2</span>
-            <span className="text-gray-900 dark:text-white flex-1">{regional.seed_2}</span>
-            {seed2Color === 'green' && (
-              <span className="text-xs bg-green-600 dark:bg-green-500 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
-            )}
-            {seed2Color === 'orange' && (
-              <span className="text-xs bg-orange-700 dark:bg-orange-600 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
-            )}
-          </div>
-
-          <div className={`flex items-center gap-2 ${colorClasses[seed3Color].bg} border-l-4 ${colorClasses[seed3Color].border} px-3 py-2 rounded`}>
-            <span className={`font-bold ${colorClasses[seed3Color].text} text-sm w-6`}>3</span>
-            <span className="text-gray-900 dark:text-white flex-1">{regional.seed_3}</span>
-            {seed3Color === 'green' && (
-              <span className="text-xs bg-green-600 dark:bg-green-500 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
-            )}
-            {seed3Color === 'orange' && (
-              <span className="text-xs bg-orange-700 dark:bg-orange-600 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
-            )}
-          </div>
-
-          <div className={`flex items-center gap-2 ${colorClasses[seed4Color].bg} border-l-4 ${colorClasses[seed4Color].border} px-3 py-2 rounded`}>
-            <span className={`font-bold ${colorClasses[seed4Color].text} text-sm w-6`}>4</span>
-            <span className="text-gray-900 dark:text-white flex-1">{regional.seed_4}</span>
-            {seed4Color === 'green' && (
-              <span className="text-xs bg-green-600 dark:bg-green-500 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
-            )}
-            {seed4Color === 'orange' && (
-              <span className="text-xs bg-orange-700 dark:bg-orange-600 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
-            )}
-          </div>
+          <TeamRow seed={1} team={regional.seed_1} color={seed1Color} />
+          <TeamRow seed={2} team={regional.seed_2} color={seed2Color} />
+          <TeamRow seed={3} team={regional.seed_3} color={seed3Color} />
+          <TeamRow seed={4} team={regional.seed_4} color={seed4Color} />
         </div>
       </div>
     );
@@ -586,13 +653,85 @@ export default function CbaseTournamentPage() {
                 {simulationImage && (
                   <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-2">Simulation Results</h4>
-                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-2">
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-2 cursor-pointer hover:opacity-90 transition-opacity" onClick={() => setFullscreenImage(simulationImage)}>
                       <img 
                         src={simulationImage} 
                         alt="Regional Simulation" 
                         className="w-full h-auto rounded"
                       />
                     </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">Click to view fullscreen</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border-t-4 border-indigo-600 dark:border-indigo-500">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Conference Tournament Simulator</h3>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Simulate any conference tournament</p>
+              </div>
+
+              <div className="p-4">
+                <form onSubmit={simulateConferenceTournament} className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-wide">
+                      Conference
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={selectedConference || conferenceSearchTerm}
+                        onChange={(e) => {
+                          setConferenceSearchTerm(e.target.value);
+                          setSelectedConference('');
+                          setShowConferenceDropdown(true);
+                        }}
+                        onFocus={() => setShowConferenceDropdown(true)}
+                        onBlur={() => setTimeout(() => setShowConferenceDropdown(false), 200)}
+                        placeholder="Search conference..."
+                        className="w-full px-3 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      />
+                      {showConferenceDropdown && filteredConferences.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          {filteredConferences.map(conference => (
+                            <div
+                              key={conference}
+                              onClick={() => {
+                                setSelectedConference(conference);
+                                setConferenceSearchTerm('');
+                                setShowConferenceDropdown(false);
+                              }}
+                              className="px-3 py-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 cursor-pointer text-sm text-gray-900 dark:text-gray-100"
+                            >
+                              {conference}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={conferenceTournamentLoading}
+                    className="w-full bg-indigo-600 dark:bg-indigo-500 text-white py-2.5 px-4 rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 font-bold text-sm disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {conferenceTournamentLoading ? 'Simulating...' : 'Run Simulation'}
+                  </button>
+                </form>
+
+                {conferenceTournamentImage && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-2">Tournament Results</h4>
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-2 cursor-pointer hover:opacity-90 transition-opacity" onClick={() => setFullscreenImage(conferenceTournamentImage)}>
+                      <img 
+                        src={conferenceTournamentImage} 
+                        alt="Conference Tournament Simulation" 
+                        className="w-full h-auto rounded"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">Click to view fullscreen</p>
                   </div>
                 )}
               </div>
@@ -619,12 +758,44 @@ export default function CbaseTournamentPage() {
               <p>Last 4 In are the final at-large teams projected to make the field. First/Next 4 Out are teams just outside the projected field.</p>
             </div>
             <div>
-              <p className="font-semibold text-gray-900 dark:text-white mb-1">Conflict Resolution</p>
-              <p>Algorithm minimizes conference matchups in the first round by intelligently swapping seeds across regionals while maintaining competitive balance.</p>
+              <p className="font-semibold text-gray-900 dark:text-white mb-1">Conference Tournament Simulator</p>
+              <p>Simulates conference tournaments using PEAR ratings with 1,000 iterations. Each conference has its own unique tournament format and bracket structure.</p>
             </div>
           </div>
         </div>
       </div>
+
+      {fullscreenImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black bg-opacity-95 flex items-center justify-center p-4"
+          onClick={() => setFullscreenImage(null)}
+        >
+          <div className="relative max-w-7xl max-h-full">
+            {simulationLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg z-20">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-white mx-auto"></div>
+                  <p className="text-white mt-4 text-lg">Simulating Regional...</p>
+                </div>
+              </div>
+            )}
+            <button
+              onClick={() => setFullscreenImage(null)}
+              className="absolute top-4 right-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-full p-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors z-10"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <img 
+              src={fullscreenImage} 
+              alt="Fullscreen view" 
+              className="max-w-full max-h-[90vh] object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
