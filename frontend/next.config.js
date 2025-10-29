@@ -7,7 +7,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ['localhost', '129.212.189.128'],
+    domains: ['localhost', '129.212.189.128', 'pearatings.com', 'www.pearatings.com'],
     remotePatterns: [
       {
         protocol: 'http',
@@ -19,6 +19,26 @@ const nextConfig = {
         protocol: 'http',
         hostname: '129.212.189.128',
         pathname: '/api/image/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'pearatings.com',
+        pathname: '/api/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pearatings.com',
+        pathname: '/api/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'www.pearatings.com',
+        pathname: '/api/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.pearatings.com',
+        pathname: '/api/**',
       },
     ],
   },
