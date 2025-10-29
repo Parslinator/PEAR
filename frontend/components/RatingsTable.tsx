@@ -271,7 +271,19 @@ export default function RatingsTable({ data }: Props) {
               return (
                 <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium">{index + 1}</td>
-                  <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">{item.Team}</td>
+                  <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">
+                    <div className="flex items-center gap-2">
+                      <img 
+                        src={`http://localhost:8000/api/football-logo/${encodeURIComponent(item.Team)}`}
+                        alt={`${item.Team} logo`}
+                        className="w-6 h-6 object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <span>{item.Team}</span>
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2 min-w-[80px] mx-auto">
                       <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300 text-right w-[35px]">

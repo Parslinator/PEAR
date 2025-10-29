@@ -11,6 +11,16 @@
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
     ],
+    "/spreads/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/spreads/page.js"
+    ],
+    "/matchups/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/matchups/page.js"
+    ],
     "/cbase/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -26,11 +36,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/cbase/stats/page.js"
     ],
-    "/cbase/matchups/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/cbase/matchups/page.js"
-    ],
     "/cbase/profiles/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -40,6 +45,16 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/stats/page.js"
+    ],
+    "/previews/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/previews/page.js"
+    ],
+    "/cbase/matchups/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/cbase/matchups/page.js"
     ]
   }
 }

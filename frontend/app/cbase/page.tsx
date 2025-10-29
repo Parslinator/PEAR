@@ -328,8 +328,20 @@ export default function CbasePage() {
 
                           return (
                             <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                              <td className="px-2 py-2 text-gray-700 dark:text-gray-300 font-medium text-sm">{index + 1}</td>
-                              <td className="px-2 py-2 font-semibold text-gray-900 dark:text-white text-sm">{team.Team}</td>
+                              <td className="px-2 py-2 text-gray-700 dark:text-gray-300 font-medium border-r-2 border-gray-300 dark:border-gray-600">{index + 1}</td>
+                              <td className="px-2 py-2 font-semibold text-gray-900 dark:text-white text-sm">
+                                <div className="flex items-center gap-2">
+                                  <img 
+                                    src={`http://localhost:8000/api/baseball-logo/${encodeURIComponent(team.Team)}`}
+                                    alt={`${team.Team} logo`}
+                                    className="w-6 h-6 object-contain"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = 'none';
+                                    }}
+                                  />
+                                  <span>{team.Team}</span>
+                                </div>
+                              </td>
                               <td className="px-1 py-2 text-center">
                                 <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
                                   <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
