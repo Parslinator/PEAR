@@ -3,6 +3,9 @@ node_modules/
 frontend/node_modules/
 backend/venv/
 backend/__pycache__/
+package-lock.json
+frontend/package-lock.json
+backend/package-lock.json
 
 # Next.js
 frontend/.next/
