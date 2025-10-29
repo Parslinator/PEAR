@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { ChevronUp, ChevronDown, Download } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 interface StatsData {
   team: string;

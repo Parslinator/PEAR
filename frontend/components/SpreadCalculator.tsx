@@ -5,7 +5,7 @@ import Image from 'next/image';
 import axios from 'axios';
 import { Calculator, TrendingUp, TrendingDown } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 interface CalculationResult {
   spread: number;

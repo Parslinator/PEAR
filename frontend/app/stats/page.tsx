@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import StatsTable from '@/components/StatsTable';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export default function StatsPage() {
   const [currentSeason, setCurrentSeason] = useState({ year: 2025, week: 1 });

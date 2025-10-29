@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useTheme } from '../app/contexts/ThemeContext';
 import { useState } from 'react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export default function Navbar() {
   const pathname = usePathname();
