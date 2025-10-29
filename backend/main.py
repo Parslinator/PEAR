@@ -34,8 +34,11 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "http://129.212.189.128",  # Add your droplet IP
-        "https://your-domain.com",  # Add when you get a domain
+        "http://129.212.189.128",
+        "http://pearatings.com",      # Add these
+        "https://pearatings.com",     # Add these
+        "http://www.pearatings.com",  # Add these
+        "https://www.pearatings.com", # Add these
     ],
     allow_credentials=True,
     allow_methods=["*"],
