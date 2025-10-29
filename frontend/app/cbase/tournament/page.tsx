@@ -36,13 +36,11 @@ export default function CbaseTournamentPage() {
   const [simulationLoading, setSimulationLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Simulation form state
   const [seed1, setSeed1] = useState('');
   const [seed2, setSeed2] = useState('');
   const [seed3, setSeed3] = useState('');
   const [seed4, setSeed4] = useState('');
 
-  // Search/filter states
   const [seed1SearchTerm, setSeed1SearchTerm] = useState('');
   const [seed2SearchTerm, setSeed2SearchTerm] = useState('');
   const [seed3SearchTerm, setSeed3SearchTerm] = useState('');
@@ -118,7 +116,6 @@ export default function CbaseTournamentPage() {
     }
   };
 
-  // Filter teams based on search
   const filteredSeed1Teams = teams.filter(team =>
     team.toLowerCase().includes(seed1SearchTerm.toLowerCase())
   );
@@ -160,25 +157,20 @@ export default function CbaseTournamentPage() {
     a.click();
   };
 
-  // Helper function to determine team status and color
   const getTeamColor = (team: string) => {
     if (!tournamentOutlook) return 'blue';
     
-    // Check if automatic qualifier (green)
     if (tournamentOutlook.automatic_qualifiers?.includes(team)) {
       return 'green';
     }
     
-    // Check if last four in (orange)
     if (tournamentOutlook.last_four_in.includes(team)) {
       return 'orange';
     }
     
-    // Regular at-large team (blue)
     return 'blue';
   };
 
-  // Pair regionals: 1 vs 16, 2 vs 15, etc.
   const getRegionalPairs = () => {
     if (!tournamentOutlook) return [];
     
@@ -195,7 +187,6 @@ export default function CbaseTournamentPage() {
     return pairs;
   };
 
-  // Component to render a single regional
   const RegionalCard = ({ regional }: { regional: any }) => {
     const seed1Color = getTeamColor(regional.seed_1);
     const seed2Color = getTeamColor(regional.seed_2);
@@ -204,83 +195,77 @@ export default function CbaseTournamentPage() {
 
     const colorClasses = {
       green: {
-        bg: 'bg-green-50',
-        border: 'border-green-600',
-        text: 'text-green-700',
-        badge: 'bg-green-600'
+        bg: 'bg-green-50 dark:bg-green-900/20',
+        border: 'border-green-600 dark:border-green-500',
+        text: 'text-green-700 dark:text-green-400',
+        badge: 'bg-green-600 dark:bg-green-500'
       },
       blue: {
-        bg: 'bg-blue-50',
-        border: 'border-blue-500',
-        text: 'text-blue-600',
-        badge: 'bg-blue-600'
+        bg: 'bg-blue-50 dark:bg-blue-900/20',
+        border: 'border-blue-500 dark:border-blue-400',
+        text: 'text-blue-600 dark:text-blue-400',
+        badge: 'bg-blue-600 dark:bg-blue-500'
       },
       orange: {
-        bg: 'bg-orange-100',
-        border: 'border-orange-600',
-        text: 'text-orange-700',
-        badge: 'bg-orange-700'
+        bg: 'bg-orange-100 dark:bg-orange-900/20',
+        border: 'border-orange-600 dark:border-orange-500',
+        text: 'text-orange-700 dark:text-orange-400',
+        badge: 'bg-orange-700 dark:bg-orange-600'
       }
     };
 
     return (
-      <div className="border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all">
-        {/* Regional Header */}
-        <div className="bg-gradient-to-r from-gray-800 to-gray-700 text-white px-4 py-2 rounded-t-lg">
+      <div className="border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all">
+        <div className="bg-gradient-to-r from-gray-800 to-gray-700 dark:from-gray-900 dark:to-gray-800 text-white px-4 py-2 rounded-t-lg">
           <div className="flex items-center justify-between">
             <span className="font-bold">{regional.host} Regional</span>
-            <span className="text-xs bg-white/20 px-2 py-1 rounded">Seed #{regional.regional_number}</span>
+            <span className="text-xs bg-white/20 dark:bg-white/10 px-2 py-1 rounded">Seed #{regional.regional_number}</span>
           </div>
         </div>
 
-        {/* Regional Seeds */}
-        <div className="p-3 space-y-1">
-          {/* 1 Seed - Host */}
+        <div className="p-3 space-y-1 bg-white dark:bg-gray-800">
           <div className={`flex items-center gap-2 ${colorClasses[seed1Color].bg} border-l-4 ${colorClasses[seed1Color].border} px-3 py-2 rounded`}>
             <span className={`font-bold ${colorClasses[seed1Color].text} text-sm w-6`}>1</span>
-            <span className="font-bold text-gray-900 flex-1">{regional.seed_1}</span>
+            <span className="font-bold text-gray-900 dark:text-white flex-1">{regional.seed_1}</span>
             {seed1Color === 'green' ? (
-              <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
+              <span className="text-xs bg-green-600 dark:bg-green-500 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
             ) : seed1Color === 'orange' ? (
-              <span className="text-xs bg-orange-700 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
+              <span className="text-xs bg-orange-700 dark:bg-orange-600 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
             ) : (
-              <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded font-semibold">HOST</span>
+              <span className="text-xs bg-blue-600 dark:bg-blue-500 text-white px-2 py-0.5 rounded font-semibold">HOST</span>
             )}
           </div>
 
-          {/* 2 Seed */}
           <div className={`flex items-center gap-2 ${colorClasses[seed2Color].bg} border-l-4 ${colorClasses[seed2Color].border} px-3 py-2 rounded`}>
             <span className={`font-bold ${colorClasses[seed2Color].text} text-sm w-6`}>2</span>
-            <span className="text-gray-900 flex-1">{regional.seed_2}</span>
+            <span className="text-gray-900 dark:text-white flex-1">{regional.seed_2}</span>
             {seed2Color === 'green' && (
-              <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
+              <span className="text-xs bg-green-600 dark:bg-green-500 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
             )}
             {seed2Color === 'orange' && (
-              <span className="text-xs bg-orange-700 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
+              <span className="text-xs bg-orange-700 dark:bg-orange-600 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
             )}
           </div>
 
-          {/* 3 Seed */}
           <div className={`flex items-center gap-2 ${colorClasses[seed3Color].bg} border-l-4 ${colorClasses[seed3Color].border} px-3 py-2 rounded`}>
             <span className={`font-bold ${colorClasses[seed3Color].text} text-sm w-6`}>3</span>
-            <span className="text-gray-900 flex-1">{regional.seed_3}</span>
+            <span className="text-gray-900 dark:text-white flex-1">{regional.seed_3}</span>
             {seed3Color === 'green' && (
-              <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
+              <span className="text-xs bg-green-600 dark:bg-green-500 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
             )}
             {seed3Color === 'orange' && (
-              <span className="text-xs bg-orange-700 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
+              <span className="text-xs bg-orange-700 dark:bg-orange-600 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
             )}
           </div>
 
-          {/* 4 Seed */}
           <div className={`flex items-center gap-2 ${colorClasses[seed4Color].bg} border-l-4 ${colorClasses[seed4Color].border} px-3 py-2 rounded`}>
             <span className={`font-bold ${colorClasses[seed4Color].text} text-sm w-6`}>4</span>
-            <span className="text-gray-900 flex-1">{regional.seed_4}</span>
+            <span className="text-gray-900 dark:text-white flex-1">{regional.seed_4}</span>
             {seed4Color === 'green' && (
-              <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
+              <span className="text-xs bg-green-600 dark:bg-green-500 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
             )}
             {seed4Color === 'orange' && (
-              <span className="text-xs bg-orange-700 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
+              <span className="text-xs bg-orange-700 dark:bg-orange-600 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
             )}
           </div>
         </div>
@@ -290,9 +275,9 @@ export default function CbaseTournamentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-yellow-400 mx-auto"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-yellow-400 dark:border-blue-400 mx-auto"></div>
           <p className="text-white mt-4 text-xl">Loading Tournament Data...</p>
         </div>
       </div>
@@ -300,14 +285,13 @@ export default function CbaseTournamentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Simple Header with Export */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">PEAR's Tournament Projection</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">PEAR's Tournament Projection</h1>
           <button
             onClick={downloadCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 font-semibold transition-colors"
           >
             <Download className="w-4 h-4" />
             Export CSV
@@ -315,52 +299,49 @@ export default function CbaseTournamentPage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 text-red-800 px-4 py-3 rounded mb-6 flex items-center gap-2">
+          <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 dark:border-red-600 text-red-800 dark:text-red-300 px-4 py-3 rounded mb-6 flex items-center gap-2">
             <AlertCircle className="w-5 h-5" />
             {error}
           </div>
         )}
 
-        {/* Conference Bids Summary */}
         {tournamentOutlook && (
-          <div className="mb-8 bg-white rounded-lg shadow-md p-6 border-t-4 border-blue-600">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Target className="w-5 h-5 text-blue-600" />
+          <div className="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-t-4 border-blue-600 dark:border-blue-500">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               Multi-Bid Conferences
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {Object.entries(tournamentOutlook.multibid_conferences)
                 .sort((a, b) => b[1] - a[1])
                 .map(([conf, count]) => (
-                  <div key={conf} className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3 text-center border border-blue-200">
-                    <div className="text-2xl font-bold text-blue-700">{count}</div>
-                    <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide">{conf}</div>
+                  <div key={conf} className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg p-3 text-center border border-blue-200 dark:border-blue-700">
+                    <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{count}</div>
+                    <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">{conf}</div>
                   </div>
                 ))}
             </div>
           </div>
         )}
 
-        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Regionals - Takes up 2 columns */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-md border-t-4 border-green-600">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-2xl font-bold text-gray-900">PEAR's Projected Regionals</h2>
-                <p className="text-sm text-gray-600 mt-1">64-team field • Top 16 national seeds</p>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border-t-4 border-green-600 dark:border-green-500">
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">PEAR's Projected Regionals</h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">64-team field • Top 16 national seeds</p>
                 <div className="flex gap-4 mt-3 text-xs">
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 bg-green-600 rounded"></div>
-                    <span className="text-gray-600">Automatic Qualifier</span>
+                    <div className="w-3 h-3 bg-green-600 dark:bg-green-500 rounded"></div>
+                    <span className="text-gray-600 dark:text-gray-400">Automatic Qualifier</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 bg-blue-600 rounded"></div>
-                    <span className="text-gray-600">At-Large</span>
+                    <div className="w-3 h-3 bg-blue-600 dark:bg-blue-500 rounded"></div>
+                    <span className="text-gray-600 dark:text-gray-400">At-Large</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <div className="w-3 h-3 bg-orange-600 rounded"></div>
-                    <span className="text-gray-600">Last Four In</span>
+                    <span className="text-gray-600 dark:text-gray-400">Last Four In</span>
                   </div>
                 </div>
               </div>
@@ -374,7 +355,7 @@ export default function CbaseTournamentPage() {
                           <RegionalCard regional={pair.regional1} />
                           <RegionalCard regional={pair.regional2} />
                         </div>
-                        {index < 7 && <div className="border-b border-gray-200 mt-8"></div>}
+                        {index < 7 && <div className="border-b border-gray-200 dark:border-gray-700 mt-8"></div>}
                       </div>
                     ))}
                   </div>
@@ -383,58 +364,53 @@ export default function CbaseTournamentPage() {
             </div>
           </div>
 
-          {/* Sidebar - Bubble Watch & Simulator */}
           <div className="space-y-6">
-            {/* Bubble Watch */}
             {tournamentOutlook && (
-              <div className="bg-white rounded-lg shadow-md border-t-4 border-yellow-500">
-                <div className="p-4 border-b border-gray-200">
-                  <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-yellow-600" />
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border-t-4 border-yellow-500 dark:border-yellow-600">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-yellow-600 dark:text-yellow-500" />
                     Bubble Watch
                   </h3>
                 </div>
 
                 <div className="p-4 space-y-4">
-                  {/* Last Four In */}
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                      <h4 className="font-bold text-sm text-gray-700 uppercase tracking-wide">Last Four In</h4>
+                      <h4 className="font-bold text-sm text-gray-700 dark:text-gray-300 uppercase tracking-wide">Last Four In</h4>
                     </div>
                     <div className="space-y-1">
                       {tournamentOutlook.last_four_in.map((team, index) => (
-                        <div key={index} className="bg-orange-50 border-l-2 border-orange-500 px-3 py-2 text-sm rounded">
+                        <div key={index} className="bg-orange-50 dark:bg-orange-900/20 border-l-2 border-orange-500 dark:border-orange-600 px-3 py-2 text-sm rounded text-gray-900 dark:text-gray-100">
                           {team}
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* First Four Out */}
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                      <h4 className="font-bold text-sm text-gray-700 uppercase tracking-wide">First Four Out</h4>
+                      <h4 className="font-bold text-sm text-gray-700 dark:text-gray-300 uppercase tracking-wide">First Four Out</h4>
                     </div>
                     <div className="space-y-1">
                       {tournamentOutlook.first_four_out.map((team, index) => (
-                        <div key={index} className="bg-red-50 border-l-2 border-red-500 px-3 py-2 text-sm rounded">
+                        <div key={index} className="bg-red-50 dark:bg-red-900/20 border-l-2 border-red-500 dark:border-red-600 px-3 py-2 text-sm rounded text-gray-900 dark:text-gray-100">
                           {team}
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Next Four Out */}
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-3 h-3 bg-red-800 rounded-full"></div>
-                      <h4 className="font-bold text-sm text-gray-700 uppercase tracking-wide">Next Four Out</h4>
+                      <div className="w-3 h-3 bg-red-800 dark:bg-red-900 rounded-full"></div>
+                      <h4 className="font-bold text-sm text-gray-700 dark:text-gray-300 uppercase tracking-wide">Next Four Out</h4>
                     </div>
                     <div className="space-y-1">
                       {tournamentOutlook.next_four_out.map((team, index) => (
-                        <div key={index} className="bg-red-100 border-l-2 border-red-800 px-3 py-2 text-sm rounded">
+                        <div key={index} className="bg-red-100 dark:bg-red-950/30 border-l-2 border-red-800 dark:border-red-900 px-3 py-2 text-sm rounded text-gray-900 dark:text-gray-100">
                           {team}
                         </div>
                       ))}
@@ -444,18 +420,16 @@ export default function CbaseTournamentPage() {
               </div>
             )}
 
-            {/* Regional Simulator */}
-            <div className="bg-white rounded-lg shadow-md border-t-4 border-purple-600">
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="text-xl font-bold text-gray-900">Regional Simulator</h3>
-                <p className="text-xs text-gray-600 mt-1">Simulate any 4-team regional</p>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border-t-4 border-purple-600 dark:border-purple-500">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Regional Simulator</h3>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Simulate any 4-team regional</p>
               </div>
 
               <div className="p-4">
                 <form onSubmit={simulateRegional} className="space-y-3">
-                  {/* 1 Seed */}
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wide">
+                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-wide">
                       1 Seed (Host)
                     </label>
                     <div className="relative">
@@ -470,10 +444,10 @@ export default function CbaseTournamentPage() {
                         onFocus={() => setShowSeed1Dropdown(true)}
                         onBlur={() => setTimeout(() => setShowSeed1Dropdown(false), 200)}
                         placeholder="Search team..."
-                        className="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-3 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       />
                       {showSeed1Dropdown && filteredSeed1Teams.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                           {filteredSeed1Teams.map(team => (
                             <div
                               key={team}
@@ -482,7 +456,7 @@ export default function CbaseTournamentPage() {
                                 setSeed1SearchTerm('');
                                 setShowSeed1Dropdown(false);
                               }}
-                              className="px-3 py-2 hover:bg-purple-50 cursor-pointer text-sm"
+                              className="px-3 py-2 hover:bg-purple-50 dark:hover:bg-purple-900/30 cursor-pointer text-sm text-gray-900 dark:text-gray-100"
                             >
                               {team}
                             </div>
@@ -492,9 +466,8 @@ export default function CbaseTournamentPage() {
                     </div>
                   </div>
 
-                  {/* 2 Seed */}
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wide">2 Seed</label>
+                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-wide">2 Seed</label>
                     <div className="relative">
                       <input
                         type="text"
@@ -507,10 +480,10 @@ export default function CbaseTournamentPage() {
                         onFocus={() => setShowSeed2Dropdown(true)}
                         onBlur={() => setTimeout(() => setShowSeed2Dropdown(false), 200)}
                         placeholder="Search team..."
-                        className="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-3 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       />
                       {showSeed2Dropdown && filteredSeed2Teams.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                           {filteredSeed2Teams.map(team => (
                             <div
                               key={team}
@@ -519,7 +492,7 @@ export default function CbaseTournamentPage() {
                                 setSeed2SearchTerm('');
                                 setShowSeed2Dropdown(false);
                               }}
-                              className="px-3 py-2 hover:bg-purple-50 cursor-pointer text-sm"
+                              className="px-3 py-2 hover:bg-purple-50 dark:hover:bg-purple-900/30 cursor-pointer text-sm text-gray-900 dark:text-gray-100"
                             >
                               {team}
                             </div>
@@ -529,9 +502,8 @@ export default function CbaseTournamentPage() {
                     </div>
                   </div>
 
-                  {/* 3 Seed */}
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wide">3 Seed</label>
+                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-wide">3 Seed</label>
                     <div className="relative">
                       <input
                         type="text"
@@ -544,10 +516,10 @@ export default function CbaseTournamentPage() {
                         onFocus={() => setShowSeed3Dropdown(true)}
                         onBlur={() => setTimeout(() => setShowSeed3Dropdown(false), 200)}
                         placeholder="Search team..."
-                        className="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-3 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       />
                       {showSeed3Dropdown && filteredSeed3Teams.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                           {filteredSeed3Teams.map(team => (
                             <div
                               key={team}
@@ -556,7 +528,7 @@ export default function CbaseTournamentPage() {
                                 setSeed3SearchTerm('');
                                 setShowSeed3Dropdown(false);
                               }}
-                              className="px-3 py-2 hover:bg-purple-50 cursor-pointer text-sm"
+                              className="px-3 py-2 hover:bg-purple-50 dark:hover:bg-purple-900/30 cursor-pointer text-sm text-gray-900 dark:text-gray-100"
                             >
                               {team}
                             </div>
@@ -566,9 +538,8 @@ export default function CbaseTournamentPage() {
                     </div>
                   </div>
 
-                  {/* 4 Seed */}
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wide">4 Seed</label>
+                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-wide">4 Seed</label>
                     <div className="relative">
                       <input
                         type="text"
@@ -581,10 +552,10 @@ export default function CbaseTournamentPage() {
                         onFocus={() => setShowSeed4Dropdown(true)}
                         onBlur={() => setTimeout(() => setShowSeed4Dropdown(false), 200)}
                         placeholder="Search team..."
-                        className="w-full px-3 py-2 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="w-full px-3 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       />
                       {showSeed4Dropdown && filteredSeed4Teams.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                           {filteredSeed4Teams.map(team => (
                             <div
                               key={team}
@@ -593,7 +564,7 @@ export default function CbaseTournamentPage() {
                                 setSeed4SearchTerm('');
                                 setShowSeed4Dropdown(false);
                               }}
-                              className="px-3 py-2 hover:bg-purple-50 cursor-pointer text-sm"
+                              className="px-3 py-2 hover:bg-purple-50 dark:hover:bg-purple-900/30 cursor-pointer text-sm text-gray-900 dark:text-gray-100"
                             >
                               {team}
                             </div>
@@ -606,17 +577,16 @@ export default function CbaseTournamentPage() {
                   <button
                     type="submit"
                     disabled={simulationLoading}
-                    className="w-full bg-purple-600 text-white py-2.5 px-4 rounded-lg hover:bg-purple-700 font-bold text-sm disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                    className="w-full bg-purple-600 dark:bg-purple-500 text-white py-2.5 px-4 rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 font-bold text-sm disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
                   >
                     {simulationLoading ? 'Simulating...' : 'Run Simulation'}
                   </button>
                 </form>
 
-                {/* Simulation Result */}
                 {simulationImage && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <h4 className="text-sm font-bold text-gray-900 mb-2">Simulation Results</h4>
-                    <div className="bg-gray-50 rounded-lg p-2">
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-2">Simulation Results</h4>
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-2">
                       <img 
                         src={simulationImage} 
                         alt="Regional Simulation" 
@@ -630,27 +600,26 @@ export default function CbaseTournamentPage() {
           </div>
         </div>
 
-        {/* Info Footer */}
-        <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-blue-600" />
+        <div className="mt-8 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+          <h3 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             How This Works
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700 dark:text-gray-300">
             <div>
-              <p className="font-semibold text-gray-900 mb-1">Tournament Projection</p>
+              <p className="font-semibold text-gray-900 dark:text-white mb-1">Tournament Projection</p>
               <p>Projects the 16 regional hosts and their opponents based on current NET rankings. Automatic Qualifiers are determined via highest NET ranking. This does not account for location.</p>
             </div>
             <div>
-              <p className="font-semibold text-gray-900 mb-1">Regional Simulator</p>
+              <p className="font-semibold text-gray-900 dark:text-white mb-1">Regional Simulator</p>
               <p>Uses PEAR ratings to simulate a double-elimination regional tournament 5,000 times. Home field advantage factored in for the host team.</p>
             </div>
             <div>
-              <p className="font-semibold text-gray-900 mb-1">Bubble Teams</p>
+              <p className="font-semibold text-gray-900 dark:text-white mb-1">Bubble Teams</p>
               <p>Last 4 In are the final at-large teams projected to make the field. First/Next 4 Out are teams just outside the projected field.</p>
             </div>
             <div>
-              <p className="font-semibold text-gray-900 mb-1">Conflict Resolution</p>
+              <p className="font-semibold text-gray-900 dark:text-white mb-1">Conflict Resolution</p>
               <p>Algorithm minimizes conference matchups in the first round by intelligently swapping seeds across regionals while maintaining competitive balance.</p>
             </div>
           </div>

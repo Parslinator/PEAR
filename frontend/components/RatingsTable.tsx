@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp, ChevronDown, Download } from 'lucide-react';
 
 interface RatingData {
   Team: string;
@@ -177,9 +177,10 @@ export default function RatingsTable({ data }: Props) {
         />
         <button
           onClick={downloadCSV}
-          className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold whitespace-nowrap"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 font-semibold transition-colors"
         >
-          Download CSV
+          <Download className="w-4 h-4" />
+          Export CSV
         </button>
       </div>
 

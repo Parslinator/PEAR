@@ -1,50 +1,25 @@
 {
   "pages": {
+    "/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/page.js"
+    ],
     "/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/page": [
+    "/spreads/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/page.js"
+      "static/chunks/app/spreads/page.js"
     ],
     "/stats/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/stats/page.js"
-    ],
-    "/cbase/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/cbase/page.js"
-    ],
-    "/cbase/stats/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/cbase/stats/page.js"
-    ],
-    "/cbase/matchups/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/cbase/matchups/page.js"
-    ],
-    "/cbase/profiles/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/cbase/profiles/page.js"
-    ],
-    "/cbase/tournament/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/cbase/tournament/page.js"
-    ],
-    "/spreads/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/spreads/page.js"
     ],
     "/matchups/page": [
       "static/chunks/webpack.js",
@@ -56,10 +31,30 @@
       "static/chunks/main-app.js",
       "static/chunks/app/previews/page.js"
     ],
-    "/archive/page": [
+    "/cbase/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/archive/page.js"
+      "static/chunks/app/cbase/page.js"
+    ],
+    "/cbase/matchups/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/cbase/matchups/page.js"
+    ],
+    "/cbase/tournament/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/cbase/tournament/page.js"
+    ],
+    "/cbase/stats/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/cbase/stats/page.js"
+    ],
+    "/cbase/profiles/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/cbase/profiles/page.js"
     ]
   }
 }

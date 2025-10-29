@@ -179,19 +179,19 @@ export default function CbasePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Simple Header with Export */}
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Ratings and Resume</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Ratings and Resume</h1>
             {dataDate && (
-              <p className="text-sm text-gray-600 mt-1">Data as of {dataDate}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Data as of {dataDate}</p>
             )}
           </div>
           <button
             onClick={downloadCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 font-semibold transition-colors"
           >
             <Download className="w-4 h-4" />
             Export CSV
@@ -199,24 +199,24 @@ export default function CbasePage() {
         </div>
 
         <section>
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
             {/* Search and Filter Controls */}
-            <div className="p-4 border-b border-gray-200">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex gap-4 flex-wrap items-center">
                 <div className="flex-1 min-w-[200px] relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
                   <input
                     type="text"
                     placeholder="Search teams..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   />
                 </div>
                 <select
                   value={selectedConference}
                   onChange={(e) => setSelectedConference(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   {conferences.map(conf => (
                     <option key={conf} value={conf}>{conf}</option>
@@ -229,86 +229,86 @@ export default function CbasePage() {
             <div className="p-6">
               {loading ? (
                 <div className="text-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                  <p className="mt-4 text-gray-600">Loading ratings...</p>
+                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                  <p className="mt-4 text-gray-600 dark:text-gray-400">Loading ratings...</p>
                 </div>
               ) : (
                 <>
                   <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
                     <table className="w-full text-sm">
-                      <thead className="bg-gray-50 sticky top-0">
+                      <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">
                         <tr>
-                          <th className="px-2 py-2 text-left font-semibold text-gray-700">Rank</th>
+                          <th className="px-2 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">Rank</th>
                           <th 
-                            className="px-3 py-3 text-left font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                            className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                             onClick={() => handleSort('Team')}
                           >
                             Team {sortField === 'Team' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
                           <th 
-                            className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                            className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                             onClick={() => handleSort('NET_Score')}
                           >
                             NET {sortField === 'NET_Score' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
                           <th 
-                            className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                            className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                             onClick={() => handleSort('Rating')}
                           >
                             TSR {sortField === 'Rating' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
                           <th 
-                            className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                            className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                             onClick={() => handleSort('resume_quality')}
                           >
                             RQI {sortField === 'resume_quality' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
                           <th 
-                            className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                            className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                             onClick={() => handleSort('avg_expected_wins')}
                           >
                             SOS {sortField === 'avg_expected_wins' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
                           <th 
-                            className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                            className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                             onClick={() => handleSort('ELO')}
                           >
                             ELO {sortField === 'ELO' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
                           <th 
-                            className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                            className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                             onClick={() => handleSort('RPI')}
                           >
                             RPI {sortField === 'RPI' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
-                          <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                          <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                             onClick={() => handleSort('Q1')}
                           >
                             Q1 {sortField === 'Q1' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
-                          <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                          <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                             onClick={() => handleSort('Q2')}
                           >
                             Q2 {sortField === 'Q2' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
-                          <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                          <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                             onClick={() => handleSort('Q3')}
                           >
                             Q3 {sortField === 'Q3' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
-                          <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                          <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                             onClick={() => handleSort('Q4')}
                           >
                             Q4 {sortField === 'Q4' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
-                          <th className="px-1 py-2 text-center font-semibold text-gray-700 cursor-pointer hover:bg-gray-100"
+                          <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                             onClick={() => handleSort('Conference')}
                           >
-                            Conf {sortField === 'Conference' && (sortDirection === 'asc' ? '↑' : '↓')}
+                            CONF {sortField === 'Conference' && (sortDirection === 'asc' ? '↑' : '↓')}
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200">
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                         {filteredAndSortedStats.map((team, index) => {
                           // Calculate background colors
                           const netBg = getRatingColor(team.NET_Score || 0, stats.map(s => s.NET_Score || 0).filter(v => v !== null), true);
@@ -327,12 +327,12 @@ export default function CbasePage() {
                           const rpiRank = getNationalRank(team.RPI, 'RPI', false);
 
                           return (
-                            <tr key={index} className="hover:bg-gray-50">
-                              <td className="px-2 py-2 text-gray-700 font-medium text-sm">{index + 1}</td>
-                              <td className="px-2 py-2 font-semibold text-gray-900 text-sm">{team.Team}</td>
+                            <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                              <td className="px-2 py-2 text-gray-700 dark:text-gray-300 font-medium text-sm">{index + 1}</td>
+                              <td className="px-2 py-2 font-semibold text-gray-900 dark:text-white text-sm">{team.Team}</td>
                               <td className="px-1 py-2 text-center">
                                 <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                                  <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
+                                  <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                     {team.NET_Score?.toFixed(3)}
                                   </span>
                                   <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: netBg, color: getTextColor(netBg) }}>{netRank}</span>
@@ -340,7 +340,7 @@ export default function CbasePage() {
                               </td>
                               <td className="px-1 py-2 text-center">
                                 <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                                  <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
+                                  <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                     {team.Rating?.toFixed(2)}
                                   </span>
                                   <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: tsrBg, color: getTextColor(tsrBg) }}>{tsrRank}</span>
@@ -348,7 +348,7 @@ export default function CbasePage() {
                               </td>
                               <td className="px-1 py-2 text-center">
                                 <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                                  <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
+                                  <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                     {team.resume_quality?.toFixed(3)}
                                   </span>
                                   <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: rqiBg, color: getTextColor(rqiBg) }}>{rqiRank}</span>
@@ -356,7 +356,7 @@ export default function CbasePage() {
                               </td>
                               <td className="px-1 py-2 text-center">
                                 <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                                  <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
+                                  <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                     {team.avg_expected_wins?.toFixed(3)}
                                   </span>
                                   <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: sosBg, color: getTextColor(sosBg) }}>{sosRank}</span>
@@ -364,7 +364,7 @@ export default function CbasePage() {
                               </td>
                               <td className="px-1 py-2 text-center">
                                 <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                                  <span className="text-[10px] font-medium text-gray-700 text-right w-[32px]">
+                                  <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                     {team.ELO?.toFixed(1)}
                                   </span>
                                   <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: eloBg, color: getTextColor(eloBg) }}>{eloRank}</span>
@@ -375,11 +375,11 @@ export default function CbasePage() {
                                   <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: rpiBg, color: getTextColor(rpiBg) }}>{rpiRank}</span>
                                 </div>
                               </td>
-                              <td className="px-1 py-2 text-center text-xs text-gray-600">{team.Q1}</td>
-                              <td className="px-1 py-2 text-center text-xs text-gray-600">{team.Q2}</td>
-                              <td className="px-1 py-2 text-center text-xs text-gray-600">{team.Q3}</td>
-                              <td className="px-1 py-2 text-center text-xs text-gray-600">{team.Q4}</td>
-                              <td className="px-1 py-2 text-center text-xs text-gray-600">{team.Conference}</td>
+                              <td className="px-1 py-2 text-center text-xs text-gray-600 dark:text-gray-400">{team.Q1}</td>
+                              <td className="px-1 py-2 text-center text-xs text-gray-600 dark:text-gray-400">{team.Q2}</td>
+                              <td className="px-1 py-2 text-center text-xs text-gray-600 dark:text-gray-400">{team.Q3}</td>
+                              <td className="px-1 py-2 text-center text-xs text-gray-600 dark:text-gray-400">{team.Q4}</td>
+                              <td className="px-1 py-2 text-center text-xs text-gray-600 dark:text-gray-400">{team.Conference}</td>
                             </tr>
                           );
                         })}
@@ -387,10 +387,10 @@ export default function CbasePage() {
                     </table>
                   </div>
 
-                  <div className="mt-6 text-sm text-gray-600 space-y-1">
-                    <p><strong>TSR</strong> - Team Strength Rating | <strong>NET</strong> - Mimicking the NCAA Evaluation Tool using TSR, RQI, SOS</p>
-                    <p><strong>RPI</strong> - Warren Nolan's Live RPI | <strong>RQI</strong> - Resume Quality Index | <strong>SOS</strong> - Strength of Schedule</p>
-                    <p><strong>Q1-Q4</strong> - Quadrant records (wins-losses)</p>
+                  <div className="mt-6 text-sm text-gray-600 dark:text-gray-400 space-y-1 border-t dark:border-gray-700 pt-4">
+                    <p><strong className="dark:text-gray-300">TSR</strong> - Team Strength Rating | <strong className="dark:text-gray-300">NET</strong> - Mimicking the NCAA Evaluation Tool using TSR, RQI, SOS</p>
+                    <p><strong className="dark:text-gray-300">RPI</strong> - Warren Nolan's Live RPI | <strong className="dark:text-gray-300">RQI</strong> - Resume Quality Index | <strong className="dark:text-gray-300">SOS</strong> - Strength of Schedule</p>
+                    <p><strong className="dark:text-gray-300">Q1-Q4</strong> - Quadrant records (wins-losses)</p>
                   </div>
                 </>
               )}

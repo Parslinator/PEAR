@@ -118,35 +118,35 @@ export default function CbaseMatchupsPage() {
   );
 
   const getGQIColor = (gqi: number) => {
-    if (gqi >= 8) return 'text-green-600 bg-green-50 border-green-200';
-    if (gqi >= 6) return 'text-green-500 bg-green-50 border-green-200';
-    if (gqi >= 4) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    return 'text-gray-600 bg-gray-50 border-gray-200';
+    if (gqi >= 8) return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700';
+    if (gqi >= 6) return 'text-green-500 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700';
+    if (gqi >= 4) return 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700';
+    return 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700';
   };
 
   const getWinProbColor = (prob: number) => {
-    if (prob >= 70) return 'text-green-700 font-bold';
-    if (prob >= 55) return 'text-blue-700 font-semibold';
-    return 'text-gray-700';
+    if (prob >= 70) return 'text-green-700 dark:text-green-400 font-bold';
+    if (prob >= 55) return 'text-blue-700 dark:text-blue-400 font-semibold';
+    return 'text-gray-700 dark:text-gray-300';
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 pt-16">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Matchup Calculator</h1>
-          <p className="text-lg text-gray-600">Calculate spread and win probability for any matchup</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Matchup Calculator</h1>
+          <p className="text-lg text-gray-600 dark:text-gray-400">Calculate spread and win probability for any matchup</p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
           <div className="p-6">
             <form onSubmit={calculateSpread} className="space-y-6">
               {/* Team Selectors - Side by Side */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Away Team */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Away Team
                   </label>
                   <div className="relative">
@@ -161,10 +161,10 @@ export default function CbaseMatchupsPage() {
                       onFocus={() => setShowAwayDropdown(true)}
                       onBlur={() => setTimeout(() => setShowAwayDropdown(false), 200)}
                       placeholder="Search for a team..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     />
                     {showAwayDropdown && filteredAwayTeams.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                         {filteredAwayTeams.map(team => (
                           <div
                             key={team}
@@ -173,7 +173,7 @@ export default function CbaseMatchupsPage() {
                               setAwaySearchTerm('');
                               setShowAwayDropdown(false);
                             }}
-                            className="px-4 py-3 hover:bg-purple-50 cursor-pointer text-gray-900"
+                            className="px-4 py-3 hover:bg-purple-50 dark:hover:bg-purple-900/30 cursor-pointer text-gray-900 dark:text-gray-100"
                           >
                             {team}
                           </div>
@@ -185,7 +185,7 @@ export default function CbaseMatchupsPage() {
 
                 {/* Home Team */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Home Team
                   </label>
                   <div className="relative">
@@ -200,10 +200,10 @@ export default function CbaseMatchupsPage() {
                       onFocus={() => setShowHomeDropdown(true)}
                       onBlur={() => setTimeout(() => setShowHomeDropdown(false), 200)}
                       placeholder="Search for a team..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     />
                     {showHomeDropdown && filteredHomeTeams.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                         {filteredHomeTeams.map(team => (
                           <div
                             key={team}
@@ -212,7 +212,7 @@ export default function CbaseMatchupsPage() {
                               setHomeSearchTerm('');
                               setShowHomeDropdown(false);
                             }}
-                            className="px-4 py-3 hover:bg-purple-50 cursor-pointer text-gray-900"
+                            className="px-4 py-3 hover:bg-purple-50 dark:hover:bg-purple-900/30 cursor-pointer text-gray-900 dark:text-gray-100"
                           >
                             {team}
                           </div>
@@ -225,7 +225,7 @@ export default function CbaseMatchupsPage() {
 
               {/* Game Location */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                   Game Location
                 </label>
                 <div className="flex items-center space-x-6">
@@ -234,25 +234,25 @@ export default function CbaseMatchupsPage() {
                       type="radio"
                       checked={!neutral}
                       onChange={() => setNeutral(false)}
-                      className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
+                      className="w-4 h-4 text-purple-600 border-gray-300 dark:border-gray-600 focus:ring-purple-500"
                     />
-                    <span className="ml-2 text-gray-700">On Campus</span>
+                    <span className="ml-2 text-gray-700 dark:text-gray-300">On Campus</span>
                   </label>
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="radio"
                       checked={neutral}
                       onChange={() => setNeutral(true)}
-                      className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
+                      className="w-4 h-4 text-purple-600 border-gray-300 dark:border-gray-600 focus:ring-purple-500"
                     />
-                    <span className="ml-2 text-gray-700">Neutral Site</span>
+                    <span className="ml-2 text-gray-700 dark:text-gray-300">Neutral Site</span>
                   </label>
                 </div>
               </div>
 
               {/* Error Message */}
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
                   {error}
                 </div>
               )}
@@ -261,7 +261,7 @@ export default function CbaseMatchupsPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center space-x-3 text-lg"
+                className="w-full bg-purple-600 dark:bg-purple-500 hover:bg-purple-700 dark:hover:bg-purple-600 text-white font-bold py-4 px-6 rounded-lg transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center space-x-3 text-lg"
               >
                 {loading ? (
                   <>
@@ -280,8 +280,8 @@ export default function CbaseMatchupsPage() {
             {/* Results */}
             {imageUrl && (
               <div className="mt-8">
-                <div className="border-t-2 border-gray-200 pt-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4 text-center">Matchup Comparison</h3>
+                <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-6">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">Matchup Comparison</h3>
                   
                   <div className="flex justify-center">
                     <div 

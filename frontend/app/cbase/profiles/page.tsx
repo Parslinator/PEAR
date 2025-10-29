@@ -207,24 +207,24 @@ export default function TeamAnalysisPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 pt-24 pb-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
             Team Profiles
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-600 dark:text-gray-400">
             View team profiles and historical performance
           </p>
         </div>
 
         {/* Team Selection Form */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
           <div className="space-y-4">
             <div className="relative" ref={dropdownRef}>
               <label
                 htmlFor="team-select"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
                 Select Team
               </label>
@@ -237,21 +237,21 @@ export default function TeamAnalysisPage() {
                 onFocus={() => setShowDropdown(true)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type to search for a team..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 autoComplete="off"
               />
               
               {/* Dropdown menu */}
               {showDropdown && filteredTeams.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto">
                   {filteredTeams.map((team, index) => (
                     <div
                       key={team}
                       onClick={() => handleTeamSelect(team)}
-                      className={`px-4 py-2 cursor-pointer ${
+                      className={`px-4 py-2 cursor-pointer text-gray-900 dark:text-white ${
                         index === selectedIndex
-                          ? "bg-blue-100"
-                          : "hover:bg-gray-100"
+                          ? "bg-blue-100 dark:bg-blue-900"
+                          : "hover:bg-gray-100 dark:hover:bg-gray-600"
                       }`}
                     >
                       {team}
@@ -262,8 +262,8 @@ export default function TeamAnalysisPage() {
 
               {/* No results message */}
               {showDropdown && filteredTeams.length === 0 && teamName && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-                  <div className="px-4 py-2 text-gray-500">No teams found</div>
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg">
+                  <div className="px-4 py-2 text-gray-500 dark:text-gray-400">No teams found</div>
                 </div>
               )}
             </div>
@@ -272,7 +272,7 @@ export default function TeamAnalysisPage() {
               <button
                 onClick={handleTeamProfile}
                 disabled={loadingProfile || !teamName.trim()}
-                className="w-full bg-blue-600 text-white py-3 px-6 rounded-md font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                className="w-full bg-blue-600 dark:bg-blue-500 text-white py-3 px-6 rounded-md font-semibold hover:bg-blue-700 dark:hover:bg-blue-600 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
               >
                 {loadingProfile ? "Generating..." : "Generate Team Profile"}
               </button>
@@ -280,7 +280,7 @@ export default function TeamAnalysisPage() {
               <button
                 onClick={handleHistoricalPerformance}
                 disabled={loadingHistorical || !teamName.trim()}
-                className="w-full bg-green-600 text-white py-3 px-6 rounded-md font-semibold hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                className="w-full bg-green-600 dark:bg-green-500 text-white py-3 px-6 rounded-md font-semibold hover:bg-green-700 dark:hover:bg-green-600 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
               >
                 {loadingHistorical ? "Generating..." : "Generate Historical Performance"}
               </button>
@@ -288,8 +288,8 @@ export default function TeamAnalysisPage() {
           </div>
 
           {error && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-red-800 text-sm">{error}</p>
+            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-md">
+              <p className="text-red-800 dark:text-red-300 text-sm">{error}</p>
             </div>
           )}
         </div>
@@ -297,15 +297,15 @@ export default function TeamAnalysisPage() {
         {/* Results Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Team Profile Section */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">Team Profile</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Team Profile</h2>
               {profileImage && (
                 <button
                   onClick={() =>
                     handleDownload(profileImage, `${teamName}_profile.png`)
                   }
-                  className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium text-sm"
                 >
                   Download
                 </button>
@@ -314,7 +314,7 @@ export default function TeamAnalysisPage() {
 
             {loadingProfile ? (
               <div className="flex items-center justify-center h-96">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
               </div>
             ) : profileImage ? (
               <div className="relative w-full cursor-pointer" onClick={() => setFullscreenImage(profileImage)}>
@@ -328,8 +328,8 @@ export default function TeamAnalysisPage() {
                 />
               </div>
             ) : (
-              <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
-                <p className="text-gray-500">
+              <div className="flex items-center justify-center h-96 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                <p className="text-gray-500 dark:text-gray-400">
                   Select a team and click "Generate Team Profile"
                 </p>
               </div>
@@ -337,9 +337,9 @@ export default function TeamAnalysisPage() {
           </div>
 
           {/* Historical Performance Section */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                 Historical Performance
               </h2>
               {historicalImage && (
@@ -350,7 +350,7 @@ export default function TeamAnalysisPage() {
                       `${teamName}_historical.png`
                     )
                   }
-                  className="text-green-600 hover:text-green-800 font-medium text-sm"
+                  className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 font-medium text-sm"
                 >
                   Download
                 </button>
@@ -359,7 +359,7 @@ export default function TeamAnalysisPage() {
 
             {loadingHistorical ? (
               <div className="flex items-center justify-center h-96">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 dark:border-green-400"></div>
               </div>
             ) : historicalImage ? (
               <div className="relative w-full cursor-pointer" onClick={() => setFullscreenImage(historicalImage)}>
@@ -373,8 +373,8 @@ export default function TeamAnalysisPage() {
                 />
               </div>
             ) : (
-              <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
-                <p className="text-gray-500">
+              <div className="flex items-center justify-center h-96 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                <p className="text-gray-500 dark:text-gray-400">
                   Select a team and click "Generate Historical Performance"
                 </p>
               </div>
@@ -383,11 +383,11 @@ export default function TeamAnalysisPage() {
         </div>
 
         {/* Info Section */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">
+        <div className="mt-8 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-2">
             About These Visualizations
           </h3>
-          <div className="text-sm text-blue-800 space-y-2">
+          <div className="text-sm text-blue-800 dark:text-blue-300 space-y-2">
             <p>
               <strong>Team Profile:</strong> Shows comprehensive team statistics including NET rankings, 
               percentile rankings across various metrics, quad records, and recent performance.

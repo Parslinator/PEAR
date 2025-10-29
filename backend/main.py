@@ -88,6 +88,37 @@ if os.path.exists(logo_folder):
             except Exception as e:
                 print(f"Error loading {filename}: {e}")
 
+@app.get("/api/football-logo/{team_name}")
+def get_football_logo(team_name: str):
+    """Serve team logo"""
+    # Replace spaces with underscores for the filename
+    logo_filename = f"{team_name.replace(' ', '_')}.png"
+    logo_path = os.path.join(logo_folder, logo_filename)
+    
+    print(f"Looking for logo at: {logo_path}")
+    print(f"Logo folder: {logo_folder}")
+    print(f"File exists: {os.path.exists(logo_path)}")
+    
+    if not os.path.exists(logo_path):
+        raise HTTPException(status_code=404, detail=f"Logo not found at: {logo_path}")
+    
+    return FileResponse(logo_path, media_type="image/png")
+
+@app.get("/api/game-preview/{year}/{week}/{filename}")
+def get_game_preview(year: int, week: int, filename: str):
+    """Serve game preview image"""
+    # The filename comes as "home_team vs away_team" (without .png)
+    image_filename = f"{filename}.png"
+    image_path = os.path.join(BASE_PATH, f"y{year}", "Visuals", f"week_{week}", "Games", image_filename)
+    
+    print(f"Looking for game preview at: {image_path}")
+    print(f"File exists: {os.path.exists(image_path)}")
+    
+    if not os.path.exists(image_path):
+        raise HTTPException(status_code=404, detail=f"Game preview not found at: {image_path}")
+    
+    return FileResponse(image_path, media_type="image/png")
+
 class SpreadRequest(BaseModel):
     away_team: str
     home_team: str
@@ -572,20 +603,21 @@ def get_spreads(year: int, week: int):
             raise HTTPException(status_code=404, detail=f"Spreads file not found at: {spreads_path}")
         
         spreads = pd.read_excel(spreads_path)
+        spreads['start_date'] = pd.to_datetime(spreads['start_date']).dt.strftime('%Y-%m-%d')
         
         vegas_col = 'formattedSpread' if 'formattedSpread' in spreads.columns else 'formatted_spread'
         spreads['Vegas'] = spreads.get(vegas_col, '')
         
-        required_cols = ['home_team', 'away_team', 'PEAR', 'pr_spread', 'difference', 'GQI']
+        required_cols = ['start_date', 'start_time', 'home_team', 'away_team', 'home_score', 'away_score', 'PEAR_win_prob', 'PEAR', 'pr_spread', 'difference', 'GQI']
         missing_cols = [col for col in required_cols if col not in spreads.columns]
         
         if missing_cols:
             print(f"Available columns: {spreads.columns.tolist()}")
             print(f"Missing columns: {missing_cols}")
             raise HTTPException(status_code=500, detail=f"Missing columns in spreads file: {missing_cols}")
-        
-        result = spreads[['home_team', 'away_team', 'PEAR', 'Vegas', 'difference', 'GQI', 'pr_spread']].dropna().to_dict('records')
-        
+
+        result = spreads[['start_date', 'start_time', 'home_team', 'away_team', 'home_score', 'away_score', 'PEAR_win_prob', 'PEAR', 'Vegas', 'difference', 'GQI', 'pr_spread']].dropna().to_dict('records')
+
         return {"data": result, "year": year, "week": week}
     except HTTPException as e:
         raise e

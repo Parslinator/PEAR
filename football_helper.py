@@ -624,6 +624,9 @@ def analyze_vegas_predictions(current_week, current_year, postseason=False, post
     week_games['pr_spread'] = (
         GLOBAL_HFA + week_games['home_pr'] + home_adj - week_games['away_pr']
     ).round(1)
+    week_games['PEAR_win_prob'] = PEAR_Win_Prob_vectorized(
+            week_games['home_pr'], week_games['away_pr'], week_games['neutral']
+        )
     
     # Adjust for neutral site
     week_games.loc[week_games['neutral'], 'pr_spread'] -= 3
@@ -634,7 +637,9 @@ def analyze_vegas_predictions(current_week, current_year, postseason=False, post
         (week_games['home_or'] + week_games['away_dr']) / 2 +
         (week_games['away_or'] + week_games['home_dr']) / 2
     ).round(1)
-    
+    week_games['home_score'] = round((week_games['total'] + week_games['pr_spread'])/2, 1)
+    week_games['away_score'] = round((week_games['total'] - week_games['pr_spread'])/2, 1)
+
     # Calculate Game Quality Index
     pr_min = team_data['power_rating'].min()
     pr_max = team_data['power_rating'].max()
@@ -757,7 +762,12 @@ def analyze_vegas_predictions(current_week, current_year, postseason=False, post
     week_games['PEAR SU'] = week_games.apply(lambda row: check_straight_up(row, 'pr_spread'), axis = 1)
     week_games['actual_total'] = week_games['home_points'] + week_games['away_points']
     week_games['PEAR_OU'] = week_games.apply(lambda row: check_over_under(row, 'total'), axis = 1)
-    game_completion_info = week_games[['home_team', 'away_team', 'GQI', 'difference', 'formatted_open', 'formattedSpread', 'PEAR', 'pr_spread', 'spread', 'actual_margin', 'actual_spread', 'PEAR ATS OPEN', 'PEAR ATS CLOSE', 'PEAR SU', 'PEAR_OU']]
+    week_games['start_date'] = pd.to_datetime(week_games['start_date'], utc=True)
+    week_games['start_date'] = week_games['start_date'].dt.tz_convert('US/Central')
+    week_games['start_time'] = week_games['start_date'].dt.tz_convert('US/Central').dt.time
+    week_games["start_time"] = pd.to_datetime(week_games["start_time"], format="%H:%M:%S").dt.strftime("%#I:%M %p")
+    week_games['start_date'] = week_games['start_date'].dt.date
+    game_completion_info = week_games[['start_date', 'start_time', 'home_team', 'away_team', 'home_score', 'away_score', 'PEAR_win_prob', 'GQI', 'difference', 'formatted_open', 'formattedSpread', 'PEAR', 'pr_spread', 'spread', 'actual_margin', 'actual_spread', 'PEAR ATS OPEN', 'PEAR ATS CLOSE', 'PEAR SU', 'PEAR_OU']]
     completed = game_completion_info[
         (game_completion_info["PEAR ATS CLOSE"] != '') &
         (game_completion_info["GQI"].notna())

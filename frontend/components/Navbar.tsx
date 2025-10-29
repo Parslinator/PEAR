@@ -2,21 +2,23 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, Coffee, Moon, Sun } from 'lucide-react';
+import { ChevronDown, DollarSign, Moon, Sun } from 'lucide-react';
 import { useState } from 'react';
 import Image from 'next/image';
-import { useTheme } from '../app/contexts/ThemeContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-export default function Navbar() {
+interface ThemeContextType {
+  darkMode: boolean;
+  toggleDarkMode: () => void;
+}
+
+export default function Navbar({ darkMode, toggleDarkMode }: ThemeContextType) {
   const pathname = usePathname();
   const [sportDropdownOpen, setSportDropdownOpen] = useState(false);
-  const { darkMode, toggleDarkMode } = useTheme();
 
   // Determine current sport from pathname
   const isCBASE = pathname.startsWith('/cbase');
-  const currentSport = isCBASE ? 'baseball' : 'football';
 
   // Navigation items for each sport
   const footballNavItems = [
@@ -39,7 +41,7 @@ export default function Navbar() {
   const navItems = isCBASE ? baseballNavItems : footballNavItems;
 
   return (
-    <nav className="text-gray-900 shadow-lg sticky top-0 z-50" style={{ backgroundColor: '#CECEB2' }}>
+    <nav className="text-gray-900 shadow-lg fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: '#CECEB2' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo/Brand with Sport Switcher */}
@@ -70,9 +72,12 @@ export default function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setSportDropdownOpen(!sportDropdownOpen)}
-                className="flex items-center space-x-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                className="flex items-center space-x-1 px-4 py-2 rounded-lg transition-colors text-white font-semibold"
+                style={{ backgroundColor: '#fc8884' }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5645f'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fc8884'}
               >
-                <span className="text-sm font-semibold">
+                <span>
                   {isCBASE ? 'Baseball' : 'Football'}
                 </span>
                 <ChevronDown className="w-4 h-4" />
@@ -129,15 +134,15 @@ export default function Navbar() {
               {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
             
-            {/* Buy Me a Coffee Button */}
+            {/* Support Button */}
             <a
               href="https://buymeacoffee.com/PEARatings"
               target="_blank"
               rel="noopener noreferrer"
-              className="ml-2 flex items-center space-x-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-gray-900 rounded-lg font-semibold transition-all"
+              className="p-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-gray-900 transition-all"
+              aria-label="Support on Buy Me a Coffee"
             >
-              <Coffee className="w-4 h-4" />
-              <span>Support</span>
+              <DollarSign className="w-5 h-5" />
             </a>
           </div>
 
@@ -189,14 +194,14 @@ export default function Navbar() {
               )}
             </button>
             
-            {/* Buy Me a Coffee Button - Mobile */}
+            {/* Support Button - Mobile */}
             <a
               href="https://buymeacoffee.com/PEARatings"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-gray-900 rounded-lg font-semibold transition-all"
             >
-              <Coffee className="w-4 h-4" />
+              <DollarSign className="w-4 h-4" />
               <span>Support on Buy Me a Coffee</span>
             </a>
           </div>
