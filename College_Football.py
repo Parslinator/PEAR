@@ -878,7 +878,6 @@ else:
     st.caption("MD - Most Deserving (PEAR's 'AP' Ballot), SOS - Strength of Schedule, SOR - Strength of Record, OFF - Offense, DEF - Defense, PBR - Penalty Burden Ratio, DCE - Drive Control Efficiency, DDE - Drive Disruption Efficiency")
     # , MD - Most Deserving Rankings
 
-
 st.divider()
 
 col1, col2 = st.columns(2)
