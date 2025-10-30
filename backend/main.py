@@ -127,6 +127,21 @@ def get_game_preview(year: int, week: int, filename: str):
     
     return FileResponse(image_path, media_type="image/png")
 
+@app.get("/api/team-profile/{year}/{week}/{team_name}")
+def get_team_profile(year: int, week: int, team_name: str):
+    """Serve team profile image"""
+    # The filename comes as "home_team vs away_team" (without .png)
+    image_filename = f"{team_name}.png"
+    image_path = os.path.join(BASE_PATH, f"y{year}", "Visuals", f"week_{week}", "Stat Profiles", image_filename)
+    
+    # print(f"Looking for game preview at: {image_path}")
+    # print(f"File exists: {os.path.exists(image_path)}")
+    
+    if not os.path.exists(image_path):
+        raise HTTPException(status_code=404, detail=f"Game preview not found at: {image_path}")
+    
+    return FileResponse(image_path, media_type="image/png")
+
 class SpreadRequest(BaseModel):
     away_team: str
     home_team: str
