@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import Image from 'next/image';
 import { X, Download } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
@@ -35,6 +34,12 @@ export default function CbaseGamesPage() {
   const fetchGames = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      if (!API_URL) {
+        throw new Error('API URL is not configured');
+      }
+      
       const response = await fetch(`${API_URL}/api/cbase/schedule/today`);
       if (!response.ok) throw new Error('Failed to fetch games');
       
@@ -42,6 +47,7 @@ export default function CbaseGamesPage() {
       setGames(data.games || []);
       setDate(data.date || '');
     } catch (err) {
+      console.error('Fetch error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
@@ -101,6 +107,10 @@ export default function CbaseGamesPage() {
     if (gqi >= 6) return 'bg-yellow-500 dark:bg-yellow-600';
     if (gqi >= 4) return 'bg-orange-500 dark:bg-orange-600';
     return 'bg-red-600 dark:bg-red-600';
+  };
+
+  const getLogoUrl = (teamName: string) => {
+    return `${API_URL}/api/baseball-logo/${encodeURIComponent(teamName)}`;
   };
 
   const downloadCSV = () => {
@@ -164,6 +174,46 @@ export default function CbaseGamesPage() {
           <p className="text-lg text-gray-600 dark:text-gray-400">{date}</p>
         </div>
 
+        {/* Matchup Image Modal */}
+        {selectedGame && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[9999] p-4"
+            onClick={closeModal}
+          >
+            <div 
+              className="relative max-w-6xl max-h-[90vh] bg-white dark:bg-gray-800 rounded-lg shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={closeModal}
+                className="absolute top-4 right-4 p-2 bg-gray-900 bg-opacity-50 hover:bg-opacity-75 rounded-full text-white transition-all z-10"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              
+              {loadingImage ? (
+                <div className="flex items-center justify-center p-12">
+                  <div className="text-lg text-gray-600 dark:text-gray-400">Loading matchup...</div>
+                </div>
+              ) : matchupImageUrl ? (
+                <img
+                  src={matchupImageUrl}
+                  alt={`${selectedGame.away_team} vs ${selectedGame.home_team} matchup`}
+                  className="max-w-full max-h-[90vh] object-contain"
+                  onError={(e) => {
+                    console.error('Failed to load matchup image');
+                    e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="%23f3f4f6"/><text x="50%" y="50%" text-anchor="middle" fill="%23374151" font-size="18">Matchup not available</text></svg>';
+                  }}
+                />
+              ) : (
+                <div className="flex items-center justify-center p-12">
+                  <div className="text-lg text-red-600 dark:text-red-400">Failed to load matchup</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="mb-4 flex justify-between items-center">
           <div className="flex gap-2">
             <button
@@ -210,6 +260,7 @@ export default function CbaseGamesPage() {
                 game={game}
                 onClick={() => handleGameClick(game)}
                 getGQIColor={getGQIColor}
+                getLogoUrl={getLogoUrl}
               />
             ))}
           </div>
@@ -218,49 +269,9 @@ export default function CbaseGamesPage() {
         <div className="mt-6 text-xs text-gray-600 dark:text-gray-400 space-y-1">
           <p><strong className="dark:text-gray-300">GQI</strong> - Game Quality Index (1-10 scale, higher is better). Click any game to view matchup!</p>
           <p><strong className="dark:text-gray-300">Win %</strong> - PEAR's projected win probability for each team</p>
-          <p><strong className="dark:text-gray-300">PROJECTION</strong> - PEAR's predicted spread</p>
+          <p><strong className="dark:text-gray-300">PROJECTION</strong> - PEAR's predicted run line</p>
         </div>
       </div>
-
-      {/* Matchup Image Modal */}
-      {selectedGame && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[9999] p-4"
-          onClick={closeModal}
-        >
-          <div 
-            className="relative max-w-6xl max-h-[90vh] bg-white dark:bg-gray-800 rounded-lg shadow-2xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={closeModal}
-              className="absolute top-4 right-4 p-2 bg-gray-900 bg-opacity-50 hover:bg-opacity-75 rounded-full text-white transition-all z-10"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            
-            {loadingImage ? (
-              <div className="flex items-center justify-center p-12">
-                <div className="text-lg text-gray-600 dark:text-gray-400">Loading matchup...</div>
-              </div>
-            ) : matchupImageUrl ? (
-              <img
-                src={matchupImageUrl}
-                alt={`${selectedGame.away_team} vs ${selectedGame.home_team} matchup`}
-                className="max-w-full max-h-[90vh] object-contain"
-                onError={(e) => {
-                  console.error('Failed to load matchup image');
-                  e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="%23f3f4f6"/><text x="50%" y="50%" text-anchor="middle" fill="%23374151" font-size="18">Matchup not available</text></svg>';
-                }}
-              />
-            ) : (
-              <div className="flex items-center justify-center p-12">
-                <div className="text-lg text-red-600 dark:text-red-400">Failed to load matchup</div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -268,11 +279,13 @@ export default function CbaseGamesPage() {
 function GameCard({ 
   game, 
   onClick, 
-  getGQIColor 
+  getGQIColor,
+  getLogoUrl
 }: { 
   game: Game; 
   onClick: () => void;
   getGQIColor: (gqi: number) => string;
+  getLogoUrl: (teamName: string) => string;
 }) {
   const awayWinProb = ((1 - game.home_win_prob) * 100).toFixed(1);
   const homeWinProb = (game.home_win_prob * 100).toFixed(1);
@@ -293,7 +306,7 @@ function GameCard({
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <img 
-            src={`${API_URL}/api/baseball-logo/${encodeURIComponent(game.away_team)}`}
+            src={getLogoUrl(game.away_team)}
             alt={`${game.away_team} logo`}
             className="w-6 h-6 object-contain flex-shrink-0"
             onError={(e) => {
@@ -315,7 +328,7 @@ function GameCard({
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <img 
-            src={`${API_URL}/api/baseball-logo/${encodeURIComponent(game.home_team)}`}
+            src={getLogoUrl(game.home_team)}
             alt={`${game.home_team} logo`}
             className="w-6 h-6 object-contain flex-shrink-0"
             onError={(e) => {
