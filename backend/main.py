@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
@@ -129,18 +129,27 @@ def get_game_preview(year: int, week: int, filename: str):
 
 @app.get("/api/team-profile/{year}/{week}/{team_name}")
 def get_team_profile(year: int, week: int, team_name: str):
-    """Serve team profile image"""
-    # The filename comes as "home_team vs away_team" (without .png)
-    image_filename = f"{team_name}.png"
-    image_path = os.path.join(BASE_PATH, f"y{year}", "Visuals", f"week_{week}", "Stat Profiles", image_filename)
-    
-    # print(f"Looking for game preview at: {image_path}")
-    # print(f"File exists: {os.path.exists(image_path)}")
+    image_path = os.path.join(BASE_PATH, f"y{year}", "Visuals", f"week_{week}", "Stat Profiles", f"{team_name}.png")
     
     if not os.path.exists(image_path):
-        raise HTTPException(status_code=404, detail=f"Game preview not found at: {image_path}")
+        raise HTTPException(status_code=404, detail="Image not found")
     
-    return FileResponse(image_path, media_type="image/png")
+    # Optimize the image
+    img = Image.open(image_path)
+    
+    # Resize if too large (e.g., max width 1200px)
+    max_width = 1200
+    if img.width > max_width:
+        ratio = max_width / img.width
+        new_size = (max_width, int(img.height * ratio))
+        img = img.resize(new_size, Image.LANCZOS)
+    
+    # Save as optimized format
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG', optimize=True, quality=85)
+    buffer.seek(0)
+    
+    return Response(content=buffer.getvalue(), media_type="image/png")
 
 class SpreadRequest(BaseModel):
     away_team: str
