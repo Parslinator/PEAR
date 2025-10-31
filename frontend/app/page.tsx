@@ -53,7 +53,7 @@ export default function Home() {
               </div>
             ) : (
               <>
-                <RatingsTable data={ratings} />
+                <RatingsTable data={ratings} year={currentSeason.year} week={currentSeason.week} />
                 <div className="mt-6 text-sm text-gray-600 dark:text-gray-400 space-y-1 border-t dark:border-gray-700 pt-4">
                   <p><strong className="dark:text-gray-300">MD</strong> - Most Deserving (PEAR's 'AP' Ballot)</p>
                   <p><strong className="dark:text-gray-300">SOS</strong> - Strength of Schedule | <strong className="dark:text-gray-300">OFF</strong> - Offense | <strong className="dark:text-gray-300">DEF</strong> - Defense</p>
