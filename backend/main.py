@@ -1209,6 +1209,25 @@ def get_baseball_teams():
         print(f"Error in get_baseball_teams: {e}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
+@app.get("/api/cbase/team-conferences")
+def get_team_conferences():
+    """Get mapping of teams to their conferences"""
+    try:
+        modeling_stats, _ = load_baseball_data()
+        
+        # Create a dictionary mapping team names to conferences
+        team_conference_map = {}
+        for _, row in modeling_stats[['Team', 'Conference']].drop_duplicates().iterrows():
+            team_conference_map[row['Team']] = row['Conference']
+        
+        return {"team_conferences": team_conference_map}
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error in get_team_conferences: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
 @app.post("/api/cbase/calculate-spread")
 def calculate_baseball_matchup_spread(request: BaseballSpreadRequest):
     """Calculate spread for baseball matchup"""

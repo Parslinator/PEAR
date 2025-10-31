@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Trophy, Download, Filter, Search, Calendar, TrendingUp, AlertCircle, Target } from 'lucide-react';
+import { Download, TrendingUp, AlertCircle, Target } from 'lucide-react';
 import Image from 'next/image';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
@@ -64,11 +64,15 @@ export default function CbaseTournamentPage() {
   const [showSeed4Dropdown, setShowSeed4Dropdown] = useState(false);
 
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  
+  const [teamConferences, setTeamConferences] = useState<{ [key: string]: string }>({});
+  const [highlightedConference, setHighlightedConference] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTournamentData();
     fetchTeams();
     fetchConferences();
+    fetchTeamConferences();
   }, []);
 
   const fetchTeams = async () => {
@@ -86,6 +90,15 @@ export default function CbaseTournamentPage() {
       setConferences(response.data.conferences);
     } catch (error) {
       console.error('Error fetching conferences:', error);
+    }
+  };
+
+  const fetchTeamConferences = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/cbase/team-conferences`);
+      setTeamConferences(response.data.team_conferences);
+    } catch (error) {
+      console.error('Error fetching team conferences:', error);
     }
   };
 
@@ -266,27 +279,33 @@ export default function CbaseTournamentPage() {
     }
   };
 
-  const TeamRow = ({ seed, team, color }: { seed: number; team: string; color: string }) => (
-    <div className={`flex items-center gap-2 ${colorClasses[color].bg} border-l-4 ${colorClasses[color].border} px-3 py-2 rounded`}>
-      <span className={`font-bold ${colorClasses[color].text} text-sm w-6`}>{seed}</span>
-      <Image 
-        src={`${API_URL}/api/baseball-logo/${encodeURIComponent(team)}`}
-        alt={`${team} logo`}
-        width={24}
-        height={24}
-        className="rounded"
-        unoptimized
-      />
-      <span className="font-bold text-gray-900 dark:text-white flex-1">{team}</span>
-      {color === 'green' ? (
-        <span className="text-xs bg-green-600 dark:bg-green-500 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
-      ) : color === 'orange' ? (
-        <span className="text-xs bg-orange-700 dark:bg-orange-600 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
-      ) : seed === 1 ? (
-        <span className="text-xs bg-blue-600 dark:bg-blue-500 text-white px-2 py-0.5 rounded font-semibold">HOST</span>
-      ) : null}
-    </div>
-  );
+  const TeamRow = ({ seed, team, color }: { seed: number; team: string; color: string }) => {
+    const isHighlighted = highlightedConference && teamConferences[team] === highlightedConference;
+    
+    return (
+      <div className={`flex items-center gap-2 ${colorClasses[color].bg} border-l-4 ${colorClasses[color].border} px-3 py-2 rounded transition-all ${
+        isHighlighted ? 'ring-4 ring-yellow-400 ring-offset-2 scale-105 shadow-lg' : ''
+      }`}>
+        <span className={`font-bold ${colorClasses[color].text} text-sm w-6`}>{seed}</span>
+        <Image 
+          src={`${API_URL}/api/baseball-logo/${encodeURIComponent(team)}`}
+          alt={`${team} logo`}
+          width={24}
+          height={24}
+          className="rounded"
+          unoptimized
+        />
+        <span className="font-bold text-gray-900 dark:text-white flex-1">{team}</span>
+        {color === 'green' ? (
+          <span className="text-xs bg-green-600 dark:bg-green-500 text-white px-2 py-0.5 rounded font-semibold">AQ</span>
+        ) : color === 'orange' ? (
+          <span className="text-xs bg-orange-700 dark:bg-orange-600 text-white px-2 py-0.5 rounded font-semibold">L4I</span>
+        ) : seed === 1 ? (
+          <span className="text-xs bg-blue-600 dark:bg-blue-500 text-white px-2 py-0.5 rounded font-semibold">HOST</span>
+        ) : null}
+      </div>
+    );
+  };
 
   const RegionalCard = ({ regional }: { regional: any }) => {
     const seed1Color = getTeamColor(regional.seed_1);
@@ -377,17 +396,43 @@ export default function CbaseTournamentPage() {
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               Multi-Bid Conferences
+              {highlightedConference && (
+                <span className="ml-auto text-sm font-normal text-gray-600 dark:text-gray-400">
+                  Showing: {highlightedConference}
+                  <button
+                    onClick={() => setHighlightedConference(null)}
+                    className="ml-2 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+                  >
+                    Clear
+                  </button>
+                </span>
+              )}
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {Object.entries(tournamentOutlook.multibid_conferences)
                 .sort((a, b) => b[1] - a[1])
                 .map(([conf, count]) => (
-                  <div key={conf} className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-lg p-3 text-center border border-blue-200 dark:border-blue-700">
-                    <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{count}</div>
-                    <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">{conf}</div>
-                  </div>
+                  <button
+                    key={conf}
+                    onClick={() => setHighlightedConference(highlightedConference === conf ? null : conf)}
+                    className={`rounded-lg p-3 text-center border transition-all transform hover:scale-105 ${
+                      highlightedConference === conf
+                        ? 'bg-yellow-200 dark:bg-yellow-700 border-yellow-500 dark:border-yellow-400 ring-2 ring-yellow-400 shadow-lg'
+                        : 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 border-blue-200 dark:border-blue-700 hover:border-blue-400 dark:hover:border-blue-500'
+                    }`}
+                  >
+                    <div className={`text-2xl font-bold ${
+                      highlightedConference === conf ? 'text-yellow-900 dark:text-yellow-100' : 'text-blue-700 dark:text-blue-300'
+                    }`}>{count}</div>
+                    <div className={`text-xs font-semibold uppercase tracking-wide ${
+                      highlightedConference === conf ? 'text-yellow-800 dark:text-yellow-200' : 'text-gray-700 dark:text-gray-300'
+                    }`}>{conf}</div>
+                  </button>
                 ))}
             </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+              Click on a conference to highlight its teams in the bracket
+            </p>
           </div>
         )}
 
@@ -448,11 +493,19 @@ export default function CbaseTournamentPage() {
                       <h4 className="font-bold text-sm text-gray-700 dark:text-gray-300 uppercase tracking-wide">Last Four In</h4>
                     </div>
                     <div className="space-y-1">
-                      {tournamentOutlook.last_four_in.map((team, index) => (
-                        <div key={index} className="bg-orange-50 dark:bg-orange-900/20 border-l-2 border-orange-500 dark:border-orange-600 px-3 py-2 text-sm rounded text-gray-900 dark:text-gray-100">
-                          {team}
-                        </div>
-                      ))}
+                      {tournamentOutlook.last_four_in.map((team, index) => {
+                        const isHighlighted = highlightedConference && teamConferences[team] === highlightedConference;
+                        return (
+                          <div 
+                            key={index} 
+                            className={`bg-orange-50 dark:bg-orange-900/20 border-l-2 border-orange-500 dark:border-orange-600 px-3 py-2 text-sm rounded text-gray-900 dark:text-gray-100 transition-all ${
+                              isHighlighted ? 'ring-4 ring-yellow-400 ring-offset-2 scale-105 shadow-lg' : ''
+                            }`}
+                          >
+                            {team}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -462,11 +515,19 @@ export default function CbaseTournamentPage() {
                       <h4 className="font-bold text-sm text-gray-700 dark:text-gray-300 uppercase tracking-wide">First Four Out</h4>
                     </div>
                     <div className="space-y-1">
-                      {tournamentOutlook.first_four_out.map((team, index) => (
-                        <div key={index} className="bg-red-50 dark:bg-red-900/20 border-l-2 border-red-500 dark:border-red-600 px-3 py-2 text-sm rounded text-gray-900 dark:text-gray-100">
-                          {team}
-                        </div>
-                      ))}
+                      {tournamentOutlook.first_four_out.map((team, index) => {
+                        const isHighlighted = highlightedConference && teamConferences[team] === highlightedConference;
+                        return (
+                          <div 
+                            key={index} 
+                            className={`bg-red-50 dark:bg-red-900/20 border-l-2 border-red-500 dark:border-red-600 px-3 py-2 text-sm rounded text-gray-900 dark:text-gray-100 transition-all ${
+                              isHighlighted ? 'ring-4 ring-yellow-400 ring-offset-2 scale-105 shadow-lg' : ''
+                            }`}
+                          >
+                            {team}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -476,11 +537,19 @@ export default function CbaseTournamentPage() {
                       <h4 className="font-bold text-sm text-gray-700 dark:text-gray-300 uppercase tracking-wide">Next Four Out</h4>
                     </div>
                     <div className="space-y-1">
-                      {tournamentOutlook.next_four_out.map((team, index) => (
-                        <div key={index} className="bg-red-100 dark:bg-red-950/30 border-l-2 border-red-800 dark:border-red-900 px-3 py-2 text-sm rounded text-gray-900 dark:text-gray-100">
-                          {team}
-                        </div>
-                      ))}
+                      {tournamentOutlook.next_four_out.map((team, index) => {
+                        const isHighlighted = highlightedConference && teamConferences[team] === highlightedConference;
+                        return (
+                          <div 
+                            key={index} 
+                            className={`bg-red-100 dark:bg-red-950/30 border-l-2 border-red-800 dark:border-red-900 px-3 py-2 text-sm rounded text-gray-900 dark:text-gray-100 transition-all ${
+                              isHighlighted ? 'ring-4 ring-yellow-400 ring-offset-2 scale-105 shadow-lg' : ''
+                            }`}
+                          >
+                            {team}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -510,42 +579,6 @@ export default function CbaseTournamentPage() {
                         }}
                         onFocus={() => setShowSeed1Dropdown(true)}
                         onBlur={() => setTimeout(() => setShowSeed1Dropdown(false), 200)}
-                        placeholder="Search team..."
-                        className="w-full px-3 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                      />
-                      {showSeed1Dropdown && filteredSeed1Teams.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                          {filteredSeed1Teams.map(team => (
-                            <div
-                              key={team}
-                              onClick={() => {
-                                setSeed1(team);
-                                setSeed1SearchTerm('');
-                                setShowSeed1Dropdown(false);
-                              }}
-                              className="px-3 py-2 hover:bg-purple-50 dark:hover:bg-purple-900/30 cursor-pointer text-sm text-gray-900 dark:text-gray-100"
-                            >
-                              {team}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-wide">2 Seed</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={seed2 || seed2SearchTerm}
-                        onChange={(e) => {
-                          setSeed2SearchTerm(e.target.value);
-                          setSeed2('');
-                          setShowSeed2Dropdown(true);
-                        }}
-                        onFocus={() => setShowSeed2Dropdown(true)}
-                        onBlur={() => setTimeout(() => setShowSeed2Dropdown(false), 200)}
                         placeholder="Search team..."
                         className="w-full px-3 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       />
