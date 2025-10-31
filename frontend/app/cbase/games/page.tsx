@@ -9,7 +9,7 @@ interface Game {
   home_team: string;
   away_team: string;
   Location: string;
-  PEAR: number;
+  PEAR: string;
   GQI: number;
   Date: string;
   home_win_prob: number;
@@ -36,10 +36,6 @@ export default function CbaseGamesPage() {
       setLoading(true);
       setError(null);
       
-      if (!API_URL) {
-        throw new Error('API URL is not configured');
-      }
-      
       const response = await fetch(`${API_URL}/api/cbase/schedule/today`);
       if (!response.ok) throw new Error('Failed to fetch games');
       
@@ -59,7 +55,7 @@ export default function CbaseGamesPage() {
     if (sortMode === 'gqi') {
       return sorted.sort((a, b) => b.GQI - a.GQI);
     }
-    return sorted; // time sorting would go here if we had time data
+    return sorted;
   }, [games, sortMode]);
 
   const handleGameClick = async (game: Game) => {
@@ -122,7 +118,7 @@ export default function CbaseGamesPage() {
       game.Location,
       `${((1 - game.home_win_prob) * 100).toFixed(1)}%`,
       `${(game.home_win_prob * 100).toFixed(1)}%`,
-      game.PEAR.toFixed(1),
+      game.PEAR,
       game.GQI.toFixed(1)
     ]);
     
@@ -351,7 +347,7 @@ function GameCard({
         <div className="flex justify-between items-center">
           <span className="text-xs text-gray-600 dark:text-gray-400">PROJECTION</span>
           <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-200 rounded font-medium text-xs">
-            {game.PEAR.toFixed(1)}
+            {game.PEAR}
           </span>
         </div>
       </div>
