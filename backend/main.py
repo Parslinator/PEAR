@@ -1289,14 +1289,22 @@ def get_todays_baseball_games():
         today = datetime.now(cst).date()
         
         today_games = schedule_df[schedule_df['Date'].dt.date == today].copy()
-        
+
         if len(today_games) == 0:
-            return {"games": [], "date": today.strftime("%B %d, %Y")}
+            # If we're past July and there are no games for today,
+            # use the most recent date in the dataframe instead.
+            if today.month > 7:
+                last_date = schedule_df['Date'].max().date()
+                today_games = schedule_df[schedule_df['Date'].dt.date == last_date].copy()
+                today_games = today_games[['home_team', 'away_team', 'Location', 'PEAR', 'GQI', 'Date', 'home_win_prob']].drop_duplicates()
+                return {"games": today_games.to_dict(orient="records"), "date": last_date.strftime("%B %d, %Y")}
+            else:
+                return {"games": [], "date": today.strftime("%B %d, %Y")}
         
         # Process results
         today_games = today_games[[
-            'home_team', 'away_team', 'PEAR', 'GQI', 'Date', 'Result'
-        ]].copy()
+            'home_team', 'away_team', 'Location', 'PEAR', 'GQI', 'Date', 'home_win_prob'
+        ]].copy().drop_duplicates()
         
         today_games = today_games.sort_values('GQI', ascending=False).reset_index(drop=True)
         

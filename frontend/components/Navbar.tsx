@@ -43,6 +43,7 @@ export default function Navbar() {
   const baseballNavItems = [
     { name: 'Ratings', path: '/cbase' },
     { name: 'Stats', path: '/cbase/stats' },
+    { name: 'Games', path: '/cbase/games' },
     { name: 'Tournament', path: '/cbase/tournament' },
     { name: 'Matchups', path: '/cbase/matchups' },
     { name: 'Profiles', path: '/cbase/profiles' },
