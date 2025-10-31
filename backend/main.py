@@ -631,7 +631,7 @@ def get_spreads(year: int, week: int):
         vegas_col = 'formattedSpread' if 'formattedSpread' in spreads.columns else 'formatted_spread'
         spreads['Vegas'] = spreads.get(vegas_col, '')
         
-        required_cols = ['start_date', 'start_time', 'home_team', 'away_team', 'home_score', 'away_score', 'PEAR_win_prob', 'PEAR', 'pr_spread', 'difference', 'GQI']
+        required_cols = ['start_date', 'start_time', 'outlet', 'home_team', 'away_team', 'home_score', 'away_score', 'PEAR_win_prob', 'PEAR', 'pr_spread', 'difference', 'GQI']
         missing_cols = [col for col in required_cols if col not in spreads.columns]
         
         if missing_cols:
@@ -639,7 +639,7 @@ def get_spreads(year: int, week: int):
             print(f"Missing columns: {missing_cols}")
             raise HTTPException(status_code=500, detail=f"Missing columns in spreads file: {missing_cols}")
 
-        result = spreads[['start_date', 'start_time', 'home_team', 'away_team', 'home_score', 'away_score', 'PEAR_win_prob', 'PEAR', 'Vegas', 'difference', 'GQI', 'pr_spread']].dropna().to_dict('records')
+        result = spreads[['start_date', 'start_time', 'outlet', 'home_team', 'away_team', 'home_score', 'away_score', 'PEAR_win_prob', 'PEAR', 'Vegas', 'difference', 'GQI', 'pr_spread']].dropna().to_dict('records')
 
         return {"data": result, "year": year, "week": week}
     except HTTPException as e:

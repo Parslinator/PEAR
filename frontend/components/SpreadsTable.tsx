@@ -18,6 +18,7 @@ interface SpreadData {
   difference: number;
   GQI: number;
   pr_spread: number;
+  outlet?: string;
 }
 
 interface Props {
@@ -169,11 +170,12 @@ export default function SpreadsBoxes({ data, year, week }: Props) {
   }, [data, sortMode]);
 
   const downloadCSV = () => {
-    const headers = ['Date', 'Time', 'Away Team', 'Away Score', 'Home Team', 'Home Score', 
+    const headers = ['Date', 'Time', 'Outlet', 'Away Team', 'Away Score', 'Home Team', 'Home Score', 
                      'Away Win %', 'Home Win %', 'PEAR', 'Vegas', 'PEAR Raw', 'Difference', 'GQI'];
     const csvData = data.map(item => [
       item.start_date,
       item.start_time || 'TBD',
+      item.outlet || '',
       item.away_team,
       item.away_score || '',
       item.home_team,
@@ -312,6 +314,7 @@ export default function SpreadsBoxes({ data, year, week }: Props) {
                     <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">
                       <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
                         {game.start_time || 'TBD'}
+                        {game.outlet && ` - ${game.outlet}`}
                       </span>
                       <span className={`px-2 py-0.5 rounded-full text-white text-xs font-bold ${getGQIColor(game.GQI)}`}>
                         {game.GQI.toFixed(1)}

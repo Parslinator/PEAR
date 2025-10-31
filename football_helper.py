@@ -557,6 +557,22 @@ def analyze_vegas_predictions(current_week, current_year, postseason=False, post
     week_games['start_date'] = pd.to_datetime(week_games['start_date'])
     week_games = week_games.sort_values('start_date').reset_index(drop=True)
     
+    media_list = games_api.get_media(year=current_year, week=current_week)
+    media_dict = [dict(
+                    id=g.id,
+                    outlet=g.outlet
+                    ) for g in media_list]
+    media_info = pd.DataFrame(media_dict)
+    outlet_priority = {"ABC": 1, "ESPN": 2, "FOX": 3, "NBC": 4}
+    media_info_clean = (
+        media_info
+        .assign(priority=media_info["outlet"].map(outlet_priority).fillna(99))
+        .sort_values(["id", "priority"])
+        .drop_duplicates(subset=["id"], keep="first")
+        .drop(columns="priority")
+    )
+    week_games = pd.merge(week_games, media_info_clean, on="id", how="left")
+
     # Fetch and merge ELO ratings
     elo_ratings_list = ratings_api.get_elo(year=current_year)
     elo_ratings = pd.DataFrame([{
@@ -767,7 +783,7 @@ def analyze_vegas_predictions(current_week, current_year, postseason=False, post
     week_games['start_time'] = week_games['start_date'].dt.tz_convert('US/Central').dt.time
     week_games["start_time"] = pd.to_datetime(week_games["start_time"], format="%H:%M:%S").dt.strftime("%#I:%M %p")
     week_games['start_date'] = week_games['start_date'].dt.date
-    game_completion_info = week_games[['start_date', 'start_time', 'home_team', 'away_team', 'home_score', 'away_score', 'PEAR_win_prob', 'GQI', 'difference', 'formatted_open', 'formattedSpread', 'PEAR', 'pr_spread', 'spread', 'actual_margin', 'actual_spread', 'PEAR ATS OPEN', 'PEAR ATS CLOSE', 'PEAR SU', 'PEAR_OU']]
+    game_completion_info = week_games[['start_date', 'start_time', 'outlet', 'home_team', 'away_team', 'home_score', 'away_score', 'PEAR_win_prob', 'GQI', 'difference', 'formatted_open', 'formattedSpread', 'PEAR', 'pr_spread', 'spread', 'actual_margin', 'actual_spread', 'PEAR ATS OPEN', 'PEAR ATS CLOSE', 'PEAR SU', 'PEAR_OU']]
     completed = game_completion_info[
         (game_completion_info["PEAR ATS CLOSE"] != '') &
         (game_completion_info["GQI"].notna())
