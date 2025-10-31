@@ -314,7 +314,7 @@ export default function SpreadsBoxes({ data, year, week }: Props) {
                     <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">
                       <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
                         {game.start_time || 'TBD'}
-                        {game.outlet && ` - ${game.outlet}`}
+                        {game.outlet && game.outlet !== 'Unknown' && ` - ${game.outlet}`}
                       </span>
                       <span className={`px-2 py-0.5 rounded-full text-white text-xs font-bold ${getGQIColor(game.GQI)}`}>
                         {game.GQI.toFixed(1)}
