@@ -846,6 +846,7 @@ def adjust_home_pr(home_win_prob):
     return ((home_win_prob - 50) / 50) * 1
 
 st.title(f"{current_year} CFB PEAR")
+st.title("!!! PLEASE READ !!!\nThis Site has been replaced, please use:\nhttps://pearatings.com")
 st.logo("./PEAR/pear_logo.jpg", size = 'large')
 
 st.divider()
