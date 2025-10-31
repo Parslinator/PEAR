@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronUp, ChevronDown, Download } from 'lucide-react';
+import { ChevronUp, ChevronDown, Download, X } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -27,17 +27,19 @@ interface StatsData {
 
 interface Props {
   data: StatsData[];
+  year: number;
+  week: number;
 }
 
 type SortField = keyof StatsData;
 
-export default function StatsTable({ data }: Props) {
+export default function StatsTable({ data, year, week }: Props) {
   const [sortField, setSortField] = useState<SortField>('power_rating');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [filter, setFilter] = useState('');
   const [conferenceFilter, setConferenceFilter] = useState('All');
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
 
-  // Get unique conferences from data
   const conferences = useMemo(() => {
     const uniqueConfs = Array.from(
       new Set(data.map(item => item.conference).filter(Boolean))
@@ -45,7 +47,6 @@ export default function StatsTable({ data }: Props) {
     return ['All', ...uniqueConfs];
   }, [data]);
 
-  // Map conference names to shorthand
   const getConferenceShorthand = (conf: string): string => {
     const shorthandMap: { [key: string]: string } = {
       'American Athletic': 'AAC',
@@ -73,7 +74,6 @@ export default function StatsTable({ data }: Props) {
     }
   };
 
-  // Calculate national rank for a team's stat value
   const getNationalRank = (value: number, field: SortField, higherIsBetter: boolean = true): number => {
     if (value === null || value === undefined) return data.length;
     
@@ -124,7 +124,6 @@ export default function StatsTable({ data }: Props) {
       normalized = 1 - normalized;
     }
     
-    // Colors: Dark Blue #00008B (0, 0, 139), Light Gray #D3D3D3 (211, 211, 211), Dark Red #8B0000 (139, 0, 0)
     if (normalized >= 0.5) {
       const t = (normalized - 0.5) * 2;
       const r = Math.round(211 + (0 - 211) * t);
@@ -195,6 +194,14 @@ export default function StatsTable({ data }: Props) {
     window.URL.revokeObjectURL(url);
   };
 
+  const handleTeamClick = (teamName: string) => {
+    setSelectedTeam(teamName);
+  };
+
+  const closeModal = () => {
+    setSelectedTeam(null);
+  };
+
   return (
     <div>
       <div className="mb-4 flex gap-4">
@@ -214,7 +221,6 @@ export default function StatsTable({ data }: Props) {
         </button>
       </div>
 
-      {/* Conference Filter Buttons */}
       {conferences.length > 1 && (
         <div className="mb-4 flex flex-wrap gap-2 justify-center">
           {conferences.map(conf => (
@@ -264,89 +270,47 @@ export default function StatsTable({ data }: Props) {
               <th className="px-3 py-2"></th>
               <th className="px-2 py-2 border-r-2 border-gray-300 dark:border-gray-600"></th>
               
-              <th
-                className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-emerald-100 dark:bg-emerald-800/40"
-                onClick={() => handleSort('offensive_rating')}
-              >
+              <th className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-emerald-100 dark:bg-emerald-800/40" onClick={() => handleSort('offensive_rating')}>
                 Rating <SortIcon field="offensive_rating" />
               </th>
-              <th
-                className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-emerald-100 dark:bg-emerald-800/40"
-                onClick={() => handleSort('Offense_successRate_adj')}
-              >
+              <th className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-emerald-100 dark:bg-emerald-800/40" onClick={() => handleSort('Offense_successRate_adj')}>
                 Success <SortIcon field="Offense_successRate_adj" />
               </th>
-              <th
-                className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-emerald-100 dark:bg-emerald-800/40"
-                onClick={() => handleSort('Offense_ppa_adj')}
-              >
+              <th className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-emerald-100 dark:bg-emerald-800/40" onClick={() => handleSort('Offense_ppa_adj')}>
                 PPA <SortIcon field="Offense_ppa_adj" />
               </th>
-              <th
-                className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-emerald-100 dark:bg-emerald-800/40"
-                onClick={() => handleSort('Offense_rushing_adj')}
-              >
+              <th className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-emerald-100 dark:bg-emerald-800/40" onClick={() => handleSort('Offense_rushing_adj')}>
                 Rush <SortIcon field="Offense_rushing_adj" />
               </th>
-              <th
-                className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-emerald-100 dark:bg-emerald-800/40"
-                onClick={() => handleSort('Offense_passing_adj')}
-              >
+              <th className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-emerald-100 dark:bg-emerald-800/40" onClick={() => handleSort('Offense_passing_adj')}>
                 Pass <SortIcon field="Offense_passing_adj" />
               </th>
-              <th
-                className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-emerald-100 dark:bg-emerald-800/40"
-                onClick={() => handleSort('adj_offense_ppo')}
-              >
+              <th className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-emerald-100 dark:bg-emerald-800/40" onClick={() => handleSort('adj_offense_ppo')}>
                 PPO <SortIcon field="adj_offense_ppo" />
               </th>
-              <th
-                className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-emerald-100 dark:bg-emerald-800/40 border-r-2 border-gray-300 dark:border-gray-600"
-                onClick={() => handleSort('adj_offense_drive_quality')}
-              >
+              <th className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-emerald-100 dark:bg-emerald-800/40 border-r-2 border-gray-300 dark:border-gray-600" onClick={() => handleSort('adj_offense_drive_quality')}>
                 Drive Q <SortIcon field="adj_offense_drive_quality" />
               </th>
               
-              <th
-                className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-sky-100 dark:bg-sky-800/40"
-                onClick={() => handleSort('defensive_rating')}
-              >
+              <th className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-sky-100 dark:bg-sky-800/40" onClick={() => handleSort('defensive_rating')}>
                 Rating <SortIcon field="defensive_rating" />
               </th>
-              <th
-                className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-sky-100 dark:bg-sky-800/40"
-                onClick={() => handleSort('Defense_successRate_adj')}
-              >
+              <th className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-sky-100 dark:bg-sky-800/40" onClick={() => handleSort('Defense_successRate_adj')}>
                 Success <SortIcon field="Defense_successRate_adj" />
               </th>
-              <th
-                className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-sky-100 dark:bg-sky-800/40"
-                onClick={() => handleSort('Defense_ppa_adj')}
-              >
+              <th className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-sky-100 dark:bg-sky-800/40" onClick={() => handleSort('Defense_ppa_adj')}>
                 PPA <SortIcon field="Defense_ppa_adj" />
               </th>
-              <th
-                className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-sky-100 dark:bg-sky-800/40"
-                onClick={() => handleSort('Defense_rushing_adj')}
-              >
+              <th className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-sky-100 dark:bg-sky-800/40" onClick={() => handleSort('Defense_rushing_adj')}>
                 Rush <SortIcon field="Defense_rushing_adj" />
               </th>
-              <th
-                className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-sky-100 dark:bg-sky-800/40"
-                onClick={() => handleSort('Defense_passing_adj')}
-              >
+              <th className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-sky-100 dark:bg-sky-800/40" onClick={() => handleSort('Defense_passing_adj')}>
                 Pass <SortIcon field="Defense_passing_adj" />
               </th>
-              <th
-                className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-sky-100 dark:bg-sky-800/40"
-                onClick={() => handleSort('adj_defense_ppo')}
-              >
+              <th className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-sky-100 dark:bg-sky-800/40" onClick={() => handleSort('adj_defense_ppo')}>
                 PPO <SortIcon field="adj_defense_ppo" />
               </th>
-              <th
-                className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-sky-100 dark:bg-sky-800/40"
-                onClick={() => handleSort('adj_defense_drive_quality')}
-              >
+              <th className="px-2 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 bg-sky-100 dark:bg-sky-800/40" onClick={() => handleSort('adj_defense_drive_quality')}>
                 Drive Q <SortIcon field="adj_defense_drive_quality" />
               </th>
             </tr>
@@ -354,8 +318,6 @@ export default function StatsTable({ data }: Props) {
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {filteredData.map((item, index) => {
               const ratingBg = getRatingColor(item.power_rating, data.map(d => d.power_rating), true);
-              const ratingText = getTextColor(ratingBg);
-              
               const offRatingBg = getRatingColor(item.offensive_rating, data.map(d => d.offensive_rating), true);
               const offSuccessBg = getRatingColor(item.Offense_successRate_adj, data.map(d => d.Offense_successRate_adj), true);
               const offPPABg = getRatingColor(item.Offense_ppa_adj, data.map(d => d.Offense_ppa_adj), true);
@@ -372,7 +334,6 @@ export default function StatsTable({ data }: Props) {
               const defPPOBg = getRatingColor(item.adj_defense_ppo, data.map(d => d.adj_defense_ppo), false);
               const defDQBg = getRatingColor(item.adj_defense_drive_quality, data.map(d => d.adj_defense_drive_quality), false);
 
-              // Get national ranks
               const ratingRank = getNationalRank(item.power_rating, 'power_rating', true);
               const offRatingRank = getNationalRank(item.offensive_rating, 'offensive_rating', true);
               const offSuccessRank = getNationalRank(item.Offense_successRate_adj, 'Offense_successRate_adj', true);
@@ -394,7 +355,7 @@ export default function StatsTable({ data }: Props) {
                 <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td className="px-2 py-2 text-gray-700 dark:text-gray-300 font-medium border-r-2 border-gray-300 dark:border-gray-600">{index + 1}</td>
                   <td className="px-2 py-2 font-semibold text-gray-900 dark:text-white text-sm">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 cursor-pointer hover:opacity-75 transition-opacity" onClick={() => handleTeamClick(item.team)}>
                       <img 
                         src={`${API_URL}/api/football-logo/${encodeURIComponent(item.team)}`}
                         alt={`${item.team} logo`}
@@ -411,120 +372,92 @@ export default function StatsTable({ data }: Props) {
                       <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                         {item.power_rating.toFixed(1)}
                       </span>
-                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: ratingBg, color: ratingText }}>{ratingRank}</span>
+                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: ratingBg, color: getTextColor(ratingBg) }}>{ratingRank}</span>
                     </div>
                   </td>
                   
                   <td className="px-1 py-2 text-center">
                     <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
-                        {item.offensive_rating.toFixed(1)}
-                      </span>
+                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">{item.offensive_rating.toFixed(1)}</span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: offRatingBg, color: getTextColor(offRatingBg) }}>{offRatingRank}</span>
                     </div>
                   </td>
                   <td className="px-1 py-2 text-center">
                     <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
-                        {item.Offense_successRate_adj.toFixed(2)}
-                      </span>
+                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">{item.Offense_successRate_adj.toFixed(2)}</span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: offSuccessBg, color: getTextColor(offSuccessBg) }}>{offSuccessRank}</span>
                     </div>
                   </td>
                   <td className="px-1 py-2 text-center">
                     <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
-                        {item.Offense_ppa_adj.toFixed(2)}
-                      </span>
+                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">{item.Offense_ppa_adj.toFixed(2)}</span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: offPPABg, color: getTextColor(offPPABg) }}>{offPPARank}</span>
                     </div>
                   </td>
                   <td className="px-1 py-2 text-center">
                     <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
-                        {item.Offense_rushing_adj.toFixed(2)}
-                      </span>
+                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">{item.Offense_rushing_adj.toFixed(2)}</span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: offRushBg, color: getTextColor(offRushBg) }}>{offRushRank}</span>
                     </div>
                   </td>
                   <td className="px-1 py-2 text-center">
                     <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
-                        {item.Offense_passing_adj.toFixed(2)}
-                      </span>
+                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">{item.Offense_passing_adj.toFixed(2)}</span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: offPassBg, color: getTextColor(offPassBg) }}>{offPassRank}</span>
                     </div>
                   </td>
                   <td className="px-1 py-2 text-center">
                     <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
-                        {item.adj_offense_ppo.toFixed(2)}
-                      </span>
+                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">{item.adj_offense_ppo.toFixed(2)}</span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: offPPOBg, color: getTextColor(offPPOBg) }}>{offPPORank}</span>
                     </div>
                   </td>
                   <td className="px-1 py-2 text-center border-r-2 border-gray-300 dark:border-gray-600">
                     <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
-                        {item.adj_offense_drive_quality.toFixed(1)}
-                      </span>
+                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">{item.adj_offense_drive_quality.toFixed(1)}</span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: offDQBg, color: getTextColor(offDQBg) }}>{offDQRank}</span>
                     </div>
                   </td>
                   
                   <td className="px-1 py-2 text-center">
                     <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
-                        {item.defensive_rating.toFixed(1)}
-                      </span>
+                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">{item.defensive_rating.toFixed(1)}</span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: defRatingBg, color: getTextColor(defRatingBg) }}>{defRatingRank}</span>
                     </div>
                   </td>
                   <td className="px-1 py-2 text-center">
                     <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
-                        {item.Defense_successRate_adj.toFixed(2)}
-                      </span>
+                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">{item.Defense_successRate_adj.toFixed(2)}</span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: defSuccessBg, color: getTextColor(defSuccessBg) }}>{defSuccessRank}</span>
                     </div>
                   </td>
                   <td className="px-1 py-2 text-center">
                     <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
-                        {item.Defense_ppa_adj.toFixed(2)}
-                      </span>
+                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">{item.Defense_ppa_adj.toFixed(2)}</span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: defPPABg, color: getTextColor(defPPABg) }}>{defPPARank}</span>
                     </div>
                   </td>
                   <td className="px-1 py-2 text-center">
                     <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
-                        {item.Defense_rushing_adj.toFixed(2)}
-                      </span>
+                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">{item.Defense_rushing_adj.toFixed(2)}</span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: defRushBg, color: getTextColor(defRushBg) }}>{defRushRank}</span>
                     </div>
                   </td>
                   <td className="px-1 py-2 text-center">
                     <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
-                        {item.Defense_passing_adj.toFixed(2)}
-                      </span>
+                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">{item.Defense_passing_adj.toFixed(2)}</span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: defPassBg, color: getTextColor(defPassBg) }}>{defPassRank}</span>
                     </div>
                   </td>
                   <td className="px-1 py-2 text-center">
                     <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
-                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
-                        {item.adj_defense_ppo.toFixed(2)}
-                      </span>
+                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">{item.adj_defense_ppo.toFixed(2)}</span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: defPPOBg, color: getTextColor(defPPOBg) }}>{defPPORank}</span>
                     </div>
                   </td>
                   <td className="px-1 py-2 text-center">
                     <div className="flex items-center justify-center gap-1 min-w-[80px] mx-auto">
-                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
-                        {item.adj_defense_drive_quality.toFixed(1)}
-                      </span>
+                      <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">{item.adj_defense_drive_quality.toFixed(1)}</span>
                       <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: defDQBg, color: getTextColor(defDQBg) }}>{defDQRank}</span>
                     </div>
                   </td>
@@ -534,6 +467,37 @@ export default function StatsTable({ data }: Props) {
           </tbody>
         </table>
       </div>
+
+      {selectedTeam && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={closeModal}
+        >
+          <div 
+            className="relative max-w-6xl max-h-[90vh] bg-white dark:bg-gray-800 rounded-lg shadow-2xl overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={closeModal}
+              className="absolute top-4 right-4 z-10 bg-white dark:bg-gray-700 rounded-full p-2 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+            >
+              <X className="w-6 h-6 text-gray-700 dark:text-gray-200" />
+            </button>
+            <div className="p-4">
+              <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{selectedTeam} Profile</h2>
+              <img
+                src={`${API_URL}/api/team-profile/${year}/${week}/${encodeURIComponent(selectedTeam)}`}
+                alt={`${selectedTeam} profile`}
+                className="w-full h-auto"
+                onError={(e) => {
+                  e.currentTarget.src = '';
+                  e.currentTarget.alt = 'Profile image not available';
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

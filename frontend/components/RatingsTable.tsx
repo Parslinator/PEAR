@@ -170,7 +170,7 @@ export default function RatingsTable({ data, year, week }: Props) {
     window.URL.revokeObjectURL(url);
   };
 
-  const handleLogoClick = (teamName: string) => {
+  const handleTeamClick = (teamName: string) => {
     setSelectedTeam(teamName);
   };
 
@@ -285,12 +285,11 @@ export default function RatingsTable({ data, year, week }: Props) {
                 <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium">{index + 1}</td>
                   <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 cursor-pointer hover:opacity-75 transition-opacity" onClick={() => handleTeamClick(item.Team)}>
                       <img 
                         src={`${API_URL}/api/football-logo/${encodeURIComponent(item.Team)}`}
                         alt={`${item.Team} logo`}
-                        className="w-6 h-6 object-contain cursor-pointer hover:opacity-75 transition-opacity"
-                        onClick={() => handleLogoClick(item.Team)}
+                        className="w-6 h-6 object-contain"
                         onError={(e) => {
                           e.currentTarget.style.display = 'none';
                         }}
