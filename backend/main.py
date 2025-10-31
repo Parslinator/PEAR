@@ -146,10 +146,13 @@ def get_team_profile(year: int, week: int, team_name: str):
     
     # Save as optimized format
     buffer = io.BytesIO()
-    img.save(buffer, format='PNG', optimize=True, quality=85)
+    img.save(buffer, format='WEBP', quality=85, method=6)
     buffer.seek(0)
-    
-    return Response(content=buffer.getvalue(), media_type="image/png")
+
+    return Response(
+        content=buffer.getvalue(), 
+        media_type="image/webp"
+    )
 
 class SpreadRequest(BaseModel):
     away_team: str
