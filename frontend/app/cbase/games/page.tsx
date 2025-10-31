@@ -266,6 +266,7 @@ export default function CbaseGamesPage() {
           <p><strong className="dark:text-gray-300">GQI</strong> - Game Quality Index (1-10 scale, higher is better). Click any game to view matchup!</p>
           <p><strong className="dark:text-gray-300">Win %</strong> - PEAR's projected win probability for each team</p>
           <p><strong className="dark:text-gray-300">PROJECTION</strong> - PEAR's predicted run line</p>
+          <p><strong className="dark:text-gray-300">Win %</strong> - Blue = projected winner, Red = projected loser</p>
         </div>
       </div>
     </div>
@@ -285,6 +286,7 @@ function GameCard({
 }) {
   const awayWinProb = ((1 - game.home_win_prob) * 100).toFixed(1);
   const homeWinProb = (game.home_win_prob * 100).toFixed(1);
+  const homeWinning = game.home_win_prob > 0.5;
 
   return (
     <div
@@ -314,7 +316,7 @@ function GameCard({
           </span>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+          <span className={`text-xs font-bold ${!homeWinning ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
             {awayWinProb}%
           </span>
         </div>
@@ -336,7 +338,7 @@ function GameCard({
           </span>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+          <span className={`text-xs font-bold ${homeWinning ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
             {homeWinProb}%
           </span>
         </div>
