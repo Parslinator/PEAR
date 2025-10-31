@@ -18,7 +18,7 @@ interface SpreadData {
   difference: number;
   GQI: number;
   pr_spread: number;
-  outlet?: string;
+  outlet: string;
 }
 
 interface Props {

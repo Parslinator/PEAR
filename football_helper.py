@@ -571,7 +571,9 @@ def analyze_vegas_predictions(current_week, current_year, postseason=False, post
         .drop_duplicates(subset=["id"], keep="first")
         .drop(columns="priority")
     )
+    media_info_clean['outlet'] = media_info_clean['outlet'].fillna("Unknown")
     week_games = pd.merge(week_games, media_info_clean, on="id", how="left")
+    week_games['outlet'] = week_games['outlet'].fillna("Unknown")
 
     # Fetch and merge ELO ratings
     elo_ratings_list = ratings_api.get_elo(year=current_year)
