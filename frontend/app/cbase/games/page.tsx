@@ -316,7 +316,7 @@ function GameCard({
           </span>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className={`text-xs font-bold ${!homeWinning ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
+          <span className={`text-base font-bold ${!homeWinning ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
             {awayWinProb}%
           </span>
         </div>
@@ -338,7 +338,7 @@ function GameCard({
           </span>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className={`text-xs font-bold ${homeWinning ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
+          <span className={`text-base font-bold ${homeWinning ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
             {homeWinProb}%
           </span>
         </div>
