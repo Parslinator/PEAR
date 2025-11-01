@@ -94,19 +94,36 @@ export default function CbasePage() {
     }
     
     // Colors: Dark Blue #00008B (0, 0, 139), Light Gray #D3D3D3 (211, 211, 211), Dark Red #8B0000 (139, 0, 0)
-    if (normalized >= 0.5) {
-      const t = (normalized - 0.5) * 2;
-      const r = Math.round(211 + (0 - 211) * t);
-      const g = Math.round(211 + (0 - 211) * t);
-      const b = Math.round(211 + (139 - 211) * t);
+    if (normalized < 0.25) {
+      // Dark Blue (#00008B) → Cyan (#00FFFF)
+      const t = normalized / 0.25;
+      const r = Math.round(0 + (0 - 0) * t);
+      const g = Math.round(0 + (255 - 0) * t);
+      const b = Math.round(139 + (255 - 139) * t);
+      return `rgb(${r}, ${g}, ${b})`;
+    } else if (normalized < 0.5) {
+      // Cyan (#00FFFF) → Light Gray (#D3D3D3)
+      const t = (normalized - 0.25) / 0.25;
+      const r = Math.round(0 + (211 - 0) * t);
+      const g = Math.round(255 + (211 - 255) * t);
+      const b = Math.round(255 + (211 - 255) * t);
+      return `rgb(${r}, ${g}, ${b})`;
+    } else if (normalized < 0.75) {
+      // Light Gray (#D3D3D3) → Orange (#FFA500)
+      const t = (normalized - 0.5) / 0.25;
+      const r = Math.round(211 + (255 - 211) * t);
+      const g = Math.round(211 + (165 - 211) * t);
+      const b = Math.round(211 + (0 - 211) * t);
       return `rgb(${r}, ${g}, ${b})`;
     } else {
-      const t = normalized * 2;
-      const r = Math.round(139 + (211 - 139) * t);
-      const g = Math.round(0 + (211 - 0) * t);
-      const b = Math.round(0 + (211 - 0) * t);
+      // Orange (#FFA500) → Dark Red (#8B0000)
+      const t = (normalized - 0.75) / 0.25;
+      const r = Math.round(255 + (139 - 255) * t);
+      const g = Math.round(165 + (0 - 165) * t);
+      const b = Math.round(0 + (0 - 0) * t);
       return `rgb(${r}, ${g}, ${b})`;
     }
+
   };
 
   const getTextColor = (bgColor: string) => {
