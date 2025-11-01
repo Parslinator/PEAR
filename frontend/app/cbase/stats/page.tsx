@@ -190,16 +190,34 @@ export default function CbaseStatsPage() {
       try {
         const canvas = await html2canvas(tableElement as HTMLElement, {
           scale: 2,
-          backgroundColor: '#ffffff'
+          backgroundColor: '#ffffff',
+          logging: false,
+          useCORS: true
         });
         
         // Add watermark
         const ctx = canvas.getContext('2d');
         if (ctx) {
-          ctx.font = 'bold 24px Arial';
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-          ctx.textAlign = 'right';
-          ctx.fillText('@PEARatings', canvas.width - 20, 40);
+          // Add semi-transparent background for watermark
+          const padding = 10;
+          const fontSize = 28;
+          ctx.font = `bold ${fontSize}px Arial`;
+          const text = '@PEARatings';
+          const textWidth = ctx.measureText(text).width;
+          
+          // Position in top-right corner
+          const x = canvas.width - textWidth - padding;
+          const y = padding + fontSize;
+          
+          // Draw semi-transparent background
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+          ctx.fillRect(x - padding, padding, textWidth + padding * 2, fontSize + padding);
+          
+          // Draw text
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'top';
+          ctx.fillText(text, x, y);
         }
         
         const link = document.createElement('a');
@@ -481,9 +499,8 @@ export default function CbaseStatsPage() {
                 </div>
 
                 <div className="mt-6 text-sm text-gray-600 dark:text-gray-400 space-y-1 border-t dark:border-gray-700 pt-4">
-                  <p><strong className="dark:text-gray-300">WAR</strong> - Team WAR Rank | <strong className="dark:text-gray-300">PYTHAG</strong> - Pythagorean Win Percentage</p>
-                  <p><strong className="dark:text-gray-300">ERA</strong> - Earned Run Average | <strong className="dark:text-gray-300">WHIP</strong> - Walks + Hits per Inning Pitched | <strong className="dark:text-gray-300">K/9</strong> - Strikeouts Per 9 Innings</p>
-                  <p><strong className="dark:text-gray-300">RPG</strong> - Runs Per Game | <strong className="dark:text-gray-300">BA</strong> - Batting Average | <strong className="dark:text-gray-300">OBP</strong> - On Base Percentage | <strong className="dark:text-gray-300">SLG</strong> - Slugging | <strong className="dark:text-gray-300">OPS</strong> - On Base Plus Slugging</p>
+                  <p></p>
+                  <p><strong className="dark:text-gray-300">TSR</strong> - Team Strength Rating | <strong className="dark:text-gray-300">WAR</strong> - Team WAR Rank | <strong className="dark:text-gray-300">PYTHAG</strong> - Pythagorean Win Percentage | <strong className="dark:text-gray-300">ERA</strong> - Earned Run Average | <strong className="dark:text-gray-300">WHIP</strong> - Walks + Hits per Inning Pitched | <strong className="dark:text-gray-300">K/9</strong> - Strikeouts Per 9 Innings | <strong className="dark:text-gray-300">RPG</strong> - Runs Per Game | <strong className="dark:text-gray-300">BA</strong> - Batting Average | <strong className="dark:text-gray-300">OBP</strong> - On Base Percentage | <strong className="dark:text-gray-300">SLG</strong> - Slugging | <strong className="dark:text-gray-300">OPS</strong> - On Base Plus Slugging | <strong className="dark:text-gray-300">PCT</strong> - Fielding Percentage | </p>
                 </div>
               </>
             )}
