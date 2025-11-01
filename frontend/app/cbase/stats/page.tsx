@@ -373,7 +373,7 @@ export default function CbaseStatsPage() {
                               </div>
                             </td>
                             <td className="px-1 py-2 text-center">
-                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                              <div className="flex items-center justify-center gap-1 min-w-[60px] mx-auto">
                                 <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                   {team.Rating?.toFixed(2)}
                                 </span>
@@ -381,7 +381,7 @@ export default function CbaseStatsPage() {
                               </div>
                             </td>
                             <td className="px-1 py-2 text-center">
-                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                              <div className="flex items-center justify-center gap-1 min-w-[60px] mx-auto">
                                 <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                   {team.fWAR?.toFixed(2)}
                                 </span>
@@ -389,7 +389,7 @@ export default function CbaseStatsPage() {
                               </div>
                             </td>
                             <td className="px-1 py-2 text-center">
-                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                              <div className="flex items-center justify-center gap-1 min-w-[60px] mx-auto">
                                 <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                   {team.PYTHAG?.toFixed(3)}
                                 </span>
@@ -397,7 +397,7 @@ export default function CbaseStatsPage() {
                               </div>
                             </td>
                             <td className="px-1 py-2 text-center">
-                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                              <div className="flex items-center justify-center gap-1 min-w-[60px] mx-auto">
                                 <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                   {team.ERA?.toFixed(2)}
                                 </span>
@@ -405,7 +405,7 @@ export default function CbaseStatsPage() {
                               </div>
                             </td>
                             <td className="px-1 py-2 text-center">
-                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                              <div className="flex items-center justify-center gap-1 min-w-[60px] mx-auto">
                                 <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                   {team.WHIP?.toFixed(2)}
                                 </span>
@@ -413,7 +413,7 @@ export default function CbaseStatsPage() {
                               </div>
                             </td>
                             <td className="px-1 py-2 text-center">
-                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                              <div className="flex items-center justify-center gap-1 min-w-[60px] mx-auto">
                                 <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                   {team.KP9?.toFixed(1)}
                                 </span>
@@ -421,7 +421,7 @@ export default function CbaseStatsPage() {
                               </div>
                             </td>
                             <td className="px-1 py-2 text-center">
-                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                              <div className="flex items-center justify-center gap-1 min-w-[60px] mx-auto">
                                 <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                   {team.RPG?.toFixed(1)}
                                 </span>
@@ -429,7 +429,7 @@ export default function CbaseStatsPage() {
                               </div>
                             </td>
                             <td className="px-1 py-2 text-center">
-                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                              <div className="flex items-center justify-center gap-1 min-w-[60px] mx-auto">
                                 <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                   {team.BA?.toFixed(3)}
                                 </span>
@@ -437,7 +437,7 @@ export default function CbaseStatsPage() {
                               </div>
                             </td>
                             <td className="px-1 py-2 text-center">
-                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                              <div className="flex items-center justify-center gap-1 min-w-[60px] mx-auto">
                                 <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                   {team.OBP?.toFixed(3)}
                                 </span>
@@ -445,7 +445,7 @@ export default function CbaseStatsPage() {
                               </div>
                             </td>
                             <td className="px-1 py-2 text-center">
-                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                              <div className="flex items-center justify-center gap-1 min-w-[60px] mx-auto">
                                 <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                   {team.SLG?.toFixed(3)}
                                 </span>
@@ -453,7 +453,7 @@ export default function CbaseStatsPage() {
                               </div>
                             </td>
                             <td className="px-1 py-2 text-center">
-                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                              <div className="flex items-center justify-center gap-1 min-w-[60px] mx-auto">
                                 <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                   {team.OPS?.toFixed(3)}
                                 </span>
@@ -461,7 +461,7 @@ export default function CbaseStatsPage() {
                               </div>
                             </td>
                             <td className="px-1 py-2 text-center">
-                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                              <div className="flex items-center justify-center gap-1 min-w-[60px] mx-auto">
                                 <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
                                   {team.PCT?.toFixed(3)}
                                 </span>
