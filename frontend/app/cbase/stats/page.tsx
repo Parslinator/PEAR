@@ -253,13 +253,13 @@ export default function CbaseStatsPage() {
             )}
           </div>
           <div className="flex gap-2">
-            <button
+            {/* <button
               onClick={captureScreenshot}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 font-semibold transition-colors"
             >
               <Camera className="w-4 h-4" />
               Screenshot
-            </button>
+            </button> */}
             <button
               onClick={downloadCSV}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 font-semibold transition-colors"
