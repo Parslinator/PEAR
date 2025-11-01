@@ -1308,14 +1308,14 @@ def get_todays_baseball_games():
             if today.month > 7:
                 last_date = schedule_df['Date'].max().date()
                 today_games = schedule_df[schedule_df['Date'].dt.date == last_date].copy()
-                today_games = today_games[['home_team', 'away_team', 'Location', 'PEAR', 'GQI', 'Date', 'home_win_prob']].drop_duplicates()
+                today_games = today_games[['home_team', 'away_team', 'Location', 'PEAR', 'GQI', 'Date', 'home_win_prob', 'home_net', 'away_net']].drop_duplicates()
                 return {"games": today_games.to_dict(orient="records"), "date": last_date.strftime("%B %d, %Y")}
             else:
                 return {"games": [], "date": today.strftime("%B %d, %Y")}
         
         # Process results
         today_games = today_games[[
-            'home_team', 'away_team', 'Location', 'PEAR', 'GQI', 'Date', 'home_win_prob'
+            'home_team', 'away_team', 'Location', 'PEAR', 'GQI', 'Date', 'home_win_prob', 'home_net', 'away_net'
         ]].copy().drop_duplicates()
         
         today_games = today_games.sort_values('GQI', ascending=False).reset_index(drop=True)

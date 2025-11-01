@@ -13,6 +13,8 @@ interface Game {
   GQI: number;
   Date: string;
   home_win_prob: number;
+  home_net: number;
+  away_net: number;
 }
 
 type SortMode = 'gqi' | 'time';
@@ -303,6 +305,9 @@ function GameCard({
       {/* Away Team */}
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
+          <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">
+            #{game.away_net}
+          </span>
           <img 
             src={getLogoUrl(game.away_team)}
             alt={`${game.away_team} logo`}
@@ -325,6 +330,9 @@ function GameCard({
       {/* Home Team */}
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-2 flex-1 min-w-0">
+          <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">
+            #{game.home_net}
+          </span>
           <img 
             src={getLogoUrl(game.home_team)}
             alt={`${game.home_team} logo`}
