@@ -196,7 +196,7 @@ export default function CbasePage() {
   };
 
   const captureScreenshot = async () => {
-    const tableElement = document.querySelector('.stats-table-container');
+    const tableElement = document.querySelector('.ratings-table-container');
     if (tableElement) {
       try {
         const canvas = await html2canvas(tableElement as HTMLElement, {
@@ -310,7 +310,7 @@ export default function CbasePage() {
             </div>
 
             {/* Table Container */}
-            <div className="p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden ratings-table-container">
               {loading ? (
                 <div className="text-center py-12">
                   <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
