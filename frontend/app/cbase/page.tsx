@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Trophy, Calendar, Download, Search, Camera } from 'lucide-react';
+import { Trophy, Calendar, Download, Search } from 'lucide-react';
 import axios from 'axios';
-import html2canvas from 'html2canvas';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -195,64 +194,6 @@ export default function CbasePage() {
     window.URL.revokeObjectURL(url);
   };
 
-  const captureScreenshot = async () => {
-    const tableElement = document.querySelector('.ratings-table-container');
-    if (tableElement) {
-      try {
-        const canvas = await html2canvas(tableElement as HTMLElement, {
-          scale: 2,
-          backgroundColor: '#ffffff',
-          logging: false,
-          useCORS: true
-        });
-        
-        // Wait a bit to ensure canvas is fully rendered
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Add watermark
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          const padding = 15;
-          const fontSize = 32;
-          ctx.font = `bold ${fontSize}px Arial`;
-          const text = '@PEARatings';
-          const textMetrics = ctx.measureText(text);
-          const textWidth = textMetrics.width;
-          const textHeight = fontSize;
-          
-          // Position in top-right corner
-          const x = canvas.width - textWidth - padding * 2;
-          const y = padding;
-          
-          // Draw semi-transparent white background
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-          ctx.fillRect(x - padding, y, textWidth + padding * 2, textHeight + padding * 2);
-          
-          // Draw border
-          ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-          ctx.lineWidth = 1;
-          ctx.strokeRect(x - padding, y, textWidth + padding * 2, textHeight + padding * 2);
-          
-          // Draw text
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'top';
-          ctx.fillText(text, x, y + padding);
-        }
-        
-        // Small delay before download
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        const link = document.createElement('a');
-        link.download = `cbase_stats_${new Date().toISOString().split('T')[0]}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      } catch (error) {
-        console.error('Error capturing screenshot:', error);
-      }
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -264,22 +205,13 @@ export default function CbasePage() {
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Data as of {dataDate}</p>
             )}
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={captureScreenshot}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 font-semibold transition-colors"
-            >
-              <Camera className="w-4 h-4" />
-              Screenshot
-            </button>
-            <button
-              onClick={downloadCSV}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 font-semibold transition-colors"
-            >
-              <Download className="w-4 h-4" />
-              Export CSV
-            </button>
-          </div>
+          <button
+            onClick={downloadCSV}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 font-semibold transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Export CSV
+          </button>
         </div>
 
         <section>
@@ -310,7 +242,7 @@ export default function CbasePage() {
             </div>
 
             {/* Table Container */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden ratings-table-container">
+            <div className="p-6">
               {loading ? (
                 <div className="text-center py-12">
                   <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
@@ -484,8 +416,9 @@ export default function CbasePage() {
                   </div>
 
                   <div className="mt-6 text-sm text-gray-600 dark:text-gray-400 space-y-1 border-t dark:border-gray-700 pt-4">
-                    <p><strong className="dark:text-gray-300">@PEARatings</strong></p>
-                    <p><strong className="dark:text-gray-300">TSR</strong> - Team Strength Rating | <strong className="dark:text-gray-300">NET</strong> - Mimicking the NCAA Evaluation Tool using TSR, RQI, SOS | <strong className="dark:text-gray-300">RPI</strong> - Warren Nolan's Live RPI | <strong className="dark:text-gray-300">RQI</strong> - Resume Quality Index | <strong className="dark:text-gray-300">SOS</strong> - Strength of Schedule | <strong className="dark:text-gray-300">Q1-Q4</strong> - Quadrant records (wins-losses) </p>
+                    <p><strong className="dark:text-gray-300">TSR</strong> - Team Strength Rating | <strong className="dark:text-gray-300">NET</strong> - Mimicking the NCAA Evaluation Tool using TSR, RQI, SOS</p>
+                    <p><strong className="dark:text-gray-300">RPI</strong> - Warren Nolan's Live RPI | <strong className="dark:text-gray-300">RQI</strong> - Resume Quality Index | <strong className="dark:text-gray-300">SOS</strong> - Strength of Schedule</p>
+                    <p><strong className="dark:text-gray-300">Q1-Q4</strong> - Quadrant records (wins-losses)</p>
                   </div>
                 </>
               )}
