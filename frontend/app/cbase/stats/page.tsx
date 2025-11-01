@@ -195,30 +195,42 @@ export default function CbaseStatsPage() {
           useCORS: true
         });
         
+        // Wait a bit to ensure canvas is fully rendered
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Add watermark
         const ctx = canvas.getContext('2d');
         if (ctx) {
-          // Add semi-transparent background for watermark
-          const padding = 10;
-          const fontSize = 28;
+          const padding = 15;
+          const fontSize = 32;
           ctx.font = `bold ${fontSize}px Arial`;
           const text = '@PEARatings';
-          const textWidth = ctx.measureText(text).width;
+          const textMetrics = ctx.measureText(text);
+          const textWidth = textMetrics.width;
+          const textHeight = fontSize;
           
           // Position in top-right corner
-          const x = canvas.width - textWidth - padding;
-          const y = padding + fontSize;
+          const x = canvas.width - textWidth - padding * 2;
+          const y = padding;
           
-          // Draw semi-transparent background
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-          ctx.fillRect(x - padding, padding, textWidth + padding * 2, fontSize + padding);
+          // Draw semi-transparent white background
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+          ctx.fillRect(x - padding, y, textWidth + padding * 2, textHeight + padding * 2);
+          
+          // Draw border
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x - padding, y, textWidth + padding * 2, textHeight + padding * 2);
           
           // Draw text
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
           ctx.textAlign = 'left';
           ctx.textBaseline = 'top';
-          ctx.fillText(text, x, y);
+          ctx.fillText(text, x, y + padding);
         }
+        
+        // Small delay before download
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         const link = document.createElement('a');
         link.download = `cbase_stats_${new Date().toISOString().split('T')[0]}.png`;
@@ -500,7 +512,7 @@ export default function CbaseStatsPage() {
 
                 <div className="mt-6 text-sm text-gray-600 dark:text-gray-400 space-y-1 border-t dark:border-gray-700 pt-4">
                   <p></p>
-                  <p><strong className="dark:text-gray-300">TSR</strong> - Team Strength Rating | <strong className="dark:text-gray-300">WAR</strong> - Team WAR Rank | <strong className="dark:text-gray-300">PYTHAG</strong> - Pythagorean Win Percentage | <strong className="dark:text-gray-300">ERA</strong> - Earned Run Average | <strong className="dark:text-gray-300">WHIP</strong> - Walks + Hits per Inning Pitched | <strong className="dark:text-gray-300">K/9</strong> - Strikeouts Per 9 Innings | <strong className="dark:text-gray-300">RPG</strong> - Runs Per Game | <strong className="dark:text-gray-300">BA</strong> - Batting Average | <strong className="dark:text-gray-300">OBP</strong> - On Base Percentage | <strong className="dark:text-gray-300">SLG</strong> - Slugging | <strong className="dark:text-gray-300">OPS</strong> - On Base Plus Slugging | <strong className="dark:text-gray-300">PCT</strong> - Fielding Percentage | </p>
+                  <p><strong className="dark:text-gray-300">TSR</strong> - Team Strength Rating | <strong className="dark:text-gray-300">WAR</strong> - Team WAR Rank | <strong className="dark:text-gray-300">PYTHAG</strong> - Pythagorean Win Percentage | <strong className="dark:text-gray-300">ERA</strong> - Earned Run Average | <strong className="dark:text-gray-300">WHIP</strong> - Walks + Hits per Inning Pitched | <strong className="dark:text-gray-300">K/9</strong> - Strikeouts Per 9 Innings | <strong className="dark:text-gray-300">RPG</strong> - Runs Per Game | <strong className="dark:text-gray-300">BA</strong> - Batting Average | <strong className="dark:text-gray-300">OBP</strong> - On Base Percentage | <strong className="dark:text-gray-300">SLG</strong> - Slugging | <strong className="dark:text-gray-300">OPS</strong> - On Base Plus Slugging | <strong className="dark:text-gray-300">PCT</strong> - Fielding Percentage </p>
                 </div>
               </>
             )}
