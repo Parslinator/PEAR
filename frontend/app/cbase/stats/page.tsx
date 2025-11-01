@@ -22,6 +22,7 @@ interface TeamStats {
   OBP: number;
   SLG: number;
   OPS: number;
+  PCT: number;
 }
 
 type SortField = keyof TeamStats;
@@ -158,7 +159,7 @@ export default function CbaseStatsPage() {
     });
 
   const downloadCSV = () => {
-    const headers = ['Rank', 'Team', 'WAR', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'Conference'];
+    const headers = ['Rank', 'Team', 'WAR', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'PCT', 'Conference'];
     const csvData = filteredAndSortedStats.map((team, index) => [
       index + 1,
       team.Team,
@@ -172,6 +173,7 @@ export default function CbaseStatsPage() {
       team.OBP?.toFixed(3) || '',
       team.SLG?.toFixed(3) || '',
       team.OPS?.toFixed(3) || '',
+      team.PCT?.toFixed(3) || '',
       team.Conference
     ]);
     
@@ -308,6 +310,11 @@ export default function CbaseStatsPage() {
                           OPS {sortField === 'OPS' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                          onClick={() => handleSort('PCT')}
+                        >
+                          PCT {sortField === 'PCT' && (sortDirection === 'asc' ? '↑' : '↓')}
+                        </th>
+                        <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                           onClick={() => handleSort('Conference')}
                         >
                           CONF {sortField === 'Conference' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -326,6 +333,7 @@ export default function CbaseStatsPage() {
                         const obpBg = getRatingColor(team.OBP || 0, stats.map(s => s.OBP || 0).filter(v => v !== null), true);
                         const slgBg = getRatingColor(team.SLG || 0, stats.map(s => s.SLG || 0).filter(v => v !== null), true);
                         const opsBg = getRatingColor(team.OPS || 0, stats.map(s => s.OPS || 0).filter(v => v !== null), true);
+                        const pctBg = getRatingColor(team.PCT || 0, stats.map(s => s.PCT || 0).filter(v => v !== null), true);
 
                         // Get national ranks
                         const warRank = getNationalRank(team.fWAR, 'fWAR', true);
@@ -338,6 +346,7 @@ export default function CbaseStatsPage() {
                         const obpRank = getNationalRank(team.OBP, 'OBP', true);
                         const slgRank = getNationalRank(team.SLG, 'SLG', true);
                         const opsRank = getNationalRank(team.OPS, 'OPS', true);
+                        const pctRank = getNationalRank(team.PCT, 'PCT', true);
 
                         return (
                           <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
@@ -433,6 +442,14 @@ export default function CbaseStatsPage() {
                                   {team.OPS?.toFixed(3)}
                                 </span>
                                 <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: opsBg, color: getTextColor(opsBg) }}>{opsRank}</span>
+                              </div>
+                            </td>
+                            <td className="px-1 py-2 text-center">
+                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
+                                  {team.PCT?.toFixed(3)}
+                                </span>
+                                <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: pctBg, color: getTextColor(pctBg) }}>{pctRank}</span>
                               </div>
                             </td>
                             <td className="px-1 py-2 text-center text-xs text-gray-600 dark:text-gray-400">{team.Conference}</td>

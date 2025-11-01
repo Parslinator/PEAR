@@ -1184,7 +1184,7 @@ def get_baseball_stats():
             'Team', 'Conference', 'Rating', 'NET', 'NET_Score', 'RPI', 'ELO', 'ELO_Rank', 'PRR', 'RQI', 
             'resume_quality', 'avg_expected_wins', 'SOS', 'SOR', 'Q1', 'Q2', 'Q3', 'Q4',
             'fWAR', 'oWAR_z', 'pWAR_z', 'WPOE', 'PYTHAG',
-            'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS'
+            'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'PCT'
         ]
         
         available_columns = [col for col in stats_columns if col in modeling_stats.columns]
