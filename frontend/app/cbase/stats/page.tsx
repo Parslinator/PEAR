@@ -511,7 +511,7 @@ export default function CbaseStatsPage() {
                 </div>
 
                 <div className="mt-6 text-sm text-gray-600 dark:text-gray-400 space-y-1 border-t dark:border-gray-700 pt-4">
-                  <p></p>
+                  <p><strong className="dark:text-gray-300">@PEARatings</strong></p>
                   <p><strong className="dark:text-gray-300">TSR</strong> - Team Strength Rating | <strong className="dark:text-gray-300">WAR</strong> - Team WAR Rank | <strong className="dark:text-gray-300">PYTHAG</strong> - Pythagorean Win Percentage | <strong className="dark:text-gray-300">ERA</strong> - Earned Run Average | <strong className="dark:text-gray-300">WHIP</strong> - Walks + Hits per Inning Pitched | <strong className="dark:text-gray-300">K/9</strong> - Strikeouts Per 9 Innings | <strong className="dark:text-gray-300">RPG</strong> - Runs Per Game | <strong className="dark:text-gray-300">BA</strong> - Batting Average | <strong className="dark:text-gray-300">OBP</strong> - On Base Percentage | <strong className="dark:text-gray-300">SLG</strong> - Slugging | <strong className="dark:text-gray-300">OPS</strong> - On Base Plus Slugging | <strong className="dark:text-gray-300">PCT</strong> - Fielding Percentage </p>
                 </div>
               </>
