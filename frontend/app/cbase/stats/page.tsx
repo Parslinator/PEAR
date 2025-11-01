@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Trophy, Download, Search } from 'lucide-react';
+import { Download, Search, Camera } from 'lucide-react';
 import axios from 'axios';
+import html2canvas from 'html2canvas';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -58,7 +59,6 @@ export default function CbaseStatsPage() {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      // Default sort directions - for ERA and WHIP, lower is better (asc), for others higher is better (desc)
       if (field === 'ERA' || field === 'WHIP') {
         setSortDirection('asc');
       } else {
@@ -67,7 +67,6 @@ export default function CbaseStatsPage() {
     }
   };
 
-  // Calculate national rank for a team's stat value
   const getNationalRank = (value: number, field: SortField, higherIsBetter: boolean = true): number => {
     if (value === null || value === undefined) return stats.length;
     
@@ -89,32 +88,27 @@ export default function CbaseStatsPage() {
       normalized = 1 - normalized;
     }
     
-    // Color scale: Dark Red (#8B0000) → Orange (#FFA500) → Light Gray (#D3D3D3) → Cyan (#00FFFF) → Dark Blue (#00008B)
     if (normalized < 0.25) {
-      // Dark Red (#8B0000) → Orange (#FFA500)
       const t = normalized / 0.25;
       const r = Math.round(139 + (255 - 139) * t);
       const g = Math.round(0 + (165 - 0) * t);
-      const b = Math.round(0 + (0 - 0) * t);
+      const b = 0;
       return `rgb(${r}, ${g}, ${b})`;
     } else if (normalized < 0.5) {
-      // Orange (#FFA500) → Light Gray (#D3D3D3)
       const t = (normalized - 0.25) / 0.25;
       const r = Math.round(255 + (211 - 255) * t);
       const g = Math.round(165 + (211 - 165) * t);
       const b = Math.round(0 + (211 - 0) * t);
       return `rgb(${r}, ${g}, ${b})`;
     } else if (normalized < 0.75) {
-      // Light Gray (#D3D3D3) → Cyan (#00FFFF)
       const t = (normalized - 0.5) / 0.25;
       const r = Math.round(211 + (0 - 211) * t);
       const g = Math.round(211 + (255 - 211) * t);
       const b = Math.round(211 + (255 - 211) * t);
       return `rgb(${r}, ${g}, ${b})`;
     } else {
-      // Cyan (#00FFFF) → Dark Blue (#00008B)
       const t = (normalized - 0.75) / 0.25;
-      const r = Math.round(0 + (0 - 0) * t);
+      const r = 0;
       const g = Math.round(255 + (0 - 255) * t);
       const b = Math.round(255 + (139 - 255) * t);
       return `rgb(${r}, ${g}, ${b})`;
@@ -145,12 +139,10 @@ export default function CbaseStatsPage() {
       let aVal = a[sortField];
       let bVal = b[sortField];
       
-      // Handle string values
       if (typeof aVal === 'string' && typeof bVal === 'string') {
         return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
       }
       
-      // Handle numeric values
       if (typeof aVal === 'number' && typeof bVal === 'number') {
         return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
       }
@@ -192,10 +184,37 @@ export default function CbaseStatsPage() {
     window.URL.revokeObjectURL(url);
   };
 
+  const captureScreenshot = async () => {
+    const tableElement = document.querySelector('.stats-table-container');
+    if (tableElement) {
+      try {
+        const canvas = await html2canvas(tableElement as HTMLElement, {
+          scale: 2,
+          backgroundColor: '#ffffff'
+        });
+        
+        // Add watermark
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.font = 'bold 24px Arial';
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+          ctx.textAlign = 'right';
+          ctx.fillText('@PEARatings', canvas.width - 20, 40);
+        }
+        
+        const link = document.createElement('a');
+        link.download = `cbase_stats_${new Date().toISOString().split('T')[0]}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (error) {
+        console.error('Error capturing screenshot:', error);
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Simple Header with Export */}
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Team Statistics</h1>
@@ -203,16 +222,24 @@ export default function CbaseStatsPage() {
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Data as of {dataDate}</p>
             )}
           </div>
-          <button
-            onClick={downloadCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 font-semibold transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            Export CSV
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={captureScreenshot}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 font-semibold transition-colors"
+            >
+              <Camera className="w-4 h-4" />
+              Screenshot
+            </button>
+            <button
+              onClick={downloadCSV}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 font-semibold transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Export CSV
+            </button>
+          </div>
         </div>
 
-        {/* Search and Filter Controls */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
@@ -240,8 +267,7 @@ export default function CbaseStatsPage() {
           </div>
         </div>
 
-        {/* Stats Table */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden stats-table-container">
           <div className="p-6">
             {loading ? (
               <div className="text-center py-12">
@@ -256,68 +282,55 @@ export default function CbaseStatsPage() {
                       <tr>
                         <th className="px-2 py-2 text-left font-semibold text-gray-700 dark:text-gray-200">Rank</th>
                         <th className="px-2 py-2 text-left font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => handleSort('Team')}
-                        >
+                          onClick={() => handleSort('Team')}>
                           Team {sortField === 'Team' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => handleSort('Rating')}
-                        >
+                          onClick={() => handleSort('Rating')}>
                           TSR {sortField === 'Rating' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => handleSort('fWAR')}
-                        >
+                          onClick={() => handleSort('fWAR')}>
                           WAR {sortField === 'fWAR' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => handleSort('PYTHAG')}
-                        >
+                          onClick={() => handleSort('PYTHAG')}>
                           PYTHAG {sortField === 'PYTHAG' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => handleSort('ERA')}
-                        >
+                          onClick={() => handleSort('ERA')}>
                           ERA {sortField === 'ERA' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => handleSort('WHIP')}
-                        >
+                          onClick={() => handleSort('WHIP')}>
                           WHIP {sortField === 'WHIP' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => handleSort('KP9')}
-                        >
+                          onClick={() => handleSort('KP9')}>
                           K/9 {sortField === 'KP9' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => handleSort('RPG')}
-                        >
+                          onClick={() => handleSort('RPG')}>
                           RPG {sortField === 'RPG' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => handleSort('BA')}
-                        >
+                          onClick={() => handleSort('BA')}>
                           BA {sortField === 'BA' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => handleSort('OBP')}
-                        >
+                          onClick={() => handleSort('OBP')}>
                           OBP {sortField === 'OBP' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => handleSort('SLG')}
-                        >
+                          onClick={() => handleSort('SLG')}>
                           SLG {sortField === 'SLG' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => handleSort('OPS')}
-                        >
+                          onClick={() => handleSort('OPS')}>
                           OPS {sortField === 'OPS' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => handleSort('PCT')}
-                        >
+                          onClick={() => handleSort('PCT')}>
                           PCT {sortField === 'PCT' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                       </tr>
@@ -337,7 +350,6 @@ export default function CbaseStatsPage() {
                         const opsBg = getRatingColor(team.OPS || 0, stats.map(s => s.OPS || 0).filter(v => v !== null), true);
                         const pctBg = getRatingColor(team.PCT || 0, stats.map(s => s.PCT || 0).filter(v => v !== null), true);
 
-                        // Get national ranks
                         const ratingRank = getNationalRank(team.Rating, 'Rating', true);
                         const warRank = getNationalRank(team.fWAR, 'fWAR', true);
                         const pythagRank = getNationalRank(team.PYTHAG, 'PYTHAG', true);
@@ -360,9 +372,7 @@ export default function CbaseStatsPage() {
                                   src={`${API_URL}/api/baseball-logo/${encodeURIComponent(team.Team)}`}
                                   alt={`${team.Team} logo`}
                                   className="w-6 h-6 object-contain"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                  }}
+                                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                 />
                                 <span>{team.Team}</span>
                               </div>
