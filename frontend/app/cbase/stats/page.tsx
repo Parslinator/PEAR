@@ -159,10 +159,11 @@ export default function CbaseStatsPage() {
     });
 
   const downloadCSV = () => {
-    const headers = ['Rank', 'Team', 'WAR', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'PCT', 'Conference'];
+    const headers = ['Rank', 'Team', 'Rating', 'WAR', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'PCT', 'Conference'];
     const csvData = filteredAndSortedStats.map((team, index) => [
       index + 1,
       team.Team,
+      team.Rating?.toFixed(2) || '',
       team.fWAR?.toFixed(2) || '',
       team.PYTHAG?.toFixed(3) || '',
       team.ERA?.toFixed(2) || '',
@@ -260,6 +261,11 @@ export default function CbaseStatsPage() {
                           Team {sortField === 'Team' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
+                          onClick={() => handleSort('Rating')}
+                        >
+                          TSR {sortField === 'Rating' && (sortDirection === 'asc' ? '↑' : '↓')}
+                        </th>
+                        <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                           onClick={() => handleSort('fWAR')}
                         >
                           WAR {sortField === 'fWAR' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -323,6 +329,7 @@ export default function CbaseStatsPage() {
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                       {filteredAndSortedStats.map((team, index) => {
+                        const ratingBg = getRatingColor(team.Rating || 0, stats.map(s => s.Rating || 0).filter(v => v !== null), true);
                         const warBg = getRatingColor(team.fWAR || 0, stats.map(s => s.fWAR || 0).filter(v => v !== null), true);
                         const pythagBg = getRatingColor(team.PYTHAG || 0, stats.map(s => s.PYTHAG || 0).filter(v => v !== null), true);
                         const eraBg = getRatingColor(team.ERA || 0, stats.map(s => s.ERA || 0).filter(v => v !== null), false);
@@ -336,6 +343,7 @@ export default function CbaseStatsPage() {
                         const pctBg = getRatingColor(team.PCT || 0, stats.map(s => s.PCT || 0).filter(v => v !== null), true);
 
                         // Get national ranks
+                        const ratingRank = getNationalRank(team.Rating, 'Rating', true);
                         const warRank = getNationalRank(team.fWAR, 'fWAR', true);
                         const pythagRank = getNationalRank(team.PYTHAG, 'PYTHAG', true);
                         const eraRank = getNationalRank(team.ERA, 'ERA', false);
@@ -362,6 +370,14 @@ export default function CbaseStatsPage() {
                                   }}
                                 />
                                 <span>{team.Team}</span>
+                              </div>
+                            </td>
+                            <td className="px-1 py-2 text-center">
+                              <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
+                                <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
+                                  {team.Rating?.toFixed(2)}
+                                </span>
+                                <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: ratingBg, color: getTextColor(ratingBg) }}>{ratingRank}</span>
                               </div>
                             </td>
                             <td className="px-1 py-2 text-center">
