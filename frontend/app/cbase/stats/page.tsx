@@ -26,6 +26,10 @@ interface TeamStats {
   PCT: number;
 }
 
+interface TeamProfile {
+  [key: string]: any;
+}
+
 type SortField = keyof TeamStats;
 
 export default function CbaseStatsPage() {
@@ -36,6 +40,9 @@ export default function CbaseStatsPage() {
   const [dataDate, setDataDate] = useState('');
   const [sortField, setSortField] = useState<SortField>('Rating');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+  const [teamProfile, setTeamProfile] = useState<TeamProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -52,6 +59,47 @@ export default function CbaseStatsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchTeamProfile = async (teamName: string) => {
+    try {
+      setProfileLoading(true);
+      const response = await fetch(`${API_URL}/api/cbase/team-profile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          team_name: teamName,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate team profile');
+      }
+
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+      setTeamProfile({ imageUrl });
+    } catch (error) {
+      console.error('Error fetching team profile:', error);
+      setTeamProfile(null);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handleTeamClick = (teamName: string) => {
+    setSelectedTeam(teamName);
+    fetchTeamProfile(teamName);
+  };
+
+  const closeModal = () => {
+    if (teamProfile?.imageUrl) {
+      URL.revokeObjectURL(teamProfile.imageUrl);
+    }
+    setSelectedTeam(null);
+    setTeamProfile(null);
   };
 
   const handleSort = (field: SortField) => {
@@ -397,7 +445,10 @@ export default function CbaseStatsPage() {
                           <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                             <td className="px-2 py-2 text-gray-700 dark:text-gray-300 font-medium border-r-2 border-gray-300 dark:border-gray-600">{index + 1}</td>
                             <td className="px-2 py-2 font-semibold text-gray-900 dark:text-white text-sm">
-                              <div className="flex items-center gap-2">
+                              <div 
+                                className="flex items-center gap-2 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                onClick={() => handleTeamClick(team.Team)}
+                              >
                                 <img 
                                   src={`${API_URL}/api/baseball-logo/${encodeURIComponent(team.Team)}`}
                                   alt={`${team.Team} logo`}
@@ -519,6 +570,47 @@ export default function CbaseStatsPage() {
           </div>
         </div>
       </div>
+
+      {selectedTeam && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={closeModal}
+        >
+          <div 
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedTeam}</h2>
+              <button
+                onClick={closeModal}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="p-6">
+              {profileLoading ? (
+                <div className="text-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                  <p className="mt-4 text-gray-600 dark:text-gray-400">Loading team profile...</p>
+                </div>
+              ) : teamProfile?.imageUrl ? (
+                <div className="flex justify-center">
+                  <img 
+                    src={teamProfile.imageUrl} 
+                    alt={`${selectedTeam} profile`}
+                    className="max-w-full h-auto rounded-lg"
+                  />
+                </div>
+              ) : (
+                <p className="text-center text-gray-600 dark:text-gray-400">Failed to load team profile</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
