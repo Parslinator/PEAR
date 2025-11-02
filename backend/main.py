@@ -26,6 +26,7 @@ import glob
 import re
 import random
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.patches import Rectangle
 
 app = FastAPI(title="PEAR Ratings API")
 
@@ -1414,15 +1415,24 @@ def get_conference_standings(conference_name: str):
         print(f"Error getting conference standings: {e}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
+def adjust_home_pr(home_win_prob):
+    return ((home_win_prob - 50) / 50) * 0.9
+
+def calculate_spread_from_stats(home_pr, away_pr, home_elo, away_elo, location):
+    if location != "Neutral":
+        home_pr += 0.3
+    elo_win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1) * 100, 2)
+    spread = round(adjust_home_pr(elo_win_prob) + home_pr - away_pr, 2)
+    return spread, elo_win_prob
+    
 def calculate_series_probabilities(win_prob):
-    """Calculate series win probabilities for 3-game series"""
     # Team A win probabilities
     P_A_0 = (1 - win_prob) ** 3
     P_A_1 = 3 * win_prob * (1 - win_prob) ** 2
     P_A_2 = 3 * win_prob ** 2 * (1 - win_prob)
     P_A_3 = win_prob ** 3
 
-    # Team B win probabilities
+    # Team B win probabilities (q = 1 - p)
     lose_prob = 1 - win_prob
     P_B_0 = win_prob ** 3
     P_B_1 = 3 * lose_prob * win_prob ** 2
@@ -1435,280 +1445,531 @@ def calculate_series_probabilities(win_prob):
     P_B_at_least_1 = 1 - P_B_0
     P_B_at_least_2 = P_B_2 + P_B_3
 
-    return [P_A_at_least_1, P_A_at_least_2, P_A_3], [P_B_at_least_1, P_B_at_least_2, P_B_3]
-
-def get_total_record(row):
-    """Get total record from quadrant records"""
-    try:
-        wins = sum(int(str(row[col]).split("-")[0]) for col in ["Q1", "Q2", "Q3", "Q4"])
-        losses = sum(int(str(row[col]).split("-")[1]) for col in ["Q1", "Q2", "Q3", "Q4"])
-        return f"{wins}-{losses}"
-    except:
-        return "0-0"
-
-def get_text_color_for_bubble(color_rgba):
-    """Determine if text should be black or white based on background color luminance"""
-    # Extract RGB values (color_rgba is a tuple of (r, g, b, a) with values 0-1)
-    r, g, b = color_rgba[0], color_rgba[1], color_rgba[2]
-    
-    # Calculate relative luminance
-    luminance = 0.299 * r + 0.587 * g + 0.114 * b
-    
-    # Return 'white' for dark backgrounds, 'black' for light backgrounds
-    return 'white' if luminance < 0.5 else 'black'
-
-def darken_color(color, factor=0.3):
-    """Darken a color for edge effects"""
-    color = mcolors.to_rgba(color)
-    darkened_color = [max(c - factor, 0) for c in color[:3]]
-    return mcolors.rgb2hex(darkened_color)
+    return [P_A_at_least_1,P_A_at_least_2,P_A_3], [P_B_at_least_1,P_B_at_least_2,P_B_3]
 
 @app.post("/api/cbase/matchup-image")
 def generate_matchup_image(request: BaseballSpreadRequest):
     """Generate matchup comparison image"""
     try:
-        modeling_stats, _ = load_baseball_data()
+        stats_and_metrics, _ = load_baseball_data()
         
         away_team = request.away_team
         home_team = request.home_team
-        location = "Neutral" if request.neutral else "Home"
+        neutrality = "Neutral" if request.neutral else "Home"
         
-        # Get team data
-        team1_data = modeling_stats[modeling_stats['Team'] == home_team]
-        team2_data = modeling_stats[modeling_stats['Team'] == away_team]
-        
-        if team1_data.empty or team2_data.empty:
-            raise HTTPException(status_code=404, detail="Team not found")
-        
+            
         # Load team logos
         logo_folder = os.path.join(BASEBALL_BASE_PATH, "logos")
-        team1_logo = None
-        team2_logo = None
+        home_logo = None
+        away_logo = None
+
+        def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
+            if location != "Neutral":
+                home_pr += 0.3
+            rating_diff = home_pr - away_pr
+            return round(1 / (1 + 10 ** (-rating_diff / 6)) * 100, 2)
+
+        def fixed_width_text(ax, x, y, text, width=0.06, height=0.04,
+                            facecolor="lightgrey", edgecolor="none", alpha=1.0, **kwargs):
+            # Draw rectangle behind text
+            ax.add_patch(Rectangle(
+                (x - width/2, y - height/2), width, height,
+                transform=ax.transAxes,
+                facecolor=facecolor,
+                edgecolor=edgecolor,
+                alpha=alpha,
+                zorder=1
+            ))
+
+            # Draw text centered on top
+            ax.text(x, y, text,
+                    ha="center", va="center", zorder=2, **kwargs)
+            
+        def get_text_color(bg_color: str) -> str:
+            """Determine if text should be black or white based on background color luminance"""
+            import re
+            
+            # Handle hex colors
+            if bg_color.startswith('#'):
+                # Convert hex to RGB
+                bg_color = bg_color.lstrip('#')
+                r = int(bg_color[0:2], 16)
+                g = int(bg_color[2:4], 16)
+                b = int(bg_color[4:6], 16)
+            else:
+                # Handle rgb() format
+                match = re.match(r'rgb\((\d+),\s*(\d+),\s*(\d+)\)', bg_color)
+                if not match:
+                    return 'white'
+                
+                r = int(match.group(1))
+                g = int(match.group(2))
+                b = int(match.group(3))
+            
+            luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+            return 'black' if luminance > 0.5 else 'white'
+
+        def rank_text_color(rank, vmin=1, vmax=300):
+            """Get appropriate text color (black or white) based on rank background color"""
+            if rank == "":
+                return 'black'
+            
+            bg_color = rank_to_color(rank, vmin=vmin, vmax=vmax)
+            return get_text_color(bg_color)
+
+        def percent_text_color(win_pct, vmin=0.0, vmax=1.0):
+            """Get appropriate text color (black or white) based on win percentage background color"""
+            if win_pct == "":
+                return 'black'
+            
+            bg_color = rank_to_color(win_pct, vmin=vmin, vmax=vmax)
+            return get_text_color(bg_color)
+
+        def plot_logo(ax, img, xy, zoom=0.2):
+            """Helper to plot a logo at given xy coords."""
+            imagebox = OffsetImage(img, zoom=zoom)
+            ab = AnnotationBbox(imagebox, xy, frameon=False)
+            ax.add_artist(ab)
+
+        def rank_to_color(rank, vmin=1, vmax=300):
+            """
+            Map a rank (1–300) to a hex color.
+            Dark blue = best (1), grey = middle, dark red = worst (300).
+            Color scale: Dark Red (#8B0000) → Orange (#FFA500) → Light Gray (#D3D3D3) → Cyan (#00FFFF) → Dark Blue (#00008B)
+            """
+            # Define colormap from blue → grey → red
+            cmap = mcolors.LinearSegmentedColormap.from_list(
+                "rank_cmap", ["#00008B", "#00FFFF", "#D3D3D3", "#FFA500", "#8B0000"]  # dark blue, cyan, light gray, orange, dark red
+            )
+            
+            # Normalize rank to [0,1]
+            norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+            rgba = cmap(norm(rank))
+            
+            # Convert RGBA to hex
+            return mcolors.to_hex(rgba)
+
+        def percent_to_color(win_pct, vmin=0.0, vmax=1.0):
+            """
+            Map a win percentage (0.0–1.0) to a hex color.
+            Dark blue = best (1.0), grey = middle (0.5), dark red = worst (0.0).
+            Color scale: Dark Red (#8B0000) → Orange (#FFA500) → Light Gray (#D3D3D3) → Cyan (#00FFFF) → Dark Blue (#00008B)
+            """
+            # Define colormap from red → grey → blue
+            cmap = mcolors.LinearSegmentedColormap.from_list(
+                "percent_cmap", ["#8B0000", "#FFA500", "#D3D3D3", "#00FFFF", "#00008B"]  # dark red, orange, light gray, cyan, dark blue
+            )
+            
+            # Normalize percentage to [0,1]
+            norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+            rgba = cmap(norm(win_pct))
+            
+            # Convert RGBA to hex
+            return mcolors.to_hex(rgba)
+
+        def get_value_and_rank(df, team, column, higher_is_better=True):
+            """
+            Return (value, rank) for a given team and column.
+            
+            Args:
+                df (pd.DataFrame): Data source with 'team' and stat columns.
+                team (str): Team name to look up.
+                column (str): Column name to extract.
+                higher_is_better (bool): If True, high values rank better (1 = highest).
+                                        If False, low values rank better (1 = lowest).
+            """
+            ascending = not higher_is_better
+            ranks = df[column].rank(ascending=ascending, method="first").astype(int)
+
+            value = df.loc[df['Team'] == team, column].values[0]
+            rank = ranks.loc[df['Team'] == team].values[0]
+
+            return value, rank
+        
+        def get_record_value_and_rank(df, team, column, higher_is_better=True):
+            """
+            Return (record_string, win_percentage, rank) for a given team and column containing W-L records.
+            
+            Args:
+                df (pd.DataFrame): Data source with 'team' and record columns.
+                team (str): Team name to look up.
+                column (str): Column name containing records in "W-L" format.
+                higher_is_better (bool): If True, high win% ranks better (1 = highest).
+                                        If False, low win% ranks better (1 = lowest).
+            
+            Returns:
+                tuple: (record_string, win_percentage as float, rank as int)
+            """
+            def calculate_win_pct(record):
+                """Convert 'W-L' string to win percentage."""
+                if pd.isna(record) or record == '':
+                    return 0.0
+                parts = str(record).split('-')
+                wins = int(parts[0])
+                losses = int(parts[1])
+                total = wins + losses
+                return wins / total if total > 0 else 0.0
+            
+            # Calculate win percentages for all teams
+            win_pcts = df[column].apply(calculate_win_pct)
+            
+            # Calculate ranks
+            ascending = not higher_is_better
+            ranks = win_pcts.rank(ascending=ascending, method="first").astype(int)
+            
+            # Get values for specified team
+            team_idx = df['Team'] == team
+            record_string = df.loc[team_idx, column].values[0]
+            win_pct = win_pcts.loc[team_idx].values[0]
+            rank = ranks.loc[team_idx].values[0]
+            
+            return record_string, win_pct
+        
+        def add_row(x_vals, y, away_val, away_rank, away_name, home_name, home_rank, home_val, away_digits, home_digits):
+            # Helper to choose text color based on rank
+
+            # Away value
+            if away_val != "":
+                ax.text(x_vals[0], y, f"{away_val:.{away_digits}f}", ha='center', fontsize=16, fontweight='bold',
+                        bbox=dict(facecolor='green', alpha=0))
+
+            # Away rank box
+            if away_rank != "":
+                fixed_width_text(
+                    ax, x_vals[1], y+0.007, f"{away_rank}", width=0.06, height=0.04,
+                    facecolor=rank_to_color(away_rank), alpha=alpha_val,
+                    fontsize=16, fontweight='bold', color=rank_text_color(away_rank)
+                )
+
+            # Metric name
+            if away_name != "":
+                ax.text(x_vals[2], y, away_name, ha='left', fontsize=16, fontweight='bold',
+                        bbox=dict(facecolor='green', alpha=0))
+
+            if home_name != "":
+                ax.text(x_vals[3], y, home_name, ha='right', fontsize=16, fontweight='bold',
+                        bbox=dict(facecolor='green', alpha=0))
+
+            # Home rank box
+            if home_rank != "":
+                fixed_width_text(
+                    ax, x_vals[4], y+0.007, f"{home_rank}", width=0.06, height=0.04,
+                    facecolor=rank_to_color(home_rank), alpha=alpha_val,
+                    fontsize=16, fontweight='bold', color=rank_text_color(home_rank)
+                )
+
+            # Home value
+            if home_val != "":
+                ax.text(x_vals[5], y, f"{home_val:.{home_digits}f}", ha='center', fontsize=16, fontweight='bold',
+                        bbox=dict(facecolor='green', alpha=0))
         
         if os.path.exists(logo_folder):
             # Try to find logos for both teams (keep spaces, don't replace with underscores)
-            team1_logo_path = os.path.join(logo_folder, f"{home_team}.png")
-            team2_logo_path = os.path.join(logo_folder, f"{away_team}.png")
+            home_logo_path = os.path.join(logo_folder, f"{home_team}.png")
+            away_logo_path = os.path.join(logo_folder, f"{away_team}.png")
             
-            if os.path.exists(team1_logo_path):
-                team1_logo = Image.open(team1_logo_path).convert("RGBA")
-            if os.path.exists(team2_logo_path):
-                team2_logo = Image.open(team2_logo_path).convert("RGBA")
-        
-        # Percentile columns
-        percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 
-                             'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
-        custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'WAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
-        
-        # Extract team 1 (home) data
-        team1_record = get_total_record(team1_data.iloc[0])
-        team1_proj_record = team1_data['Projected_Record'].values[0] if 'Projected_Record' in team1_data.columns else "N/A"
-        team1_rating = team1_data['Rating'].values[0]
-        team1_net = team1_data['NET'].values[0]
-        team1_Q1 = team1_data['Q1'].values[0]
-        team1_Q2 = team1_data['Q2'].values[0]
-        team1_Q3 = team1_data['Q3'].values[0]
-        team1_Q4 = team1_data['Q4'].values[0]
-        
-        # Extract team 2 (away) data
-        team2_record = get_total_record(team2_data.iloc[0])
-        team2_proj_record = team2_data['Projected_Record'].values[0] if 'Projected_Record' in team2_data.columns else "N/A"
-        team2_rating = team2_data['Rating'].values[0]
-        team2_net = team2_data['NET'].values[0]
-        team2_Q1 = team2_data['Q1'].values[0]
-        team2_Q2 = team2_data['Q2'].values[0]
-        team2_Q3 = team2_data['Q3'].values[0]
-        team2_Q4 = team2_data['Q4'].values[0]
-        
-        # Get available percentile columns
-        available_percentile_cols = [col for col in percentile_columns if col in modeling_stats.columns]
-        
-        team1_percentiles = team1_data[available_percentile_cols].values[0] if available_percentile_cols else [50] * len(percentile_columns)
-        team2_percentiles = team2_data[available_percentile_cols].values[0] if available_percentile_cols else [50] * len(percentile_columns)
-        
-        # Calculate win probabilities
-        home_pr = team1_rating
-        away_pr = team2_rating
-        home_elo = team1_data['ELO'].values[0] if 'ELO' in team1_data.columns else 1200
-        away_elo = team2_data['ELO'].values[0] if 'ELO' in team2_data.columns else 1200
-        
-        spread, elo_win_prob = calculate_baseball_spread(home_pr, away_pr, home_elo, away_elo, location)
-        win_prob = baseball_win_prob(home_pr, away_pr, location)
-        
-        # Format spread
-        if spread >= 0:
-            spread_text = f"{home_team} -{abs(spread)}"
-        else:
-            spread_text = f"{away_team} -{abs(spread)}"
-        
-        # Calculate GQI
-        max_net = 299
-        w_tq = 0.70
-        w_wp = 0.20
-        w_ned = 0.10
-        avg_net = (team1_net + team2_net) / 2
-        tq = (max_net - avg_net) / (max_net - 1)
-        wp_calc = 1 - 2 * np.abs((win_prob / 100) - 0.5)
-        ned = 1 - (np.abs(team2_net - team1_net) / (max_net - 1))
-        gqi = round(10 * (w_tq * tq + w_wp * wp_calc + w_ned * ned), 1)
-        
-        # Calculate series probabilities
-        team1_win_prob = win_prob / 100
-        team2_win_prob = 1 - team1_win_prob
-        team1_probs, team2_probs = calculate_series_probabilities(team1_win_prob)
-        
-        # Calculate win quality
-        bubble_team_rating = modeling_stats['Rating'].quantile(0.90)
-        team1_quality = 1 - baseball_win_prob(team2_rating, bubble_team_rating, location) / 100
-        team1_win_quality = 1 - team1_quality
-        team1_loss_quality = -team1_quality
-        
-        team2_quality = baseball_win_prob(bubble_team_rating, team1_rating, location) / 100
-        team2_win_quality = 1 - team2_quality
-        team2_loss_quality = -team2_quality
-        
-        # Create the visualization
-        fig, ax = plt.subplots(figsize=(8, 10))
+            if os.path.exists(home_logo_path):
+                home_logo = Image.open(home_logo_path).convert("RGBA")
+            if os.path.exists(away_logo_path):
+                away_logo = Image.open(away_logo_path).convert("RGBA")
+
+        fig, ax = plt.subplots(figsize=(16, 12), dpi=400)
         fig.patch.set_facecolor('#CECEB2')
         ax.set_facecolor('#CECEB2')
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.axis("off")
+
+        # ----------------
+        # logos, score, win prob, spread, O/U
+        # ----------------
+        plot_logo(ax, away_logo, (0.15, 0.8), zoom=0.3)
+        plot_logo(ax, home_logo, (0.85, 0.8), zoom=0.3)
+
+        if neutrality == "Neutral":
+            ax.text(0.5, 0.96, f"{away_team} (N) {home_team}", ha='center', fontsize=32, fontweight='bold', bbox=dict(facecolor='red', alpha=0.0))
+        else:
+            ax.text(0.5, 0.96, f"{away_team} at {home_team}", ha='center', fontsize=32, fontweight='bold', bbox=dict(facecolor='red', alpha=0.0))
+
+        alpha_val = 0.9
+
+        away_pr, away_rank = get_value_and_rank(stats_and_metrics, away_team, 'Rating')
+        home_pr, home_rank = get_value_and_rank(stats_and_metrics, home_team, 'Rating')
+        away_elo, away_elo_rank = get_value_and_rank(stats_and_metrics, away_team, 'ELO')
+        home_elo, home_elo_rank = get_value_and_rank(stats_and_metrics, home_team, 'ELO')
+        home_net_score, home_net_rank = get_value_and_rank(stats_and_metrics, home_team, 'NET_Score')
+        away_net_score, away_net_rank = get_value_and_rank(stats_and_metrics, away_team, 'NET_Score')
+        home_rq, home_rq_rank = get_value_and_rank(stats_and_metrics, home_team, 'resume_quality')
+        away_rq, away_rq_rank = get_value_and_rank(stats_and_metrics, away_team, 'resume_quality')
+        home_sos, home_sos_rank = get_value_and_rank(stats_and_metrics, home_team, 'avg_expected_wins', False)
+        away_sos, away_sos_rank = get_value_and_rank(stats_and_metrics, away_team, 'avg_expected_wins', False)
+        home_pythag, home_pythag_rank = get_value_and_rank(stats_and_metrics, home_team, 'PYTHAG')
+        away_pythag, away_pythag_rank = get_value_and_rank(stats_and_metrics, away_team, 'PYTHAG')
+        home_war, home_war_rank = get_value_and_rank(stats_and_metrics, home_team, 'fWAR')
+        away_war, away_war_rank = get_value_and_rank(stats_and_metrics, away_team, 'fWAR')
+        home_wpoe, home_wpoe_rank = get_value_and_rank(stats_and_metrics, home_team, 'wpoe_pct')
+        away_wpoe, away_wpoe_rank = get_value_and_rank(stats_and_metrics, away_team, 'wpoe_pct')
+        home_q1, home_q1_rank = get_record_value_and_rank(stats_and_metrics, home_team, 'Q1')
+        home_q2, home_q2_rank = get_record_value_and_rank(stats_and_metrics, home_team, 'Q2')
+        home_q3, home_q3_rank = get_record_value_and_rank(stats_and_metrics, home_team, 'Q3')
+        home_q4, home_q4_rank = get_record_value_and_rank(stats_and_metrics, home_team, 'Q4')
+        away_q1, away_q1_rank = get_record_value_and_rank(stats_and_metrics, away_team, 'Q1')
+        away_q2, away_q2_rank = get_record_value_and_rank(stats_and_metrics, away_team, 'Q2')
+        away_q3, away_q3_rank = get_record_value_and_rank(stats_and_metrics, away_team, 'Q3')
+        away_q4, away_q4_rank = get_record_value_and_rank(stats_and_metrics, away_team, 'Q4')
+
+        home_rpg, home_rpg_rank = get_value_and_rank(stats_and_metrics, home_team, 'RPG')
+        away_rpg, away_rpg_rank = get_value_and_rank(stats_and_metrics, away_team, 'RPG')
+        home_ba, home_ba_rank = get_value_and_rank(stats_and_metrics, home_team, 'BA')
+        away_ba, away_ba_rank = get_value_and_rank(stats_and_metrics, away_team, 'BA')
+        home_obp, home_obp_rank = get_value_and_rank(stats_and_metrics, home_team, 'OBP')
+        away_obp, away_obp_rank = get_value_and_rank(stats_and_metrics, away_team, 'OBP')
+        home_slg, home_slg_rank = get_value_and_rank(stats_and_metrics, home_team, 'SLG')
+        away_slg, away_slg_rank = get_value_and_rank(stats_and_metrics, away_team, 'SLG')
+        home_ops, home_ops_rank = get_value_and_rank(stats_and_metrics, home_team, 'OPS')
+        away_ops, away_ops_rank = get_value_and_rank(stats_and_metrics, away_team, 'OPS')
+        home_iso, home_iso_rank = get_value_and_rank(stats_and_metrics, home_team, 'ISO')
+        away_iso, away_iso_rank = get_value_and_rank(stats_and_metrics, away_team, 'ISO')
+        home_era, home_era_rank = get_value_and_rank(stats_and_metrics, home_team, 'ERA', False)
+        away_era, away_era_rank = get_value_and_rank(stats_and_metrics, away_team, 'ERA', False)
+        home_whip, home_whip_rank = get_value_and_rank(stats_and_metrics, home_team, 'WHIP', False)
+        away_whip, away_whip_rank = get_value_and_rank(stats_and_metrics, away_team, 'WHIP', False)
+        home_k9, home_k9_rank = get_value_and_rank(stats_and_metrics, home_team, 'KP9')
+        away_k9, away_k9_rank = get_value_and_rank(stats_and_metrics, away_team, 'KP9')
+        home_lob, home_lob_rank = get_value_and_rank(stats_and_metrics, home_team, 'LOB%')
+        away_lob, away_lob_rank = get_value_and_rank(stats_and_metrics, away_team, 'LOB%')
+        home_kbb, home_kbb_rank = get_value_and_rank(stats_and_metrics, home_team, 'K/BB')
+        away_kbb, away_kbb_rank = get_value_and_rank(stats_and_metrics, away_team, 'K/BB')
+        home_pct, home_pct_rank = get_value_and_rank(stats_and_metrics, home_team, 'PCT')
+        away_pct, away_pct_rank = get_value_and_rank(stats_and_metrics, away_team, 'PCT')
+
+        home_win_prob = PEAR_Win_Prob(home_pr, away_pr, neutrality)
+        home_series, away_series = calculate_series_probabilities(home_win_prob/100)
+        spread, elo_win_prob = calculate_spread_from_stats(home_pr, away_pr, home_elo, away_elo, neutrality)
+        if spread < 0:
+            formatted_spread = f"{away_team} -{abs(spread):.2f}"
+        else:
+            formatted_spread = f"{home_team} -{spread:.2f}"
+
+        max_net = 299
+        w_tq = 0.70   # NET AVG
+        w_wp = 0.20   # Win Probability
+        w_ned = 0.10  # NET Differential
+        avg_net = (home_net_rank + away_net_rank) / 2
+        tq = (max_net - avg_net) / (max_net - 1)
+        wp = 1 - 2 * np.abs((home_win_prob/100) - 0.5)
+        ned = 1 - (np.abs(away_net_rank - home_net_rank) / (max_net - 1))
+        gqi = round(10*(w_tq * tq + w_wp * wp + w_ned * ned), 1)
+
+        bubble_team_rating = stats_and_metrics['Rating'].quantile(0.90)
+        home_quality = PEAR_Win_Prob(bubble_team_rating, away_pr, neutrality) / 100
+        home_win_quality, home_loss_quality = (1 - home_quality), -home_quality
+        away_quality = 1-PEAR_Win_Prob(home_pr, bubble_team_rating, neutrality) / 100
+        away_win_quality, away_loss_quality = (1 - away_quality), -away_quality
+
+        ax.text(0.5, 0.57, f"{formatted_spread}", ha='center', fontsize=28, fontweight='bold', bbox=dict(facecolor='blue', alpha=0.0))
+        ax.text(0.5, 0.625, f"GQI: {gqi}", ha='center', fontsize=28, fontweight='bold', bbox=dict(facecolor='blue', alpha=0.0))
+        ax.text(0.6, 0.89, f"ONE GAME (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.6, 0.84, f"{round(home_win_prob,1)}", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.6, 0.76, f"SERIES (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.6, 0.74, "≥1 WIN    ≥2 WINS    SWEEP", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.6, 0.71, f"{round(home_series[0]*100,1)}%  {round(home_series[1]*100,1)}%  {round(home_series[2]*100,1)}%", ha='center', fontsize=16, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
         
-        # Calculate differences for center bars
-        percentile_diffs = [team1_percentiles[i] - team2_percentiles[i] for i in range(len(team1_percentiles))]
+        ax.text(0.4, 0.89, f"ONE GAME (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.4, 0.84, f"{round(100-home_win_prob,1)}", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.4, 0.76, f"SERIES (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.4, 0.74, "≥1 WIN    ≥2 WINS    SWEEP", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.4, 0.71, f"{round(away_series[0]*100,1)}%  {round(away_series[1]*100,1)}%  {round(away_series[2]*100,1)}%", ha='center', fontsize=16, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+
+
+        away_record = stats_and_metrics.loc[stats_and_metrics['Team'] == away_team, 'Record'].values[0]
+        ax.text(0.01, 0.53, f"{away_record}", ha='left', fontsize=16, fontweight='bold')
+
+        home_record = stats_and_metrics.loc[stats_and_metrics['Team'] == home_team, 'Record'].values[0]
+        ax.text(0.99, 0.53, f"{home_record}", ha='right', fontsize=16, fontweight='bold')
+
+        # X positions for the 5 columns
+        x_cols = [0.31, 0.378, 0.42, 0.58, 0.622, 0.69]
+
+        ax.text(0.5, 0.528, f"{away_team} OFF vs {home_team} PCH",
+                ha='center', fontsize=16, fontweight='bold',
+                bbox=dict(facecolor='green', alpha=0))
+        ax.hlines(y=0.518, xmin=0.29, xmax=0.71, colors='black', linewidth=1)
+
+        # Away OFF vs Home DEF
+        add_row(x_cols, 0.49, away_rpg, away_rpg_rank, "RPG", "ERA", home_era_rank, home_era, 2, 2)
+        add_row(x_cols, 0.45, away_ba, away_ba_rank, "BA", "WHIP", home_whip_rank, home_whip, 3, 2)
+        add_row(x_cols, 0.41, away_obp, away_obp_rank, "OBP", "K/9", home_k9_rank, home_k9, 3, 1)
+        add_row(x_cols, 0.37, away_slg, away_slg_rank, "SLG", "LOB%", home_lob_rank, home_lob, 3, 2)
+        add_row(x_cols, 0.33, away_ops, away_ops_rank, "OPS", "K/BB", home_kbb_rank, home_kbb, 3, 2)
+        add_row(x_cols, 0.29, away_iso, away_iso_rank, "ISO", "PCT", home_pct_rank, home_pct, 3, 3)
+
+        # Header for Away DEF vs Home OFF
+        ax.text(0.5, 0.248, f"{away_team} PCH vs {home_team} OFF",
+                ha='center', fontsize=16, fontweight='bold', bbox=dict(facecolor='green', alpha=0))
+        ax.hlines(y=0.238, xmin=0.29, xmax=0.71, colors='black', linewidth=1)
+        add_row(x_cols, 0.21, away_era, away_era_rank, "ERA", "RPG", home_rpg_rank, home_rpg, 2, 2)
+        add_row(x_cols, 0.17, away_whip, away_whip_rank, "WHIP", "BA", home_ba_rank, home_ba, 2, 3)
+        add_row(x_cols, 0.13, away_k9, away_k9_rank, "K/9", "OBP", home_obp_rank, home_obp, 1, 3)
+        add_row(x_cols, 0.09, away_lob, away_lob_rank, "LOB%", "SLG", home_slg_rank, home_slg, 2, 3)
+        add_row(x_cols, 0.05, away_kbb, away_kbb_rank, "K/BB", "OPS", home_ops_rank, home_ops, 2, 3)
+        add_row(x_cols, 0.01, away_pct, away_pct_rank, "PCT", "ISO", home_iso_rank, home_iso, 2, 3)
+        ax.text(0.5, -0.03, "@PEARatings", ha='center', fontsize=16, fontweight='bold',bbox=dict(facecolor='green', alpha=0))
+
+        ### AWAY SIDE
+
+        ax.text(0.01, 0.49, f"NET", ha='left', fontsize=16, fontweight='bold')
+        ax.hlines(y=0.478, xmin=0.01, xmax=0.26, colors='black', linewidth=1)
+        ax.text(0.19, 0.49, f"{away_net_score:.3f}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.49+0.007, f"{away_net_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(away_net_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(away_net_rank))
         
-        # Create colormap
-        cmap = plt.get_cmap('seismic')
-        colors = [cmap(abs(p) / 100) for p in percentile_diffs]
-        colors1 = [cmap(p / 100) for p in team1_percentiles]
-        colors2 = [cmap(p / 100) for p in team2_percentiles]
+        ax.text(0.04, 0.45, f"RATING", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.45, f"{away_pr}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.45+0.007, f"{away_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(away_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(away_rank))
+
+        ax.text(0.04, 0.41, f"RQI", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.41, f"{away_rq:.3f}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.41+0.007, f"{away_rq_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(away_rq_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(away_rq_rank))
         
-        # Create darkened colors for edges
-        darkened_colors = [darken_color(c) for c in colors]
-        darkened_colors1 = [darken_color(c) for c in colors1]
-        darkened_colors2 = [darken_color(c) for c in colors2]
+        ax.text(0.04, 0.37, f"SOS", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.37, f"{away_sos:.3f}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.37+0.007, f"{away_sos_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(away_sos_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(away_sos_rank))
+
+        ax.text(0.04, 0.33, f"PYTHAG", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.33, f"{away_pythag:.3f}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.33+0.007, f"{away_pythag_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(away_pythag_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(away_pythag_rank))
+
+        ax.text(0.04, 0.29, f"WAR", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.29, f"{away_war:.3f}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.29+0.007, f"{away_war_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(away_war_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(away_war_rank))
+
+        ax.text(0.04, 0.25, f"WPOE", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.25, f"{away_wpoe:.3f}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.25+0.007, f"{away_wpoe_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(away_wpoe_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(away_wpoe_rank))
+
+        ax.text(0.01, 0.21, f"NET QUADS", ha='left', fontsize=16, fontweight='bold')
+        ax.hlines(y=0.198, xmin=0.01, xmax=0.26, colors='black', linewidth=1)
+
+        ax.text(0.04, 0.17, f"Q1", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.17, f"{away_q1}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.17+0.007, f"{away_q1_rank:.3f}", width=0.06, height=0.04,
+                                    facecolor=percent_to_color(away_q1_rank), alpha=alpha_val,
+                                    fontsize=16, fontweight='bold', color=percent_text_color(away_q1_rank))
+
+        ax.text(0.04, 0.13, f"Q2", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.13, f"{away_q2}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.13+0.007, f"{away_q2_rank:.3f}", width=0.06, height=0.04,
+                                    facecolor=percent_to_color(away_q2_rank), alpha=alpha_val,
+                                    fontsize=16, fontweight='bold', color=percent_text_color(away_q2_rank))
         
-        # Draw background gray bars
-        ax.barh(range(len(percentile_diffs)), 99, color='gray', height=0.1, left=0)
-        ax.barh(range(len(percentile_diffs)), -99, color='gray', height=0.1, left=0)
+        ax.text(0.04, 0.09, f"Q3", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.09, f"{away_q3}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.09+0.007, f"{away_q3_rank:.3f}", width=0.06, height=0.04,
+                                    facecolor=percent_to_color(away_q3_rank), alpha=alpha_val,
+                                    fontsize=16, fontweight='bold', color=percent_text_color(away_q3_rank))
+
+        ax.text(0.04, 0.05, f"Q4", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.05, f"{away_q4}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.05+0.007, f"{away_q4_rank:.3f}", width=0.06, height=0.04,
+                                    facecolor=percent_to_color(away_q4_rank), alpha=alpha_val,
+                                    fontsize=16, fontweight='bold', color=percent_text_color(away_q4_rank))
         
-        # Draw main bars
-        bars = ax.barh(range(len(percentile_diffs)), percentile_diffs, color=colors, height=0.3, 
-                       edgecolor=darkened_colors, linewidth=3)
-        bars1 = ax.barh(range(len(team1_percentiles)), team1_percentiles, color=colors1, height=0.3, 
-                        edgecolor=darkened_colors1, linewidth=3)
-        bars2 = ax.barh(range(len(team2_percentiles)), [-p for p in team2_percentiles], color=colors2, height=0.3, 
-                        edgecolor=darkened_colors2, linewidth=3)
+        ax.text(0.01, 0.01, f"WIN QUALITY", ha='left', fontsize=16, fontweight='bold')
+        ax.hlines(y=0.0, xmin=0.01, xmax=0.26, colors='black', linewidth=1)
+        ax.text(0.04, -0.03, f"{away_win_quality:.2f}", ha='left', fontsize=16, fontweight='bold', color='green')
+        ax.text(0.19, -0.03, f"{away_loss_quality:.2f}", ha='right', fontsize=16, fontweight='bold', color='red')
+
+        #### HOME SIDE
+
+        ax.text(0.99, 0.49, f"NET", ha='right', fontsize=16, fontweight='bold')
+        ax.hlines(y=0.478, xmin=0.74, xmax=0.99, colors='black', linewidth=1)
+        ax.text(0.81, 0.49, f"{home_net_score:.3f}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.49+0.007, f"{home_net_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(home_net_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(home_net_rank))
+
+        ax.text(0.96, 0.45, f"RATING", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.45, f"{home_pr}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.45+0.007, f"{home_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(home_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(home_rank))
+
+        ax.text(0.96, 0.41, f"RQI", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.41, f"{home_rq:.3f}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.41+0.007, f"{home_rq_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(home_rq_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(home_rq_rank))
+
+        ax.text(0.96, 0.37, f"SOS", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.37, f"{home_sos:.3f}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.37+0.007, f"{home_sos_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(home_sos_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(home_sos_rank))
+
+        ax.text(0.96, 0.33, f"PYTHAG", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.33, f"{home_pythag:.3f}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.33+0.007, f"{home_pythag_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(home_pythag_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(home_pythag_rank))
+
+        ax.text(0.96, 0.29, f"WAR", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.29, f"{home_war:.3f}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.29+0.007, f"{home_war_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(home_war_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(home_war_rank))
         
-        # Add labels for team1 (home)
-        for i, (bar, percentile) in enumerate(zip(bars1, team1_percentiles)):
-            text_color = get_text_color_for_bubble(colors1[i])
-            ax.text(bar.get_width(), bar.get_y() + bar.get_height() / 2, 
-                   str(int(percentile)), ha='center', va='center',
-                   fontsize=16, fontweight='bold', color=text_color, zorder=2,
-                   bbox=dict(facecolor=colors1[i], edgecolor=darkened_colors1[i], 
-                            boxstyle='circle,pad=0.4', linewidth=3))
-            ax.text(0, bar.get_y() - 0.35, custom_labels[i], fontsize=12, 
-                   fontweight='bold', ha='center', va='center')
+        ax.text(0.96, 0.25, f"WPOE", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.25, f"{home_wpoe:.3f}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.25+0.007, f"{home_wpoe_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(home_wpoe_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(home_wpoe_rank))
         
-        # Add labels for team2 (away)
-        for i, (bar, percentile) in enumerate(zip(bars2, team2_percentiles)):
-            text_color = get_text_color_for_bubble(colors2[i])
-            ax.text(bar.get_width(), bar.get_y() + bar.get_height() / 2, 
-                   str(int(percentile)), ha='center', va='center',
-                   fontsize=16, fontweight='bold', color=text_color, zorder=2,
-                   bbox=dict(facecolor=colors2[i], edgecolor=darkened_colors2[i], 
-                            boxstyle='circle,pad=0.4', linewidth=3))
-        
-        # Add labels for difference bars
-        for i, (bar, diff) in enumerate(zip(bars, percentile_diffs)):
-            text_color = get_text_color_for_bubble(colors[i])
-            ax.text(bar.get_width(), bar.get_y() + bar.get_height() / 2, 
-                   str(int(abs(diff))), ha='center', va='center',
-                   fontsize=14, fontweight='bold', color=text_color, zorder=2,
-                   bbox=dict(facecolor=colors[i], edgecolor=darkened_colors[i], 
-                            boxstyle='circle,pad=0.3', linewidth=3))
-        
-        ax.set_xlim(-104, 104)
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.invert_yaxis()
-        for spine in ax.spines.values():
-            spine.set_visible(False)
-        
-        # Add title and info
-        plt.text(0, -1.7, f"#{team2_net} {away_team} vs. #{team1_net} {home_team}", 
-                ha='center', fontsize=20, fontweight='bold')
-        plt.text(0, -1.25, f"Game Quality: {gqi}", ha='center', fontsize=16, fontweight='bold')
-        plt.text(0, -0.8, spread_text, ha='center', fontsize=16, fontweight='bold')
-        plt.text(0, 12.8, "@PEARatings", ha='center', fontsize=16, fontweight='bold')
-        
-        # Team 2 (away) info - left side
-        plt.text(-135, 0.5, away_team, ha='center', fontsize=16, fontweight='bold')
-        plt.text(-135, 1.0, team2_record, ha='center', fontsize=16)
-        plt.text(-135, 2.0, "Single Game", ha='center', fontsize=16, fontweight='bold')
-        plt.text(-135, 2.5, f"{round(team2_win_prob * 100)}%", ha='center', fontsize=16)
-        plt.text(-135, 3.5, "Series", ha='center', fontsize=16, fontweight='bold')
-        plt.text(-135, 4.0, f"Win 1: {round(team2_probs[0] * 100)}%", ha='center', fontsize=16)
-        plt.text(-135, 4.5, f"Win 2: {round(team2_probs[1] * 100)}%", ha='center', fontsize=16)
-        plt.text(-135, 5.0, f"Win 3: {round(team2_probs[2] * 100)}%", ha='center', fontsize=16)
-        plt.text(-135, 6.0, "NET Quads", ha='center', fontsize=16, fontweight='bold')
-        plt.text(-150, 6.5, f"Q1: {team2_Q1}", ha='left', fontsize=16)
-        plt.text(-150, 7.0, f"Q2: {team2_Q2}", ha='left', fontsize=16)
-        plt.text(-150, 7.5, f"Q3: {team2_Q3}", ha='left', fontsize=16)
-        plt.text(-150, 8.0, f"Q4: {team2_Q4}", ha='left', fontsize=16)
-        plt.text(-135, 9.0, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
-        plt.text(-135, 9.5, team2_proj_record, ha='center', fontsize=16)
-        plt.text(-135, 10.5, "Win Quality", ha='center', fontsize=16, fontweight='bold')
-        plt.text(-160, 11.0, f"{team2_win_quality:.2f}", ha='left', fontsize=16, 
-                color='green', fontweight='bold')
-        plt.text(-110, 11.0, f"{team2_loss_quality:.2f}", ha='right', fontsize=16, 
-                color='red', fontweight='bold')
-        
-        # Team 1 (home) info - right side
-        plt.text(135, 0.5, home_team, ha='center', fontsize=16, fontweight='bold')
-        plt.text(135, 1.0, team1_record, ha='center', fontsize=16)
-        plt.text(135, 2.0, "Single Game", ha='center', fontsize=16, fontweight='bold')
-        plt.text(135, 2.5, f"{round(team1_win_prob * 100)}%", ha='center', fontsize=16)
-        plt.text(135, 3.5, "Series", ha='center', fontsize=16, fontweight='bold')
-        plt.text(135, 4.0, f"Win 1: {round(team1_probs[0] * 100)}%", ha='center', fontsize=16)
-        plt.text(135, 4.5, f"Win 2: {round(team1_probs[1] * 100)}%", ha='center', fontsize=16)
-        plt.text(135, 5.0, f"Win 3: {round(team1_probs[2] * 100)}%", ha='center', fontsize=16)
-        plt.text(135, 6.0, "NET Quads", ha='center', fontsize=16, fontweight='bold')
-        plt.text(121, 6.5, f"Q1: {team1_Q1}", ha='left', fontsize=16)
-        plt.text(121, 7.0, f"Q2: {team1_Q2}", ha='left', fontsize=16)
-        plt.text(121, 7.5, f"Q3: {team1_Q3}", ha='left', fontsize=16)
-        plt.text(121, 8.0, f"Q4: {team1_Q4}", ha='left', fontsize=16)
-        plt.text(135, 9.0, "Proj. Record", ha='center', fontsize=16, fontweight='bold')
-        plt.text(135, 9.5, team1_proj_record, ha='center', fontsize=16)
-        plt.text(135, 10.5, "Win Quality", ha='center', fontsize=16, fontweight='bold')
-        plt.text(110, 11.0, f"{team1_win_quality:.2f}", ha='left', fontsize=16, 
-                color='green', fontweight='bold')
-        plt.text(160, 11.0, f"{team1_loss_quality:.2f}", ha='right', fontsize=16, 
-                color='red', fontweight='bold')
-        
-        # Add explanation text
-        plt.text(-155, 13.2, "Middle Bubble is Difference Between Team Percentiles", 
-                ha='left', fontsize=12)
-        plt.text(155, 13.2, "Series Percentages are the Chance to Win __ Games", 
-                ha='right', fontsize=12)
-        plt.text(-155, 13.6, "NET - PEAR's Ranking System, Combining TSR and RQI", 
-                ha='left', fontsize=12)
-        plt.text(155, 13.6, "TSR - Team Strength Rating, How Good Your Team Is", 
-                ha='right', fontsize=12)
-        plt.text(-155, 14.0, "RQI - Resume Quality Index, How Good Your Wins Are", 
-                ha='left', fontsize=12)
-        plt.text(155, 14.0, "PWP - Pythagorean Win Percent, Expected Win Rate", 
-                ha='right', fontsize=12)
-        
-        # Add team logos if available
-        if team1_logo:
-            ax_img1 = fig.add_axes([0.94, 0.83, 0.15, 0.15])
-            ax_img1.imshow(team1_logo)
-            ax_img1.axis("off")
-        
-        if team2_logo:
-            ax_img2 = fig.add_axes([-0.065, 0.83, 0.15, 0.15])
-            ax_img2.imshow(team2_logo)
-            ax_img2.axis("off")
+        ax.text(0.99, 0.21, f"NET QUADS", ha='right', fontsize=16, fontweight='bold')
+        ax.hlines(y=0.198, xmin=0.74, xmax=0.99, colors='black', linewidth=1)
+        ax.text(0.96, 0.17, f"Q1", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.17, f"{home_q1}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.17+0.007, f"{home_q1_rank:.3f}", width=0.06, height=0.04,
+                                    facecolor=percent_to_color(home_q1_rank), alpha=alpha_val,
+                                    fontsize=16, fontweight='bold', color=percent_text_color(home_q1_rank))
+
+        ax.text(0.96, 0.13, f"Q2", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.13, f"{home_q2}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.13+0.007, f"{home_q2_rank:.3f}", width=0.06, height=0.04,
+                                    facecolor=percent_to_color(home_q2_rank), alpha=alpha_val,
+                                    fontsize=16, fontweight='bold', color=percent_text_color(home_q2_rank))
+
+        ax.text(0.96, 0.09, f"Q3", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.09, f"{home_q3}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.09+0.007, f"{home_q3_rank:.3f}", width=0.06, height=0.04,
+                                    facecolor=percent_to_color(home_q3_rank), alpha=alpha_val,
+                                    fontsize=16, fontweight='bold', color=percent_text_color(home_q3_rank))
+
+        ax.text(0.96, 0.05, f"Q4", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.05, f"{home_q4}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.05+0.007, f"{home_q4_rank:.3f}", width=0.06, height=0.04,
+                                    facecolor=percent_to_color(home_q4_rank), alpha=alpha_val,
+                                    fontsize=16, fontweight='bold', color=percent_text_color(home_q4_rank))
+
+        ax.text(0.99, 0.01, f"WIN QUALITY", ha='right', fontsize=16, fontweight='bold')
+        ax.hlines(y=0.0, xmin=0.74, xmax=0.99, colors='black', linewidth=1)
+        ax.text(0.81, -0.03, f"{home_win_quality:.2f}", ha='left', fontsize=16, fontweight='bold', color='green')
+        ax.text(0.96, -0.03, f"{home_loss_quality:.2f}", ha='right', fontsize=16, fontweight='bold', color='red')
+
+        plt.show()
         
         # Save to BytesIO
         buf = io.BytesIO()
