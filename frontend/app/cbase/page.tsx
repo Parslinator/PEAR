@@ -65,11 +65,22 @@ export default function CbasePage() {
   const fetchTeamProfile = async (teamName: string) => {
     try {
       setProfileLoading(true);
-      const response = await axios.get(`${API_URL}/api/cbase/team-profile`, {
-        params: { team: teamName },
-        responseType: 'blob'
+      const response = await fetch(`${API_URL}/api/cbase/team-profile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          team_name: teamName,
+        }),
       });
-      const imageUrl = URL.createObjectURL(response.data);
+
+      if (!response.ok) {
+        throw new Error('Failed to generate team profile');
+      }
+
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
       setTeamProfile({ imageUrl });
     } catch (error) {
       console.error('Error fetching team profile:', error);
