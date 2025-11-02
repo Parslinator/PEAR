@@ -66,9 +66,11 @@ export default function CbasePage() {
     try {
       setProfileLoading(true);
       const response = await axios.get(`${API_URL}/api/cbase/team-profile`, {
-        params: { team: teamName }
+        params: { team: teamName },
+        responseType: 'blob'
       });
-      setTeamProfile(response.data);
+      const imageUrl = URL.createObjectURL(response.data);
+      setTeamProfile({ imageUrl });
     } catch (error) {
       console.error('Error fetching team profile:', error);
       setTeamProfile(null);
@@ -83,6 +85,9 @@ export default function CbasePage() {
   };
 
   const closeModal = () => {
+    if (teamProfile?.imageUrl) {
+      URL.revokeObjectURL(teamProfile.imageUrl);
+    }
     setSelectedTeam(null);
     setTeamProfile(null);
   };
@@ -472,10 +477,14 @@ export default function CbasePage() {
                     <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
                     <p className="mt-4 text-gray-600 dark:text-gray-400">Loading team profile...</p>
                   </div>
-                ) : teamProfile ? (
-                  <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
-                    {JSON.stringify(teamProfile, null, 2)}
-                  </pre>
+                ) : teamProfile?.imageUrl ? (
+                  <div className="flex justify-center">
+                    <img 
+                      src={teamProfile.imageUrl} 
+                      alt={`${selectedTeam} profile`}
+                      className="max-w-full h-auto rounded-lg"
+                    />
+                  </div>
                 ) : (
                   <p className="text-center text-gray-600 dark:text-gray-400">Failed to load team profile</p>
                 )}
