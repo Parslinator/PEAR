@@ -1683,8 +1683,8 @@ def generate_matchup_image(request: BaseballSpreadRequest):
         # ----------------
         # logos, score, win prob, spread, O/U
         # ----------------
-        plot_logo(ax, away_logo, (0.15, 0.8), zoom=0.3)
-        plot_logo(ax, home_logo, (0.85, 0.8), zoom=0.3)
+        plot_logo(ax, away_logo, (0.15, 0.75), zoom=0.3)
+        plot_logo(ax, home_logo, (0.85, 0.75), zoom=0.3)
 
         if neutrality == "Neutral":
             ax.text(0.5, 0.96, f"{away_team} (N) {home_team}", ha='center', fontsize=32, fontweight='bold', bbox=dict(facecolor='red', alpha=0.0))
@@ -1771,16 +1771,17 @@ def generate_matchup_image(request: BaseballSpreadRequest):
         ax.text(0.5, 0.625, f"GQI: {gqi}", ha='center', fontsize=28, fontweight='bold', bbox=dict(facecolor='blue', alpha=0.0))
         ax.text(0.6, 0.89, f"ONE GAME (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
         ax.text(0.6, 0.84, f"{round(home_win_prob,1)}", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
-        ax.text(0.6, 0.76, f"SERIES (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
-        ax.text(0.6, 0.74, "≥1 WIN    ≥2 WINS    SWEEP", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
-        ax.text(0.6, 0.71, f"{round(home_series[0]*100,1)}%  {round(home_series[1]*100,1)}%  {round(home_series[2]*100,1)}%", ha='center', fontsize=16, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.6, 0.78, f"SERIES (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.6, 0.75, f"≥1: {round(home_series[0]*100,1)}%", ha='center', fontsize=18, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.6, 0.72, f"≥2: {round(home_series[1]*100,1)}%", ha='center', fontsize=18, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.6, 0.69, f"SWEEP: {round(home_series[2]*100,1)}%", ha='center', fontsize=18, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
         
         ax.text(0.4, 0.89, f"ONE GAME (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
         ax.text(0.4, 0.84, f"{round(100-home_win_prob,1)}", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
-        ax.text(0.4, 0.76, f"SERIES (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
-        ax.text(0.4, 0.74, "≥1 WIN    ≥2 WINS    SWEEP", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
-        ax.text(0.4, 0.71, f"{round(away_series[0]*100,1)}%  {round(away_series[1]*100,1)}%  {round(away_series[2]*100,1)}%", ha='center', fontsize=16, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
-
+        ax.text(0.4, 0.78, f"SERIES (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.4, 0.75, f"≥1: {round(away_series[0]*100,1)}%", ha='center', fontsize=18, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.4, 0.72, f"≥2: {round(away_series[1]*100,1)}%", ha='center', fontsize=18, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.4, 0.69, f"SWEEP: {round(away_series[2]*100,1)}%", ha='center', fontsize=18, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
 
         away_record = stats_and_metrics.loc[stats_and_metrics['Team'] == away_team, 'Record'].values[0]
         ax.text(0.01, 0.53, f"{away_record}", ha='left', fontsize=16, fontweight='bold')
