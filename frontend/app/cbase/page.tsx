@@ -27,6 +27,10 @@ interface TeamStats {
   Q4: string;
 }
 
+interface TeamProfile {
+  [key: string]: any;
+}
+
 type SortField = keyof TeamStats;
 
 export default function CbasePage() {
@@ -37,6 +41,9 @@ export default function CbasePage() {
   const [dataDate, setDataDate] = useState('');
   const [sortField, setSortField] = useState<SortField>('NET');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+  const [teamProfile, setTeamProfile] = useState<TeamProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -55,23 +62,46 @@ export default function CbasePage() {
     }
   };
 
+  const fetchTeamProfile = async (teamName: string) => {
+    try {
+      setProfileLoading(true);
+      const response = await axios.get(`${API_URL}/api/cbase/team-profile`, {
+        params: { team: teamName }
+      });
+      setTeamProfile(response.data);
+    } catch (error) {
+      console.error('Error fetching team profile:', error);
+      setTeamProfile(null);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handleTeamClick = (teamName: string) => {
+    setSelectedTeam(teamName);
+    fetchTeamProfile(teamName);
+  };
+
+  const closeModal = () => {
+    setSelectedTeam(null);
+    setTeamProfile(null);
+  };
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      // Default sort directions
       if (field === 'Rating' || field === 'NET_Score') {
-        setSortDirection('desc'); // Higher is better for Rating and NET_Score
+        setSortDirection('desc');
       } else if (field === 'NET' || field === 'RPI' || field === 'ELO_Rank' || field === 'PRR' || field === 'RQI' || field === 'SOS') {
-        setSortDirection('asc'); // Lower is better for ranks
+        setSortDirection('asc');
       } else {
         setSortDirection('desc');
       }
     }
   };
 
-  // Calculate national rank for a team's stat value
   const getNationalRank = (value: number, field: SortField, higherIsBetter: boolean = true): number => {
     if (value === null || value === undefined) return stats.length;
     
@@ -93,30 +123,25 @@ export default function CbasePage() {
       normalized = 1 - normalized;
     }
     
-    // Color scale: Dark Red (#8B0000) → Orange (#FFA500) → Light Gray (#D3D3D3) → Cyan (#00FFFF) → Dark Blue (#00008B)
     if (normalized < 0.25) {
-      // Dark Red (#8B0000) → Orange (#FFA500)
       const t = normalized / 0.25;
       const r = Math.round(139 + (255 - 139) * t);
       const g = Math.round(0 + (165 - 0) * t);
       const b = Math.round(0 + (0 - 0) * t);
       return `rgb(${r}, ${g}, ${b})`;
     } else if (normalized < 0.5) {
-      // Orange (#FFA500) → Light Gray (#D3D3D3)
       const t = (normalized - 0.25) / 0.25;
       const r = Math.round(255 + (211 - 255) * t);
       const g = Math.round(165 + (211 - 165) * t);
       const b = Math.round(0 + (211 - 0) * t);
       return `rgb(${r}, ${g}, ${b})`;
     } else if (normalized < 0.75) {
-      // Light Gray (#D3D3D3) → Cyan (#00FFFF)
       const t = (normalized - 0.5) / 0.25;
       const r = Math.round(211 + (0 - 211) * t);
       const g = Math.round(211 + (255 - 211) * t);
       const b = Math.round(211 + (255 - 211) * t);
       return `rgb(${r}, ${g}, ${b})`;
     } else {
-      // Cyan (#00FFFF) → Dark Blue (#00008B)
       const t = (normalized - 0.75) / 0.25;
       const r = Math.round(0 + (0 - 0) * t);
       const g = Math.round(255 + (0 - 255) * t);
@@ -149,12 +174,10 @@ export default function CbasePage() {
       let aVal = a[sortField];
       let bVal = b[sortField];
       
-      // Handle string values (Q1, Q2, Q3, Q4)
       if (typeof aVal === 'string' && typeof bVal === 'string') {
         return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
       }
       
-      // Handle numeric values
       if (typeof aVal === 'number' && typeof bVal === 'number') {
         return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
       }
@@ -197,7 +220,6 @@ export default function CbasePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Simple Header with Export */}
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Ratings and Resume</h1>
@@ -216,7 +238,6 @@ export default function CbasePage() {
 
         <section>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-            {/* Search and Filter Controls */}
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex gap-4 flex-wrap items-center">
                 <div className="flex-1 min-w-[200px] relative">
@@ -241,7 +262,6 @@ export default function CbasePage() {
               </div>
             </div>
 
-            {/* Table Container */}
             <div className="p-6">
               {loading ? (
                 <div className="text-center py-12">
@@ -326,7 +346,6 @@ export default function CbasePage() {
                       </thead>
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                         {filteredAndSortedStats.map((team, index) => {
-                          // Calculate background colors
                           const netBg = getRatingColor(team.NET_Score || 0, stats.map(s => s.NET_Score || 0).filter(v => v !== null), true);
                           const tsrBg = getRatingColor(team.Rating || 0, stats.map(s => s.Rating || 0).filter(v => v !== null), true);
                           const rqiBg = getRatingColor(team.resume_quality || 0, stats.map(s => s.resume_quality || 0).filter(v => v !== null), true);
@@ -334,7 +353,6 @@ export default function CbasePage() {
                           const eloBg = getRatingColor(team.ELO || 0, stats.map(s => s.ELO || 0).filter(v => v !== null), true);
                           const rpiBg = getRatingColor(team.RPI || 0, stats.map(s => s.RPI || 0).filter(v => v !== null), false);
 
-                          // Get national ranks
                           const netRank = getNationalRank(team.NET_Score, 'NET_Score', true);
                           const tsrRank = getNationalRank(team.Rating, 'Rating', true);
                           const rqiRank = getNationalRank(team.resume_quality, 'resume_quality', true);
@@ -346,7 +364,10 @@ export default function CbasePage() {
                             <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                               <td className="px-2 py-2 text-gray-700 dark:text-gray-300 font-medium border-r-2 border-gray-300 dark:border-gray-600">{index + 1}</td>
                               <td className="px-2 py-2 font-semibold text-gray-900 dark:text-white text-sm">
-                                <div className="flex items-center gap-2">
+                                <div 
+                                  className="flex items-center gap-2 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                  onClick={() => handleTeamClick(team.Team)}
+                                >
                                   <img 
                                     src={`${API_URL}/api/baseball-logo/${encodeURIComponent(team.Team)}`}
                                     alt={`${team.Team} logo`}
@@ -425,6 +446,43 @@ export default function CbasePage() {
             </div>
           </div>
         </section>
+
+        {selectedTeam && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={closeModal}
+          >
+            <div 
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedTeam}</h2>
+                <button
+                  onClick={closeModal}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="p-6">
+                {profileLoading ? (
+                  <div className="text-center py-12">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                    <p className="mt-4 text-gray-600 dark:text-gray-400">Loading team profile...</p>
+                  </div>
+                ) : teamProfile ? (
+                  <pre className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                    {JSON.stringify(teamProfile, null, 2)}
+                  </pre>
+                ) : (
+                  <p className="text-center text-gray-600 dark:text-gray-400">Failed to load team profile</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
