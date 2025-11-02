@@ -1395,9 +1395,7 @@ def PEAR_Win_Prob(home_power_rating, away_power_rating, neutral):
         home_power_rating = home_power_rating + 1.5
     return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
 
-visual = week_games[['week', 'start_date', 'home_team', 'away_team', 'home_pr', 'away_pr', 'neutral', 'PEAR', 'GQI']].dropna()
-visual['start_date'] = pd.to_datetime(visual['start_date'], utc=True)
-visual['start_date'] = visual['start_date'].dt.tz_convert('US/Central')
+visual = week_games[['week', 'start_date', 'start_time', 'home_team', 'away_team', 'home_pr', 'away_pr', 'PEAR', 'GQI']].dropna()
 time_thresholds = [
     datetime.time(14,30),  # morning -> afternoon
     datetime.time(18,0),   # afternoon -> evening
@@ -1412,13 +1410,15 @@ def get_time_class(t):
         return 2  # Evening
     else:
         return 3  # Night
-visual['start_time'] = visual['start_date'].dt.tz_convert('US/Central').dt.time
+visual['start_time'] = pd.to_datetime(visual['start_time'], format='%I:%M %p')
+visual['start_time'] = visual['start_time'].dt.tz_localize('US/Central')
+visual['start_time'] = visual['start_time'].dt.time
 visual['time_class'] = visual['start_time'].apply(get_time_class)
-visual['start_date'] = visual['start_date'].dt.date
+# visual['start_date'] = visual['start_date'].dt.date
 visual = visual.sort_values(['start_date', 'time_class', 'GQI'], ascending=[True, True, False]).reset_index(drop=True)
 
 visual['PEAR_win_prob'] = round(100*(visual.apply(
-    lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'], row['neutral'])/100, axis=1
+    lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
 )),1)
 
 save_dir = f"PEAR/PEAR Football/y{current_year}/Visuals/Schedule"
