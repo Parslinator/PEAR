@@ -4128,6 +4128,7 @@ def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, cur
         file_path = os.path.join(folder_path, f"{home_team} vs {away_team}")
 
         plt.savefig(file_path, bbox_inches='tight', dpi = 300)
+        plt.close()
 
     else:
         plt.show()
@@ -4603,6 +4604,7 @@ def display_schedule_visual(team_name, all_data, full_display_schedule, uncomple
     os.makedirs(folder_path, exist_ok=True)
     file_path = os.path.join(folder_path, f"{team_name}")
     plt.savefig(file_path, dpi = 400)
+    plt.close()
     # return fig, ax
 
 def conference_standings(projection_dataframe, records, team_data, team_logos, conf_folder_path):
