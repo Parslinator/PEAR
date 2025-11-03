@@ -135,25 +135,34 @@ def get_team_profile(year: int, week: int, team_name: str):
     if not os.path.exists(image_path):
         raise HTTPException(status_code=404, detail="Image not found")
     
-    # Optimize the image
-    img = Image.open(image_path)
-    
-    # Resize if too large (e.g., max width 1200px)
-    max_width = 1200
-    if img.width > max_width:
-        ratio = max_width / img.width
-        new_size = (max_width, int(img.height * ratio))
-        img = img.resize(new_size, Image.LANCZOS)
-    
-    # Save as optimized format
-    buffer = io.BytesIO()
-    img.save(buffer, format='WEBP', quality=85, method=6)
-    buffer.seek(0)
-
-    return Response(
-        content=buffer.getvalue(), 
-        media_type="image/webp"
-    )
+    img = None
+    try:
+        # Optimize the image
+        img = Image.open(image_path)
+        
+        # Resize if too large (e.g., max width 1200px)
+        max_width = 1200
+        if img.width > max_width:
+            ratio = max_width / img.width
+            new_size = (max_width, int(img.height * ratio))
+            img = img.resize(new_size, Image.LANCZOS)
+        
+        # Save as optimized format
+        buffer = io.BytesIO()
+        img.save(buffer, format='WEBP', quality=85, method=6)
+        buffer.seek(0)
+        
+        # Get the content before closing
+        content = buffer.getvalue()
+        
+        return Response(
+            content=content, 
+            media_type="image/webp"
+        )
+    finally:
+        # Always close the image to free memory
+        if img:
+            img.close()
 
 class SpreadRequest(BaseModel):
     away_team: str
@@ -1450,6 +1459,8 @@ def calculate_series_probabilities(win_prob):
 @app.post("/api/cbase/matchup-image")
 def generate_matchup_image(request: BaseballSpreadRequest):
     """Generate matchup comparison image"""
+    home_logo = None
+    away_logo = None
     try:
         stats_and_metrics, _ = load_baseball_data()
         
@@ -1664,7 +1675,7 @@ def generate_matchup_image(request: BaseballSpreadRequest):
                         bbox=dict(facecolor='green', alpha=0))
         
         if os.path.exists(logo_folder):
-            # Try to find logos for both teams (keep spaces, don't replace with underscores)
+            # Try to find logos for both teams
             home_logo_path = os.path.join(logo_folder, f"{home_team}.png")
             away_logo_path = os.path.join(logo_folder, f"{away_team}.png")
             
@@ -1976,7 +1987,7 @@ def generate_matchup_image(request: BaseballSpreadRequest):
         buf = io.BytesIO()
         plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
         buf.seek(0)
-        plt.close()
+        plt.close(fig)  # Close the figure
         
         return StreamingResponse(buf, media_type="image/png")
     
@@ -1987,6 +1998,12 @@ def generate_matchup_image(request: BaseballSpreadRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+    finally:
+        # Always close both logo images
+        if home_logo is not None:
+            home_logo.close()
+        if away_logo is not None:
+            away_logo.close()
 
 from collections import Counter, defaultdict
 
@@ -2502,6 +2519,7 @@ def simulate_team_win_distribution(schedule_df, comparison_date, team_name, num_
 @app.post("/api/cbase/team-profile")
 def team_profile(request: TeamProfileRequest):
     """Generate team profile visualization"""
+    logo_img = None  # Initialize outside try block
     try:
         stats_and_metrics, comparison_date = load_baseball_data()
         schedule_df = load_schedule_data()
@@ -2531,7 +2549,7 @@ def team_profile(request: TeamProfileRequest):
         away_record = record['Away']
         neutral_record = record['Neutral']
         
-        fig, ax = plt.subplots(figsize=(8, 10), dpi=500) # , dpi=500
+        fig, ax = plt.subplots(figsize=(8, 10), dpi=500)
         fig.patch.set_facecolor('#CECEB2')
         ax.set_facecolor('#CECEB2')
 
@@ -2556,7 +2574,7 @@ def team_profile(request: TeamProfileRequest):
             text.set_path_effects([
                 pe.withStroke(linewidth=2, foreground='black')
             ])
-            if idx == 4 or idx == 8:  # Check if the index is 5th or 9th bar (0-based index)
+            if idx == 4 or idx == 8:
                 y_position = bar.get_y() + bar.get_height() + 0.185
                 ax.hlines(y_position, 0, 99,
                         colors='black', linestyles='dashed', linewidth=2, zorder=1)
@@ -2577,9 +2595,9 @@ def team_profile(request: TeamProfileRequest):
         # team logo - must stay above all text calls
         logo_folder = os.path.join(BASEBALL_BASE_PATH, "logos")
         logo_path = os.path.join(logo_folder, f"{team_name}.png")
-        img = Image.open(logo_path).convert("RGBA")
+        logo_img = Image.open(logo_path).convert("RGBA")
         ax_img1 = fig.add_axes([0.04, 0.85, 0.2, 0.2])
-        ax_img1.imshow(img)
+        ax_img1.imshow(logo_img)
         ax_img1.axis("off")
 
         ### PLOT TITLE
@@ -2847,7 +2865,7 @@ def team_profile(request: TeamProfileRequest):
         buf = io.BytesIO()
         plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
         buf.seek(0)
-        plt.close()
+        plt.close(fig)  # Close the figure
         
         return StreamingResponse(buf, media_type="image/png")
         
@@ -2858,6 +2876,10 @@ def team_profile(request: TeamProfileRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+    finally:
+        # Always close the logo image
+        if logo_img is not None:
+            logo_img.close()
 
 @app.post("/api/cbase/historical-performance")
 def historical_performance(request: HistoricalPerformanceRequest):
