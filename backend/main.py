@@ -457,19 +457,19 @@ def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, cur
     ax.text(0.01, 0.53, f"{away_wins}-{away_losses} ({away_conf_wins}-{away_conf_losses})", ha='left', fontsize=16, fontweight='bold')
     ax.text(0.01, 0.49, f"RATING", ha='left', fontsize=16, fontweight='bold')
     ax.hlines(y=0.478, xmin=0.01, xmax=0.26, colors='black', linewidth=1)
-    ax.text(0.19, 0.49, f"{away_pr:.2f}", ha='right', fontsize=16, fontweight='bold')
+    ax.text(0.19, 0.49, f"{away_pr:.1f}", ha='right', fontsize=16, fontweight='bold')
     fixed_width_text(ax, 0.23, 0.49+0.007, f"{away_rank}", width=0.06, height=0.04,
                     facecolor=rank_to_color(away_rank), alpha=alpha_val,
                     fontsize=16, fontweight='bold', color=rank_text_color(away_rank))
     
     ax.text(0.08, 0.45, f"OFF", ha='left', fontsize=16, fontweight='bold')
-    ax.text(0.19, 0.45, f"{away_offense:.2f}", ha='right', fontsize=16, fontweight='bold')
+    ax.text(0.19, 0.45, f"{away_offense:.1f}", ha='right', fontsize=16, fontweight='bold')
     fixed_width_text(ax, 0.23, 0.45+0.007, f"{away_offense_rank}", width=0.06, height=0.04,
                     facecolor=rank_to_color(away_offense_rank), alpha=alpha_val,
                     fontsize=16, fontweight='bold', color=rank_text_color(away_offense_rank))
 
     ax.text(0.08, 0.41, f"DEF", ha='left', fontsize=16, fontweight='bold')
-    ax.text(0.19, 0.41, f"{away_defense:.2f}", ha='right', fontsize=16, fontweight='bold')
+    ax.text(0.19, 0.41, f"{away_defense:.1f}", ha='right', fontsize=16, fontweight='bold')
     fixed_width_text(ax, 0.23, 0.41+0.007, f"{away_defense_rank}", width=0.06, height=0.04,
                     facecolor=rank_to_color(away_defense_rank), alpha=alpha_val,
                     fontsize=16, fontweight='bold', color=rank_text_color(away_defense_rank))
@@ -477,13 +477,13 @@ def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, cur
     ax.text(0.01, 0.37, f"DRIVE QUALITY", ha='left', fontsize=16, fontweight='bold')
     ax.hlines(y=0.358, xmin=0.01, xmax=0.26, colors='black', linewidth=1)
     ax.text(0.08, 0.33, f"OFF", ha='left', fontsize=16, fontweight='bold')
-    ax.text(0.19, 0.33, f"{away_off_dq:.2f}", ha='right', fontsize=16, fontweight='bold')
+    ax.text(0.19, 0.33, f"{away_off_dq:.1f}", ha='right', fontsize=16, fontweight='bold')
     fixed_width_text(ax, 0.23, 0.33+0.007, f"{away_off_dq_rank}", width=0.06, height=0.04,
                     facecolor=rank_to_color(away_off_dq_rank), alpha=alpha_val,
                     fontsize=16, fontweight='bold', color=rank_text_color(away_off_dq_rank))
     
     ax.text(0.08, 0.29, f"DEF", ha='left', fontsize=16, fontweight='bold')
-    ax.text(0.19, 0.29, f"{away_def_dq:.2f}", ha='right', fontsize=16, fontweight='bold')
+    ax.text(0.19, 0.29, f"{away_def_dq:.1f}", ha='right', fontsize=16, fontweight='bold')
     fixed_width_text(ax, 0.23, 0.29+0.007, f"{away_def_dq_rank}", width=0.06, height=0.04,
                     facecolor=rank_to_color(away_def_dq_rank), alpha=alpha_val,
                     fontsize=16, fontweight='bold', color=rank_text_color(away_def_dq_rank))
@@ -505,7 +505,7 @@ def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, cur
     ax.text(0.01, 0.13, f"RESUME", ha='left', fontsize=16, fontweight='bold')
     ax.hlines(y=0.118, xmin=0.01, xmax=0.26, colors='black', linewidth=1)
     ax.text(0.08, 0.09, f"MD", ha='left', fontsize=16, fontweight='bold')
-    ax.text(0.19, 0.09, f"{away_md:.0f}", ha='right', fontsize=16, fontweight='bold')
+    ax.text(0.19, 0.09, f"{away_md:.3f}", ha='right', fontsize=16, fontweight='bold')
     fixed_width_text(ax, 0.23, 0.09+0.007, f"{away_md_rank}", width=0.06, height=0.04,
                     facecolor=rank_to_color(away_md_rank), alpha=alpha_val,
                     fontsize=16, fontweight='bold', color=rank_text_color(away_md_rank))
@@ -526,19 +526,19 @@ def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, cur
     ax.text(0.99, 0.53, f"{home_wins}-{home_losses} ({home_conf_wins}-{home_conf_losses})", ha='right', fontsize=16, fontweight='bold')
     ax.text(0.99, 0.49, f"RATING", ha='right', fontsize=16, fontweight='bold')
     ax.hlines(y=0.478, xmin=0.74, xmax=0.99, colors='black', linewidth=1)
-    ax.text(0.81, 0.49, f"{home_pr:.2f}", ha='left', fontsize=16, fontweight='bold')
+    ax.text(0.81, 0.49, f"{home_pr:.1f}", ha='left', fontsize=16, fontweight='bold')
     fixed_width_text(ax, 0.77, 0.49+0.007, f"{home_rank}", width=0.06, height=0.04,
                     facecolor=rank_to_color(home_rank), alpha=alpha_val,
                     fontsize=16, fontweight='bold', color=rank_text_color(home_rank))
     
     ax.text(0.92, 0.45, f"OFF", ha='right', fontsize=16, fontweight='bold')
-    ax.text(0.81, 0.45, f"{home_offense:.2f}", ha='left', fontsize=16, fontweight='bold')
+    ax.text(0.81, 0.45, f"{home_offense:.1f}", ha='left', fontsize=16, fontweight='bold')
     fixed_width_text(ax, 0.77, 0.45+0.007, f"{home_offense_rank}", width=0.06, height=0.04,
                     facecolor=rank_to_color(home_offense_rank), alpha=alpha_val,
                     fontsize=16, fontweight='bold', color=rank_text_color(home_offense_rank))
 
     ax.text(0.92, 0.41, f"DEF", ha='right', fontsize=16, fontweight='bold')
-    ax.text(0.81, 0.41, f"{home_defense:.2f}", ha='left', fontsize=16, fontweight='bold')
+    ax.text(0.81, 0.41, f"{home_defense:.1f}", ha='left', fontsize=16, fontweight='bold')
     fixed_width_text(ax, 0.77, 0.41+0.007, f"{home_defense_rank}", width=0.06, height=0.04,
                     facecolor=rank_to_color(home_defense_rank), alpha=alpha_val,
                     fontsize=16, fontweight='bold', color=rank_text_color(home_defense_rank))
@@ -546,13 +546,13 @@ def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, cur
     ax.text(0.99, 0.37, f"DRIVE QUALITY", ha='right', fontsize=16, fontweight='bold')
     ax.hlines(y=0.358, xmin=0.74, xmax=0.99, colors='black', linewidth=1)
     ax.text(0.92, 0.33, f"OFF", ha='right', fontsize=16, fontweight='bold')
-    ax.text(0.81, 0.33, f"{home_off_dq:.2f}", ha='left', fontsize=16, fontweight='bold')
+    ax.text(0.81, 0.33, f"{home_off_dq:.1f}", ha='left', fontsize=16, fontweight='bold')
     fixed_width_text(ax, 0.77, 0.33+0.007, f"{home_off_dq_rank}", width=0.06, height=0.04,
                     facecolor=rank_to_color(home_off_dq_rank), alpha=alpha_val,
                     fontsize=16, fontweight='bold', color=rank_text_color(home_off_dq_rank))
     
     ax.text(0.92, 0.29, f"DEF", ha='right', fontsize=16, fontweight='bold')
-    ax.text(0.81, 0.29, f"{home_def_dq:.2f}", ha='left', fontsize=16, fontweight='bold')
+    ax.text(0.81, 0.29, f"{home_def_dq:.1f}", ha='left', fontsize=16, fontweight='bold')
     fixed_width_text(ax, 0.77, 0.29+0.007, f"{home_def_dq_rank}", width=0.06, height=0.04,
                     facecolor=rank_to_color(home_def_dq_rank), alpha=alpha_val,
                     fontsize=16, fontweight='bold', color=rank_text_color(home_def_dq_rank))
@@ -574,7 +574,7 @@ def plot_matchup_new(all_data, team_logos, away_team, home_team, neutrality, cur
     ax.text(0.99, 0.13, f"RESUME", ha='right', fontsize=16, fontweight='bold')
     ax.hlines(y=0.118, xmin=0.74, xmax=0.99, colors='black', linewidth=1)
     ax.text(0.92, 0.09, f"MD", ha='right', fontsize=16, fontweight='bold')
-    ax.text(0.81, 0.09, f"{home_md:.0f}", ha='left', fontsize=16, fontweight='bold')
+    ax.text(0.81, 0.09, f"{home_md:.3f}", ha='left', fontsize=16, fontweight='bold')
     fixed_width_text(ax, 0.77, 0.09+0.007, f"{home_md_rank}", width=0.06, height=0.04,
                     facecolor=rank_to_color(home_md_rank), alpha=alpha_val,
                     fontsize=16, fontweight='bold', color=rank_text_color(home_md_rank))
