@@ -1474,8 +1474,9 @@ def generate_matchup_image(request: BaseballSpreadRequest):
     """Generate matchup comparison image"""
     home_logo = None
     away_logo = None
-    fig = None  # Track the figure
+    
     try:
+
         stats_and_metrics, _ = load_baseball_data()
         
         away_team = request.away_team
@@ -1689,7 +1690,6 @@ def generate_matchup_image(request: BaseballSpreadRequest):
                         bbox=dict(facecolor='green', alpha=0))
         
         if os.path.exists(logo_folder):
-            # Try to find logos for both teams
             home_logo_path = os.path.join(logo_folder, f"{home_team}.png")
             away_logo_path = os.path.join(logo_folder, f"{away_team}.png")
             
@@ -1995,26 +1995,20 @@ def generate_matchup_image(request: BaseballSpreadRequest):
         ax.text(0.81, -0.03, f"{home_win_quality:.2f}", ha='left', fontsize=16, fontweight='bold', color='green')
         ax.text(0.96, -0.03, f"{home_loss_quality:.2f}", ha='right', fontsize=16, fontweight='bold', color='red')
         
-        # Save to buffer BEFORE closing anything
         buf = io.BytesIO()
         fig.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
         buf.seek(0)
         
-        # Get the image data before cleanup
+        # Get image data
         image_data = buf.getvalue()
         
-        # Close everything immediately
-        cleanup_figure_memory(fig)
-        if home_logo:
-            home_logo.close()
-            del home_logo
-        if away_logo:
-            away_logo.close()
-            del away_logo
+        # Aggressive cleanup
+        plt.close(fig)
+        fig.clf()
+        del fig
+        del buf
+        gc.collect()
         
-        gc.collect()  # Force garbage collection
-        
-        # Return the saved image data
         return Response(content=image_data, media_type="image/png")
     
     except Exception as e:
@@ -2022,25 +2016,13 @@ def generate_matchup_image(request: BaseballSpreadRequest):
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
     
     finally:
-        # Final cleanup - ensure everything is closed
-        if fig is not None:
-            try:
-                plt.close(fig)
-                del fig
-            except:
-                pass
+        # Always close logo images
         if home_logo is not None:
-            try:
-                home_logo.close()
-                del home_logo
-            except:
-                pass
+            home_logo.close()
+            del home_logo
         if away_logo is not None:
-            try:
-                away_logo.close()
-                del away_logo
-            except:
-                pass
+            away_logo.close()
+            del away_logo
         gc.collect()
 
 from collections import Counter, defaultdict
