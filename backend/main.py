@@ -1976,7 +1976,9 @@ def generate_matchup_image(request: BaseballSpreadRequest):
         buf = io.BytesIO()
         plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
         buf.seek(0)
-        plt.close()
+        plt.close(fig)
+        home_logo.close()
+        away_logo.close()
         
         return StreamingResponse(buf, media_type="image/png")
     
@@ -2275,7 +2277,7 @@ def simulate_regional(request: RegionalSimulationRequest):
         buf = io.BytesIO()
         plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
         buf.seek(0)
-        plt.close()
+        plt.close(fig)
 
         return StreamingResponse(buf, media_type="image/png")
     
@@ -2847,7 +2849,8 @@ def team_profile(request: TeamProfileRequest):
         buf = io.BytesIO()
         plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
         buf.seek(0)
-        plt.close()
+        plt.close(fig)
+        ax_img1.close()
         
         return StreamingResponse(buf, media_type="image/png")
         
@@ -2984,7 +2987,7 @@ def historical_performance(request: HistoricalPerformanceRequest):
         buf = io.BytesIO()
         plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
         buf.seek(0)
-        plt.close()
+        plt.close(fig)
         
         return StreamingResponse(buf, media_type="image/png")
         
