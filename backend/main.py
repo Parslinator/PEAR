@@ -28,31 +28,7 @@ import random
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Rectangle
 
-import gc  # For garbage collection
-
 app = FastAPI(title="PEAR Ratings API")
-
-# ========== Memory Cleanup Helpers ==========
-def close_figure_safely(fig):
-    """Close matplotlib figure to prevent memory leak"""
-    try:
-        plt.close(fig)
-        fig.clear()
-        del fig
-        gc.collect()
-    except:
-        pass
-
-def close_image_safely(img):
-    """Close PIL Image to prevent memory leak"""
-    try:
-        if img:
-            img.close()
-            del img
-            gc.collect()
-    except:
-        pass
-
 
 # CORS middleware to allow frontend to call backend
 app.add_middleware(
@@ -121,17 +97,6 @@ if os.path.exists(logo_folder):
             except Exception as e:
                 print(f"Error loading {filename}: {e}")
 
-@app.get("/api/health")
-def health_check():
-    """Check backend health and memory usage"""
-    try:
-        import psutil
-        process = psutil.Process()
-        memory_mb = process.memory_info().rss / 1024 / 1024
-        return {"status": "healthy", "memory_mb": round(memory_mb, 2)}
-    except:
-        return {"status": "healthy"}
-
 @app.get("/api/football-logo/{team_name}")
 def get_football_logo(team_name: str):
     """Serve team logo"""
@@ -164,45 +129,6 @@ def get_game_preview(year: int, week: int, filename: str):
     return FileResponse(image_path, media_type="image/png")
 
 @app.get("/api/team-profile/{year}/{week}/{team_name}")
-def get_team_profile(year: int, week: int, team_name: str):
-    """Serve optimized team profile image"""
-    image_path = os.path.join(BASE_PATH, f"y{year}", "Visuals", f"week_{week}", "Stat Profiles", f"{team_name}.png")
-    
-    if not os.path.exists(image_path):
-        raise HTTPException(status_code=404, detail="Image not found")
-    
-    img = None
-    try:
-        # Optimize the image
-        img = Image.open(image_path)
-        
-        # Resize if too large (e.g., max width 1200px)
-        max_width = 1200
-        if img.width > max_width:
-            ratio = max_width / img.width
-            new_size = (max_width, int(img.height * ratio))
-            img = img.resize(new_size, Image.LANCZOS)
-        
-        # Save as optimized format
-        buffer = io.BytesIO()
-        img.save(buffer, format='WEBP', quality=85, method=6)
-        buffer.seek(0)
-        
-        response_content = buffer.getvalue()
-        
-        return Response(
-            content=response_content,
-            media_type="image/webp",
-            headers={
-                "Cache-Control": "public, max-age=3600",
-                "Content-Type": "image/webp"
-            }
-        )
-    finally:
-        # Always close image to prevent memory leak
-        close_image_safely(img)
-
-
 def get_team_profile(year: int, week: int, team_name: str):
     image_path = os.path.join(BASE_PATH, f"y{year}", "Visuals", f"week_{week}", "Stat Profiles", f"{team_name}.png")
     
@@ -809,7 +735,6 @@ async def generate_matchup_image(request: MatchupRequest):
         
         buf = BytesIO()
         fig.savefig(buf, format='png', dpi=300, bbox_inches='tight')
-        close_figure_safely(fig)
         buf.seek(0)
         plt.close(fig)
         
@@ -2050,7 +1975,6 @@ def generate_matchup_image(request: BaseballSpreadRequest):
         # Save to BytesIO
         buf = io.BytesIO()
         plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
-        close_figure_safely(plt.gcf())
         buf.seek(0)
         plt.close(fig)
         home_logo.close()
@@ -2352,7 +2276,6 @@ def simulate_regional(request: RegionalSimulationRequest):
         # Save to BytesIO
         buf = io.BytesIO()
         plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
-        close_figure_safely(plt.gcf())
         buf.seek(0)
         plt.close(fig)
 
@@ -2925,7 +2848,6 @@ def team_profile(request: TeamProfileRequest):
         # Save to BytesIO
         buf = io.BytesIO()
         plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
-        close_figure_safely(plt.gcf())
         buf.seek(0)
         plt.close(fig)
         ax_img1.close()
@@ -3064,7 +2986,6 @@ def historical_performance(request: HistoricalPerformanceRequest):
         # Save to BytesIO
         buf = io.BytesIO()
         plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
-        close_figure_safely(plt.gcf())
         buf.seek(0)
         plt.close(fig)
         
@@ -4058,7 +3979,6 @@ def simulate_conference_tournament_endpoint(conference_data: dict):
         # Convert the matplotlib figure to an image
         buf = io.BytesIO()
         fig.savefig(buf, format='png', dpi=150, bbox_inches='tight')
-        close_figure_safely(fig)
         buf.seek(0)
         plt.close(fig)
         
