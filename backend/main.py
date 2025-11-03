@@ -30,103 +30,27 @@ from matplotlib.patches import Rectangle
 
 import gc  # For garbage collection
 
-
 app = FastAPI(title="PEAR Ratings API")
 
-
-# ========== MEMORY OPTIMIZATION: Data Caching & Cleanup ==========
-print("🚀 Initializing memory-optimized backend...")
-
-# Global data cache to avoid reloading Excel files
-DATA_CACHE = {}
-CACHE_TIMESTAMP = {}
-
-def load_excel_cached(file_path, cache_key=None, force_reload=False):
-    """
-    Load Excel file with caching to avoid repeated disk I/O.
-    Args:
-        file_path: Path to the Excel file
-        cache_key: Optional cache key (defaults to file_path)
-        force_reload: Force reload from disk
-    Returns:
-        DataFrame (a copy to prevent mutations)
-    """
-    import os
-    from datetime import datetime
-    
-    if cache_key is None:
-        cache_key = file_path
-    
-    # Check if file has been modified since last load
-    if not force_reload and cache_key in DATA_CACHE:
-        try:
-            file_mtime = os.path.getmtime(file_path)
-            if cache_key in CACHE_TIMESTAMP and CACHE_TIMESTAMP[cache_key] >= file_mtime:
-                return DATA_CACHE[cache_key].copy()
-        except:
-            pass
-    
-    # Load the file
-    try:
-        DATA_CACHE[cache_key] = load_excel_cached(file_path, cache_key='excel_3767')
-        CACHE_TIMESTAMP[cache_key] = datetime.now().timestamp()
-        print(f"✓ Cached: {os.path.basename(file_path)} ({len(DATA_CACHE[cache_key])} rows)")
-    except Exception as e:
-        print(f"✗ Failed to load {file_path}: {e}")
-        raise
-    
-    return DATA_CACHE[cache_key].copy()
-
-def load_csv_cached(file_path, cache_key=None, force_reload=False, **kwargs):
-    """Load CSV file with caching."""
-    import os
-    from datetime import datetime
-    
-    if cache_key is None:
-        cache_key = file_path
-    
-    if not force_reload and cache_key in DATA_CACHE:
-        try:
-            file_mtime = os.path.getmtime(file_path)
-            if cache_key in CACHE_TIMESTAMP and CACHE_TIMESTAMP[cache_key] >= file_mtime:
-                return DATA_CACHE[cache_key].copy()
-        except:
-            pass
-    
-    try:
-        DATA_CACHE[cache_key] = load_csv_cached(file_path, **kwargs, cache_key='csv_2080')
-        CACHE_TIMESTAMP[cache_key] = datetime.now().timestamp()
-        print(f"✓ Cached: {os.path.basename(file_path)} ({len(DATA_CACHE[cache_key])} rows)")
-    except Exception as e:
-        print(f"✗ Failed to load {file_path}: {e}")
-        raise
-    
-    return DATA_CACHE[cache_key].copy()
-
+# ========== Memory Cleanup Helpers ==========
 def close_figure_safely(fig):
-    """
-    Properly close matplotlib figure and free memory.
-    CRITICAL: Call this after EVERY plt.savefig() or fig.savefig()
-    """
+    """Close matplotlib figure to prevent memory leak"""
     try:
         plt.close(fig)
         fig.clear()
         del fig
         gc.collect()
-    except Exception as e:
+    except:
         pass
 
 def close_image_safely(img):
-    """
-    Properly close PIL Image and free memory.
-    CRITICAL: Call this after EVERY Image.open()
-    """
+    """Close PIL Image to prevent memory leak"""
     try:
         if img:
             img.close()
             del img
             gc.collect()
-    except Exception as e:
+    except:
         pass
 
 
@@ -197,44 +121,16 @@ if os.path.exists(logo_folder):
             except Exception as e:
                 print(f"Error loading {filename}: {e}")
 
-
 @app.get("/api/health")
 def health_check():
-    """Health check endpoint - monitors memory usage and cache"""
+    """Check backend health and memory usage"""
     try:
         import psutil
         process = psutil.Process()
         memory_mb = process.memory_info().rss / 1024 / 1024
-        
-        return {
-            "status": "healthy",
-            "memory_mb": round(memory_mb, 2),
-            "memory_available_mb": round(psutil.virtual_memory().available / 1024 / 1024, 2),
-            "cached_datasets": len(DATA_CACHE),
-            "cached_logos": len(team_logos),
-            "current_week": CURRENT_WEEK,
-            "current_year": CURRENT_YEAR
-        }
-    except ImportError:
-        return {
-            "status": "healthy",
-            "note": "Install psutil for memory monitoring: pip install psutil",
-            "cached_datasets": len(DATA_CACHE),
-            "cached_logos": len(team_logos)
-        }
-
-@app.post("/api/clear-cache")
-def clear_cache():
-    """Clear data cache to free memory (admin endpoint)"""
-    global DATA_CACHE, CACHE_TIMESTAMP
-    old_size = len(DATA_CACHE)
-    DATA_CACHE.clear()
-    CACHE_TIMESTAMP.clear()
-    gc.collect()
-    return {
-        "message": f"Cache cleared. Freed {old_size} cached datasets."
-    }
-
+        return {"status": "healthy", "memory_mb": round(memory_mb, 2)}
+    except:
+        return {"status": "healthy"}
 
 @app.get("/api/football-logo/{team_name}")
 def get_football_logo(team_name: str):
@@ -269,7 +165,7 @@ def get_game_preview(year: int, week: int, filename: str):
 
 @app.get("/api/team-profile/{year}/{week}/{team_name}")
 def get_team_profile(year: int, week: int, team_name: str):
-    """Serve optimized team profile image - MEMORY SAFE"""
+    """Serve optimized team profile image"""
     image_path = os.path.join(BASE_PATH, f"y{year}", "Visuals", f"week_{week}", "Stat Profiles", f"{team_name}.png")
     
     if not os.path.exists(image_path):
@@ -277,9 +173,10 @@ def get_team_profile(year: int, week: int, team_name: str):
     
     img = None
     try:
+        # Optimize the image
         img = Image.open(image_path)
         
-        # Resize if too large
+        # Resize if too large (e.g., max width 1200px)
         max_width = 1200
         if img.width > max_width:
             ratio = max_width / img.width
@@ -302,8 +199,35 @@ def get_team_profile(year: int, week: int, team_name: str):
             }
         )
     finally:
+        # Always close image to prevent memory leak
         close_image_safely(img)
 
+
+def get_team_profile(year: int, week: int, team_name: str):
+    image_path = os.path.join(BASE_PATH, f"y{year}", "Visuals", f"week_{week}", "Stat Profiles", f"{team_name}.png")
+    
+    if not os.path.exists(image_path):
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    # Optimize the image
+    img = Image.open(image_path)
+    
+    # Resize if too large (e.g., max width 1200px)
+    max_width = 1200
+    if img.width > max_width:
+        ratio = max_width / img.width
+        new_size = (max_width, int(img.height * ratio))
+        img = img.resize(new_size, Image.LANCZOS)
+    
+    # Save as optimized format
+    buffer = io.BytesIO()
+    img.save(buffer, format='WEBP', quality=85, method=6)
+    buffer.seek(0)
+
+    return Response(
+        content=buffer.getvalue(), 
+        media_type="image/webp"
+    )
 
 class SpreadRequest(BaseModel):
     away_team: str
@@ -333,11 +257,11 @@ def load_data(year: int, week: int):
         if not os.path.exists(data_path):
             raise HTTPException(status_code=404, detail=f"Data file not found at: {data_path}")
         
-        ratings = load_csv_cached(ratings_path, cache_key='csv_1742')
+        ratings = pd.read_csv(ratings_path)
         if 'Unnamed: 0' in ratings.columns:
             ratings = ratings.drop(columns=['Unnamed: 0'])
         
-        all_data = load_csv_cached(data_path, cache_key='csv_9290')
+        all_data = pd.read_csv(data_path)
         
         return ratings, all_data
     except FileNotFoundError as e:
@@ -788,7 +712,7 @@ def get_spreads(year: int, week: int):
         if not os.path.exists(spreads_path):
             raise HTTPException(status_code=404, detail=f"Spreads file not found at: {spreads_path}")
         
-        spreads = load_excel_cached(spreads_path, cache_key='excel_8500')
+        spreads = pd.read_excel(spreads_path)
         spreads['start_date'] = pd.to_datetime(spreads['start_date']).dt.strftime('%Y-%m-%d')
         
         vegas_col = 'formattedSpread' if 'formattedSpread' in spreads.columns else 'formatted_spread'
@@ -929,7 +853,7 @@ def get_historical_ratings():
         if not os.path.exists(hist_path):
             raise HTTPException(status_code=404, detail=f"Historical data file not found at: {hist_path}")
         
-        hist_data = load_csv_cached(hist_path, cache_key='csv_8698')
+        hist_data = pd.read_csv(hist_path)
         hist_data['Team'] = hist_data['team']
         hist_data['Season'] = hist_data['season'].astype(str)
         hist_data['Normalized Rating'] = hist_data['norm_pr']
@@ -947,7 +871,7 @@ def get_team_history(team_name: str):
     """Get historical stats for a specific team"""
     try:
         hist_path = os.path.join(BASE_PATH, "normalized_power_rating_across_years.csv")
-        hist_data = load_csv_cached(hist_path, cache_key='csv_8698')
+        hist_data = pd.read_csv(hist_path)
         
         team_hist = hist_data[hist_data['team'] == team_name]
         if team_hist.empty:
@@ -1090,14 +1014,14 @@ def load_baseball_data():
         latest_file = date_files[latest_date]
         
         file_path = os.path.join(folder_path, latest_file)
-        modeling_stats = load_csv_cached(file_path, cache_key='csv_4512')
+        modeling_stats = pd.read_csv(file_path)
         
         # If file doesn't have expected number of teams, try previous day
         if len(modeling_stats) < 290 and len(sorted_dates) > 1:
             previous_date = sorted_dates[1]
             previous_file = date_files[previous_date]
             file_path = os.path.join(folder_path, previous_file)
-            modeling_stats = load_csv_cached(file_path, cache_key='csv_4512')
+            modeling_stats = pd.read_csv(file_path)
             latest_date = previous_date
         
         formatted_date = latest_date.strftime("%B %d, %Y")
@@ -1243,7 +1167,7 @@ def load_baseball_schedule():
         if not os.path.exists(schedule_path):
             raise HTTPException(status_code=404, detail="Schedule file not found")
         
-        schedule_df = load_csv_cached(schedule_path, cache_key='csv_8700')
+        schedule_df = pd.read_csv(schedule_path)
         schedule_df["Date"] = pd.to_datetime(schedule_df["Date"])
         
         return schedule_df
@@ -2457,7 +2381,7 @@ def load_schedule_data():
     try:
         baseball_path = os.path.join(os.path.dirname(BACKEND_DIR), "PEAR", "PEAR Baseball")
         schedule_path = os.path.join(baseball_path, f"y{current_season}", f"schedule_{current_season}.csv")
-        schedule_df = load_csv_cached(schedule_path, cache_key='csv_8700')
+        schedule_df = pd.read_csv(schedule_path)
         schedule_df["Date"] = pd.to_datetime(schedule_df["Date"])
         return schedule_df
     except Exception as e:
@@ -2498,7 +2422,7 @@ def load_historical_data():
             latest_file = max(valid_files, key=lambda x: x[1])[0]
             
             try:
-                df = load_csv_cached(latest_file, cache_key='csv_8691')
+                df = pd.read_csv(latest_file)
                 df["Season"] = year
                 all_data_list.append(df)
             except Exception as e:
@@ -2915,11 +2839,11 @@ def team_profile(request: TeamProfileRequest):
             plt.text(0.92, 1.01, f"{projected}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
 
         ### PREVIOUS YEARS DATA
-        data_2022 = load_csv_cached(f"{BASEBALL_BASE_PATH}/y2022/Data/baseball_06_26_2022.csv", cache_key='csv_9366')
+        data_2022 = pd.read_csv(f"{BASEBALL_BASE_PATH}/y2022/Data/baseball_06_26_2022.csv")
         team_2022 = data_2022[data_2022['Team'] == team_name]
-        data_2023 = load_csv_cached(f"{BASEBALL_BASE_PATH}/y2023/Data/baseball_06_26_2023.csv", cache_key='csv_6969')
+        data_2023 = pd.read_csv(f"{BASEBALL_BASE_PATH}/y2023/Data/baseball_06_26_2023.csv")
         team_2023 = data_2023[data_2023['Team'] == team_name]
-        data_2024 = load_csv_cached(f"{BASEBALL_BASE_PATH}/y2024/Data/baseball_06_25_2024.csv", cache_key='csv_489')
+        data_2024 = pd.read_csv(f"{BASEBALL_BASE_PATH}/y2024/Data/baseball_06_25_2024.csv")
         team_2024 = data_2024[data_2024['Team'] == team_name]
         # Column labels
         plt.text(-0.11, -0.06, "2024", fontsize=20, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
