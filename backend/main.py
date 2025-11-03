@@ -45,6 +45,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+import gc
+
+def cleanup_figure_memory(fig):
+    """Aggressively clean up matplotlib figure and force garbage collection"""
+    try:
+        plt.close(fig)
+        fig.clf()  # Clear the figure
+        del fig
+        gc.collect()  # Force garbage collection
+    except Exception as e:
+        print(f"Error cleaning up figure: {e}")
+
 # Global constants
 GLOBAL_HFA = 3
 
@@ -1461,6 +1474,7 @@ def generate_matchup_image(request: BaseballSpreadRequest):
     """Generate matchup comparison image"""
     home_logo = None
     away_logo = None
+    fig = None  # Track the figure
     try:
         stats_and_metrics, _ = load_baseball_data()
         
@@ -1980,30 +1994,54 @@ def generate_matchup_image(request: BaseballSpreadRequest):
         ax.hlines(y=0.0, xmin=0.74, xmax=0.99, colors='black', linewidth=1)
         ax.text(0.81, -0.03, f"{home_win_quality:.2f}", ha='left', fontsize=16, fontweight='bold', color='green')
         ax.text(0.96, -0.03, f"{home_loss_quality:.2f}", ha='right', fontsize=16, fontweight='bold', color='red')
-
-        plt.show()
         
-        # Save to BytesIO
+        # Save to buffer BEFORE closing anything
         buf = io.BytesIO()
-        plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
+        fig.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
         buf.seek(0)
-        plt.close(fig)  # Close the figure
         
-        return StreamingResponse(buf, media_type="image/png")
+        # Get the image data before cleanup
+        image_data = buf.getvalue()
+        
+        # Close everything immediately
+        cleanup_figure_memory(fig)
+        if home_logo:
+            home_logo.close()
+            del home_logo
+        if away_logo:
+            away_logo.close()
+            del away_logo
+        
+        gc.collect()  # Force garbage collection
+        
+        # Return the saved image data
+        return Response(content=image_data, media_type="image/png")
     
-    except HTTPException as e:
-        raise e
     except Exception as e:
         print(f"Error generating matchup image: {e}")
-        import traceback
-        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+    
     finally:
-        # Always close both logo images
+        # Final cleanup - ensure everything is closed
+        if fig is not None:
+            try:
+                plt.close(fig)
+                del fig
+            except:
+                pass
         if home_logo is not None:
-            home_logo.close()
+            try:
+                home_logo.close()
+                del home_logo
+            except:
+                pass
         if away_logo is not None:
-            away_logo.close()
+            try:
+                away_logo.close()
+                del away_logo
+            except:
+                pass
+        gc.collect()
 
 from collections import Counter, defaultdict
 
@@ -2861,13 +2899,22 @@ def team_profile(request: TeamProfileRequest):
 
         plt.tight_layout()
             
-        # Save to BytesIO
+        # Save to BytesIO and get data before cleanup
         buf = io.BytesIO()
-        plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
+        fig.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
         buf.seek(0)
-        plt.close(fig)  # Close the figure
         
-        return StreamingResponse(buf, media_type="image/png")
+        # Get image data before closing
+        image_data = buf.getvalue()
+        
+        # Aggressive cleanup
+        plt.close(fig)
+        fig.clf()
+        del fig
+        del buf
+        gc.collect()
+        
+        return Response(content=image_data, media_type="image/png")
         
     except HTTPException as e:
         raise e
@@ -2880,6 +2927,8 @@ def team_profile(request: TeamProfileRequest):
         # Always close the logo image
         if logo_img is not None:
             logo_img.close()
+            del logo_img
+        gc.collect()
 
 @app.post("/api/cbase/historical-performance")
 def historical_performance(request: HistoricalPerformanceRequest):
