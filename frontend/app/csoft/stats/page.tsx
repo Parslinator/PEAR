@@ -17,7 +17,7 @@ interface TeamStats {
   PYTHAG: number;
   ERA: number;
   WHIP: number;
-  KP9: number;
+  KP7: number;
   RPG: number;
   BA: number;
   OBP: number;
@@ -199,7 +199,7 @@ export default function CsoftStatsPage() {
     });
 
   const downloadCSV = () => {
-    const headers = ['Rank', 'Team', 'Rating', 'WAR', 'PYTHAG', 'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'PCT', 'Conference'];
+    const headers = ['Rank', 'Team', 'Rating', 'WAR', 'PYTHAG', 'ERA', 'WHIP', 'KP7', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'PCT', 'Conference'];
     const csvData = filteredAndSortedStats.map((team, index) => [
       index + 1,
       team.Team,
@@ -208,7 +208,7 @@ export default function CsoftStatsPage() {
       team.PYTHAG?.toFixed(3) || '',
       team.ERA?.toFixed(2) || '',
       team.WHIP?.toFixed(2) || '',
-      team.KP9?.toFixed(1) || '',
+      team.KP7?.toFixed(1) || '',
       team.RPG?.toFixed(1) || '',
       team.BA?.toFixed(3) || '',
       team.OBP?.toFixed(3) || '',
@@ -384,8 +384,8 @@ export default function CsoftStatsPage() {
                           WHIP {sortField === 'WHIP' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                          onClick={() => handleSort('KP9')}>
-                          K/9 {sortField === 'KP9' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          onClick={() => handleSort('KP7')}>
+                          K/9 {sortField === 'KP7' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                           onClick={() => handleSort('RPG')}>
@@ -420,7 +420,7 @@ export default function CsoftStatsPage() {
                         const pythagBg = getRatingColor(team.PYTHAG || 0, stats.map(s => s.PYTHAG || 0).filter(v => v !== null), true);
                         const eraBg = getRatingColor(team.ERA || 0, stats.map(s => s.ERA || 0).filter(v => v !== null), false);
                         const whipBg = getRatingColor(team.WHIP || 0, stats.map(s => s.WHIP || 0).filter(v => v !== null), false);
-                        const kp9Bg = getRatingColor(team.KP9 || 0, stats.map(s => s.KP9 || 0).filter(v => v !== null), true);
+                        const KP7Bg = getRatingColor(team.KP7 || 0, stats.map(s => s.KP7 || 0).filter(v => v !== null), true);
                         const rpgBg = getRatingColor(team.RPG || 0, stats.map(s => s.RPG || 0).filter(v => v !== null), true);
                         const baBg = getRatingColor(team.BA || 0, stats.map(s => s.BA || 0).filter(v => v !== null), true);
                         const obpBg = getRatingColor(team.OBP || 0, stats.map(s => s.OBP || 0).filter(v => v !== null), true);
@@ -433,7 +433,7 @@ export default function CsoftStatsPage() {
                         const pythagRank = getNationalRank(team.PYTHAG, 'PYTHAG', true);
                         const eraRank = getNationalRank(team.ERA, 'ERA', false);
                         const whipRank = getNationalRank(team.WHIP, 'WHIP', false);
-                        const kp9Rank = getNationalRank(team.KP9, 'KP9', true);
+                        const KP7Rank = getNationalRank(team.KP7, 'KP7', true);
                         const rpgRank = getNationalRank(team.RPG, 'RPG', true);
                         const baRank = getNationalRank(team.BA, 'BA', true);
                         const obpRank = getNationalRank(team.OBP, 'OBP', true);
@@ -501,9 +501,9 @@ export default function CsoftStatsPage() {
                             <td className="px-1 py-2 text-center">
                               <div className="flex items-center justify-center gap-1 min-w-[70px] mx-auto">
                                 <span className="text-[10px] font-medium text-gray-700 dark:text-gray-300 text-right w-[32px]">
-                                  {team.KP9?.toFixed(1)}
+                                  {team.KP7?.toFixed(1)}
                                 </span>
-                                <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: kp9Bg, color: getTextColor(kp9Bg) }}>{kp9Rank}</span>
+                                <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[9px] font-semibold min-w-[35px]" style={{ backgroundColor: KP7Bg, color: getTextColor(KP7Bg) }}>{KP7Rank}</span>
                               </div>
                             </td>
                             <td className="px-1 py-2 text-center">
@@ -563,7 +563,7 @@ export default function CsoftStatsPage() {
 
                 <div className="mt-6 text-sm text-gray-600 dark:text-gray-400 space-y-1 border-t dark:border-gray-700 pt-4">
                   <p><strong className="dark:text-gray-300">@PEARatings</strong></p>
-                  <p><strong className="dark:text-gray-300">TSR</strong> - Team Strength Rating | <strong className="dark:text-gray-300">WAR</strong> - Team WAR Rank | <strong className="dark:text-gray-300">PYTHAG</strong> - Pythagorean Win Percentage | <strong className="dark:text-gray-300">ERA</strong> - Earned Run Average | <strong className="dark:text-gray-300">WHIP</strong> - Walks + Hits per Inning Pitched | <strong className="dark:text-gray-300">K/9</strong> - Strikeouts Per 9 Innings | <strong className="dark:text-gray-300">RPG</strong> - Runs Per Game | <strong className="dark:text-gray-300">BA</strong> - Batting Average | <strong className="dark:text-gray-300">OBP</strong> - On Base Percentage | <strong className="dark:text-gray-300">SLG</strong> - Slugging | <strong className="dark:text-gray-300">OPS</strong> - On Base Plus Slugging | <strong className="dark:text-gray-300">PCT</strong> - Fielding Percentage </p>
+                  <p><strong className="dark:text-gray-300">TSR</strong> - Team Strength Rating | <strong className="dark:text-gray-300">WAR</strong> - Team WAR Rank | <strong className="dark:text-gray-300">PYTHAG</strong> - Pythagorean Win Percentage | <strong className="dark:text-gray-300">ERA</strong> - Earned Run Average | <strong className="dark:text-gray-300">WHIP</strong> - Walks + Hits per Inning Pitched | <strong className="dark:text-gray-300">K/7</strong> - Strikeouts Per 9 Innings | <strong className="dark:text-gray-300">RPG</strong> - Runs Per Game | <strong className="dark:text-gray-300">BA</strong> - Batting Average | <strong className="dark:text-gray-300">OBP</strong> - On Base Percentage | <strong className="dark:text-gray-300">SLG</strong> - Slugging | <strong className="dark:text-gray-300">OPS</strong> - On Base Plus Slugging | <strong className="dark:text-gray-300">PCT</strong> - Fielding Percentage </p>
                 </div>
               </>
             )}

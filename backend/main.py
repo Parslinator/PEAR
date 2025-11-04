@@ -4229,7 +4229,7 @@ def get_softball_stats():
             'Team', 'Conference', 'Rating', 'NET', 'NET_Score', 'RPI', 'ELO', 'ELO_Rank', 'PRR', 'RQI', 
             'resume_quality', 'avg_expected_wins', 'SOS', 'SOR', 'Q1', 'Q2', 'Q3', 'Q4',
             'fWAR', 'oWAR_z', 'pWAR_z', 'WPOE', 'PYTHAG',
-            'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'PCT'
+            'ERA', 'WHIP', 'KP7', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'PCT'
         ]
         
         available_columns = [col for col in stats_columns if col in modeling_stats.columns]
@@ -4756,8 +4756,8 @@ def generate_softball_matchup_image(request: SoftballSpreadRequest):
         away_era, away_era_rank = get_value_and_rank(stats_and_metrics, away_team, 'ERA', False)
         home_whip, home_whip_rank = get_value_and_rank(stats_and_metrics, home_team, 'WHIP', False)
         away_whip, away_whip_rank = get_value_and_rank(stats_and_metrics, away_team, 'WHIP', False)
-        home_k9, home_k9_rank = get_value_and_rank(stats_and_metrics, home_team, 'KP9')
-        away_k9, away_k9_rank = get_value_and_rank(stats_and_metrics, away_team, 'KP9')
+        home_k9, home_k9_rank = get_value_and_rank(stats_and_metrics, home_team, 'KP7')
+        away_k9, away_k9_rank = get_value_and_rank(stats_and_metrics, away_team, 'KP7')
         home_lob, home_lob_rank = get_value_and_rank(stats_and_metrics, home_team, 'LOB%')
         away_lob, away_lob_rank = get_value_and_rank(stats_and_metrics, away_team, 'LOB%')
         home_kbb, home_kbb_rank = get_value_and_rank(stats_and_metrics, home_team, 'K/BB')
@@ -5782,7 +5782,7 @@ def softball_team_profile(request: SoftballTeamProfileRequest):
         filled_distribution = projected_wins.reindex(full_range, fill_value=0)
 
         stat_rankings = stats_and_metrics.copy()
-        higher = ["TB", "SLG", "KP9", "BB", "RS", "H", "BA", "PCT", "HBP", "OBP", "OPS", 
+        higher = ["TB", "SLG", "KP7", "BB", "RS", "H", "BA", "PCT", "HBP", "OBP", "OPS", 
                 "PYTHAG", "wOBA", "wRAA", "ISO", "BB%", "LOB%", "K/BB"]
         lower = ["WP9", "ERA", "E", "RA9", "FIP", "WHIP"]
         all_ranked_stats = higher + lower
