@@ -4187,7 +4187,7 @@ def calculate_gqi_baseball(home_pr, away_pr, min_pr, max_pr):
     gqi = np.clip((1 + 9 * gqi_raw) + 0.1, None, 10)
     return round(gqi, 1)
 
-@app.get("/api/csoftball/ratings")
+@app.get("/api/softball/ratings")
 def get_softball_ratings():
     """Get current softball team ratings"""
     try:
@@ -4215,10 +4215,10 @@ def get_softball_ratings():
     except HTTPException as e:
         raise e
     except Exception as e:
-        print(f"Error in get_baseball_ratings: {e}")
+        print(f"Error in get_softball_ratings: {e}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
-@app.get("/api/csoftball/stats")
+@app.get("/api/softball/stats")
 def get_softball_stats():
     """Get comprehensive softball team statistics"""
     try:
@@ -4252,7 +4252,7 @@ def get_softball_stats():
         print(f"Error in get_baseball_stats: {e}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
-@app.get("/api/csoftball/teams")
+@app.get("/api/softball/teams")
 def get_softball_teams():
     """Get list of all softball teams"""
     try:
@@ -4266,7 +4266,7 @@ def get_softball_teams():
         print(f"Error in get_baseball_teams: {e}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
-@app.get("/api/csoftball/team-conferences")
+@app.get("/api/softball/team-conferences")
 def get_team_softball_conferences():
     """Get mapping of teams to their conferences"""
     try:
