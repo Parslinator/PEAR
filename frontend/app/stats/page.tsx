@@ -55,8 +55,8 @@ export default function StatsPage() {
               <>
                 <StatsTable data={stats} year={currentSeason.year} week={currentSeason.week} />
                 <div className="mt-6 text-sm text-gray-600 dark:text-gray-400 space-y-1 border-t dark:border-gray-700 pt-4">
-                  <p><strong className="dark:text-gray-300">Success Rate</strong> - Percentage of successful plays | <strong className="dark:text-gray-300">PPA</strong> - Predicted Points Added per play</p>
-                  <p><strong className="dark:text-gray-300">Rush/Pass</strong> - Rushing and Passing efficiency metrics | <strong className="dark:text-gray-300">PPO</strong> - Points Per Opportunity | <strong className="dark:text-gray-300">Drive Q</strong> - Drive Quality rating</p>
+                  <p><strong className="dark:text-gray-300">Success Rate</strong> - Based on Down, How Often Is Your Play Successful | <strong className="dark:text-gray-300">PPA</strong> - Predicted Points Added per play</p>
+                  <p><strong className="dark:text-gray-300">Rush/Pass</strong> - Rushing and Passing PPA | <strong className="dark:text-gray-300">PPO</strong> - Points Per Opportunity | <strong className="dark:text-gray-300">Drive Q</strong> - Drive Quality Percentage</p>
                   <p className="mt-3 font-semibold dark:text-gray-300">All stats are opponent-adjusted</p>
                 </div>
               </>
