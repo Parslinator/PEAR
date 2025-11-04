@@ -83,6 +83,7 @@ export default function Navbar() {
     { name: 'Ratings', path: '/csoft' },
     { name: 'Stats', path: '/csoft/stats' },
     { name: 'Games', path: '/csoft/games' },
+    { name: 'Tournament', path: '/csoft/tournament' },
     { name: 'Matchups', path: '/csoft/matchups' },
   ];
 
