@@ -5784,7 +5784,7 @@ def softball_team_profile(request: SoftballTeamProfileRequest):
         stat_rankings = stats_and_metrics.copy()
         higher = ["TB", "SLG", "KP7", "BB", "RS", "H", "BA", "PCT", "HBP", "OBP", "OPS", 
                 "PYTHAG", "wOBA", "wRAA", "ISO", "BB%", "LOB%", "K/BB"]
-        lower = ["WP9", "ERA", "E", "RA9", "FIP", "WHIP"]
+        lower = ["ERA", "E", "FIP", "WHIP"]
         all_ranked_stats = higher + lower
         stat_rankings[higher] = stat_rankings[higher].rank(ascending=False, method="min")
         stat_rankings[lower] = stat_rankings[lower].rank(ascending=True, method="min")
