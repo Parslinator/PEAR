@@ -527,6 +527,42 @@ export default function CsoftTournamentPage() {
                         placeholder="Search team..."
                         className="w-full px-3 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       />
+                      {showSeed1Dropdown && filteredSeed1Teams.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          {filteredSeed1Teams.map(team => (
+                            <div
+                              key={team}
+                              onClick={() => {
+                                setSeed1(team);
+                                setSeed1SearchTerm('');
+                                setShowSeed1Dropdown(false);
+                              }}
+                              className="px-3 py-2 hover:bg-purple-50 dark:hover:bg-purple-900/30 cursor-pointer text-sm text-gray-900 dark:text-gray-100"
+                            >
+                              {team}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1 uppercase tracking-wide">2 Seed</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={seed2 || seed2SearchTerm}
+                        onChange={(e) => {
+                          setSeed2SearchTerm(e.target.value);
+                          setSeed2('');
+                          setShowSeed2Dropdown(true);
+                        }}
+                        onFocus={() => setShowSeed2Dropdown(true)}
+                        onBlur={() => setTimeout(() => setShowSeed2Dropdown(false), 200)}
+                        placeholder="Search team..."
+                        className="w-full px-3 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      />
                       {showSeed2Dropdown && filteredSeed2Teams.length > 0 && (
                         <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                           {filteredSeed2Teams.map(team => (
