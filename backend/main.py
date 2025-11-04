@@ -4822,7 +4822,7 @@ def generate_softball_matchup_image(request: SoftballSpreadRequest):
         # Away OFF vs Home DEF
         add_row(x_cols, 0.49, away_rpg, away_rpg_rank, "RPG", "ERA", home_era_rank, home_era, 2, 2)
         add_row(x_cols, 0.45, away_ba, away_ba_rank, "BA", "WHIP", home_whip_rank, home_whip, 3, 2)
-        add_row(x_cols, 0.41, away_obp, away_obp_rank, "OBP", "K/9", home_k9_rank, home_k9, 3, 1)
+        add_row(x_cols, 0.41, away_obp, away_obp_rank, "OBP", "K/7", home_k9_rank, home_k9, 3, 1)
         add_row(x_cols, 0.37, away_slg, away_slg_rank, "SLG", "LOB%", home_lob_rank, home_lob, 3, 2)
         add_row(x_cols, 0.33, away_ops, away_ops_rank, "OPS", "K/BB", home_kbb_rank, home_kbb, 3, 2)
         add_row(x_cols, 0.29, away_iso, away_iso_rank, "ISO", "PCT", home_pct_rank, home_pct, 3, 3)
@@ -4833,7 +4833,7 @@ def generate_softball_matchup_image(request: SoftballSpreadRequest):
         ax.hlines(y=0.238, xmin=0.29, xmax=0.71, colors='black', linewidth=1)
         add_row(x_cols, 0.21, away_era, away_era_rank, "ERA", "RPG", home_rpg_rank, home_rpg, 2, 2)
         add_row(x_cols, 0.17, away_whip, away_whip_rank, "WHIP", "BA", home_ba_rank, home_ba, 2, 3)
-        add_row(x_cols, 0.13, away_k9, away_k9_rank, "K/9", "OBP", home_obp_rank, home_obp, 1, 3)
+        add_row(x_cols, 0.13, away_k9, away_k9_rank, "K/7", "OBP", home_obp_rank, home_obp, 1, 3)
         add_row(x_cols, 0.09, away_lob, away_lob_rank, "LOB%", "SLG", home_slg_rank, home_slg, 2, 3)
         add_row(x_cols, 0.05, away_kbb, away_kbb_rank, "K/BB", "OPS", home_ops_rank, home_ops, 2, 3)
         add_row(x_cols, 0.01, away_pct, away_pct_rank, "PCT", "ISO", home_iso_rank, home_iso, 2, 3)

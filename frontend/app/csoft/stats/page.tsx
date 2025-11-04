@@ -385,7 +385,7 @@ export default function CsoftStatsPage() {
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                           onClick={() => handleSort('KP7')}>
-                          K/9 {sortField === 'KP7' && (sortDirection === 'asc' ? '↑' : '↓')}
+                          K/7 {sortField === 'KP7' && (sortDirection === 'asc' ? '↑' : '↓')}
                         </th>
                         <th className="px-1 py-2 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
                           onClick={() => handleSort('RPG')}>
