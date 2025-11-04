@@ -4037,6 +4037,1840 @@ def simulate_conference_tournament_endpoint(conference_data: dict):
     except Exception as e:
         print(f"Error simulating conference tournament: {e}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+    
+# ========================================
+# SOFTBALL (CSOFT) ENDPOINTS
+# ========================================
+
+SOFTBALL_BASE_PATH = os.path.join(os.path.dirname(BACKEND_DIR), "PEAR", "PEAR Softball")
+SOFTBALL_CURRENT_SEASON = 2025
+SOFTBALL_HFA = 0.3  # Home field advantage in runs for softball
+
+# print(f"Softball base path: {SOFTBALL_BASE_PATH}")
+# print(f"Softball base path exists: {os.path.exists(SOFTBALL_BASE_PATH)}")
+
+@app.get("/api/softball-logo/{team_name}")
+def get_softball_logo(team_name: str):
+    """Serve team logo"""
+    # Replace spaces with underscores for the filename
+    logo_filename = f"{team_name}.png"
+    logo_path = os.path.join(SOFTBALL_BASE_PATH, "logos", logo_filename)
+
+    # print(f"Looking for logo at: {logo_path}")
+    # print(f"Logo folder: {logo_folder}")
+    # print(f"File exists: {os.path.exists(logo_path)}")
+    
+    if not os.path.exists(logo_path):
+        raise HTTPException(status_code=404, detail=f"Logo not found at: {logo_path}")
+    
+    return FileResponse(logo_path, media_type="image/png")
+
+class SoftballSpreadRequest(BaseModel):
+    away_team: str
+    home_team: str
+    neutral: bool = False
+
+class RegionalRequest(BaseModel):
+    team_1: str
+    team_2: str
+    team_3: str
+    team_4: str
+    simulations: int = 1000
+
+def load_softball_data():
+    """Load the most recent softball data file"""
+    try:
+        folder_path = os.path.join(SOFTBALL_BASE_PATH, f"y{SOFTBALL_CURRENT_SEASON}", "Data")
+        
+        if not os.path.exists(folder_path):
+            raise HTTPException(status_code=404, detail=f"Softball data folder not found: {folder_path}")
+        
+        # Find all softball CSV files
+        csv_files = [f for f in os.listdir(folder_path) 
+                    if f.startswith("softball_") and f.endswith(".csv")]
+        
+        if not csv_files:
+            raise HTTPException(status_code=404, detail="No softball data files found")
+        
+        # Extract dates and find most recent
+        def extract_date(filename):
+            try:
+                return datetime.strptime(filename.replace("softball_", "").replace(".csv", ""), "%m_%d_%Y")
+            except ValueError:
+                return None
+        
+        date_files = {extract_date(f): f for f in csv_files if extract_date(f) is not None}
+        
+        if not date_files:
+            raise HTTPException(status_code=404, detail="No valid date files found")
+        
+        sorted_dates = sorted(date_files.keys(), reverse=True)
+        latest_date = sorted_dates[0]
+        latest_file = date_files[latest_date]
+        
+        file_path = os.path.join(folder_path, latest_file)
+        modeling_stats = pd.read_csv(file_path)
+        
+        # If file doesn't have expected number of teams, try previous day
+        if len(modeling_stats) < 290 and len(sorted_dates) > 1:
+            previous_date = sorted_dates[1]
+            previous_file = date_files[previous_date]
+            file_path = os.path.join(folder_path, previous_file)
+            modeling_stats = pd.read_csv(file_path)
+            latest_date = previous_date
+        
+        formatted_date = latest_date.strftime("%B %d, %Y")
+        
+        return modeling_stats, formatted_date
+    
+    except Exception as e:
+        print(f"Error loading baseball data: {e}")
+        raise HTTPException(status_code=500, detail=f"Error loading baseball data: {str(e)}")
+    
+def load_softball_schedule_data():
+    """Load the current season schedule"""
+    try:
+        schedule_path = os.path.join(SOFTBALL_BASE_PATH, f"y{SOFTBALL_CURRENT_SEASON}", 
+                                     f"schedule_{SOFTBALL_CURRENT_SEASON}.csv")
+        
+        if not os.path.exists(schedule_path):
+            raise HTTPException(status_code=404, detail="Schedule file not found")
+        
+        schedule_df = pd.read_csv(schedule_path)
+        schedule_df["Date"] = pd.to_datetime(schedule_df["Date"])
+        
+        return schedule_df
+    
+    except Exception as e:
+        print(f"Error loading schedule: {e}")
+        raise HTTPException(status_code=500, detail=f"Error loading schedule: {str(e)}")
+
+def baseball_win_prob(home_pr, away_pr, location="Neutral"):
+    """Calculate win probability for baseball"""
+    if location != "Neutral":
+        home_pr += BASEBALL_HFA
+    rating_diff = home_pr - away_pr
+    return round(1 / (1 + 10 ** (-rating_diff / 6)) * 100, 2)
+
+def adjust_home_pr_baseball(home_win_prob):
+    """Adjust home power rating based on ELO win probability"""
+    return ((home_win_prob - 50) / 50) * 0.9
+
+def calculate_baseball_spread(home_pr, away_pr, home_elo, away_elo, location):
+    """Calculate spread for baseball matchup"""
+    if location != "Neutral":
+        home_pr += BASEBALL_HFA
+    
+    elo_win_prob = round((10**((home_elo - away_elo) / 400)) / 
+                        ((10**((home_elo - away_elo) / 400)) + 1) * 100, 2)
+    
+    spread = round(adjust_home_pr_baseball(elo_win_prob) + home_pr - away_pr, 2)
+    
+    return spread, elo_win_prob
+
+def calculate_gqi_baseball(home_pr, away_pr, min_pr, max_pr):
+    """Calculate Game Quality Index for baseball"""
+    # Team quality
+    tq = (home_pr + away_pr) / 2
+    tq_norm = np.clip((tq - min_pr) / (max_pr - min_pr), 0, 1)
+    
+    # Spread competitiveness
+    spread_cap = 8  # Adjusted for baseball
+    beta = 8.5
+    spread = abs(home_pr - away_pr)
+    sc = np.clip(1 - (spread / spread_cap), 0, 1)
+    
+    # Combine factors
+    x = (0.65 * tq_norm + 0.35 * sc)
+    gqi_raw = 1 / (1 + np.exp(-beta * (x - 0.5)))
+    
+    gqi = np.clip((1 + 9 * gqi_raw) + 0.1, None, 10)
+    return round(gqi, 1)
+
+@app.get("/api/csoftball/ratings")
+def get_softball_ratings():
+    """Get current softball team ratings"""
+    try:
+        modeling_stats, data_date = load_softball_data()
+        
+        # Prepare data for frontend
+        teams = modeling_stats[[
+            'Team', 'Rating', 'NET', 'NET_Score', 'SOS', 'SOR', 
+            'Conference', 'ELO', 'RPI', 'PRR', 'RQI'
+        ]].copy()
+        
+        teams = teams.rename(columns={
+            'Rating': 'power_rating',
+            'NET_Score': 'net_score'
+        })
+        
+        teams = teams.sort_values('power_rating', ascending=False).reset_index(drop=True)
+        
+        return {
+            "teams": teams.to_dict('records'),
+            "date": data_date,
+            "count": len(teams)
+        }
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error in get_baseball_ratings: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/csoftball/stats")
+def get_softball_stats():
+    """Get comprehensive softball team statistics"""
+    try:
+        modeling_stats, data_date = load_softball_data()
+        
+        # All the stats columns
+        stats_columns = [
+            'Team', 'Conference', 'Rating', 'NET', 'NET_Score', 'RPI', 'ELO', 'ELO_Rank', 'PRR', 'RQI', 
+            'resume_quality', 'avg_expected_wins', 'SOS', 'SOR', 'Q1', 'Q2', 'Q3', 'Q4',
+            'fWAR', 'oWAR_z', 'pWAR_z', 'WPOE', 'PYTHAG',
+            'ERA', 'WHIP', 'KP9', 'RPG', 'BA', 'OBP', 'SLG', 'OPS', 'PCT'
+        ]
+        
+        available_columns = [col for col in stats_columns if col in modeling_stats.columns]
+        stats = modeling_stats[available_columns].copy()
+        
+        # If ELO_Rank doesn't exist, use ELO column as the rank
+        if 'ELO_Rank' not in stats.columns and 'ELO' in stats.columns:
+            stats['ELO_Rank'] = stats['ELO']
+        
+        stats = stats.sort_values('Rating', ascending=False).reset_index(drop=True)
+        
+        return {
+            "stats": stats.to_dict('records'),
+            "date": data_date
+        }
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error in get_baseball_stats: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/csoftball/teams")
+def get_softball_teams():
+    """Get list of all softball teams"""
+    try:
+        modeling_stats, _ = load_softball_data()
+        teams = sorted(modeling_stats['Team'].unique().tolist())
+        return {"teams": teams}
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error in get_baseball_teams: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/csoftball/team-conferences")
+def get_team_softball_conferences():
+    """Get mapping of teams to their conferences"""
+    try:
+        modeling_stats, _ = load_softball_data()
+        
+        # Create a dictionary mapping team names to conferences
+        team_conference_map = {}
+        for _, row in modeling_stats[['Team', 'Conference']].drop_duplicates().iterrows():
+            team_conference_map[row['Team']] = row['Conference']
+        
+        return {"team_conferences": team_conference_map}
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error in get_team_conferences: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.post("/api/softball/calculate-spread")
+def calculate_softball_matchup_spread(request: SoftballSpreadRequest):
+    """Calculate spread for softball matchup"""
+    try:
+        modeling_stats, _ = load_softball_data()
+        
+        home_team_data = modeling_stats[modeling_stats['Team'] == request.home_team]
+        away_team_data = modeling_stats[modeling_stats['Team'] == request.away_team]
+        
+        if home_team_data.empty or away_team_data.empty:
+            raise HTTPException(status_code=404, detail="Team not found")
+        
+        home_pr = home_team_data['Rating'].values[0]
+        away_pr = away_team_data['Rating'].values[0]
+        home_elo = home_team_data['ELO'].values[0]
+        away_elo = away_team_data['ELO'].values[0]
+        
+        location = "Neutral" if request.neutral else "Home"
+        spread, elo_win_prob = calculate_baseball_spread(home_pr, away_pr, home_elo, away_elo, location)
+        win_prob = baseball_win_prob(home_pr, away_pr, location)
+        
+        gqi = calculate_gqi_baseball(
+            home_pr, away_pr, 
+            modeling_stats['Rating'].min(), 
+            modeling_stats['Rating'].max()
+        )
+        
+        if spread >= 0:
+            formatted_spread = f"{request.home_team} -{spread}"
+        else:
+            formatted_spread = f"{request.away_team} {abs(spread)}"
+        
+        return {
+            "spread": spread,
+            "formatted_spread": formatted_spread,
+            "home_win_prob": win_prob,
+            "away_win_prob": round(100 - win_prob, 2),
+            "elo_win_prob": elo_win_prob,
+            "game_quality": gqi,
+            "home_pr": round(home_pr, 2),
+            "away_pr": round(away_pr, 2),
+            "home_elo": round(home_elo, 0),
+            "away_elo": round(away_elo, 0)
+        }
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error calculating baseball spread: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/softball/schedule/today")
+def get_todays_softball_games():
+    """Get today's softball games"""
+    try:
+        schedule_df = load_softball_schedule_data()
+        
+        cst = pytz.timezone('America/Chicago')
+        today = datetime.now(cst).date()
+        
+        today_games = schedule_df[schedule_df['Date'].dt.date == today].copy()
+
+        if len(today_games) == 0:
+            # If we're past July and there are no games for today,
+            # use the most recent date in the dataframe instead.
+            if today.month > 7:
+                last_date = schedule_df['Date'].max().date()
+                today_games = schedule_df[schedule_df['Date'].dt.date == last_date].copy()
+                today_games = today_games[['home_team', 'away_team', 'Location', 'PEAR', 'GQI', 'Date', 'home_win_prob', 'home_net', 'away_net']].drop_duplicates()
+                return {"games": today_games.to_dict(orient="records"), "date": last_date.strftime("%B %d, %Y")}
+            else:
+                return {"games": [], "date": today.strftime("%B %d, %Y")}
+        
+        # Process results
+        today_games = today_games[[
+            'home_team', 'away_team', 'Location', 'PEAR', 'GQI', 'Date', 'home_win_prob', 'home_net', 'away_net'
+        ]].copy().drop_duplicates()
+        
+        today_games = today_games.sort_values('GQI', ascending=False).reset_index(drop=True)
+        
+        return {
+            "games": today_games.to_dict('records'),
+            "date": today.strftime("%B %d, %Y"),
+            "count": len(today_games)
+        }
+    
+    except Exception as e:
+        print(f"Error getting today's games: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/softball/team/{team_name}")
+def get_softball_team_info(team_name: str):
+    """Get detailed information for a specific softball team"""
+    try:
+        modeling_stats, data_date = load_softball_data()
+        schedule_df = load_softball_schedule_data()
+        team_data = modeling_stats[modeling_stats['Team'] == team_name]
+        
+        if team_data.empty:
+            raise HTTPException(status_code=404, detail="Team not found")
+        
+        # Get team schedule
+        team_schedule = schedule_df[
+            (schedule_df['home_team'] == team_name) | 
+            (schedule_df['away_team'] == team_name)
+        ].copy()
+        
+        cst = pytz.timezone('America/Chicago')
+        today = datetime.now(cst).date()
+        
+        # Upcoming games
+        upcoming = team_schedule[team_schedule['Date'].dt.date >= today].copy()
+        upcoming = upcoming.sort_values('Date').head(10)
+        
+        # Recent results
+        completed = team_schedule[
+            (team_schedule['Date'].dt.date < today) & 
+            (team_schedule['Result'].notna())
+        ].copy()
+        completed = completed.sort_values('Date', ascending=False).head(10)
+        
+        return {
+            "team": team_data.to_dict('records')[0],
+            "upcoming_games": upcoming.to_dict('records') if len(upcoming) > 0 else [],
+            "recent_games": completed.to_dict('records') if len(completed) > 0 else [],
+            "date": data_date
+        }
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error getting team info: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/softball/conferences")
+def get_softball_conferences():
+    """Get list of all conferences"""
+    try:
+        modeling_stats, _ = load_softball_data()
+        conferences = sorted(modeling_stats['Conference'].unique().tolist())
+        # Remove "Independent" if present
+        conferences = [c for c in conferences if c != "Independent"]
+        return {"conferences": conferences}
+    
+    except Exception as e:
+        print(f"Error getting conferences: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+
+def adjust_home_pr(home_win_prob):
+    return ((home_win_prob - 50) / 50) * 0.9
+
+def calculate_spread_from_stats(home_pr, away_pr, home_elo, away_elo, location):
+    if location != "Neutral":
+        home_pr += 0.3
+    elo_win_prob = round((10**((home_elo - away_elo) / 400)) / ((10**((home_elo - away_elo) / 400)) + 1) * 100, 2)
+    spread = round(adjust_home_pr(elo_win_prob) + home_pr - away_pr, 2)
+    return spread, elo_win_prob
+    
+def calculate_series_probabilities(win_prob):
+    # Team A win probabilities
+    P_A_0 = (1 - win_prob) ** 3
+    P_A_1 = 3 * win_prob * (1 - win_prob) ** 2
+    P_A_2 = 3 * win_prob ** 2 * (1 - win_prob)
+    P_A_3 = win_prob ** 3
+
+    # Team B win probabilities (q = 1 - p)
+    lose_prob = 1 - win_prob
+    P_B_0 = win_prob ** 3
+    P_B_1 = 3 * lose_prob * win_prob ** 2
+    P_B_2 = 3 * lose_prob ** 2 * win_prob
+    P_B_3 = lose_prob ** 3
+
+    # Summing for at least conditions
+    P_A_at_least_1 = 1 - P_A_0
+    P_A_at_least_2 = P_A_2 + P_A_3
+    P_B_at_least_1 = 1 - P_B_0
+    P_B_at_least_2 = P_B_2 + P_B_3
+
+    return [P_A_at_least_1,P_A_at_least_2,P_A_3], [P_B_at_least_1,P_B_at_least_2,P_B_3]
+
+@app.post("/api/softball/matchup-image")
+def generate_softball_matchup_image(request: SoftballSpreadRequest):
+    """Generate matchup comparison image"""
+    home_logo = None
+    away_logo = None
+    
+    try:
+
+        stats_and_metrics, _ = load_softball_data()
+        
+        away_team = request.away_team
+        home_team = request.home_team
+        neutrality = "Neutral" if request.neutral else "Home"
+        
+            
+        # Load team logos
+        logo_folder = os.path.join(SOFTBALL_BASE_PATH, "logos")
+        home_logo = None
+        away_logo = None
+
+        def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
+            if location != "Neutral":
+                home_pr += 0.3
+            rating_diff = home_pr - away_pr
+            return round(1 / (1 + 10 ** (-rating_diff / 6)) * 100, 2)
+
+        def fixed_width_text(ax, x, y, text, width=0.06, height=0.04,
+                            facecolor="lightgrey", edgecolor="none", alpha=1.0, **kwargs):
+            # Draw rectangle behind text
+            ax.add_patch(Rectangle(
+                (x - width/2, y - height/2), width, height,
+                transform=ax.transAxes,
+                facecolor=facecolor,
+                edgecolor=edgecolor,
+                alpha=alpha,
+                zorder=1
+            ))
+
+            # Draw text centered on top
+            ax.text(x, y, text,
+                    ha="center", va="center", zorder=2, **kwargs)
+            
+        def get_text_color(bg_color: str) -> str:
+            """Determine if text should be black or white based on background color luminance"""
+            import re
+            
+            # Handle hex colors
+            if bg_color.startswith('#'):
+                # Convert hex to RGB
+                bg_color = bg_color.lstrip('#')
+                r = int(bg_color[0:2], 16)
+                g = int(bg_color[2:4], 16)
+                b = int(bg_color[4:6], 16)
+            else:
+                # Handle rgb() format
+                match = re.match(r'rgb\((\d+),\s*(\d+),\s*(\d+)\)', bg_color)
+                if not match:
+                    return 'white'
+                
+                r = int(match.group(1))
+                g = int(match.group(2))
+                b = int(match.group(3))
+            
+            luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+            return 'black' if luminance > 0.5 else 'white'
+
+        def rank_text_color(rank, vmin=1, vmax=300):
+            """Get appropriate text color (black or white) based on rank background color"""
+            if rank == "":
+                return 'black'
+            
+            bg_color = rank_to_color(rank, vmin=vmin, vmax=vmax)
+            return get_text_color(bg_color)
+
+        def percent_text_color(win_pct, vmin=0.0, vmax=1.0):
+            """Get appropriate text color (black or white) based on win percentage background color"""
+            if win_pct == "":
+                return 'black'
+            
+            bg_color = rank_to_color(win_pct, vmin=vmin, vmax=vmax)
+            return get_text_color(bg_color)
+
+        def plot_logo(ax, img, xy, zoom=0.2):
+            """Helper to plot a logo at given xy coords."""
+            imagebox = OffsetImage(img, zoom=zoom)
+            ab = AnnotationBbox(imagebox, xy, frameon=False)
+            ax.add_artist(ab)
+
+        def rank_to_color(rank, vmin=1, vmax=300):
+            """
+            Map a rank (1–300) to a hex color.
+            Dark blue = best (1), grey = middle, dark red = worst (300).
+            Color scale: Dark Red (#8B0000) → Orange (#FFA500) → Light Gray (#D3D3D3) → Cyan (#00FFFF) → Dark Blue (#00008B)
+            """
+            # Define colormap from blue → grey → red
+            cmap = mcolors.LinearSegmentedColormap.from_list(
+                "rank_cmap", ["#00008B", "#00FFFF", "#D3D3D3", "#FFA500", "#8B0000"]  # dark blue, cyan, light gray, orange, dark red
+            )
+            
+            # Normalize rank to [0,1]
+            norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+            rgba = cmap(norm(rank))
+            
+            # Convert RGBA to hex
+            return mcolors.to_hex(rgba)
+
+        def percent_to_color(win_pct, vmin=0.0, vmax=1.0):
+            """
+            Map a win percentage (0.0–1.0) to a hex color.
+            Dark blue = best (1.0), grey = middle (0.5), dark red = worst (0.0).
+            Color scale: Dark Red (#8B0000) → Orange (#FFA500) → Light Gray (#D3D3D3) → Cyan (#00FFFF) → Dark Blue (#00008B)
+            """
+            # Define colormap from red → grey → blue
+            cmap = mcolors.LinearSegmentedColormap.from_list(
+                "percent_cmap", ["#8B0000", "#FFA500", "#D3D3D3", "#00FFFF", "#00008B"]  # dark red, orange, light gray, cyan, dark blue
+            )
+            
+            # Normalize percentage to [0,1]
+            norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+            rgba = cmap(norm(win_pct))
+            
+            # Convert RGBA to hex
+            return mcolors.to_hex(rgba)
+
+        def get_value_and_rank(df, team, column, higher_is_better=True):
+            """
+            Return (value, rank) for a given team and column.
+            
+            Args:
+                df (pd.DataFrame): Data source with 'team' and stat columns.
+                team (str): Team name to look up.
+                column (str): Column name to extract.
+                higher_is_better (bool): If True, high values rank better (1 = highest).
+                                        If False, low values rank better (1 = lowest).
+            """
+            ascending = not higher_is_better
+            ranks = df[column].rank(ascending=ascending, method="first").astype(int)
+
+            value = df.loc[df['Team'] == team, column].values[0]
+            rank = ranks.loc[df['Team'] == team].values[0]
+
+            return value, rank
+        
+        def get_record_value_and_rank(df, team, column, higher_is_better=True):
+            """
+            Return (record_string, win_percentage, rank) for a given team and column containing W-L records.
+            
+            Args:
+                df (pd.DataFrame): Data source with 'team' and record columns.
+                team (str): Team name to look up.
+                column (str): Column name containing records in "W-L" format.
+                higher_is_better (bool): If True, high win% ranks better (1 = highest).
+                                        If False, low win% ranks better (1 = lowest).
+            
+            Returns:
+                tuple: (record_string, win_percentage as float, rank as int)
+            """
+            def calculate_win_pct(record):
+                """Convert 'W-L' string to win percentage."""
+                if pd.isna(record) or record == '':
+                    return 0.0
+                parts = str(record).split('-')
+                wins = int(parts[0])
+                losses = int(parts[1])
+                total = wins + losses
+                return wins / total if total > 0 else 0.0
+            
+            # Calculate win percentages for all teams
+            win_pcts = df[column].apply(calculate_win_pct)
+            
+            # Calculate ranks
+            ascending = not higher_is_better
+            ranks = win_pcts.rank(ascending=ascending, method="first").astype(int)
+            
+            # Get values for specified team
+            team_idx = df['Team'] == team
+            record_string = df.loc[team_idx, column].values[0]
+            win_pct = win_pcts.loc[team_idx].values[0]
+            rank = ranks.loc[team_idx].values[0]
+            
+            return record_string, win_pct
+        
+        def add_row(x_vals, y, away_val, away_rank, away_name, home_name, home_rank, home_val, away_digits, home_digits):
+            # Helper to choose text color based on rank
+
+            # Away value
+            if away_val != "":
+                ax.text(x_vals[0], y, f"{away_val:.{away_digits}f}", ha='center', fontsize=16, fontweight='bold',
+                        bbox=dict(facecolor='green', alpha=0))
+
+            # Away rank box
+            if away_rank != "":
+                fixed_width_text(
+                    ax, x_vals[1], y+0.007, f"{away_rank}", width=0.06, height=0.04,
+                    facecolor=rank_to_color(away_rank), alpha=alpha_val,
+                    fontsize=16, fontweight='bold', color=rank_text_color(away_rank)
+                )
+
+            # Metric name
+            if away_name != "":
+                ax.text(x_vals[2], y, away_name, ha='left', fontsize=16, fontweight='bold',
+                        bbox=dict(facecolor='green', alpha=0))
+
+            if home_name != "":
+                ax.text(x_vals[3], y, home_name, ha='right', fontsize=16, fontweight='bold',
+                        bbox=dict(facecolor='green', alpha=0))
+
+            # Home rank box
+            if home_rank != "":
+                fixed_width_text(
+                    ax, x_vals[4], y+0.007, f"{home_rank}", width=0.06, height=0.04,
+                    facecolor=rank_to_color(home_rank), alpha=alpha_val,
+                    fontsize=16, fontweight='bold', color=rank_text_color(home_rank)
+                )
+
+            # Home value
+            if home_val != "":
+                ax.text(x_vals[5], y, f"{home_val:.{home_digits}f}", ha='center', fontsize=16, fontweight='bold',
+                        bbox=dict(facecolor='green', alpha=0))
+        
+        if os.path.exists(logo_folder):
+            home_logo_path = os.path.join(logo_folder, f"{home_team}.png")
+            away_logo_path = os.path.join(logo_folder, f"{away_team}.png")
+            
+            if os.path.exists(home_logo_path):
+                home_logo = Image.open(home_logo_path).convert("RGBA")
+            if os.path.exists(away_logo_path):
+                away_logo = Image.open(away_logo_path).convert("RGBA")
+
+        fig, ax = plt.subplots(figsize=(16, 12), dpi=400)
+        fig.patch.set_facecolor('#CECEB2')
+        ax.set_facecolor('#CECEB2')
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.axis("off")
+
+        # ----------------
+        # logos, score, win prob, spread, O/U
+        # ----------------
+        plot_logo(ax, away_logo, (0.15, 0.75), zoom=0.3)
+        plot_logo(ax, home_logo, (0.85, 0.75), zoom=0.3)
+
+        if neutrality == "Neutral":
+            ax.text(0.5, 0.96, f"{away_team} (N) {home_team}", ha='center', fontsize=32, fontweight='bold', bbox=dict(facecolor='red', alpha=0.0))
+        else:
+            ax.text(0.5, 0.96, f"{away_team} at {home_team}", ha='center', fontsize=32, fontweight='bold', bbox=dict(facecolor='red', alpha=0.0))
+
+        alpha_val = 0.9
+
+        away_pr, away_rank = get_value_and_rank(stats_and_metrics, away_team, 'Rating')
+        home_pr, home_rank = get_value_and_rank(stats_and_metrics, home_team, 'Rating')
+        away_elo, away_elo_rank = get_value_and_rank(stats_and_metrics, away_team, 'ELO')
+        home_elo, home_elo_rank = get_value_and_rank(stats_and_metrics, home_team, 'ELO')
+        home_net_score, home_net_rank = get_value_and_rank(stats_and_metrics, home_team, 'NET_Score')
+        away_net_score, away_net_rank = get_value_and_rank(stats_and_metrics, away_team, 'NET_Score')
+        home_rq, home_rq_rank = get_value_and_rank(stats_and_metrics, home_team, 'resume_quality')
+        away_rq, away_rq_rank = get_value_and_rank(stats_and_metrics, away_team, 'resume_quality')
+        home_sos, home_sos_rank = get_value_and_rank(stats_and_metrics, home_team, 'avg_expected_wins', False)
+        away_sos, away_sos_rank = get_value_and_rank(stats_and_metrics, away_team, 'avg_expected_wins', False)
+        home_pythag, home_pythag_rank = get_value_and_rank(stats_and_metrics, home_team, 'PYTHAG')
+        away_pythag, away_pythag_rank = get_value_and_rank(stats_and_metrics, away_team, 'PYTHAG')
+        home_war, home_war_rank = get_value_and_rank(stats_and_metrics, home_team, 'fWAR')
+        away_war, away_war_rank = get_value_and_rank(stats_and_metrics, away_team, 'fWAR')
+        home_wpoe, home_wpoe_rank = get_value_and_rank(stats_and_metrics, home_team, 'wpoe_pct')
+        away_wpoe, away_wpoe_rank = get_value_and_rank(stats_and_metrics, away_team, 'wpoe_pct')
+        home_q1, home_q1_rank = get_record_value_and_rank(stats_and_metrics, home_team, 'Q1')
+        home_q2, home_q2_rank = get_record_value_and_rank(stats_and_metrics, home_team, 'Q2')
+        home_q3, home_q3_rank = get_record_value_and_rank(stats_and_metrics, home_team, 'Q3')
+        home_q4, home_q4_rank = get_record_value_and_rank(stats_and_metrics, home_team, 'Q4')
+        away_q1, away_q1_rank = get_record_value_and_rank(stats_and_metrics, away_team, 'Q1')
+        away_q2, away_q2_rank = get_record_value_and_rank(stats_and_metrics, away_team, 'Q2')
+        away_q3, away_q3_rank = get_record_value_and_rank(stats_and_metrics, away_team, 'Q3')
+        away_q4, away_q4_rank = get_record_value_and_rank(stats_and_metrics, away_team, 'Q4')
+
+        home_rpg, home_rpg_rank = get_value_and_rank(stats_and_metrics, home_team, 'RPG')
+        away_rpg, away_rpg_rank = get_value_and_rank(stats_and_metrics, away_team, 'RPG')
+        home_ba, home_ba_rank = get_value_and_rank(stats_and_metrics, home_team, 'BA')
+        away_ba, away_ba_rank = get_value_and_rank(stats_and_metrics, away_team, 'BA')
+        home_obp, home_obp_rank = get_value_and_rank(stats_and_metrics, home_team, 'OBP')
+        away_obp, away_obp_rank = get_value_and_rank(stats_and_metrics, away_team, 'OBP')
+        home_slg, home_slg_rank = get_value_and_rank(stats_and_metrics, home_team, 'SLG')
+        away_slg, away_slg_rank = get_value_and_rank(stats_and_metrics, away_team, 'SLG')
+        home_ops, home_ops_rank = get_value_and_rank(stats_and_metrics, home_team, 'OPS')
+        away_ops, away_ops_rank = get_value_and_rank(stats_and_metrics, away_team, 'OPS')
+        home_iso, home_iso_rank = get_value_and_rank(stats_and_metrics, home_team, 'ISO')
+        away_iso, away_iso_rank = get_value_and_rank(stats_and_metrics, away_team, 'ISO')
+        home_era, home_era_rank = get_value_and_rank(stats_and_metrics, home_team, 'ERA', False)
+        away_era, away_era_rank = get_value_and_rank(stats_and_metrics, away_team, 'ERA', False)
+        home_whip, home_whip_rank = get_value_and_rank(stats_and_metrics, home_team, 'WHIP', False)
+        away_whip, away_whip_rank = get_value_and_rank(stats_and_metrics, away_team, 'WHIP', False)
+        home_k9, home_k9_rank = get_value_and_rank(stats_and_metrics, home_team, 'KP9')
+        away_k9, away_k9_rank = get_value_and_rank(stats_and_metrics, away_team, 'KP9')
+        home_lob, home_lob_rank = get_value_and_rank(stats_and_metrics, home_team, 'LOB%')
+        away_lob, away_lob_rank = get_value_and_rank(stats_and_metrics, away_team, 'LOB%')
+        home_kbb, home_kbb_rank = get_value_and_rank(stats_and_metrics, home_team, 'K/BB')
+        away_kbb, away_kbb_rank = get_value_and_rank(stats_and_metrics, away_team, 'K/BB')
+        home_pct, home_pct_rank = get_value_and_rank(stats_and_metrics, home_team, 'PCT')
+        away_pct, away_pct_rank = get_value_and_rank(stats_and_metrics, away_team, 'PCT')
+
+        home_win_prob = PEAR_Win_Prob(home_pr, away_pr, neutrality)
+        home_series, away_series = calculate_series_probabilities(home_win_prob/100)
+        spread, elo_win_prob = calculate_spread_from_stats(home_pr, away_pr, home_elo, away_elo, neutrality)
+        if spread < 0:
+            formatted_spread = f"{away_team} -{abs(spread):.2f}"
+        else:
+            formatted_spread = f"{home_team} -{spread:.2f}"
+
+        max_net = 299
+        w_tq = 0.70   # NET AVG
+        w_wp = 0.20   # Win Probability
+        w_ned = 0.10  # NET Differential
+        avg_net = (home_net_rank + away_net_rank) / 2
+        tq = (max_net - avg_net) / (max_net - 1)
+        wp = 1 - 2 * np.abs((home_win_prob/100) - 0.5)
+        ned = 1 - (np.abs(away_net_rank - home_net_rank) / (max_net - 1))
+        gqi = round(10*(w_tq * tq + w_wp * wp + w_ned * ned), 1)
+
+        bubble_team_rating = stats_and_metrics['Rating'].quantile(0.90)
+        home_quality = PEAR_Win_Prob(bubble_team_rating, away_pr, neutrality) / 100
+        home_win_quality, home_loss_quality = (1 - home_quality), -home_quality
+        away_quality = 1-PEAR_Win_Prob(home_pr, bubble_team_rating, neutrality) / 100
+        away_win_quality, away_loss_quality = (1 - away_quality), -away_quality
+
+        ax.text(0.5, 0.57, f"{formatted_spread}", ha='center', fontsize=28, fontweight='bold', bbox=dict(facecolor='blue', alpha=0.0))
+        ax.text(0.5, 0.625, f"GQI: {gqi}", ha='center', fontsize=28, fontweight='bold', bbox=dict(facecolor='blue', alpha=0.0))
+        ax.text(0.6, 0.89, f"ONE GAME (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.6, 0.84, f"{round(home_win_prob,1)}", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.6, 0.78, f"SERIES (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.6, 0.75, f"≥1: {round(home_series[0]*100,1)}%", ha='center', fontsize=18, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.6, 0.72, f"≥2: {round(home_series[1]*100,1)}%", ha='center', fontsize=18, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.6, 0.69, f"SWEEP: {round(home_series[2]*100,1)}%", ha='center', fontsize=18, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        
+        ax.text(0.4, 0.89, f"ONE GAME (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.4, 0.84, f"{round(100-home_win_prob,1)}", ha='center', fontsize=36, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.4, 0.78, f"SERIES (%)", ha='center', fontsize=11, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.4, 0.75, f"≥1: {round(away_series[0]*100,1)}%", ha='center', fontsize=18, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.4, 0.72, f"≥2: {round(away_series[1]*100,1)}%", ha='center', fontsize=18, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+        ax.text(0.4, 0.69, f"SWEEP: {round(away_series[2]*100,1)}%", ha='center', fontsize=18, fontweight='bold', bbox=dict(facecolor='green', alpha=0.0))
+
+        away_record = stats_and_metrics.loc[stats_and_metrics['Team'] == away_team, 'Record'].values[0]
+        ax.text(0.01, 0.53, f"{away_record}", ha='left', fontsize=16, fontweight='bold')
+
+        home_record = stats_and_metrics.loc[stats_and_metrics['Team'] == home_team, 'Record'].values[0]
+        ax.text(0.99, 0.53, f"{home_record}", ha='right', fontsize=16, fontweight='bold')
+
+        # X positions for the 5 columns
+        x_cols = [0.31, 0.378, 0.42, 0.58, 0.622, 0.69]
+
+        ax.text(0.5, 0.528, f"{away_team} OFF vs {home_team} PCH",
+                ha='center', fontsize=16, fontweight='bold',
+                bbox=dict(facecolor='green', alpha=0))
+        ax.hlines(y=0.518, xmin=0.29, xmax=0.71, colors='black', linewidth=1)
+
+        # Away OFF vs Home DEF
+        add_row(x_cols, 0.49, away_rpg, away_rpg_rank, "RPG", "ERA", home_era_rank, home_era, 2, 2)
+        add_row(x_cols, 0.45, away_ba, away_ba_rank, "BA", "WHIP", home_whip_rank, home_whip, 3, 2)
+        add_row(x_cols, 0.41, away_obp, away_obp_rank, "OBP", "K/9", home_k9_rank, home_k9, 3, 1)
+        add_row(x_cols, 0.37, away_slg, away_slg_rank, "SLG", "LOB%", home_lob_rank, home_lob, 3, 2)
+        add_row(x_cols, 0.33, away_ops, away_ops_rank, "OPS", "K/BB", home_kbb_rank, home_kbb, 3, 2)
+        add_row(x_cols, 0.29, away_iso, away_iso_rank, "ISO", "PCT", home_pct_rank, home_pct, 3, 3)
+
+        # Header for Away DEF vs Home OFF
+        ax.text(0.5, 0.248, f"{away_team} PCH vs {home_team} OFF",
+                ha='center', fontsize=16, fontweight='bold', bbox=dict(facecolor='green', alpha=0))
+        ax.hlines(y=0.238, xmin=0.29, xmax=0.71, colors='black', linewidth=1)
+        add_row(x_cols, 0.21, away_era, away_era_rank, "ERA", "RPG", home_rpg_rank, home_rpg, 2, 2)
+        add_row(x_cols, 0.17, away_whip, away_whip_rank, "WHIP", "BA", home_ba_rank, home_ba, 2, 3)
+        add_row(x_cols, 0.13, away_k9, away_k9_rank, "K/9", "OBP", home_obp_rank, home_obp, 1, 3)
+        add_row(x_cols, 0.09, away_lob, away_lob_rank, "LOB%", "SLG", home_slg_rank, home_slg, 2, 3)
+        add_row(x_cols, 0.05, away_kbb, away_kbb_rank, "K/BB", "OPS", home_ops_rank, home_ops, 2, 3)
+        add_row(x_cols, 0.01, away_pct, away_pct_rank, "PCT", "ISO", home_iso_rank, home_iso, 2, 3)
+        ax.text(0.5, -0.03, "@PEARatings", ha='center', fontsize=16, fontweight='bold',bbox=dict(facecolor='green', alpha=0))
+
+        ### AWAY SIDE
+
+        ax.text(0.01, 0.49, f"NET", ha='left', fontsize=16, fontweight='bold')
+        ax.hlines(y=0.478, xmin=0.01, xmax=0.26, colors='black', linewidth=1)
+        ax.text(0.19, 0.49, f"{away_net_score:.3f}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.49+0.007, f"{away_net_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(away_net_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(away_net_rank))
+        
+        ax.text(0.04, 0.45, f"RATING", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.45, f"{away_pr}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.45+0.007, f"{away_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(away_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(away_rank))
+
+        ax.text(0.04, 0.41, f"RQI", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.41, f"{away_rq:.3f}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.41+0.007, f"{away_rq_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(away_rq_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(away_rq_rank))
+        
+        ax.text(0.04, 0.37, f"SOS", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.37, f"{away_sos:.3f}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.37+0.007, f"{away_sos_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(away_sos_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(away_sos_rank))
+
+        ax.text(0.04, 0.33, f"PYTHAG", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.33, f"{away_pythag:.3f}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.33+0.007, f"{away_pythag_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(away_pythag_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(away_pythag_rank))
+
+        ax.text(0.04, 0.29, f"WAR", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.29, f"{away_war:.3f}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.29+0.007, f"{away_war_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(away_war_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(away_war_rank))
+
+        ax.text(0.04, 0.25, f"WPOE", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.25, f"{away_wpoe:.3f}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.25+0.007, f"{away_wpoe_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(away_wpoe_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(away_wpoe_rank))
+
+        ax.text(0.01, 0.21, f"NET QUADS", ha='left', fontsize=16, fontweight='bold')
+        ax.hlines(y=0.198, xmin=0.01, xmax=0.26, colors='black', linewidth=1)
+
+        ax.text(0.04, 0.17, f"Q1", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.17, f"{away_q1}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.17+0.007, f"{away_q1_rank:.3f}", width=0.06, height=0.04,
+                                    facecolor=percent_to_color(away_q1_rank), alpha=alpha_val,
+                                    fontsize=16, fontweight='bold', color=percent_text_color(away_q1_rank))
+
+        ax.text(0.04, 0.13, f"Q2", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.13, f"{away_q2}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.13+0.007, f"{away_q2_rank:.3f}", width=0.06, height=0.04,
+                                    facecolor=percent_to_color(away_q2_rank), alpha=alpha_val,
+                                    fontsize=16, fontweight='bold', color=percent_text_color(away_q2_rank))
+        
+        ax.text(0.04, 0.09, f"Q3", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.09, f"{away_q3}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.09+0.007, f"{away_q3_rank:.3f}", width=0.06, height=0.04,
+                                    facecolor=percent_to_color(away_q3_rank), alpha=alpha_val,
+                                    fontsize=16, fontweight='bold', color=percent_text_color(away_q3_rank))
+
+        ax.text(0.04, 0.05, f"Q4", ha='left', fontsize=16, fontweight='bold')
+        ax.text(0.19, 0.05, f"{away_q4}", ha='right', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.23, 0.05+0.007, f"{away_q4_rank:.3f}", width=0.06, height=0.04,
+                                    facecolor=percent_to_color(away_q4_rank), alpha=alpha_val,
+                                    fontsize=16, fontweight='bold', color=percent_text_color(away_q4_rank))
+        
+        ax.text(0.01, 0.01, f"WIN QUALITY", ha='left', fontsize=16, fontweight='bold')
+        ax.hlines(y=0.0, xmin=0.01, xmax=0.26, colors='black', linewidth=1)
+        ax.text(0.04, -0.03, f"{away_win_quality:.2f}", ha='left', fontsize=16, fontweight='bold', color='green')
+        ax.text(0.19, -0.03, f"{away_loss_quality:.2f}", ha='right', fontsize=16, fontweight='bold', color='red')
+
+        #### HOME SIDE
+
+        ax.text(0.99, 0.49, f"NET", ha='right', fontsize=16, fontweight='bold')
+        ax.hlines(y=0.478, xmin=0.74, xmax=0.99, colors='black', linewidth=1)
+        ax.text(0.81, 0.49, f"{home_net_score:.3f}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.49+0.007, f"{home_net_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(home_net_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(home_net_rank))
+
+        ax.text(0.96, 0.45, f"RATING", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.45, f"{home_pr}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.45+0.007, f"{home_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(home_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(home_rank))
+
+        ax.text(0.96, 0.41, f"RQI", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.41, f"{home_rq:.3f}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.41+0.007, f"{home_rq_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(home_rq_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(home_rq_rank))
+
+        ax.text(0.96, 0.37, f"SOS", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.37, f"{home_sos:.3f}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.37+0.007, f"{home_sos_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(home_sos_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(home_sos_rank))
+
+        ax.text(0.96, 0.33, f"PYTHAG", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.33, f"{home_pythag:.3f}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.33+0.007, f"{home_pythag_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(home_pythag_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(home_pythag_rank))
+
+        ax.text(0.96, 0.29, f"WAR", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.29, f"{home_war:.3f}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.29+0.007, f"{home_war_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(home_war_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(home_war_rank))
+        
+        ax.text(0.96, 0.25, f"WPOE", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.25, f"{home_wpoe:.3f}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.25+0.007, f"{home_wpoe_rank}", width=0.06, height=0.04,
+                                facecolor=rank_to_color(home_wpoe_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(home_wpoe_rank))
+        
+        ax.text(0.99, 0.21, f"NET QUADS", ha='right', fontsize=16, fontweight='bold')
+        ax.hlines(y=0.198, xmin=0.74, xmax=0.99, colors='black', linewidth=1)
+        ax.text(0.96, 0.17, f"Q1", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.17, f"{home_q1}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.17+0.007, f"{home_q1_rank:.3f}", width=0.06, height=0.04,
+                                    facecolor=percent_to_color(home_q1_rank), alpha=alpha_val,
+                                    fontsize=16, fontweight='bold', color=percent_text_color(home_q1_rank))
+
+        ax.text(0.96, 0.13, f"Q2", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.13, f"{home_q2}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.13+0.007, f"{home_q2_rank:.3f}", width=0.06, height=0.04,
+                                    facecolor=percent_to_color(home_q2_rank), alpha=alpha_val,
+                                    fontsize=16, fontweight='bold', color=percent_text_color(home_q2_rank))
+
+        ax.text(0.96, 0.09, f"Q3", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.09, f"{home_q3}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.09+0.007, f"{home_q3_rank:.3f}", width=0.06, height=0.04,
+                                    facecolor=percent_to_color(home_q3_rank), alpha=alpha_val,
+                                    fontsize=16, fontweight='bold', color=percent_text_color(home_q3_rank))
+
+        ax.text(0.96, 0.05, f"Q4", ha='right', fontsize=16, fontweight='bold')
+        ax.text(0.81, 0.05, f"{home_q4}", ha='left', fontsize=16, fontweight='bold')
+        fixed_width_text(ax, 0.77, 0.05+0.007, f"{home_q4_rank:.3f}", width=0.06, height=0.04,
+                                    facecolor=percent_to_color(home_q4_rank), alpha=alpha_val,
+                                    fontsize=16, fontweight='bold', color=percent_text_color(home_q4_rank))
+
+        ax.text(0.99, 0.01, f"WIN QUALITY", ha='right', fontsize=16, fontweight='bold')
+        ax.hlines(y=0.0, xmin=0.74, xmax=0.99, colors='black', linewidth=1)
+        ax.text(0.81, -0.03, f"{home_win_quality:.2f}", ha='left', fontsize=16, fontweight='bold', color='green')
+        ax.text(0.96, -0.03, f"{home_loss_quality:.2f}", ha='right', fontsize=16, fontweight='bold', color='red')
+        
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
+        buf.seek(0)
+        
+        # Get image data
+        image_data = buf.getvalue()
+        
+        # Aggressive cleanup
+        plt.close(fig)
+        fig.clf()
+        del fig
+        del buf
+        gc.collect()
+        
+        return Response(content=image_data, media_type="image/png")
+    
+    except Exception as e:
+        print(f"Error generating matchup image: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+    
+    finally:
+        # Always close logo images
+        if home_logo is not None:
+            home_logo.close()
+            del home_logo
+        if away_logo is not None:
+            away_logo.close()
+            del away_logo
+        gc.collect()
+
+from collections import Counter, defaultdict
+
+def get_conference(team, stats_df):
+    """Get conference for a team"""
+    return stats_df.loc[stats_df["Team"] == team, "Conference"].values[0]
+
+def count_conflict_conferences(teams, stats_df):
+    """Count conference conflicts in a regional"""
+    conferences = [get_conference(team, stats_df) for team in teams]
+    return sum(count - 1 for count in Counter(conferences).values() if count > 1)
+
+def resolve_conflicts(formatted_df, stats_df):
+    """Resolve conference conflicts by swapping seeds between regionals"""
+    seed_cols = ["seed_2", "seed_3", "seed_4"]
+
+    for seed_col in seed_cols:
+        num_regionals = len(formatted_df)
+
+        for i in range(num_regionals):
+            row = formatted_df.iloc[i]
+            teams_i = [row["seed_1"], row["seed_2"], row["seed_3"], row["seed_4"]]
+            conflict_i = count_conflict_conferences(teams_i, stats_df)
+
+            if conflict_i == 0:
+                continue
+
+            current_team = row[seed_col]
+
+            for j in range(num_regionals):
+                if i == j:
+                    continue
+
+                alt_team = formatted_df.at[j, seed_col]
+                if alt_team == current_team:
+                    continue
+
+                row_j = formatted_df.iloc[j]
+                teams_j = [row_j["seed_1"], row_j["seed_2"], row_j["seed_3"], row_j["seed_4"]]
+
+                temp_i = teams_i.copy()
+                temp_j = teams_j.copy()
+                temp_i[seed_cols.index(seed_col) + 1] = alt_team
+                temp_j[seed_cols.index(seed_col) + 1] = current_team
+
+                new_conflict_i = count_conflict_conferences(temp_i, stats_df)
+                new_conflict_j = count_conflict_conferences(temp_j, stats_df)
+
+                if (new_conflict_i + new_conflict_j) < (conflict_i + count_conflict_conferences(teams_j, stats_df)):
+                    formatted_df.at[i, seed_col] = alt_team
+                    formatted_df.at[j, seed_col] = current_team
+                    break
+
+    return formatted_df
+
+@app.get("/api/softball/tournament-outlook")
+def get_softball_tournament_outlook():
+    """Generate projected NCAA Tournament bracket"""
+    try:
+        modeling_stats, _ = load_softball_data()
+        
+        # Hardcoded lists from the streamlit app
+        # aq_list = ["Binghamton", "East Carolina", "Stetson", "Rhode Island", "North Carolina", "Arizona",
+        #         "Creighton", "USC Upstate", "Nebraska", "Cal Poly", "Northeastern", "Western Ky.", "Wright St.",
+        #         "Columbia", "Fairfield", "Miami (OH)", "Murray St.", "Fresno St.",
+        #         "Central Conn. St.", "Little Rock", "Holy Cross", "Vanderbilt", "Houston Christian",
+        #         "ETSU", "Bethune-Cookman", "North Dakota St.", "Coastal Carolina", "Saint Mary's (CA)", "Utah Valley", "Oregon St."]
+        aq_list = list(modeling_stats.loc[modeling_stats.groupby("Conference")["NET"].idxmin()]['Team'])
+        
+        # host_seeds_list = ["Georgia", "Auburn", "Texas", "LSU", "North Carolina", "Clemson", "Coastal Carolina", "Oregon St.",
+        #             "Oregon", "Arkansas", "Southern Miss.", "Tennessee", "UCLA", "Vanderbilt", "Ole Miss", "Florida St."]
+        host_seeds_list = modeling_stats.nsmallest(16, "NET")['Team'].tolist()
+        
+        # Get automatic qualifiers and host seeds
+        automatic_qualifiers = (
+            modeling_stats[modeling_stats["Team"].isin(aq_list)]
+            .sort_values("NET")
+        )
+        
+        host_seeds = (
+            modeling_stats[modeling_stats["Team"].isin(host_seeds_list)]
+            .sort_values("NET")
+        )
+        
+        # Calculate at-large bids
+        amount_of_at_large = 64 - len(set(automatic_qualifiers["Team"]) - set(host_seeds["Team"])) - len(host_seeds)
+        
+        at_large = modeling_stats.drop(automatic_qualifiers.index)
+        at_large = at_large[~at_large["Team"].isin(host_seeds_list)]
+        automatic_qualifiers = automatic_qualifiers[~automatic_qualifiers["Team"].isin(host_seeds_list)]
+        at_large = at_large.nsmallest(amount_of_at_large, "NET")
+        
+        # Get bubble teams
+        last_four_in = at_large[-4:].reset_index()
+        next_8 = modeling_stats.drop(automatic_qualifiers.index)
+        next_8 = next_8[~next_8["Team"].isin(host_seeds_list)]
+        next_8_teams = next_8.nsmallest(amount_of_at_large + 8, "NET").iloc[amount_of_at_large:].reset_index(drop=True)
+        
+        # Build tournament bracket
+        remaining_teams = pd.concat([automatic_qualifiers, at_large]).sort_values("NET").reset_index(drop=True)
+        
+        seed_1_df = host_seeds.sort_values("NET").reset_index(drop=True)
+        seed_2_df = remaining_teams.iloc[0:16].sort_values("NET", ascending=False).copy()
+        seed_3_df = remaining_teams.iloc[16:32].copy()
+        seed_4_df = remaining_teams.iloc[32:48].sort_values("NET", ascending=False).copy()
+        
+        # Create formatted dataframe
+        formatted_df = pd.DataFrame({
+            'host': seed_1_df['Team'].values,
+            'seed_1': seed_1_df['Team'].values,
+            'seed_2': seed_2_df['Team'].values,
+            'seed_3': seed_3_df['Team'].values,
+            'seed_4': seed_4_df['Team'].values
+        })
+        
+        # Resolve conflicts
+        formatted_df = resolve_conflicts(formatted_df, modeling_stats)
+        
+        # Get multi-bid conferences
+        all_teams = pd.unique(formatted_df[["seed_1", "seed_2", "seed_3", "seed_4"]].values.ravel())
+        bracket_teams = modeling_stats[modeling_stats["Team"].isin(all_teams)]
+        conference_counts = bracket_teams["Conference"].value_counts()
+        multibid = conference_counts[conference_counts > 1]
+        
+        # Format response
+        regionals = []
+        for i, row in formatted_df.iterrows():
+            regionals.append({
+                "regional_number": i + 1,
+                "host": row["host"],
+                "seed_1": row["seed_1"],
+                "seed_2": row["seed_2"],
+                "seed_3": row["seed_3"],
+                "seed_4": row["seed_4"]
+            })
+        
+        return {
+            "regionals": regionals,
+            "last_four_in": last_four_in['Team'].tolist(),
+            "first_four_out": next_8_teams.iloc[0:4]['Team'].tolist(),
+            "next_four_out": next_8_teams.iloc[4:8]['Team'].tolist(),
+            "multibid_conferences": multibid.to_dict(),
+            "automatic_qualifiers": aq_list
+        }
+    
+    except Exception as e:
+        print(f"Error generating tournament outlook: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+def simulate_tournament_home_field(teams, ratings):
+    """Simulate a single double-elimination regional tournament"""
+    import random
+    
+    def PEAR_Win_Prob(home_pr, away_pr):
+        rating_diff = home_pr - away_pr
+        return round(1 / (1 + 10 ** (-rating_diff / 6)), 4)
+
+    team_a, team_b, team_c, team_d = teams
+    r = ratings
+
+    def adjusted(team):
+        return r[team] + 0.3 if team == team_a else r[team]
+
+    # Game 1: #1 vs #4
+    w1, l1 = (team_a, team_d) if random.random() < PEAR_Win_Prob(adjusted(team_a), adjusted(team_d)) else (team_d, team_a)
+    # Game 2: #2 vs #3
+    w2, l2 = (team_b, team_c) if random.random() < PEAR_Win_Prob(adjusted(team_b), adjusted(team_c)) else (team_c, team_b)
+    # Game 3: Loser's bracket
+    w3 = l2 if random.random() < PEAR_Win_Prob(adjusted(l2), adjusted(l1)) else l1
+    # Game 4: Winner's bracket
+    w4, l4 = (w1, w2) if random.random() < PEAR_Win_Prob(adjusted(w1), adjusted(w2)) else (w2, w1)
+    # Game 5: Loser's bracket final
+    w5 = l4 if random.random() < PEAR_Win_Prob(adjusted(l4), adjusted(w3)) else w3
+    # Game 6: Championship
+    game6_prob = PEAR_Win_Prob(adjusted(w4), adjusted(w5))
+    w6 = w4 if random.random() < game6_prob else w5
+
+    # If from loser's bracket, need to win twice
+    return w6 if w6 == w4 else (w4 if random.random() < game6_prob else w5)
+
+def run_simulation_home_field(team_a, team_b, team_c, team_d, stats_and_metrics, num_simulations=5000):
+    """Run multiple simulations of a regional tournament"""
+    teams = [team_a, team_b, team_c, team_d]
+    ratings = {team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].iloc[0] for team in teams}
+    results = defaultdict(int)
+
+    for _ in range(num_simulations):
+        winner = simulate_tournament_home_field(teams, ratings)
+        results[winner] += 1
+
+    total = num_simulations
+    return defaultdict(float, {team: round(count / total, 3) for team, count in results.items()})
+
+class SoftballRegionalSimulationRequest(BaseModel):
+    seed_1: str
+    seed_2: str
+    seed_3: str
+    seed_4: str
+
+@app.post("/api/softball/simulate-regional")
+def softball_simulate_regional(request: SoftballRegionalSimulationRequest):
+    """Simulate a regional tournament and return visualization"""
+    try:
+        modeling_stats, _ = load_softball_data()
+        
+        team_a = request.seed_1  # Host
+        team_b = request.seed_2
+        team_c = request.seed_3
+        team_d = request.seed_4
+        
+        # Verify all teams exist
+        for team in [team_a, team_b, team_c, team_d]:
+            if team not in modeling_stats['Team'].values:
+                raise HTTPException(status_code=404, detail=f"Team not found: {team}")
+        
+        # Run simulation
+        output = run_simulation_home_field(team_a, team_b, team_c, team_d, modeling_stats)
+        
+        # Format results
+        regional_prob = pd.DataFrame(list(output.items()), columns=["Team", "Win Regional"])
+        seed_map = {
+            team_a: f"#1 {team_a}",
+            team_b: f"#2 {team_b}",
+            team_c: f"#3 {team_c}",
+            team_d: f"#4 {team_d}",
+        }
+        regional_prob["Team"] = regional_prob["Team"].map(seed_map)
+        regional_prob['Win Regional'] = regional_prob['Win Regional'] * 100
+        seed_order = [seed_map[team_a], seed_map[team_b], seed_map[team_c], seed_map[team_d]]
+        regional_prob["SeedOrder"] = regional_prob["Team"].apply(lambda x: seed_order.index(x))
+        regional_prob = regional_prob.sort_values("SeedOrder").drop(columns="SeedOrder")
+
+        # Normalize values for color gradient
+        min_value = regional_prob.iloc[:, 1:].replace(0, np.nan).min().min()
+        max_value = regional_prob.iloc[:, 1:].max().max()
+
+        def normalize(value, min_val, max_val):
+            if pd.isna(value) or value == 0:
+                return 0
+            return (value - min_val) / (max_val - min_val)
+
+        # Create visualization
+        from matplotlib.colors import LinearSegmentedColormap
+        cmap = LinearSegmentedColormap.from_list('custom_green', ['#d5f5e3', '#006400'])
+
+        fig, ax = plt.subplots(figsize=(4, 4), dpi=125)
+        fig.patch.set_facecolor('#CECEB2')
+
+        ax.axis('tight')
+        ax.axis('off')
+
+        # Create table
+        table = ax.table(
+            cellText=regional_prob.values,
+            colLabels=regional_prob.columns,
+            cellLoc='center',
+            loc='center',
+            colColours=['#CECEB2'] * len(regional_prob.columns)
+        )
+        
+        for (i, j), cell in table.get_celld().items():
+            cell.set_edgecolor('black')
+            cell.set_linewidth(1.2)
+            if i == 0:
+                cell.set_facecolor('#CECEB2')
+                cell.set_text_props(fontsize=14, weight='bold', color='black')
+            elif j == 0:
+                cell.set_facecolor('#CECEB2')
+                cell.set_text_props(fontsize=14, weight='bold', color='black')
+            else:
+                value = regional_prob.iloc[i-1, j]
+                normalized_value = normalize(value, min_value, max_value)
+                color = cmap(normalized_value)
+                cell.set_facecolor(color)
+                cell.set_text_props(fontsize=14, weight='bold', color='black')
+                if value == 0:
+                    cell.get_text().set_text("<1%")
+                else:
+                    cell.get_text().set_text(f"{value:.1f}%")
+            cell.set_height(0.2)
+
+        plt.text(0, 0.07, f'{team_a} Regional', fontsize=16, fontweight='bold', ha='center')
+        plt.text(0, 0.06, f"@PEARatings", fontsize=12, fontweight='bold', ha='center')
+
+        # Save to BytesIO
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
+        buf.seek(0)
+        plt.close()
+
+        return StreamingResponse(buf, media_type="image/png")
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error simulating regional: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+# =====================================================================
+# NEW: Team Profile and Historical Performance Endpoints
+# =====================================================================
+
+class SoftballTeamProfileRequest(BaseModel):
+    team_name: str
+
+def load_softball_schedule_data():
+    """Load schedule data for softball"""
+    try:
+        softball_path = os.path.join(os.path.dirname(BACKEND_DIR), "PEAR", "PEAR Softball")
+        schedule_path = os.path.join(softball_path, f"y{current_season}", f"schedule_{current_season}.csv")
+        schedule_df = pd.read_csv(schedule_path)
+        schedule_df["Date"] = pd.to_datetime(schedule_df["Date"])
+        return schedule_df
+    except Exception as e:
+        print(f"Error loading schedule: {e}")
+        raise HTTPException(status_code=500, detail=f"Error loading schedule: {str(e)}")
+
+def PEAR_Win_Prob_Baseball(home_pr, away_pr, location="Neutral"):
+    """Baseball-specific win probability calculation"""
+    if location != "Neutral":
+        home_pr += 0.3
+    rating_diff = home_pr - away_pr
+    return round(1 / (1 + 10 ** (-rating_diff / 6)) * 100, 2)
+
+def get_total_record(row):
+    """Calculate total win-loss record from quad records"""
+    wins = sum(int(str(row[col]).split("-")[0]) for col in ["Q1", "Q2", "Q3", "Q4"])
+    losses = sum(int(str(row[col]).split("-")[1]) for col in ["Q1", "Q2", "Q3", "Q4"])
+    return f"{wins}-{losses}"
+
+def get_location_records(team, schedule_df):
+    """Get home, away, and neutral records for a team"""
+    df = schedule_df[
+        ((schedule_df['home_team'] == team) | (schedule_df['away_team'] == team)) &
+        (schedule_df['Result'].str.startswith(('W', 'L')))
+    ].copy()
+    
+    def get_loc(row):
+        if row['Location'] == 'Neutral':
+            return 'Neutral'
+        elif row['home_team'] == team:
+            return 'Home'
+        else:
+            return 'Away'
+    
+    df['loc'] = df.apply(get_loc, axis=1)
+    df['is_win'] = df['Result'].str.startswith('W')
+    
+    records = {}
+    for loc in ['Home', 'Away', 'Neutral']:
+        group = df[df['loc'] == loc]
+        wins = group['is_win'].sum()
+        losses = len(group) - wins
+        records[loc] = f"{int(wins)}-{int(losses)}"
+    
+    return records
+
+def get_conference_record(team, schedule_df, stats_and_metrics):
+    """Calculate conference record for a team"""
+    team_to_conf = stats_and_metrics.set_index('Team')['Conference'].to_dict()
+    team_conf = team_to_conf.get(team)
+    schedule_df['home_conf'] = schedule_df['home_team'].map(team_to_conf)
+    schedule_df['away_conf'] = schedule_df['away_team'].map(team_to_conf)
+    schedule_df["matchup"] = schedule_df["home_team"] + " vs " + schedule_df["away_team"]
+    matchup = schedule_df["matchup"].values
+    home_conf = schedule_df["home_conf"].values
+    away_conf = schedule_df["away_conf"].values
+    
+    match0 = matchup[:-2]
+    match1 = matchup[1:-1]
+    match2 = matchup[2:]
+    conf_check_0 = home_conf[:-2] == away_conf[:-2]
+    conf_check_1 = home_conf[1:-1] == away_conf[1:-1]
+    conf_check_2 = home_conf[2:] == away_conf[2:]
+    valid_series = (
+        (match0 == match1) & (match1 == match2) &
+        conf_check_0 & conf_check_1 & conf_check_2
+    )
+    base_indices = np.where(valid_series)[0]
+    valid_indices = np.unique(np.concatenate([base_indices, base_indices + 1, base_indices + 2]))
+    df = schedule_df.iloc[valid_indices].reset_index(drop=True)
+    
+    conf_games = df[
+        (df['home_conf'] == team_conf) &
+        (df['away_conf'] == team_conf) &
+        (df['Result'].str.startswith(('W', 'L')))
+    ]
+    wins = conf_games['Result'].str.startswith('W')
+    wins_count = int(wins.sum())
+    games_count = int(len(conf_games))
+    
+    return f"{wins_count}-{games_count - wins_count}"
+
+def get_metric_values(teams, column):
+    values = []
+    for team in teams:
+        try:
+            val = team[column].values[0]
+            values.append(int(val))
+        except:
+            values.append("N/A")
+    return values
+
+def simulate_team_win_distribution(schedule_df, comparison_date, team_name, num_simulations=1000):
+    # Ensure "Date" is datetime
+    schedule_df["Date"] = pd.to_datetime(schedule_df["Date"])
+
+    # --- Step 1: Filter to games involving the specified team ---
+    team_games = schedule_df[schedule_df['Team'] == team_name].reset_index(drop=True).copy()
+
+    # --- Step 2: Split into completed and remaining games ---
+    completed_games = team_games[
+        (team_games["Date"] <= comparison_date) & (team_games["home_score"].notnull()) & (team_games["away_score"].notnull())
+    ].copy()
+
+    remaining_games = team_games[
+        (team_games["Date"] >= comparison_date) & (team_games["home_win_prob"].notnull() & (team_games['home_score'] == team_games['away_score']))
+    ].copy()
+
+    # --- Step 3: Calculate current win total ---
+    completed_games["winner"] = np.where(
+        completed_games["home_score"] > completed_games["away_score"],
+        completed_games["home_team"],
+        completed_games["away_team"]
+    )
+    current_wins = (completed_games["winner"] == team_name).sum()
+
+    # --- Step 4: Simulate outcomes of remaining games ---
+    home_teams = remaining_games["home_team"].values
+    away_teams = remaining_games["away_team"].values
+    home_win_probs = remaining_games["home_win_prob"].values
+
+    simulations = []
+    for _ in range(num_simulations):
+        random_vals = np.random.rand(len(remaining_games))
+        home_wins = random_vals < home_win_probs
+        winners = np.where(home_wins, home_teams, away_teams)
+
+        sim_wins = (winners == team_name).sum()
+        total_wins = current_wins + sim_wins
+        simulations.append(total_wins)
+
+    simulations = np.array(simulations)
+
+    # Output: Series with counts of each win total
+    win_distribution = pd.Series(simulations).value_counts().sort_index()
+
+    return win_distribution
+
+@app.post("/api/softball/team-profile")
+def softball_team_profile(request: SoftballTeamProfileRequest):
+    """Generate team profile visualization"""
+    logo_img = None  # Initialize outside try block
+    try:
+        stats_and_metrics, comparison_date = load_softball_data()
+        schedule_df = load_softball_schedule_data()
+        team_name = request.team_name
+        
+        BASE_URL = "https://www.warrennolan.com"
+        completed_schedule = schedule_df[
+            (schedule_df["Date"] <= comparison_date) & (schedule_df["home_score"] != schedule_df["away_score"])
+        ].reset_index(drop=True)
+        team_schedule = schedule_df[schedule_df['Team'] == team_name].reset_index(drop=True)
+        team_data = stats_and_metrics[stats_and_metrics['Team'] == team_name]
+        team_net = team_data['NET'].values[0]
+        team_conference = team_data['Conference'].values[0]
+        team_record = get_total_record(team_data.iloc[0])
+        Conf_Record = get_conference_record(team_name, team_schedule, stats_and_metrics)
+        team_Q1 = team_data['Q1'].values[0]
+        team_Q2 = team_data['Q2'].values[0]
+        team_Q3 = team_data['Q3'].values[0]
+        team_Q4 = team_data['Q4'].values[0]
+        team_rpi = team_data['RPI'].values[0]
+        team_elo = int(team_data['ELO_Rank'].values[0])
+        team_rqi = team_data['RQI'].values[0]
+        team_tsr = team_data['PRR'].values[0]
+        team_sos = team_data['SOS'].values[0]
+        record = get_location_records(team_name, team_schedule)
+        home_record = record['Home']
+        away_record = record['Away']
+        neutral_record = record['Neutral']
+        
+        fig, ax = plt.subplots(figsize=(8, 10), dpi=500)
+        fig.patch.set_facecolor('#CECEB2')
+        ax.set_facecolor('#CECEB2')
+
+        # percentile sliders code
+        percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
+        team_data = team_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
+        cmap = plt.get_cmap('seismic')
+        colors = [cmap(p / 100) for p in team_data['Percentile']]
+        def darken_color(color, factor=0.3):
+            color = mcolors.hex2color(color)
+            darkened_color = [max(c - factor, 0) for c in color]
+            return mcolors.rgb2hex(darkened_color)
+        darkened_colors = [darken_color(c) for c in colors]
+        ax.barh(team_data['Metric'], 99, color='gray', height=0.1, left=0)
+        bars = ax.barh(team_data['Metric'], team_data['Percentile'], color=colors, height=0.6, edgecolor=darkened_colors, linewidth=3)
+        i = 0
+        for idx, (bar, percentile) in enumerate(zip(bars, team_data['Percentile'])):
+            text = ax.text(bar.get_width(), bar.get_y() + bar.get_height()/2, 
+                        str(percentile), ha='center', va='center', 
+                        fontsize=16, fontweight='bold', color='white', zorder=2,
+                        bbox=dict(facecolor=colors[i], edgecolor=darkened_colors[i], boxstyle='circle,pad=0.4', linewidth=3))
+            text.set_path_effects([
+                pe.withStroke(linewidth=2, foreground='black')
+            ])
+            if idx == 4 or idx == 8:
+                y_position = bar.get_y() + bar.get_height() + 0.185
+                ax.hlines(y_position, 0, 99,
+                        colors='black', linestyles='dashed', linewidth=2, zorder=1)
+                    
+            i = i + 1
+        ax.set_xlim(0, 102)
+        ax.set_xticks([])
+        custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'fWAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
+        ax.set_yticks(range(len(custom_labels)))
+        ax.set_yticklabels(custom_labels, fontweight='bold', fontsize=16)
+        ax.tick_params(axis='y', which='both', length=0, pad=14)
+        ax.invert_yaxis()
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+
+        # team logo - must stay above all text calls
+        logo_folder = os.path.join(SOFTBALL_BASE_PATH, "logos")
+        logo_path = os.path.join(logo_folder, f"{team_name}.png")
+        logo_img = Image.open(logo_path).convert("RGBA")
+        ax_img1 = fig.add_axes([0.04, 0.85, 0.2, 0.2])
+        ax_img1.imshow(logo_img)
+        ax_img1.axis("off")
+
+        ### PLOT TITLE
+        plt.text(0.18, 1.16, f'#{team_net} {team_name}', fontsize=34, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
+        plt.text(0.18, 1.11, f"{team_record} ({Conf_Record})", fontsize=24, ha='left', va='center', transform=ax.transAxes)
+        plt.text(0.18, 1.06, f'@PEARatings', fontsize=24, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
+        plt.text(0.18, 1.01, f'Team Profile', fontsize=24, ha='left', va='center', transform=ax.transAxes)
+
+        ### TEAM SCHEDULE
+        def get_opponent_net(row, team):
+            if row['home_team'] == team:
+                return row['away_net']
+            elif row['away_team'] == team:
+                return row['home_net']
+            else:
+                return np.nan
+
+        team_schedule['opponent_net'] = team_schedule.apply(lambda row: get_opponent_net(row, team_name), axis=1)
+
+        conditions = [
+            ((team_schedule["Location"] == "Home") & (team_schedule["opponent_net"] <= 25)) |
+            ((team_schedule["Location"] == "Neutral") & (team_schedule["opponent_net"] <= 40)) |
+            ((team_schedule["Location"] == "Away") & (team_schedule["home_net"] <= 60)),
+
+            ((team_schedule["Location"] == "Home") & (team_schedule["opponent_net"] <= 50)) |
+            ((team_schedule["Location"] == "Neutral") & (team_schedule["opponent_net"] <= 80)) |
+            ((team_schedule["Location"] == "Away") & (team_schedule["opponent_net"] <= 120)),
+
+            ((team_schedule["Location"] == "Home") & (team_schedule["opponent_net"] <= 100)) |
+            ((team_schedule["Location"] == "Neutral") & (team_schedule["opponent_net"] <= 160)) |
+            ((team_schedule["Location"] == "Away") & (team_schedule["opponent_net"] <= 240))
+        ]
+
+        # Define corresponding quadrant labels
+        quadrants = ["Q1", "Q2", "Q3"]
+
+        # Assign Quadrant values
+        team_schedule["Quad"] = np.select(conditions, quadrants, default="Q4")
+        num_items = len(team_schedule)
+        schedule_x = 0.9
+        schedule_y = 0.95
+        schedule_size = 15
+        counter = 0
+        columns = 0
+        best_rq_row = None
+        worst_rq_row = None
+        max_rq = float('-inf')
+        min_rq = float('inf')
+        for idx, (_, row) in enumerate(team_schedule.iterrows()):
+            if row['resume_quality'] > max_rq and row['Result'].startswith("W"):
+                max_rq = row['resume_quality']
+                best_rq_row = row
+            if row['resume_quality'] < min_rq and row['Result'].startswith("L"):
+                min_rq = row['resume_quality']
+                worst_rq_row = row
+            if counter % 15 == 0:
+                schedule_x +=0.35
+                schedule_y = 0.95
+                columns += 1
+            if row['home_team'] == team_name:
+                opponent = row['away_team']
+                net = row['away_net']
+                win_prob = row['home_win_prob']
+                symbol = ""
+            else:
+                opponent = row['home_team']
+                net = row['home_net']
+                win_prob = 1 - row['home_win_prob']
+                symbol = "@"
+            if row['Location'] == "Neutral":
+                symbol = "vs"
+            if "Non Div I" in opponent:
+                opponent = "Non Div I"
+            if pd.notna(net):
+                net = int(net)
+            if row['resume_quality'] < 0:
+                color = '#8B0000' #red
+            else:
+                color = '#2C5E00' #green
+            # # ax.text(0.5, 0.8, opponent, ha='center', va='center', fontsize=40, fontweight='bold', color=color)
+            # # ax.text(0.1, 0.3, f'#{net}', ha='left', va='center', fontsize=32)
+            # # ax.text(0.5, 0.5, row['Quad'], ha='right', va='center', fontsize=32, fontweight='bold')
+            result_first_letter = row['Result'][0].upper() if row['Result'][0].upper() in ['W', 'L'] else ''
+
+            if result_first_letter:
+                if (row['home_team'] == team_name) & (row['Location'] == "Home"):
+                    plt.text(schedule_x, schedule_y, f'{opponent}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color=color, transform=ax.transAxes)
+                else:
+                    plt.text(schedule_x, schedule_y, f'{symbol} {opponent}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color=color, transform=ax.transAxes)
+                ax.text(schedule_x, schedule_y-0.026, f'{row["Quad"]} | {round(win_prob*100)}% | {row["resume_quality"]:.2f}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color=color, transform=ax.transAxes)
+            else:
+                if (row['home_team'] == team_name) & (row['Location'] == "Home"):
+                    ax.text(schedule_x, schedule_y, f'{opponent}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color='#555555', transform=ax.transAxes)
+                else:
+                    ax.text(schedule_x, schedule_y, f'{symbol} {opponent}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color='#555555', transform=ax.transAxes)
+                ax.text(schedule_x, schedule_y-0.026, f'{row["Quad"]} | {round(win_prob*100)}% | {1 - abs(row["resume_quality"]):.2f}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color='#555555', transform=ax.transAxes)
+            schedule_y = schedule_y - 0.062
+            counter += 1
+
+        ### TOP TEXT
+
+        team_completed = completed_schedule[completed_schedule['Team'] == team_name].reset_index(drop=True)
+        num_rows = len(team_completed)
+        last_n_games = team_completed['Result'].iloc[-10 if num_rows >= 10 else -num_rows:]
+        wins = last_n_games.str.count('W').sum()
+        losses = (10 if num_rows >= 10 else num_rows) - wins
+        last_ten = f'{wins}-{losses}'
+        team_completed['is_home'] = team_completed['home_team'] == team_name
+        team_completed['runs_scored'] = team_completed.apply(
+            lambda row: row['home_score'] if row['is_home'] else row['away_score'], axis=1
+        )
+        team_completed['runs_allowed'] = team_completed.apply(
+            lambda row: row['away_score'] if row['is_home'] else row['home_score'], axis=1
+        )
+        run_diff = team_completed['runs_scored'].sub(team_completed['runs_allowed']).mean()
+
+        if columns == 4:
+            plt.text(1.20, 0.00, f"Best: {best_rq_row['Quad']} {best_rq_row['Opponent']} {best_rq_row['resume_quality']:.2f}", ha='left', va='center', fontsize=15, fontweight='bold', color='#2C5E00', transform=ax.transAxes)
+            plt.text(2.35, 0.00, f"Worst: {worst_rq_row['Quad']} {worst_rq_row['Opponent']} {worst_rq_row['resume_quality']:.2f}", ha='right', va='center', fontsize=15, fontweight='bold', color='#8B0000', transform=ax.transAxes)
+            plt.text(1.25, 1.16, f"RPI: {team_rpi}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.60, 1.16, f"ELO: {team_elo}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.95, 1.16, f"RQI: {team_rqi}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.30, 1.16, f"TSR: {team_tsr}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.25, 1.11, f"H: {home_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.60, 1.11, f"A: {away_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.95, 1.11, f"N: {neutral_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.30, 1.11, f"SOS: {team_sos}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.25, 1.06, f"Q1: {team_Q1}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.60, 1.06, f"Q2: {team_Q2}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.95, 1.06, f"Q3: {team_Q3}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.30, 1.06, f"Q4: {team_Q4}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.25, 1.01, f"L10: {last_ten}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.30, 1.01, f"MOV: {run_diff:.1f}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.775, 1.005, "Quad | Win Prob | Resume Points", fontsize=16, ha='center', va='center', transform=ax.transAxes)
+        elif columns == 5:
+            plt.text(1.20, 0.00, f"Best: {best_rq_row['Quad']} {best_rq_row['Opponent']} {best_rq_row['resume_quality']:.2f}", ha='left', va='center', fontsize=15, fontweight='bold', color='#2C5E00', transform=ax.transAxes)
+            plt.text(2.70, 0.00, f"Worst: {worst_rq_row['Quad']} {worst_rq_row['Opponent']} {worst_rq_row['resume_quality']:.2f}", ha='right', va='center', fontsize=15, fontweight='bold', color='#8B0000', transform=ax.transAxes)
+            plt.text(1.425, 1.16, f"RPI: {team_rpi}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.775, 1.16, f"ELO: {team_elo}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.125, 1.16, f"RQI: {team_rqi}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.475, 1.16, f"TSR: {team_tsr}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.425, 1.11, f"H: {home_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.775, 1.11, f"A: {away_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.125, 1.11, f"N: {neutral_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.475, 1.11, f"SOS: {team_sos}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.425, 1.06, f"Q1: {team_Q1}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.775, 1.06, f"Q2: {team_Q2}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.125, 1.06, f"Q3: {team_Q3}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.475, 1.06, f"Q4: {team_Q4}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.425, 1.01, f"L10: {last_ten}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.475, 1.01, f"MOV: {run_diff:.1f}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.95, 1.005, "Quad | Win Prob | Resume Points", fontsize=16, ha='center', va='center', transform=ax.transAxes)
+
+
+        automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
+        at_large = stats_and_metrics.drop(automatic_qualifiers.index)
+        at_large = at_large.nsmallest(34, "NET")
+        last_four_in = at_large[-8:].reset_index()
+        next_4_teams = stats_and_metrics.drop(automatic_qualifiers.index).nsmallest(38, "NET").iloc[34:].reset_index(drop=True)
+        projected = ""
+        if team_net <= 16:
+            projected = "Host"
+        elif team_name in last_four_in['Team'].values:
+            projected = "Last Four In"
+        elif team_name in at_large['Team'].values:
+            projected = "At-Large"
+        elif team_name in automatic_qualifiers['Team'].values:
+            projected = "Autobid"
+        elif team_name in next_4_teams['Team'].values:
+            projected = "First Four Out"
+        else:
+            projected = "Miss"
+        if columns == 4:
+            plt.text(0.82, 1.06, f"Projection:", fontsize=24, fontweight='bold', ha='center', va='center', transform=ax.transAxes)
+            plt.text(0.82, 1.01, f"{projected}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+        elif columns == 5:
+            plt.text(0.92, 1.06, f"Projection:", fontsize=24, fontweight='bold', ha='center', va='center', transform=ax.transAxes)
+            plt.text(0.92, 1.01, f"{projected}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
+
+        # ### PREVIOUS YEARS DATA
+        # data_2022 = pd.read_csv(f"{BASEBALL_BASE_PATH}/y2022/Data/baseball_06_26_2022.csv")
+        # team_2022 = data_2022[data_2022['Team'] == team_name]
+        # data_2023 = pd.read_csv(f"{BASEBALL_BASE_PATH}/y2023/Data/baseball_06_26_2023.csv")
+        # team_2023 = data_2023[data_2023['Team'] == team_name]
+        # data_2024 = pd.read_csv(f"{BASEBALL_BASE_PATH}/y2024/Data/baseball_06_25_2024.csv")
+        # team_2024 = data_2024[data_2024['Team'] == team_name]
+        # # Column labels
+        # plt.text(-0.11, -0.06, "2024", fontsize=20, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
+        # plt.text(-0.11, -0.12, "2023", fontsize=20, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
+        # plt.text(-0.11, -0.18, "2022", fontsize=20, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
+
+        # def draw_metric_column(x, label, values, y_start=0.00, y_step=-0.06):
+        #     plt.text(x, y_start, label, fontsize=20, fontweight='bold', ha='center', va='center', transform=ax.transAxes)
+
+        #     # Find the lowest numeric value
+        #     numeric_values = [(i, v) for i, v in enumerate(values) if isinstance(v, (int, float, float))]
+        #     bold_index = min(numeric_values, key=lambda t: t[1])[0] if numeric_values else -1
+
+        #     for i, val in enumerate(values):
+        #         y = y_start + y_step * (i + 1)
+        #         if val == "N/A":
+        #             display_val = "N/A"
+        #         else:
+        #             display_val = f"{int(val)}"
+        #         fontweight = 'bold' if i == bold_index else 'normal'
+        #         color = '#9932CC' if i == bold_index else 'black'
+        #         plt.text(x, y, display_val, fontsize=20, fontweight=fontweight, ha='center', va='center', color=color, transform=ax.transAxes)
+
+        # teams = [team_2024, team_2023, team_2022]
+        # draw_metric_column(0.1, "NET", get_metric_values(teams, "NET"))
+        # draw_metric_column(0.3, "RPI", get_metric_values(teams, "RPI"))
+        # draw_metric_column(0.5, "ELO", get_metric_values(teams, "ELO_Rank"))
+        # draw_metric_column(0.7, "RQI", get_metric_values(teams, "RQI"))
+        # draw_metric_column(0.9, "TSR", get_metric_values(teams, "PRR"))
+
+        ### PROJECTED WINS
+        projected_wins = simulate_team_win_distribution(schedule_df, comparison_date, team_name)
+        peak = projected_wins.idxmax()
+        start = max(0, peak - 4)
+        end = peak + 5
+        while (end - start + 1) < 10:
+            end += 1
+        full_range = range(start, end + 1)
+        filled_distribution = projected_wins.reindex(full_range, fill_value=0)
+
+        stat_rankings = stats_and_metrics.copy()
+        higher = ["TB", "SLG", "KP9", "BB", "RS", "H", "BA", "PCT", "HBP", "OBP", "OPS", 
+                "PYTHAG", "wOBA", "wRAA", "ISO", "BB%", "LOB%", "K/BB"]
+        lower = ["WP9", "ERA", "E", "RA9", "FIP", "WHIP"]
+        all_ranked_stats = higher + lower
+        stat_rankings[higher] = stat_rankings[higher].rank(ascending=False, method="min")
+        stat_rankings[lower] = stat_rankings[lower].rank(ascending=True, method="min")
+        team_stats = stat_rankings[stat_rankings['Team'] == team_name].squeeze()
+        team_stats = team_stats[all_ranked_stats]
+        team_stats = pd.to_numeric(team_stats, errors='coerce')
+        best_stats = team_stats.nsmallest(3)
+        worst_stats = team_stats.nlargest(3)
+        plt.text(1.4,-0.06, "Best Stats", fontsize=20, ha='center', va='center', fontweight='bold', transform=ax.transAxes)
+        plt.text(1.2,-0.12, f'{best_stats.index[0]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+        plt.text(1.2,-0.18, f'{int(best_stats.values[0])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+        plt.text(1.4,-0.12, f'{best_stats.index[1]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+        plt.text(1.4,-0.18, f'{int(best_stats.values[1])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+        plt.text(1.6,-0.12, f'{best_stats.index[2]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+        plt.text(1.6,-0.18, f'{int(best_stats.values[2])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+        if columns == 4:
+            plt.text(2.1,-0.06, "Worst Stats", fontsize=20, ha='center', va='center', fontweight='bold', transform=ax.transAxes)
+            plt.text(1.9,-0.12, f'{worst_stats.index[2]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(1.9,-0.18, f'{int(worst_stats.values[2])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.1,-0.12, f'{worst_stats.index[1]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.1,-0.18, f'{int(worst_stats.values[1])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.3,-0.12, f'{worst_stats.index[0]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.3,-0.18, f'{int(worst_stats.values[0])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+        elif columns == 5:
+            plt.text(2.5,-0.06, "Worst Stats", fontsize=20, ha='center', va='center', fontweight='bold', transform=ax.transAxes)
+            plt.text(2.3,-0.12, f'{worst_stats.index[2]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.3,-0.18, f'{int(worst_stats.values[2])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.5,-0.12, f'{worst_stats.index[1]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.5,-0.18, f'{int(worst_stats.values[1])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.7,-0.12, f'{worst_stats.index[0]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+            plt.text(2.7,-0.18, f'{int(worst_stats.values[0])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+
+        plt.tight_layout()
+            
+        # Save to BytesIO and get data before cleanup
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
+        buf.seek(0)
+        
+        # Get image data before closing
+        image_data = buf.getvalue()
+        
+        # Aggressive cleanup
+        plt.close(fig)
+        fig.clf()
+        del fig
+        del buf
+        gc.collect()
+        
+        return Response(content=image_data, media_type="image/png")
+        
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error generating team profile: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+    finally:
+        # Always close the logo image
+        if logo_img is not None:
+            logo_img.close()
+            del logo_img
+        gc.collect()
+
+@app.get("/api/softball/teams")
+def get_softball_teams():
+    """Get list of all teams"""
+    try:
+        modeling_stats, _ = load_softball_data()
+        teams = sorted(modeling_stats['Team'].unique().tolist())
+        return {"teams": teams}
+    except Exception as e:
+        print(f"Error getting teams: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+    
+@app.get("/api/softball/conferences")
+def get_softball_conferences():
+    """Get list of all conferences"""
+    try:
+        modeling_stats, _ = load_softball_data()
+        conferences = sorted(modeling_stats['Conference'].unique().tolist())
+        return {"conferences": conferences}
+    except Exception as e:
+        print(f"Error getting conferences: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

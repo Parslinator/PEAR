@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { DollarSign, Moon, Sun, Menu, X } from 'lucide-react';
+import { DollarSign, Moon, Sun, Menu, X, ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import { useTheme } from '../app/contexts/ThemeContext';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -14,22 +14,52 @@ export default function Navbar() {
   const router = useRouter();
   const { darkMode, toggleDarkMode } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sportDropdownOpen, setSportDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Determine current sport from pathname
   const isCBASE = pathname.startsWith('/cbase');
+  const isCSOFT = pathname.startsWith('/csoft');
 
-  const toggleSport = () => {
-    if (isCBASE) {
-      router.push('/');
-    } else {
-      router.push('/cbase');
+  const getCurrentSport = () => {
+    if (isCBASE) return 'Baseball';
+    if (isCSOFT) return 'Softball';
+    return 'Football';
+  };
+
+  const navigateToSport = (sport: string) => {
+    switch (sport) {
+      case 'Football':
+        router.push('/');
+        break;
+      case 'Baseball':
+        router.push('/cbase');
+        break;
+      case 'Softball':
+        router.push('/csoft');
+        break;
     }
+    setSportDropdownOpen(false);
     setMobileMenuOpen(false);
   };
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setSportDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Navigation items for each sport
   const footballNavItems = [
@@ -49,7 +79,40 @@ export default function Navbar() {
     { name: 'Profiles', path: '/cbase/profiles' },
   ];
 
-  const navItems = isCBASE ? baseballNavItems : footballNavItems;
+  const softballNavItems = [
+    { name: 'Ratings', path: '/csoft' },
+    { name: 'Stats', path: '/csoft/stats' },
+    { name: 'Games', path: '/csoft/games' },
+    { name: 'Matchups', path: '/csoft/matchups' },
+  ];
+
+  const getNavItems = () => {
+    if (isCBASE) return baseballNavItems;
+    if (isCSOFT) return softballNavItems;
+    return footballNavItems;
+  };
+
+  const getBrandName = () => {
+    if (isCBASE) return 'CBASE PEAR';
+    if (isCSOFT) return 'CSOFT PEAR';
+    return 'CFB PEAR';
+  };
+
+  const getBrandDescription = () => {
+    if (isCBASE) return 'College Baseball Analytics';
+    if (isCSOFT) return 'College Softball Analytics';
+    return 'College Football Analytics';
+  };
+
+  const getHomePath = () => {
+    if (isCBASE) return '/cbase';
+    if (isCSOFT) return '/csoft';
+    return '/';
+  };
+
+  const navItems = getNavItems();
+  const sports = ['Football', 'Baseball', 'Softball'];
+  const currentSport = getCurrentSport();
 
   return (
     <nav className="text-gray-900 shadow-lg fixed top-0 left-0 right-0 z-50 bg-[#CECEB2]">
@@ -58,7 +121,7 @@ export default function Navbar() {
           {/* Logo/Brand with Sport Switcher */}
           <div className="flex items-center space-x-4">
             <Link 
-              href={isCBASE ? '/cbase' : '/'} 
+              href={getHomePath()} 
               className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
             >
               <Image 
@@ -71,21 +134,41 @@ export default function Navbar() {
               />
               <div>
                 <div className="text-xl font-bold text-gray-900">
-                  {isCBASE ? 'CBASE PEAR' : 'CFB PEAR'}
+                  {getBrandName()}
                 </div>
                 <div className="text-xs text-gray-700">
-                  {isCBASE ? 'College Baseball Analytics' : 'College Football Analytics'}
+                  {getBrandDescription()}
                 </div>
               </div>
             </Link>
 
-            {/* Sport Switcher Toggle Button */}
-            <button
-              onClick={toggleSport}
-              className="px-4 py-2 rounded-lg transition-colors text-white font-semibold bg-[#fc8884] hover:bg-[#f5645f]"
-            >
-              {isCBASE ? 'Baseball' : 'Football'}
-            </button>
+            {/* Sport Switcher Dropdown Button - Desktop */}
+            <div className="hidden md:block relative" ref={dropdownRef}>
+              <button
+                onClick={() => setSportDropdownOpen(!sportDropdownOpen)}
+                className="px-4 py-2 rounded-lg transition-colors text-white font-semibold bg-[#fc8884] hover:bg-[#f5645f] flex items-center space-x-2"
+              >
+                <span>{currentSport}</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${sportDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {/* Dropdown Menu */}
+              {sportDropdownOpen && (
+                <div className="absolute top-full mt-1 left-0 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[150px]">
+                  {sports.map((sport) => (
+                    <button
+                      key={sport}
+                      onClick={() => navigateToSport(sport)}
+                      className={`w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors ${
+                        sport === currentSport ? 'bg-gray-50 font-semibold text-[#fc8884]' : 'text-gray-700'
+                      }`}
+                    >
+                      {sport}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Navigation Links */}
@@ -167,12 +250,24 @@ export default function Navbar() {
               })}
               
               {/* Sport Switcher - Mobile */}
-              <button
-                onClick={toggleSport}
-                className="flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-semibold transition-colors text-white bg-[#fc8884] hover:bg-[#f5645f]"
-              >
-                <span>{isCBASE ? 'Switch to Football' : 'Switch to Baseball'}</span>
-              </button>
+              <div className="border-t border-gray-300 pt-2 mt-2">
+                <div className="px-4 py-2 text-xs font-semibold text-gray-600 uppercase">
+                  Switch Sport
+                </div>
+                {sports.map((sport) => (
+                  <button
+                    key={sport}
+                    onClick={() => navigateToSport(sport)}
+                    className={`w-full text-left px-4 py-2 rounded-lg font-semibold transition-colors ${
+                      sport === currentSport
+                        ? 'bg-[#fc8884] text-white'
+                        : 'text-gray-700 hover:bg-gray-600 hover:text-white'
+                    }`}
+                  >
+                    {sport}
+                  </button>
+                ))}
+              </div>
               
               {/* Dark Mode Toggle - Mobile */}
               <button

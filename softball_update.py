@@ -221,6 +221,147 @@ team_replacements = {
     'Northern Iowa': 'UNI'
 }
 
+BASE_URL = "https://www.warrennolan.com"
+
+session = requests.Session()
+session.headers.update({"User-Agent": "Mozilla/5.0"})
+
+def extract_schedule_data(team_name, team_url, session):
+    schedule_url = BASE_URL + team_url
+    team_schedule = []
+
+    try:
+        response = session.get(schedule_url, timeout=10)
+        response.raise_for_status()
+    except Exception as e:
+        print(f"[Error] {team_name} → {e}")
+        return []
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+    schedule_lists = soup.find_all("ul", class_="team-schedule")
+    if not schedule_lists:
+        return []
+
+    schedule_list = schedule_lists[0]
+
+    for game in schedule_list.find_all('li', class_='team-schedule'):
+        try:
+            # Date
+            month = game.find('span', class_='team-schedule__game-date--month')
+            day = game.find('span', class_='team-schedule__game-date--day')
+            dow = game.find('span', class_='team-schedule__game-date--dow')
+            game_date = f"{month.get_text(strip=True)} {day.get_text(strip=True)} ({dow.get_text(strip=True)})"
+
+            # Opponent
+            opponent_link = game.select_one('.team-schedule__opp-line-link')
+            opponent_name = opponent_link.get_text(strip=True) if opponent_link else ""
+
+            # Location
+            location_div = game.find('div', class_='team-schedule__location')
+            location_text = location_div.get_text(strip=True) if location_div else ""
+            if "VS" in location_text:
+                game_location = "Neutral"
+            elif "AT" in location_text:
+                game_location = "Away"
+            else:
+                game_location = "Home"
+
+            # Result
+            result_info = game.find('div', class_='team-schedule__result')
+            result_text = result_info.get_text(strip=True) if result_info else "N/A"
+
+            # Box score
+            box_score_table = game.find('table', class_='team-schedule-bottom__box-score')
+            home_team = away_team = home_score = away_score = "N/A"
+
+            if box_score_table:
+                rows = box_score_table.find_all('tr')
+                if len(rows) > 2:
+                    away_row = rows[1].find_all('td')
+                    home_row = rows[2].find_all('td')
+                    away_team = away_row[0].get_text(strip=True)
+                    home_team = home_row[0].get_text(strip=True)
+                    away_score = away_row[-3].get_text(strip=True)
+                    home_score = home_row[-3].get_text(strip=True)
+
+            team_schedule.append([
+                team_name, game_date, opponent_name, game_location,
+                result_text, home_team, away_team, home_score, away_score
+            ])
+        except Exception as e:
+            print(f"[Parse Error] {team_name} game row → {e}")
+            continue
+
+    return team_schedule
+
+# ThreadPool wrapper function
+def fetch_all_schedules(elo_df, session, max_workers=12):
+    schedule_data = []
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {
+            executor.submit(extract_schedule_data, row["Team"], row["Team Link"], session): row["Team"]
+            for _, row in elo_df.iterrows()
+        }
+
+        for future in as_completed(futures):
+            try:
+                data = future.result()
+                schedule_data.extend(data)
+            except Exception as e:
+                print(f"[Thread Error] {e}")
+
+    return schedule_data
+
+schedule_data = fetch_all_schedules(elo_data, session, max_workers=12)
+
+columns = ["Team", "Date", "Opponent", "Location", "Result", "home_team", "away_team", "home_score", "away_score"]
+schedule_df = pd.DataFrame(schedule_data, columns=columns)
+schedule_df = schedule_df.astype({col: 'str' for col in schedule_df.columns if col not in ['home_score', 'away_score']})
+schedule_df['home_score'] = schedule_df['home_score'].astype(int, errors='ignore')
+schedule_df['away_score'] = schedule_df['away_score'].astype(int, errors='ignore')
+schedule_df = schedule_df.merge(elo_data[['Team', 'ELO']], left_on='home_team', right_on='Team', how='left')
+schedule_df.rename(columns={'ELO': 'home_elo'}, inplace=True)
+schedule_df = schedule_df.merge(elo_data[['Team', 'ELO']], left_on='away_team', right_on='Team', how='left')
+schedule_df.rename(columns={'ELO': 'away_elo'}, inplace=True)
+schedule_df.drop(columns=['Team', 'Team_y'], inplace=True)
+schedule_df.rename(columns={'Team_x':'Team'}, inplace=True)
+schedule_df = schedule_df[~(schedule_df['Result'] == 'Canceled')].reset_index(drop=True)
+schedule_df = schedule_df[~(schedule_df['Result'] == 'Postponed')].reset_index(drop=True)
+
+# Apply replacements and standardize 'State' to 'St.'
+columns_to_replace = ['Team', 'home_team', 'away_team', 'Opponent']
+
+for col in columns_to_replace:
+    schedule_df[col] = schedule_df[col].str.replace('State', 'St.', regex=False)
+    schedule_df[col] = schedule_df[col].replace(team_replacements)
+
+month_mapping = {
+    "JAN": "01", "FEB": "02", "MAR": "03", "APR": "04",
+    "MAY": "05", "JUN": "06", "JUL": "07", "AUG": "08",
+    "SEP": "09", "OCT": "10", "NOV": "11", "DEC": "12"
+}
+
+current_season = 2025  # Set the current season
+
+# Function to convert "FEB 14 (FRI)" format to "mm-dd-yyyy"
+def convert_date(date_str):
+    # Ensure date is a string before splitting
+    if isinstance(date_str, pd.Timestamp):
+        date_str = date_str.strftime("%b %d (%a)").upper()  # Convert to same format
+    
+    parts = date_str.split()  # ["FEB", "14", "(FRI)"]
+    month = month_mapping[parts[0].upper()]  # Convert month to number
+    day = parts[1]  # Extract day
+    return f"{month}-{day}-{current_season}"
+
+# Apply function to convert date format
+schedule_df["Date"] = schedule_df["Date"].astype(str).apply(convert_date)
+schedule_df["Date"] = pd.to_datetime(schedule_df["Date"], format="%m-%d-%Y")
+comparison_date = pd.to_datetime(formatted_date, format="%m_%d_%Y")
+
+print("Schedule Load Done")
+
 # Apply team name cleanup
 elo_data = clean_team_names(elo_data)
 projected_rpi = clean_team_names(projected_rpi)
@@ -468,6 +609,1386 @@ wOBA['pWAR_z'] = (wOBA['pWAR'] - mean_pWAR) / std_pWAR
 wOBA['fWAR'] = wOBA['oWAR_z'] + wOBA['pWAR_z']
 softball_stats = pd.merge(softball_stats, wOBA[['Team', 'wOBA', 'wRAA', 'oWAR_z', 'pWAR_z', 'fWAR', 'ISO', 'wRC+', 'BB%', 'BABIP', 'RA9', 'FIP', 'LOB%', 'K/BB']], how='left', on='Team')
 
+"""
+College Softball Power Ratings System with Home Field Advantage Optimization
+
+This system combines multiple approaches to create robust team ratings:
+1. Feature Selection: Automatically selects best subset of features for each target
+2. ML Models: Trains XGBoost/GradientBoosting models on selected features
+3. Margin Model: Learns from game results to predict score margins
+4. Ensemble: Optimally blends target-based and margin-based ratings
+5. HFA Optimization: Searches for optimal home field advantage parameter
+
+Key Features:
+- Handles rank-based targets (like ELO_Rank where lower is better)
+- Can optimize for multiple targets simultaneously
+- Margin model can receive 0 weight if it doesn't improve target correlation
+- Automatic feature selection using differential evolution
+- Flexible scale based on standard deviation (not fixed range)
+- Home field advantage as tunable hyperparameter
+
+Rating Scale:
+- Uses standard deviation-based scaling instead of fixed range
+- Default: scale=5.0 means ~68% of teams within ±5 of center
+- Allows natural expansion/compression based on team quality differences
+- More flexible than forcing all datasets into same range
+"""
+
+import numpy as np
+import pandas as pd
+from scipy.stats import spearmanr
+from scipy.optimize import differential_evolution
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import mean_absolute_error, r2_score
+import warnings
+warnings.filterwarnings('ignore')
+
+# Try to use xgboost if available
+try:
+    import xgboost as xgb
+    HAS_XGB = True
+except ImportError:
+    HAS_XGB = False
+
+class softballPowerRatingSystem:
+    """
+    Softball power rating system that optimizes for multiple targets including ELO_Rank
+    """
+    
+    def __init__(self, use_xgb=HAS_XGB, home_field_advantage=0.8, random_state=42):
+        self.use_xgb = use_xgb
+        self.hfa = home_field_advantage
+        self.random_state = random_state
+        self.scaler = StandardScaler()
+        self.models = {}
+        self.diagnostics = {}
+        
+    def _clean_round(self, values, decimals=2):
+        """Helper method to ensure clean rounding without floating point artifacts"""
+        return np.round(values.astype(float), decimals)
+    
+    def _fit_regressor(self, X, y, model_name=None):
+        """Fit regressor with cross-validation"""
+        if self.use_xgb:
+            model = xgb.XGBRegressor(
+                objective='reg:squarederror',
+                n_estimators=150,
+                max_depth=3,
+                learning_rate=0.1,
+                random_state=self.random_state,
+                verbosity=0
+            )
+        else:
+            model = GradientBoostingRegressor(
+                n_estimators=150,
+                max_depth=3,
+                learning_rate=0.1,
+                random_state=self.random_state
+            )
+        
+        model.fit(X, y)
+        
+        # Store cross-validation score
+        if model_name:
+            cv_score = np.mean(cross_val_score(model, X, y, cv=5, scoring='neg_mean_absolute_error'))
+            self.diagnostics[f'{model_name}_cv_mae'] = -cv_score
+        
+        return model
+    
+    def _prepare_game_data(self, team_data, schedule_df):
+        """Prepare game-level data efficiently"""
+        team_to_idx = {team: idx for idx, team in enumerate(team_data.index)}
+        
+        valid_games = (
+            schedule_df['home_team'].isin(team_to_idx) & 
+            schedule_df['away_team'].isin(team_to_idx)
+        )
+        
+        schedule_clean = schedule_df[valid_games].copy()
+        
+        h_idx = schedule_clean['home_team'].map(team_to_idx).values
+        a_idx = schedule_clean['away_team'].map(team_to_idx).values
+        actual_margin = schedule_clean['home_score'].values - schedule_clean['away_score'].values
+        actual_total = schedule_clean['home_score'].values + schedule_clean['away_score'].values
+        
+        # Check if neutral field column exists
+        if 'neutral' in schedule_clean.columns:
+            hfa = np.where(schedule_clean['neutral'] == False, self.hfa, 0.0)
+        else:
+            hfa = np.full(len(schedule_clean), self.hfa)
+        
+        return schedule_clean, h_idx, a_idx, actual_margin, actual_total, hfa
+    
+    def _optimize_feature_selection(self, team_data, available_features, target_columns):
+        """
+        Optimize feature selection and weights for each target using differential evolution
+        Similar to original approach but with ML models
+        """
+        best_features = {}
+        best_weights = {}
+        best_scores = {}
+        
+        for target_col in target_columns:
+            y_target = team_data[target_col].values
+            n_features = len(available_features)
+            
+            def feature_selection_objective(params):
+                # First half: binary selections, second half: continuous weights
+                feature_selection = np.array(params[:n_features])
+                weights = np.array(params[n_features:])
+                
+                # Get selected features
+                selected_mask = feature_selection > 0.5
+                selected_indices = np.where(selected_mask)[0]
+                
+                if len(selected_indices) == 0:
+                    return 1.0  # Bad score if no features selected
+                
+                # Get selected features and normalize weights
+                selected_weights = weights[selected_indices]
+                selected_weights = selected_weights / np.sum(selected_weights)
+                
+                # Compute weighted combination of selected features
+                X_selected = team_data[[available_features[i] for i in selected_indices]].values
+                combined = np.sum(X_selected * selected_weights, axis=1)
+                
+                # For rank targets, convert to ranks
+                if 'rank' in target_col.lower():
+                    combined_ranks = pd.Series(combined).rank(ascending=False)
+                    corr = spearmanr(combined_ranks, y_target).correlation
+                else:
+                    corr = spearmanr(combined, y_target).correlation
+                
+                if np.isnan(corr):
+                    corr = 0.0
+                
+                return -corr  # Minimize negative correlation
+            
+            # Optimize feature selection
+            bounds = [(0, 1)] * n_features + [(0, 1)] * n_features
+            result = differential_evolution(
+                feature_selection_objective,
+                bounds=bounds,
+                seed=self.random_state,
+                maxiter=1000,
+                polish=True,
+                strategy='best1bin'
+            )
+            
+            # Extract results
+            feature_selection = result.x[:n_features] > 0.5
+            weights = result.x[n_features:]
+            
+            selected_indices = np.where(feature_selection)[0]
+            selected_features = [available_features[i] for i in selected_indices]
+            selected_weights = weights[selected_indices]
+            selected_weights = selected_weights / np.sum(selected_weights)
+            
+            best_features[target_col] = selected_features
+            best_weights[target_col] = dict(zip(selected_features, selected_weights))
+            best_scores[target_col] = -result.fun
+            
+        return best_features, best_weights, best_scores
+    
+    def _train_rank_models(self, team_data, selected_features, target_columns):
+        """Train separate models for each target column using selected features"""
+        target_models = {}
+        target_predictions = {}
+        
+        for target_col in target_columns:
+            features_for_target = selected_features[target_col]
+            
+            if len(features_for_target) == 0:
+                # Fallback: use mean
+                target_predictions[target_col] = np.zeros(len(team_data))
+                continue
+            
+            X_team = team_data[features_for_target].values.astype(float)
+            X_team_scaled = self.scaler.fit_transform(X_team)
+            
+            y_target = team_data[target_col].values
+            
+            model = self._fit_regressor(X_team_scaled, y_target, f'target_{target_col}')
+            target_models[target_col] = model
+            predictions = model.predict(X_team_scaled)
+            
+            # CRITICAL: If this is a rank column (lower is better), invert it to a rating (higher is better)
+            if 'rank' in target_col.lower():
+                # Convert ranks to ratings: invert so lower rank = higher rating
+                # Use negative of the prediction so that rank 1 becomes the highest rating
+                target_predictions[target_col] = -predictions
+            else:
+                # For rating-based targets, use as-is
+                target_predictions[target_col] = predictions
+            
+            # Store individual correlations using the ORIGINAL target values
+            if 'rank' in target_col.lower():
+                # For ranks: compare predicted ranks vs actual ranks
+                pred_ranks = pd.Series(predictions).rank(ascending=True)  # Lower prediction = better rank
+                actual_ranks = y_target
+                corr = spearmanr(pred_ranks, actual_ranks).correlation
+            else:
+                # For ratings: direct correlation
+                corr = spearmanr(predictions, y_target).correlation
+            self.diagnostics[f'{target_col}_model_correlation'] = corr
+        
+        self.models['target_models'] = target_models
+        return target_predictions
+    
+    def _train_margin_model(self, team_data, selected_features, h_idx, a_idx, actual_margin, hfa):
+        """Train game-level margin prediction model using union of all selected features"""
+        # Use union of features selected for all targets
+        all_selected_features = set()
+        for features in selected_features.values():
+            all_selected_features.update(features)
+        
+        if len(all_selected_features) == 0:
+            # Fallback: no margin model
+            self.models['margin_model'] = None
+            return None
+        
+        margin_features = list(all_selected_features)
+        X_team = team_data[margin_features].values.astype(float)
+        X_team_scaled = self.scaler.fit_transform(X_team)
+        
+        game_features = X_team_scaled[h_idx] - X_team_scaled[a_idx]
+        X_games = np.column_stack([game_features, hfa])
+        
+        margin_model = self._fit_regressor(X_games, actual_margin, 'margin')
+        self.models['margin_model'] = margin_model
+        self.models['margin_features'] = margin_features
+        
+        # Diagnostics
+        margin_pred = margin_model.predict(X_games)
+        self.diagnostics['margin_mae'] = mean_absolute_error(actual_margin, margin_pred)
+        self.diagnostics['margin_r2'] = r2_score(actual_margin, margin_pred)
+        
+        return X_games
+    
+    def _compute_margin_ratings(self, team_data, selected_features):
+        """Compute margin-based ratings for each team"""
+        if self.models.get('margin_model') is None:
+            return np.zeros(len(team_data))
+        
+        margin_features = self.models['margin_features']
+        X_team = team_data[margin_features].values.astype(float)
+        X_team_scaled = self.scaler.transform(X_team)
+        margin_features_neutral = np.column_stack([X_team_scaled, np.zeros(len(X_team_scaled))])
+        margin_ratings = self.models['margin_model'].predict(margin_features_neutral)
+        return margin_ratings
+    
+    def _optimize_multi_target_ensemble(self, target_predictions, margin_ratings, team_data, 
+                                       target_columns, h_idx, a_idx, actual_margin, hfa,
+                                       mae_weight=0.1, correlation_weight=0.9, 
+                                       min_target_weight=0.3):
+        """
+        Optimize ensemble considering multiple targets and game prediction accuracy
+        
+        For rank-based targets (like ELO_Rank), we optimize Spearman correlation
+        For rating-based targets, we also use Spearman correlation for consistency
+        
+        Strategy: Maximize correlation first, then minimize MAE as tiebreaker
+        
+        Parameters:
+        -----------
+        min_target_weight : float
+            Minimum weight for target model (prevents margin model from dominating)
+            Default: 0.3 (at least 30% weight on target-based predictions)
+        """
+        baseline_mae = np.mean(np.abs(actual_margin))
+        n_targets = len(target_columns)
+        
+        # First, evaluate each component separately for diagnostics
+        component_correlations = {}
+        
+        # Target model correlations
+        for col in target_columns:
+            # target_predictions already has ranks converted to ratings (inverted)
+            # So we need to rank these ratings and compare to actual ranks
+            if 'rank' in col.lower():
+                # Target predictions are now ratings (higher = better)
+                # Convert back to ranks for comparison
+                predicted_ranks = pd.Series(target_predictions[col]).rank(ascending=False)
+                actual_ranks = team_data[col].values
+                corr = spearmanr(predicted_ranks, actual_ranks).correlation
+            else:
+                corr = spearmanr(target_predictions[col], team_data[col].values).correlation
+            component_correlations[f'{col}_target_only'] = corr
+        
+        # Margin model correlation
+        for col in target_columns:
+            if 'rank' in col.lower():
+                # Margin ratings are ratings (higher = better)
+                # Convert to ranks for comparison
+                rating_ranks = pd.Series(margin_ratings).rank(ascending=False)
+                corr = spearmanr(rating_ranks, team_data[col].values).correlation
+            else:
+                corr = spearmanr(margin_ratings, team_data[col].values).correlation
+            component_correlations[f'{col}_margin_only'] = corr
+        
+        self.diagnostics['component_correlations'] = component_correlations
+        
+        def multi_objective(params):
+            """
+            Optimize both target weights and ensemble mixing weight
+            
+            params: [target_weight_1, ..., target_weight_n, ensemble_weight]
+            
+            Primary goal: Maximize correlation with targets
+            Secondary goal: Minimize game prediction MAE
+            """
+            if len(params) != n_targets + 1:
+                raise ValueError(f"Expected {n_targets + 1} parameters")
+            
+            target_weights = params[:n_targets]
+            ensemble_weight = params[-1]
+            
+            # Enforce minimum target weight constraint
+            ensemble_weight = max(min_target_weight, min(1.0, ensemble_weight))
+            
+            # Normalize target weights to sum to 1
+            target_weights = np.array(target_weights)
+            target_weights = np.abs(target_weights) / np.sum(np.abs(target_weights))
+            
+            # Create composite target prediction (all are now ratings where higher = better)
+            composite_pred = sum(w * target_predictions[col] for w, col in zip(target_weights, target_columns))
+            
+            # Ensemble with margin-based ratings (also higher = better)
+            ensemble_ratings = ensemble_weight * composite_pred + (1 - ensemble_weight) * margin_ratings
+            
+            # Calculate correlation scores with each target
+            correlation_scores = []
+            for col in target_columns:
+                target_values = team_data[col].values
+                
+                # For rank targets: convert our ratings back to ranks for correlation
+                if 'rank' in col.lower():
+                    # ensemble_ratings are ratings (higher = better)
+                    # Convert to ranks (lower = better) for comparison
+                    predicted_ranks = pd.Series(ensemble_ratings).rank(ascending=False)
+                    corr = spearmanr(predicted_ranks, target_values).correlation
+                else:
+                    # For ratings, use direct correlation
+                    corr = spearmanr(ensemble_ratings, target_values).correlation
+                
+                if np.isnan(corr):
+                    corr = 0.0
+                correlation_scores.append(corr)
+            
+            # Average correlation across all targets
+            avg_correlation = np.mean(correlation_scores)
+            
+            # Game prediction accuracy (secondary objective)
+            game_pred = ensemble_ratings[h_idx] + hfa - ensemble_ratings[a_idx]
+            game_mae = np.mean(np.abs(game_pred - actual_margin))
+            normalized_mae = game_mae / baseline_mae
+            
+            # Add penalty for low target weight to enforce minimum
+            weight_penalty = 0
+            if ensemble_weight < min_target_weight:
+                weight_penalty = 10.0 * (min_target_weight - ensemble_weight)
+            
+            # PRIMARY: Maximize correlation (larger weight)
+            # SECONDARY: Minimize MAE (smaller weight as tiebreaker)
+            loss = -correlation_weight * avg_correlation + mae_weight * normalized_mae + weight_penalty
+            
+            return loss
+        
+        # Set up optimization bounds
+        # Target weights: 0 to 2, ensemble weight: min_target_weight to 1
+        bounds = [(0, 2)] * n_targets + [(min_target_weight, 1)]
+        
+        # Use differential evolution for global optimization
+        result = differential_evolution(
+            multi_objective,
+            bounds,
+            seed=self.random_state,
+            maxiter=300,
+            polish=True
+        )
+        
+        optimal_params = result.x
+        optimal_target_weights = optimal_params[:n_targets]
+        optimal_target_weights = np.abs(optimal_target_weights) / np.sum(np.abs(optimal_target_weights))
+        optimal_ensemble_weight = optimal_params[-1]
+        
+        # Ensure minimum weight is respected
+        optimal_ensemble_weight = max(min_target_weight, optimal_ensemble_weight)
+        
+        return optimal_target_weights, optimal_ensemble_weight
+    
+    def fit(self, team_data, schedule_df, available_features, target_columns=['ELO_Rank'], 
+            mae_weight=0.1, correlation_weight=0.9, rating_scale=5.0, rating_center=0.0, min_target_weight=0.3):
+        """
+        Fit Softball power rating system with automatic feature selection
+        
+        Parameters:
+        -----------
+        team_data : DataFrame
+            Team statistics with 'Team' column and features
+        schedule_df : DataFrame  
+            Game results with home_team, away_team, home_score, away_score
+        available_features : list
+            ALL available feature columns - system will select best subset
+        target_columns : list
+            List of target columns to optimize for (e.g., ['ELO_Rank'])
+        mae_weight : float
+            Weight for game prediction accuracy in optimization
+        correlation_weight : float
+            Weight for target correlation in optimization
+        rating_scale : float
+            Target standard deviation for ratings (default 5.0 for college Softball)
+            This creates a flexible scale: ~68% of teams within ±5 of center
+            Higher values = more spread, lower values = more compressed
+        rating_center : float
+            Center point for ratings (default 0.0)
+        min_target_weight : float
+            Minimum weight for target-based model in ensemble (default 0.3)
+            Prevents margin model from dominating when features don't correlate well
+        """
+        # Validate inputs
+        for col in target_columns:
+            if col not in team_data.columns:
+                raise ValueError(f"Target column '{col}' not found in team_data")
+        
+        for feat in available_features:
+            if feat not in team_data.columns:
+                raise ValueError(f"Feature '{feat}' not found in team_data")
+        
+        # Check for Team column
+        if 'Team' not in team_data.columns:
+            raise ValueError("team_data must contain 'Team' column")
+        
+        # Set Team as index
+        team_data_indexed = team_data.set_index('Team', drop=False)
+        
+        # Step 1: Feature selection for each target
+        print("Optimizing feature selection...")
+        selected_features, feature_weights, selection_scores = self._optimize_feature_selection(
+            team_data_indexed, available_features, target_columns
+        )
+        
+        # Store feature selection results
+        self.selected_features = selected_features
+        self.feature_weights = feature_weights
+        
+        # Print selected features
+        for target_col in target_columns:
+            print(f"\nSelected features for {target_col}:")
+            for feat, weight in sorted(feature_weights[target_col].items(), 
+                                      key=lambda x: x[1], reverse=True):
+                print(f"  {feat}: {weight*100:.1f}%")
+            print(f"  Initial correlation: {selection_scores[target_col]:.4f}")
+        
+        # Prepare game data
+        schedule_clean, h_idx, a_idx, actual_margin, actual_total, hfa = self._prepare_game_data(
+            team_data_indexed, schedule_df
+        )
+        
+        # Step 2: Train ML models for each target using selected features
+        print("\nTraining ML models...")
+        target_predictions = self._train_rank_models(
+            team_data_indexed, selected_features, target_columns
+        )
+        
+        # Step 3: Train margin model (optional - can get 0 weight in ensemble)
+        print("Training margin prediction model...")
+        self._train_margin_model(
+            team_data_indexed, selected_features, h_idx, a_idx, actual_margin, hfa
+        )
+        
+        # Compute margin-based ratings
+        margin_ratings = self._compute_margin_ratings(team_data_indexed, selected_features)
+        
+        # Step 4: Optimize ensemble (margin model can get 0 weight)
+        print("Optimizing ensemble weights...")
+        optimal_target_weights, optimal_ensemble_weight = self._optimize_multi_target_ensemble(
+            target_predictions, margin_ratings, team_data_indexed, target_columns,
+            h_idx, a_idx, actual_margin, hfa, mae_weight, correlation_weight, min_target_weight
+        )
+        
+        # Create final ensemble ratings
+        composite_pred = sum(w * target_predictions[col] 
+                           for w, col in zip(optimal_target_weights, target_columns))
+        
+        ensemble_ratings = (optimal_ensemble_weight * composite_pred + 
+                          (1 - optimal_ensemble_weight) * margin_ratings)
+        
+        # Scale ratings using standard deviation approach (flexible scale)
+        # This allows natural expansion/compression based on team quality differences
+        ensemble_ratings = ensemble_ratings - ensemble_ratings.mean()
+        current_std = ensemble_ratings.std()
+        
+        if current_std > 0:
+            # Scale to target standard deviation
+            scaling_factor = rating_scale / current_std
+            ensemble_ratings = ensemble_ratings * scaling_factor
+        
+        # Center at desired point
+        ensemble_ratings = ensemble_ratings - ensemble_ratings.mean() + rating_center
+        
+        # Store results with clean rounding
+        self.team_ratings = pd.DataFrame({
+            'Team': team_data_indexed['Team'].values,
+            'Rating': self._clean_round(ensemble_ratings)
+        })
+        
+        # Add individual component ratings for analysis
+        for i, col in enumerate(target_columns):
+            component_scaled = target_predictions[col] - target_predictions[col].mean()
+            component_std = component_scaled.std()
+            if component_std > 0:
+                component_scaled = (component_scaled / component_std) * rating_scale
+            component_scaled = component_scaled + rating_center
+            self.team_ratings[f'{col}_component'] = self._clean_round(component_scaled)
+        
+        margin_scaled = margin_ratings - margin_ratings.mean()
+        margin_std = margin_scaled.std()
+        if margin_std > 0:
+            margin_scaled = (margin_scaled / margin_std) * rating_scale
+        margin_scaled = margin_scaled + rating_center
+        self.team_ratings['margin_component'] = self._clean_round(margin_scaled)
+        
+        # Final diagnostics
+        final_correlations = {}
+        for col in target_columns:
+            if 'rank' in col.lower():
+                # ensemble_ratings are ratings (higher = better)
+                # Convert to ranks for comparison with actual ranks
+                rating_ranks = pd.Series(ensemble_ratings).rank(ascending=False)
+                corr = spearmanr(rating_ranks, team_data_indexed[col].values).correlation
+            else:
+                corr = spearmanr(ensemble_ratings, team_data_indexed[col].values).correlation
+            final_correlations[f'final_{col}_correlation'] = corr
+        
+        game_pred = ensemble_ratings[h_idx] + hfa - ensemble_ratings[a_idx]
+        final_mae = np.mean(np.abs(game_pred - actual_margin))
+        
+        self.diagnostics.update({
+            'target_columns': target_columns,
+            'selected_features': selected_features,
+            'feature_weights': feature_weights,
+            'feature_selection_scores': selection_scores,
+            'optimal_target_weights': dict(zip(target_columns, optimal_target_weights)),
+            'optimal_ensemble_weight': optimal_ensemble_weight,
+            'final_game_mae': final_mae,
+            'baseline_margin_mae': np.mean(np.abs(actual_margin)),
+            'n_games': len(actual_margin),
+            'rating_range': ensemble_ratings.max() - ensemble_ratings.min(),
+            'rating_std': ensemble_ratings.std(),
+            'rating_scale': rating_scale,
+            'rating_center': rating_center,
+            'home_field_advantage': self.hfa,
+            **final_correlations
+        })
+        
+        return self
+    
+    def predict_game(self, home_team, away_team, neutral=False):
+        """Predict margin and scores for a specific game"""
+        if self.team_ratings is None:
+            raise ValueError("Model must be fitted before making predictions")
+        
+        team_lookup = dict(zip(self.team_ratings['Team'], self.team_ratings['Rating']))
+        
+        # Get ratings
+        home_rating = team_lookup.get(home_team, 0)
+        away_rating = team_lookup.get(away_team, 0)
+        
+        hfa = 0 if neutral else self.hfa
+        
+        # Calculate predicted margin
+        margin = round(home_rating + hfa - away_rating, 2)
+        
+        # For Softball, typical game total is around 8-10 runs
+        # This is a simple model; could be enhanced with offensive/defensive components
+        baseline_score = 4.5  # Average runs per team
+        
+        home_score = round(baseline_score + margin/2, 1)
+        away_score = round(baseline_score - margin/2, 1)
+        
+        # Format output
+        if margin < 0:
+            favorite = away_team
+            margin_str = f'{away_team} by {abs(margin):.2f}'
+        else:
+            favorite = home_team
+            margin_str = f'{home_team} by {margin:.2f}'
+        
+        return {
+            'margin': margin_str,
+            'home_score': home_score,
+            'away_score': away_score,
+            'predicted_score': f'{home_team} {home_score}, {away_team} {away_score}'
+        }
+    
+    def get_rankings(self, n=25):
+        """Get top N teams by rating"""
+        if self.team_ratings is None:
+            raise ValueError("Model must be fitted first")
+        
+        return self.team_ratings.nlargest(n, 'Rating')
+    
+    def print_diagnostics(self):
+        """Print comprehensive model diagnostics"""
+        print("\nsoftball Power Rating System Diagnostics")
+        print("=" * 60)
+        
+        # Component correlations (individual performance)
+        if 'component_correlations' in self.diagnostics:
+            print("\nCOMPONENT CORRELATIONS (individual models):")
+            for key, value in self.diagnostics['component_correlations'].items():
+                print(f"  {key}: {value:.4f} ({value*100:.1f}%)")
+        
+        # Feature selection results
+        print("\nFEATURE SELECTION:")
+        for target_col in self.diagnostics['target_columns']:
+            print(f"\n  {target_col}:")
+            n_selected = len(self.diagnostics['selected_features'][target_col])
+            print(f"    Features selected: {n_selected}")
+            print(f"    Feature selection correlation: {self.diagnostics['feature_selection_scores'][target_col]:.4f}")
+            
+            for feat, weight in sorted(self.diagnostics['feature_weights'][target_col].items(), 
+                                      key=lambda x: x[1], reverse=True):
+                print(f"      {feat}: {weight*100:.1f}%")
+        
+        # Target information
+        print(f"\nTARGET OPTIMIZATION:")
+        print(f"  Target columns: {self.diagnostics['target_columns']}")
+        print("\n  Optimal target weights:")
+        for target, weight in self.diagnostics['optimal_target_weights'].items():
+            print(f"    {target}: {weight:.3f}")
+        
+        ensemble_weight = self.diagnostics['optimal_ensemble_weight']
+        margin_weight = 1 - ensemble_weight
+        print(f"\n  Ensemble composition:")
+        print(f"    Target model weight: {ensemble_weight:.3f}")
+        print(f"    Margin model weight: {margin_weight:.3f}")
+        
+        if margin_weight < 0.01:
+            print(f"    Note: Margin model essentially not used (weight ~0)")
+        elif ensemble_weight < 0.2:
+            print(f"    WARNING: Target model has very low weight - features may not correlate well with target")
+        
+        # Model performance
+        print(f"\nGAME PREDICTION PERFORMANCE:")
+        print(f"  Home Field Advantage: {self.diagnostics['home_field_advantage']:.3f} runs")
+        print(f"  Final MAE: {self.diagnostics['final_game_mae']:.3f} runs")
+        print(f"  Baseline MAE: {self.diagnostics['baseline_margin_mae']:.3f} runs")
+        improvement = (1 - self.diagnostics['final_game_mae']/self.diagnostics['baseline_margin_mae'])
+        print(f"  Improvement: {improvement:.1%}")
+        
+        # Target correlations
+        print(f"\nTARGET CORRELATIONS (Spearman) - Final Ensemble:")
+        for key, value in self.diagnostics.items():
+            if 'final_' in key and '_correlation' in key:
+                target_name = key.replace('final_', '').replace('_correlation', '')
+                print(f"  {target_name}: {value:.4f} ({value*100:.1f}%)")
+        
+        print(f"\nDATA SUMMARY:")
+        print(f"  Games analyzed: {self.diagnostics['n_games']}")
+        print(f"  Rating scale (target std): {self.diagnostics['rating_scale']:.2f}")
+        print(f"  Actual rating std: {self.diagnostics['rating_std']:.2f}")
+        print(f"  Rating range: {self.diagnostics['rating_range']:.2f}")
+        print(f"  Rating center: {self.diagnostics['rating_center']:.2f}\n")
+        
+        # Show top teams
+        print("=" * 60)
+        print("TOP 10 TEAMS:")
+        print(self.get_rankings(10).to_string(index=False))
+
+
+# --- USAGE EXAMPLE ---
+def build_softball_power_ratings(team_data, schedule_df, available_features, 
+                                 target_columns=['ELO_Rank'], mae_weight=0.1, 
+                                 correlation_weight=0.9, rating_scale=5.0, 
+                                 rating_center=0.0, min_target_weight=0.3,
+                                 home_field_advantage=0.8):
+    """
+    Build Softball power ratings with automatic feature selection
+    
+    Parameters:
+    -----------
+    team_data : DataFrame
+        Must contain 'Team' column and all available_features
+    schedule_df : DataFrame
+        Must contain: home_team, away_team, home_score, away_score
+        Optional: neutral (True/False for neutral site games)
+    available_features : list
+        ALL available features - system will select best subset
+        Example: ['BB%', 'OPS', 'wRC+', 'PYTHAG', 'fWAR', ...]
+    target_columns : list
+        Target columns to optimize for (e.g., ['ELO_Rank'])
+    mae_weight : float
+        Weight for game prediction accuracy in optimization
+        Set to 0 to only optimize for target correlation
+    correlation_weight : float
+        Weight for target correlation in optimization (default 0.9)
+        Higher values prioritize matching target rankings
+    rating_scale : float
+        Target standard deviation for ratings (default 5.0)
+        Creates flexible scale: ~68% of teams within ±5 of center
+        Typical values:
+        - 3.0: Compressed scale (small differences matter more)
+        - 5.0: Moderate scale (good for college Softball)
+        - 10.0: Expanded scale (emphasizes large differences)
+    rating_center : float
+        Center point for ratings (default 0.0)
+        Could use 100 for a 0-200 scale, 50 for 0-100, etc.
+    min_target_weight : float
+        Minimum weight for target-based model in ensemble (default 0.3)
+    home_field_advantage : float
+        Home field advantage in runs (default 0.8)
+        Typical range: 0.5 to 1.2 runs for college Softball
+    
+    Returns:
+    --------
+    result_data : DataFrame
+        Original team_data with Rating column added
+    diagnostics : dict
+        Model performance metrics and selected features
+    system : softballPowerRatingSystem
+        Fitted system for making predictions
+    """
+    system = softballPowerRatingSystem(home_field_advantage=home_field_advantage)
+    system.fit(team_data, schedule_df, available_features, target_columns, 
+               mae_weight=mae_weight, correlation_weight=correlation_weight,
+               rating_scale=rating_scale, rating_center=rating_center, 
+               min_target_weight=min_target_weight)
+    
+    # Merge ratings back to original team_data
+    result_data = team_data.merge(
+        system.team_ratings[['Team', 'Rating']], 
+        on='Team', 
+        how='left'
+    )
+    
+    return result_data, system.diagnostics, system
+    
+def hyperparameter_search_for_mae(team_data, schedule_df, available_features,
+                                   target_columns=['ELO_Rank'], n_trials=100, n_jobs=-1, verbose=True):
+    """
+    Perform parallelized random search to find settings that minimize game prediction MAE
+    while maintaining good correlation with target
+    
+    Parameters:
+    -----------
+    team_data : DataFrame
+        Team statistics with 'Team' column and features
+    schedule_df : DataFrame
+        Game results with home_team, away_team, home_score, away_score
+    available_features : list
+        ALL available features - system will select best subset
+    target_columns : list
+        Target columns to optimize for (e.g., ['ELO_Rank'])
+    n_trials : int
+        Number of random combinations to try (default: 100)
+    n_jobs : int
+        Number of parallel jobs (-1 uses all available cores, default: -1)
+    verbose : bool
+        Print progress during search
+    
+    Returns:
+    --------
+    dict with keys:
+        'best_params': Best hyperparameter combination found
+        'best_system': Fitted system with best parameters
+        'best_result_data': Result data with ratings
+        'results_df': DataFrame with all trials and their performance
+        'best_mae': Best MAE achieved
+    """
+    from joblib import Parallel, delayed
+    from scipy.stats import spearmanr
+    import numpy as np
+    import pandas as pd
+    import time
+    
+    print("PARALLELIZED RANDOM SEARCH FOR BEST GAME PREDICTION MAE")
+    print("=" * 70)
+    
+    # Clean schedule data once
+    model_schedule = schedule_df.drop_duplicates(
+        subset=['Date', 'home_team', 'away_team', 'home_score', 'away_score']
+    ).dropna().reset_index(drop=True)
+    
+    # Define search space
+    search_space = {
+        'rating_scale': [1.0, 1.5, 2.0, 2.5, 3.0, 3.2, 3.4, 3.6, 3.8, 4.0, 4.2, 4.4, 4.6, 4.8, 5.0],
+        'mae_weight': [0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95],
+        'correlation_weight': [0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0],
+        'min_target_weight': [0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0],
+        'home_field_advantage': [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5]
+    }
+    
+    print(f"Random search space: {n_trials} random combinations")
+    print(f"  rating_scale: {len(search_space['rating_scale'])} values")
+    print(f"  mae_weight: {len(search_space['mae_weight'])} values")
+    print(f"  correlation_weight: {len(search_space['correlation_weight'])} values")
+    print(f"  min_target_weight: {len(search_space['min_target_weight'])} values")
+    print(f"  home_field_advantage: {len(search_space['home_field_advantage'])} values")
+    
+    # Generate random combinations
+    np.random.seed(42)  # For reproducibility
+    random_combinations = []
+    for _ in range(n_trials):
+        combo = (
+            np.random.choice(search_space['rating_scale']),
+            np.random.choice(search_space['mae_weight']),
+            np.random.choice(search_space['correlation_weight']),
+            np.random.choice(search_space['min_target_weight']),
+            np.random.choice(search_space['home_field_advantage'])
+        )
+        random_combinations.append(combo)
+    
+    # Determine number of jobs
+    if n_jobs == -1:
+        import multiprocessing
+        n_jobs = multiprocessing.cpu_count()
+    print(f"Using {n_jobs} parallel jobs")
+    print()
+    
+    def evaluate_params(idx, params_tuple):
+        """Evaluate a single parameter combination"""
+        rating_scale, mae_weight, correlation_weight, min_target_weight, home_field_advantage = params_tuple
+        
+        params = {
+            'rating_scale': rating_scale,
+            'mae_weight': mae_weight,
+            'correlation_weight': correlation_weight,
+            'min_target_weight': min_target_weight,
+            'home_field_advantage': home_field_advantage
+        }
+        
+        try:
+            # Suppress print statements during parallel execution
+            import sys
+            import io
+            old_stdout = sys.stdout
+            sys.stdout = io.StringIO()
+            
+            # Build system with these parameters
+            result_data, diagnostics, system = build_softball_power_ratings(
+                team_data=team_data,
+                schedule_df=model_schedule,
+                available_features=available_features,
+                target_columns=target_columns,
+                rating_scale=params['rating_scale'],
+                mae_weight=params['mae_weight'],
+                correlation_weight=params['correlation_weight'],
+                rating_center=0.0,
+                min_target_weight=params['min_target_weight'],
+                home_field_advantage=params['home_field_advantage']
+            )
+            
+            # Restore stdout
+            sys.stdout = old_stdout
+            
+            # Extract metrics
+            mae = diagnostics['final_game_mae']
+            
+            # Get correlation for each target
+            correlations = {}
+            for col in target_columns:
+                rating_ranks = result_data['Rating'].rank(ascending=False)
+                if 'rank' in col.lower():
+                    corr = spearmanr(rating_ranks, result_data[col]).correlation
+                else:
+                    corr = spearmanr(result_data['Rating'], result_data[col]).correlation
+                correlations[col] = corr
+            
+            avg_correlation = np.mean(list(correlations.values()))
+            
+            # Store results
+            trial_result = {
+                'trial': idx + 1,
+                'mae': mae,
+                'avg_correlation': avg_correlation,
+                **params,
+                **{f'{col}_correlation': correlations[col] for col in target_columns}
+            }
+            
+            return trial_result
+            
+        except Exception as e:
+            # Restore stdout if error
+            sys.stdout = old_stdout
+            return {
+                'trial': idx + 1,
+                'mae': np.nan,
+                'avg_correlation': np.nan,
+                'error': str(e),
+                **params
+            }
+    
+    start_time = time.time()
+    
+    # Run parallel random search
+    print("Running parallel random search...")
+    results = Parallel(n_jobs=n_jobs, verbose=10 if verbose else 0)(
+        delayed(evaluate_params)(idx, params) 
+        for idx, params in enumerate(random_combinations)
+    )
+    
+    elapsed_time = time.time() - start_time
+    
+    # Create results DataFrame
+    results_df = pd.DataFrame(results)
+    
+    # Filter out failed trials
+    valid_results = results_df[~results_df['mae'].isna()].copy()
+    valid_results = valid_results.sort_values('mae')
+    
+    # Find best based on MAE (with correlation threshold)
+    best_candidates = valid_results[valid_results['avg_correlation'] > 0.985]
+    
+    if len(best_candidates) > 0:
+        best_trial = best_candidates.iloc[0]
+        best_params = {
+            'rating_scale': best_trial['rating_scale'],
+            'mae_weight': best_trial['mae_weight'],
+            'correlation_weight': best_trial['correlation_weight'],
+            'min_target_weight': best_trial['min_target_weight'],
+            'home_field_advantage': best_trial['home_field_advantage']
+        }
+        best_mae = best_trial['mae']
+        
+        # Rebuild best system for return
+        print("\nRebuilding best system...")
+        best_result_data, _, best_system = build_softball_power_ratings(
+            team_data=team_data,
+            schedule_df=model_schedule,
+            available_features=available_features,
+            target_columns=target_columns,
+            **best_params,
+            rating_center=0.0
+        )
+    else:
+        best_params = None
+        best_mae = None
+        best_system = None
+        best_result_data = None
+    
+    # Print summary
+    print("\n" + "=" * 70)
+    print("RANDOM SEARCH COMPLETE")
+    print(f"Time elapsed: {elapsed_time:.1f} seconds ({elapsed_time/60:.1f} minutes)")
+    print(f"Successful trials: {len(valid_results)}/{n_trials}")
+    print(f"Average time per trial: {elapsed_time/n_trials:.2f} seconds")
+    
+    if best_params is not None:
+        print("\n" + "=" * 70)
+        print("BEST PARAMETERS (Lowest MAE with Correlation > 0.985):")
+        print(f"  Rating Scale:          {best_params['rating_scale']:.2f}")
+        print(f"  MAE Weight:            {best_params['mae_weight']:.2f}")
+        print(f"  Correlation Weight:    {best_params['correlation_weight']:.2f}")
+        print(f"  Min Target Weight:     {best_params['min_target_weight']:.2f}")
+        print(f"  Home Field Advantage:  {best_params['home_field_advantage']:.2f} runs")
+        
+        print(f"\nPERFORMANCE:")
+        print(f"  Best MAE:              {best_mae:.3f} runs")
+        print(f"  Avg Correlation:       {best_trial['avg_correlation']:.4f}")
+        for col in target_columns:
+            print(f"  {col} Correlation:    {best_trial[f'{col}_correlation']:.4f}")
+        
+        print("\n" + "=" * 70)
+        print("TOP 10 CONFIGURATIONS BY MAE:")
+        display_cols = ['trial', 'mae', 'avg_correlation', 'rating_scale', 
+                       'mae_weight', 'correlation_weight', 'min_target_weight', 'home_field_advantage']
+        if len(valid_results) > 0:
+            print(valid_results[display_cols].head(10).to_string(index=False))
+        
+        print("\n" + "=" * 70)
+        print("PARAMETER ANALYSIS (Top 10):")
+        
+        # Analyze patterns in top performers
+        if len(valid_results) >= 10:
+            top10 = valid_results.head(10)
+            
+            # Show distribution of each parameter
+            print("\nRating Scale distribution:")
+            scale_counts = top10['rating_scale'].value_counts().sort_index()
+            for val, count in scale_counts.items():
+                print(f"  {val:.1f}: {count} times ({count/10*100:.0f}%)")
+            
+            print("\nMAE Weight distribution:")
+            mae_counts = top10['mae_weight'].value_counts().sort_index()
+            for val, count in mae_counts.items():
+                print(f"  {val:.2f}: {count} times ({count/10*100:.0f}%)")
+            
+            print("\nCorrelation Weight distribution:")
+            corr_counts = top10['correlation_weight'].value_counts().sort_index()
+            for val, count in corr_counts.items():
+                print(f"  {val:.2f}: {count} times ({count/10*100:.0f}%)")
+            
+            print("\nMin Target Weight distribution:")
+            target_counts = top10['min_target_weight'].value_counts().sort_index()
+            for val, count in target_counts.items():
+                print(f"  {val:.2f}: {count} times ({count/10*100:.0f}%)")
+            
+            print("\nHome Field Advantage distribution:")
+            hfa_counts = top10['home_field_advantage'].value_counts().sort_index()
+            for val, count in hfa_counts.items():
+                print(f"  {val:.2f}: {count} times ({count/10*100:.0f}%)")
+            
+            print("\nTop 10 averages:")
+            print(f"  Avg rating_scale:          {top10['rating_scale'].mean():.2f}")
+            print(f"  Avg mae_weight:            {top10['mae_weight'].mean():.2f}")
+            print(f"  Avg correlation_weight:    {top10['correlation_weight'].mean():.2f}")
+            print(f"  Avg min_target_weight:     {top10['min_target_weight'].mean():.2f}")
+            print(f"  Avg home_field_advantage:  {top10['home_field_advantage'].mean():.2f}")
+    else:
+        print("\nNo valid configurations found with correlation > 0.985.")
+        if len(valid_results) > 0:
+            print("Best configuration without correlation threshold:")
+            best_any = valid_results.iloc[0]
+            print(f"  MAE: {best_any['mae']:.3f}")
+            print(f"  Correlation: {best_any['avg_correlation']:.4f}")
+            print(f"  Home Field Advantage: {best_any['home_field_advantage']:.2f}")
+    
+    print("=" * 70)
+    
+    return {
+        'best_params': best_params,
+        'best_system': best_system,
+        'best_result_data': best_result_data,
+        'results_df': valid_results,
+        'best_mae': best_mae
+    }
+    
+    def evaluate_params(idx, params_tuple):
+        """Evaluate a single parameter combination"""
+        rating_scale, mae_weight, correlation_weight, min_target_weight = params_tuple
+        
+        params = {
+            'rating_scale': rating_scale,
+            'mae_weight': mae_weight,
+            'correlation_weight': correlation_weight,
+            'min_target_weight': min_target_weight
+        }
+        
+        try:
+            # Suppress print statements during parallel execution
+            import sys
+            import io
+            old_stdout = sys.stdout
+            sys.stdout = io.StringIO()
+            
+            # Build system with these parameters
+            result_data, diagnostics, system = build_softball_power_ratings(
+                team_data=team_data,
+                schedule_df=model_schedule,
+                available_features=available_features,
+                target_columns=target_columns,
+                rating_scale=params['rating_scale'],
+                mae_weight=params['mae_weight'],
+                correlation_weight=params['correlation_weight'],
+                rating_center=0.0,
+                min_target_weight=params['min_target_weight']
+            )
+            
+            # Restore stdout
+            sys.stdout = old_stdout
+            
+            # Extract metrics
+            mae = diagnostics['final_game_mae']
+            
+            # Get correlation for each target
+            correlations = {}
+            for col in target_columns:
+                rating_ranks = result_data['Rating'].rank(ascending=False)
+                if 'rank' in col.lower():
+                    corr = spearmanr(rating_ranks, result_data[col]).correlation
+                else:
+                    corr = spearmanr(result_data['Rating'], result_data[col]).correlation
+                correlations[col] = corr
+            
+            avg_correlation = np.mean(list(correlations.values()))
+            
+            # Store results
+            trial_result = {
+                'trial': idx + 1,
+                'mae': mae,
+                'avg_correlation': avg_correlation,
+                **params,
+                **{f'{col}_correlation': correlations[col] for col in target_columns}
+            }
+            
+            return trial_result
+            
+        except Exception as e:
+            # Restore stdout if error
+            sys.stdout = old_stdout
+            return {
+                'trial': idx + 1,
+                'mae': np.nan,
+                'avg_correlation': np.nan,
+                'error': str(e),
+                **params
+            }
+    
+    start_time = time.time()
+    
+    # Run parallel grid search
+    print("Running parallel grid search...")
+    results = Parallel(n_jobs=n_jobs, verbose=10 if verbose else 0)(
+        delayed(evaluate_params)(idx, params) 
+        for idx, params in enumerate(all_combinations)
+    )
+    
+    elapsed_time = time.time() - start_time
+    
+    # Create results DataFrame
+    results_df = pd.DataFrame(results)
+    
+    # Filter out failed trials
+    valid_results = results_df[~results_df['mae'].isna()].copy()
+    valid_results = valid_results.sort_values('mae')
+    
+    # Find best based on MAE (with correlation threshold)
+    best_candidates = valid_results[valid_results['avg_correlation'] > 0.75]
+    
+    if len(best_candidates) > 0:
+        best_trial = best_candidates.iloc[0]
+        best_params = {
+            'rating_scale': best_trial['rating_scale'],
+            'mae_weight': best_trial['mae_weight'],
+            'correlation_weight': best_trial['correlation_weight'],
+            'min_target_weight': best_trial['min_target_weight']
+        }
+        best_mae = best_trial['mae']
+        
+        # Rebuild best system for return
+        print("\nRebuilding best system...")
+        best_result_data, _, best_system = build_softball_power_ratings(
+            team_data=team_data,
+            schedule_df=model_schedule,
+            available_features=available_features,
+            target_columns=target_columns,
+            **best_params,
+            rating_center=0.0
+        )
+    else:
+        best_params = None
+        best_mae = None
+        best_system = None
+        best_result_data = None
+    
+    # Print summary
+    print("\n" + "=" * 70)
+    print("GRID SEARCH COMPLETE")
+    print(f"Time elapsed: {elapsed_time:.1f} seconds ({elapsed_time/60:.1f} minutes)")
+    print(f"Successful trials: {len(valid_results)}/{n_trials}")
+    print(f"Average time per trial: {elapsed_time/n_trials:.2f} seconds")
+    
+    if best_params is not None:
+        print("\n" + "=" * 70)
+        print("BEST PARAMETERS (Lowest MAE with Correlation > 0.75):")
+        print(f"  Rating Scale:        {best_params['rating_scale']:.2f}")
+        print(f"  MAE Weight:          {best_params['mae_weight']:.2f}")
+        print(f"  Correlation Weight:  {best_params['correlation_weight']:.2f}")
+        print(f"  Min Target Weight:   {best_params['min_target_weight']:.2f}")
+        
+        print(f"\nPERFORMANCE:")
+        print(f"  Best MAE:            {best_mae:.3f} runs")
+        print(f"  Avg Correlation:     {best_trial['avg_correlation']:.4f}")
+        for col in target_columns:
+            print(f"  {col} Correlation:  {best_trial[f'{col}_correlation']:.4f}")
+        
+        print("\n" + "=" * 70)
+        print("TOP 10 CONFIGURATIONS BY MAE:")
+        display_cols = ['trial', 'mae', 'avg_correlation', 'rating_scale', 
+                       'mae_weight', 'correlation_weight', 'min_target_weight']
+        if len(valid_results) > 0:
+            print(valid_results[display_cols].head(10).to_string(index=False))
+        
+        print("\n" + "=" * 70)
+        print("PARAMETER ANALYSIS (Top 10):")
+        
+        # Analyze patterns in top performers
+        if len(valid_results) >= 10:
+            top10 = valid_results.head(10)
+            
+            # Show distribution of each parameter
+            print("\nRating Scale distribution:")
+            scale_counts = top10['rating_scale'].value_counts().sort_index()
+            for val, count in scale_counts.items():
+                print(f"  {val:.1f}: {count} times ({count/10*100:.0f}%)")
+            
+            print("\nMAE Weight distribution:")
+            mae_counts = top10['mae_weight'].value_counts().sort_index()
+            for val, count in mae_counts.items():
+                print(f"  {val:.2f}: {count} times ({count/10*100:.0f}%)")
+            
+            print("\nCorrelation Weight distribution:")
+            corr_counts = top10['correlation_weight'].value_counts().sort_index()
+            for val, count in corr_counts.items():
+                print(f"  {val:.2f}: {count} times ({count/10*100:.0f}%)")
+            
+            print("\nMin Target Weight distribution:")
+            target_counts = top10['min_target_weight'].value_counts().sort_index()
+            for val, count in target_counts.items():
+                print(f"  {val:.2f}: {count} times ({count/10*100:.0f}%)")
+            
+            print("\nTop 10 averages:")
+            print(f"  Avg rating_scale:        {top10['rating_scale'].mean():.2f}")
+            print(f"  Avg mae_weight:          {top10['mae_weight'].mean():.2f}")
+            print(f"  Avg correlation_weight:  {top10['correlation_weight'].mean():.2f}")
+            print(f"  Avg min_target_weight:   {top10['min_target_weight'].mean():.2f}")
+    else:
+        print("\nNo valid configurations found with correlation > 0.75.")
+        if len(valid_results) > 0:
+            print("Best configuration without correlation threshold:")
+            best_any = valid_results.iloc[0]
+            print(f"  MAE: {best_any['mae']:.3f}")
+            print(f"  Correlation: {best_any['avg_correlation']:.4f}")
+    
+    print("=" * 70)
+    
+    return {
+        'best_params': best_params,
+        'best_system': best_system,
+        'best_result_data': best_result_data,
+        'results_df': valid_results,
+        'best_mae': best_mae
+    }
+
+def compare_with_simple_approach(team_data, schedule_df, available_features, 
+                                target_column='ELO_Rank'):
+    """
+    Compare the advanced ML system with a simple weighted feature approach
+    
+    Returns both correlations and game prediction MAE for comparison
+    """
+    print("COMPARISON: ML System vs Simple Weighted Approach")
+    print("=" * 60)
+    
+    # Clean schedule data once
+    model_schedule = schedule_df.drop_duplicates(
+        subset=['Date', 'home_team', 'away_team', 'home_score', 'away_score']
+    ).dropna().reset_index(drop=True)
+    
+    # Simple approach (original method)
+    print("\n1. Running Simple Weighted Approach...")
+    target = team_data[target_column].values
+    
+    def simple_objective(weights_raw):
+        feature_selection = np.array(weights_raw[:len(available_features)])
+        weights = np.array(weights_raw[len(available_features):])
+        
+        selected_features = [available_features[i] for i in range(len(available_features)) 
+                           if feature_selection[i] > 0.5]
+        
+        if len(selected_features) == 0:
+            return 1
+        
+        weights /= np.sum(weights)
+        combined = sum(w * team_data[feat] for w, feat in zip(weights, selected_features))
+        ranks = combined.rank(ascending=False)
+        corr, _ = spearmanr(ranks, target)
+        return -corr
+    
+    bounds = [(0, 1)] * len(available_features) + [(0, 1)] * len(available_features)
+    result = differential_evolution(simple_objective, bounds=bounds, 
+                                   strategy='best1bin', maxiter=1000, 
+                                   polish=True, seed=42)
+    
+    feature_selection = np.array(result.x[:len(available_features)]) > 0.5
+    weights = np.array(result.x[len(available_features):])
+    weights /= np.sum(weights)
+    
+    selected_features_simple = [available_features[i] for i in range(len(available_features)) 
+                               if feature_selection[i]]
+    simple_corr = -result.fun
+    
+    # Calculate simple approach ratings (scaled to same scale for fair comparison)
+    simple_combined = sum(w * team_data[feat] for w, feat in zip(weights, selected_features_simple))
+    simple_ratings = simple_combined - simple_combined.mean()
+    simple_std = simple_ratings.std()
+    if simple_std > 0:
+        simple_ratings = (simple_ratings / simple_std) * 5.0  # Scale to std=5.0
+    
+    # Calculate MAE for simple approach
+    team_data_indexed = team_data.set_index('Team', drop=False)
+    team_to_idx = {team: idx for idx, team in enumerate(team_data_indexed.index)}
+    
+    valid_games = (
+        model_schedule['home_team'].isin(team_to_idx) & 
+        model_schedule['away_team'].isin(team_to_idx)
+    )
+    schedule_clean = model_schedule[valid_games].copy()
+    
+    h_idx = schedule_clean['home_team'].map(team_to_idx).values
+    a_idx = schedule_clean['away_team'].map(team_to_idx).values
+    actual_margin = schedule_clean['home_score'].values - schedule_clean['away_score'].values
+    
+    # Check if neutral field column exists
+    if 'neutral' in schedule_clean.columns:
+        hfa = np.where(schedule_clean['neutral'] == False, 0.3, 0.0)
+    else:
+        hfa = np.full(len(schedule_clean), 0.3)
+    
+    simple_ratings_array = simple_ratings.values
+    simple_pred_margin = simple_ratings_array[h_idx] + hfa - simple_ratings_array[a_idx]
+    simple_mae = np.mean(np.abs(simple_pred_margin - actual_margin))
+    
+    print(f"   Features selected: {len(selected_features_simple)}")
+    print(f"   Correlation: {simple_corr:.4f} ({simple_corr*100:.1f}%)")
+    print(f"   Game prediction MAE: {simple_mae:.3f} runs")
+    
+    # Advanced ML approach
+    print("\n2. Running Advanced ML System...")
+    result_data, diagnostics, system = build_softball_power_ratings(
+        team_data=team_data,
+        schedule_df=model_schedule,
+        available_features=available_features,
+        target_columns=[target_column],   
+        rating_scale=4.0,
+        mae_weight=0.0,           # Pure correlation optimization
+        min_target_weight=0.5      # Pure correlation optimization
+    )
+    
+    rating_ranks = result_data['Rating'].rank(ascending=False)
+    ml_corr = spearmanr(rating_ranks, result_data[target_column]).correlation
+    ml_mae = diagnostics['final_game_mae']
+    
+    # Comparison summary
+    print("\n" + "=" * 60)
+    print("RESULTS SUMMARY:")
+    print("\nCorrelation with Target:")
+    print(f"  Simple Approach:  {simple_corr:.4f} ({simple_corr*100:.1f}%)")
+    print(f"  ML System:        {ml_corr:.4f} ({ml_corr*100:.1f}%)")
+    print(f"  Improvement:      {(ml_corr - simple_corr):.4f} ({(ml_corr - simple_corr)*100:.2f}%)")
+    
+    if ml_corr > simple_corr:
+        pct_better = ((ml_corr - simple_corr) / simple_corr) * 100
+        print(f"  Relative gain:    {pct_better:.2f}% better")
+    
+    print("\nGame Prediction MAE:")
+    print(f"  Simple Approach:  {simple_mae:.3f} runs")
+    print(f"  ML System:        {ml_mae:.3f} runs")
+    mae_improvement = simple_mae - ml_mae
+    print(f"  Improvement:      {mae_improvement:.3f} runs ({(mae_improvement/simple_mae)*100:.1f}%)")
+    
+    if ml_mae < simple_mae:
+        print(f"  ML System predicts games {(simple_mae/ml_mae - 1)*100:.1f}% more accurately")
+    else:
+        print(f"  Note: Simple approach predicted games better")
+    
+    print("=" * 60)
+    
+    return {
+        'simple_correlation': simple_corr,
+        'ml_correlation': ml_corr,
+        'correlation_improvement': ml_corr - simple_corr,
+        'simple_mae': simple_mae,
+        'ml_mae': ml_mae,
+        'mae_improvement': mae_improvement,
+        'system': system,
+        'result_data': result_data
+    }
+
 rpi_2024 = pd.read_csv("./PEAR/PEAR Softball/y2024/rpi_end_2024.csv")[['Team', 'Rank']]
 rpi_2024["Rank"] = (len(rpi_2024) - rpi_2024["Rank"]) / (len(rpi_2024) - 1)
 
@@ -488,277 +2009,36 @@ modeling_stats[lower_better] = scaler.fit_transform(-modeling_stats[lower_better
 # Available features
 features_all = ["BB%", "PCT", "OPS", 'PYTHAG', 'fWAR', 'K/BB', 'wRC+', 'LOB%', "WHIP", "wOBA", "Rank"]
 
-# Target variable
-target = modeling_stats['ELO_Rank'].values
 
-# --- SPEARMAN OBJECTIVE FUNCTION ---
-def spearman_objective(weights_raw):
-    # First half: binary values for feature selection (0 or 1)
-    feature_selection = np.array(weights_raw[:len(features_all)])
-    # Second half: continuous values for weights
-    weights = np.array(weights_raw[len(features_all):])
-    
-    # Ensure the weights sum to 1 for the selected features
-    selected_features = [features_all[i] for i in range(len(features_all)) if feature_selection[i] > 0.5]
-    
-    if len(selected_features) == 0:
-        return 1  # Return high value (bad result) if no features are selected
-    
-    weights /= np.sum(weights)  # Normalize weights to sum to 1
-    
-    # Compute weighted sum of the selected features
-    combined = sum(w * modeling_stats[feat] for w, feat in zip(weights, selected_features))
-    ranks = combined.rank(ascending=False)
-    
-    # Calculate Spearman correlation
-    corr, _ = spearmanr(ranks, target)
-    return -corr  # Negative because we are minimizing
+# Build ratings (drop duplicates from schedule first)
+model_schedule = schedule_df.drop_duplicates(
+    subset=['Date', 'home_team', 'away_team', 'home_score', 'away_score']
+).dropna().reset_index(drop=True)
 
-# --- RUNNING DIFFERENTIAL EVOLUTION ---
-def run_differential_evolution():
-    bounds = [(0, 1)] * len(features_all) + [(0, 1)] * len(features_all)  # binary for selection + continuous for weights
-    result = differential_evolution(
-        spearman_objective, 
-        bounds=bounds, 
-        strategy='best1bin', 
-        maxiter=1000, 
-        polish=True,
-        seed=42
-    )
-    
-    # Extract the binary selections and weights
-    feature_selection = np.array(result.x[:len(features_all)]) > 0.5
-    weights = np.array(result.x[len(features_all):])
-    weights /= np.sum(weights)  # Normalize weights
-    
-    selected_features = [features_all[i] for i in range(len(features_all)) if feature_selection[i]]
-    return selected_features, weights, -result.fun
-
-# --- GETTING BEST FEATURES, WEIGHTS AND SPEARMAN ---
-selected_features, best_weights, best_spearman = run_differential_evolution()
-
-# --- OUTPUT ---
-feature_weights_dict = dict(zip(selected_features, best_weights))
-sorted_features_weights = sorted(feature_weights_dict.items(), key=lambda item: item[1], reverse=True)
-total_weight = sum(weight for _, weight in sorted_features_weights)
-normalized_weights = [(feature, weight / total_weight) for feature, weight in sorted_features_weights]
-print("Selected Features:")
-for feature, weight in normalized_weights:
-    print(f"{feature}: {weight * 100:.1f}%")
-modeling_stats['in_house_pr'] = sum(
-    modeling_stats[feat] * weight for feat, weight in zip(selected_features, best_weights)
+# Fit the system
+result_data, diagnostics, system = build_softball_power_ratings(
+    team_data=modeling_stats,
+    schedule_df=model_schedule,
+    available_features=features_all,
+    target_columns=['ELO_Rank'],
+    rating_scale=2.5,
+    mae_weight=0.15,           # Pure correlation optimization
+    correlation_weight=0.50,
+    min_target_weight=0.20,     # At least 50% target model
+    home_field_advantage=0.30              # Home field advantage weight
 )
-modeling_stats['Rating'] = modeling_stats['in_house_pr'] - modeling_stats['in_house_pr'].mean()
-current_range = modeling_stats['Rating'].max() - modeling_stats['Rating'].min()
-desired_range = 20
-scaling_factor = desired_range / current_range
-modeling_stats['Rating'] = round(modeling_stats['Rating'] * scaling_factor, 4)
-modeling_stats['Rating'] = modeling_stats['Rating'] - modeling_stats['Rating'].min()
-modeling_stats['Rating'] = round(modeling_stats['Rating'] - modeling_stats['Rating'].mean(),2)
-modeling_stats['Rating'] = round(modeling_stats['Rating'], 2)
+model_output = system.get_rankings(400).reset_index(drop=True)[['Team', 'Rating']]
 
-rating_ranks = modeling_stats['Rating'].rank(ascending=False)
-spearman_corr, _ = spearmanr(rating_ranks, modeling_stats['ELO_Rank'])
-print(f"Rating and ELO Correlation: {spearman_corr * 100:.1f}%")
+# View results
+system.print_diagnostics()
 
-ending_data = pd.merge(softball_stats, modeling_stats[['Team', 'Rating']], on="Team", how="inner").sort_values('Rating', ascending=False).reset_index(drop=True)
+ending_data = pd.merge(softball_stats, model_output[['Team', 'Rating']], on="Team", how="inner").sort_values('Rating', ascending=False).reset_index(drop=True)
 ending_data.index = ending_data.index + 1
-
-# URL of the page to scrape
-url = 'https://www.warrennolan.com/softball/2025/elo'
-
-# Fetch the webpage content
-response = requests.get(url)
-soup = BeautifulSoup(response.text, 'html.parser')
-
-# Find the table with the specified class
-table = soup.find('table', class_='normal-grid alternating-rows stats-table')
-
-if table:
-    # Extract table headers
-    headers = [th.text.strip() for th in table.find('thead').find_all('th')]
-    headers.insert(1, "Team Link")  # Adding extra column for team link
-
-    # Extract table rows
-    data = []
-    for row in table.find('tbody').find_all('tr'):
-        cells = row.find_all('td')
-        row_data = []
-        for i, cell in enumerate(cells):
-            # If it's the first cell, extract team name and link from 'name-subcontainer'
-            if i == 0:
-                name_container = cell.find('div', class_='name-subcontainer')
-                if name_container:
-                    team_name = name_container.text.strip()
-                    team_link_tag = name_container.find('a')
-                    team_link = team_link_tag['href'] if team_link_tag else ''
-                else:
-                    team_name = cell.text.strip()
-                    team_link = ''
-                row_data.append(team_name)
-                row_data.append(team_link)  # Add team link separately
-            else:
-                row_data.append(cell.text.strip())
-        data.append(row_data)
-
-
-    elo_data = pd.DataFrame(data, columns=[headers])
-    elo_data.columns = elo_data.columns.get_level_values(0)
-    elo_data = elo_data.drop_duplicates(subset='Team', keep='first')
-    elo_data = elo_data.astype({col: 'str' for col in elo_data.columns if col not in ['ELO', 'Rank']})
-    elo_data['ELO'] = elo_data['ELO'].astype(float, errors='ignore')
-    elo_data['Rank'] = elo_data['Rank'].astype(int, errors='ignore')
-
-else:
-    print("Table not found on the page.")
-print("Elo Load Done")
-
-BASE_URL = "https://www.warrennolan.com"
-
-session = requests.Session()
-session.headers.update({"User-Agent": "Mozilla/5.0"})
-
-def extract_schedule_data(team_name, team_url, session):
-    schedule_url = BASE_URL + team_url
-    team_schedule = []
-
-    try:
-        response = session.get(schedule_url, timeout=10)
-        response.raise_for_status()
-    except Exception as e:
-        print(f"[Error] {team_name} → {e}")
-        return []
-
-    soup = BeautifulSoup(response.text, 'html.parser')
-    schedule_lists = soup.find_all("ul", class_="team-schedule")
-    if not schedule_lists:
-        return []
-
-    schedule_list = schedule_lists[0]
-
-    for game in schedule_list.find_all('li', class_='team-schedule'):
-        try:
-            # Date
-            month = game.find('span', class_='team-schedule__game-date--month')
-            day = game.find('span', class_='team-schedule__game-date--day')
-            dow = game.find('span', class_='team-schedule__game-date--dow')
-            game_date = f"{month.get_text(strip=True)} {day.get_text(strip=True)} ({dow.get_text(strip=True)})"
-
-            # Opponent
-            opponent_link = game.select_one('.team-schedule__opp-line-link')
-            opponent_name = opponent_link.get_text(strip=True) if opponent_link else ""
-
-            # Location
-            location_div = game.find('div', class_='team-schedule__location')
-            location_text = location_div.get_text(strip=True) if location_div else ""
-            if "VS" in location_text:
-                game_location = "Neutral"
-            elif "AT" in location_text:
-                game_location = "Away"
-            else:
-                game_location = "Home"
-
-            # Result
-            result_info = game.find('div', class_='team-schedule__result')
-            result_text = result_info.get_text(strip=True) if result_info else "N/A"
-
-            # Box score
-            box_score_table = game.find('table', class_='team-schedule-bottom__box-score')
-            home_team = away_team = home_score = away_score = "N/A"
-
-            if box_score_table:
-                rows = box_score_table.find_all('tr')
-                if len(rows) > 2:
-                    away_row = rows[1].find_all('td')
-                    home_row = rows[2].find_all('td')
-                    away_team = away_row[0].get_text(strip=True)
-                    home_team = home_row[0].get_text(strip=True)
-                    away_score = away_row[-3].get_text(strip=True)
-                    home_score = home_row[-3].get_text(strip=True)
-
-            team_schedule.append([
-                team_name, game_date, opponent_name, game_location,
-                result_text, home_team, away_team, home_score, away_score
-            ])
-        except Exception as e:
-            print(f"[Parse Error] {team_name} game row → {e}")
-            continue
-
-    return team_schedule
-
-# ThreadPool wrapper function
-def fetch_all_schedules(elo_df, session, max_workers=12):
-    schedule_data = []
-
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = {
-            executor.submit(extract_schedule_data, row["Team"], row["Team Link"], session): row["Team"]
-            for _, row in elo_df.iterrows()
-        }
-
-        for future in as_completed(futures):
-            try:
-                data = future.result()
-                schedule_data.extend(data)
-            except Exception as e:
-                print(f"[Thread Error] {e}")
-
-    return schedule_data
-
-schedule_data = fetch_all_schedules(elo_data, session, max_workers=12)
-
-columns = ["Team", "Date", "Opponent", "Location", "Result", "home_team", "away_team", "home_score", "away_score"]
-schedule_df = pd.DataFrame(schedule_data, columns=columns)
-schedule_df = schedule_df.astype({col: 'str' for col in schedule_df.columns if col not in ['home_score', 'away_score']})
-schedule_df['home_score'] = schedule_df['home_score'].astype(int, errors='ignore')
-schedule_df['away_score'] = schedule_df['away_score'].astype(int, errors='ignore')
-schedule_df = schedule_df.merge(elo_data[['Team', 'ELO']], left_on='home_team', right_on='Team', how='left')
-schedule_df.rename(columns={'ELO': 'home_elo'}, inplace=True)
-schedule_df = schedule_df.merge(elo_data[['Team', 'ELO']], left_on='away_team', right_on='Team', how='left')
-schedule_df.rename(columns={'ELO': 'away_elo'}, inplace=True)
-schedule_df.drop(columns=['Team', 'Team_y'], inplace=True)
-schedule_df.rename(columns={'Team_x':'Team'}, inplace=True)
-schedule_df = schedule_df[~(schedule_df['Result'] == 'Canceled')].reset_index(drop=True)
-schedule_df = schedule_df[~(schedule_df['Result'] == 'Postponed')].reset_index(drop=True)
-
-# Apply replacements and standardize 'State' to 'St.'
-columns_to_replace = ['Team', 'home_team', 'away_team', 'Opponent']
-
-for col in columns_to_replace:
-    schedule_df[col] = schedule_df[col].str.replace('State', 'St.', regex=False)
-    schedule_df[col] = schedule_df[col].replace(team_replacements)
-elo_data['Team'] = elo_data['Team'].str.replace('State', 'St.', regex=False)
-elo_data['Team'] = elo_data['Team'].replace(team_replacements)
-
-print("Schedule Load Done")
 
 team_rating_quantiles = {}
 for team, elo_percentile in percentile_dict.items():
     rating_at_percentile = ending_data['Rating'].quantile(elo_percentile / 100.0)
     team_rating_quantiles[team] = rating_at_percentile
-
-# Mapping months to numerical values
-month_mapping = {
-    "JAN": "01", "FEB": "02", "MAR": "03", "APR": "04",
-    "MAY": "05", "JUN": "06", "JUL": "07", "AUG": "08",
-    "SEP": "09", "OCT": "10", "NOV": "11", "DEC": "12"
-}
-
-# Function to convert "FEB 14 (FRI)" format to "mm-dd-yyyy"
-def convert_date(date_str):
-    # Ensure date is a string before splitting
-    if isinstance(date_str, pd.Timestamp):
-        date_str = date_str.strftime("%b %d (%a)").upper()  # Convert to same format
-    
-    parts = date_str.split()  # ["FEB", "14", "(FRI)"]
-    month = month_mapping[parts[0].upper()]  # Convert month to number
-    day = parts[1]  # Extract day
-    return f"{month}-{day}-{current_season}"
-
-# Apply function to convert date format
-schedule_df["Date"] = schedule_df["Date"].astype(str).apply(convert_date)
-schedule_df["Date"] = pd.to_datetime(schedule_df["Date"], format="%m-%d-%Y")
-comparison_date = pd.to_datetime(formatted_date, format="%m_%d_%Y")
 
 missing_rating = round(ending_data['Rating'].mean() - 2.5*ending_data['Rating'].std(),2)
 schedule_df = schedule_df.merge(ending_data[['Team', 'Rating']], left_on='home_team', right_on='Team', how='left')
