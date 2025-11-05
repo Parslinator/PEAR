@@ -58,8 +58,8 @@ const formatWinProbability = (prob: number | null) => {
 };
 
 const getResultBadgeColor = (result: string | null) => {
-  if (result === 'W') return 'bg-green-500 text-white';
-  if (result === 'L') return 'bg-red-500 text-white';
+  if (result === 'W') return 'bg-[#98fb98] text-gray-900';
+  if (result === 'L') return 'bg-[#ff7f50] text-white';
   return 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300';
 };
 
@@ -69,12 +69,22 @@ const getLocationBadge = (location: string) => {
   return 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300';
 };
 
-function CompletedGame({ game }: { game: GameData }) {
+function CompletedGame({ game, onGameClick }: { game: GameData; onGameClick: (game: GameData) => void }) {
+  const router = useRouter();
+  
+  const handleOpponentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/cbase/team-profile?team=${encodeURIComponent(game.opponent)}`);
+  };
+
   return (
-    <div className="bg-white dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow">
+    <div 
+      className="bg-white dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow cursor-pointer"
+      onClick={() => onGameClick(game)}
+    >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <span className={`px-2 py-1 rounded text-xs font-bold ${getResultBadgeColor(game.result)}`}>
+          <span className={`px-3 py-1 rounded text-sm font-bold ${getResultBadgeColor(game.result)}`}>
             {game.result}
           </span>
           <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -86,62 +96,71 @@ function CompletedGame({ game }: { game: GameData }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 flex-1">
+      <div className="flex items-center justify-between gap-4">
+        {/* Opponent Info */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           <img
             src={`${API_URL}/api/baseball-logo/${encodeURIComponent(game.opponent)}`}
             alt={`${game.opponent} logo`}
-            className="w-10 h-10 object-contain"
+            className="w-12 h-12 object-contain flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={handleOpponentClick}
             onError={(e) => {
               e.currentTarget.style.display = 'none';
             }}
           />
-          <div>
-            <p className="font-semibold text-gray-900 dark:text-white">
-              {game.opponent}
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-lg text-gray-900 dark:text-white truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" onClick={handleOpponentClick}>
+              {game.opponent_net ? `#${game.opponent_net} ` : ''}{game.opponent}
             </p>
-            {game.opponent_net && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                NET: #{game.opponent_net}
-              </p>
-            )}
           </div>
         </div>
 
-        <div className="text-center px-4">
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
+        {/* Metrics */}
+        <div className="flex items-center gap-6">
+          <div className="text-center">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Win Prob</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white">
+              {formatWinProbability(game.team_win_prob)}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">RQI</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white">
+              {game.resume_quality?.toFixed(2) || 'N/A'}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">GQI</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white">
+              {game.gqi?.toFixed(3) || 'N/A'}
+            </p>
+          </div>
+        </div>
+
+        {/* Score */}
+        <div className="text-center flex-shrink-0">
+          <p className="text-3xl font-bold text-gray-900 dark:text-white whitespace-nowrap">
             {game.home_score} - {game.away_score}
           </p>
-        </div>
-
-        <div className="flex flex-col items-end gap-1 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-gray-400">Win Prob:</span>
-            <span className="text-sm font-semibold text-gray-900 dark:text-white">
-              {formatWinProbability(game.team_win_prob)}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-gray-400">RQI:</span>
-            <span className="text-sm font-semibold text-gray-900 dark:text-white">
-              {game.resume_quality?.toFixed(2) || 'N/A'}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-gray-400">GQI:</span>
-            <span className="text-sm font-semibold text-gray-900 dark:text-white">
-              {game.gqi?.toFixed(3) || 'N/A'}
-            </span>
-          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function UpcomingGame({ game }: { game: GameData }) {
+function UpcomingGame({ game, onGameClick }: { game: GameData; onGameClick: (game: GameData) => void }) {
+  const router = useRouter();
+  
+  const handleOpponentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/cbase/team-profile?team=${encodeURIComponent(game.opponent)}`);
+  };
+
   return (
-    <div className="bg-white dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow">
+    <div 
+      className="bg-white dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow cursor-pointer"
+      onClick={() => onGameClick(game)}
+    >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -151,54 +170,56 @@ function UpcomingGame({ game }: { game: GameData }) {
             {game.location}
           </span>
         </div>
-        {game.pear && (
-          <span className="px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-xs font-semibold">
-            {game.pear}
-          </span>
-        )}
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 flex-1">
+      <div className="flex items-center justify-between gap-4">
+        {/* Opponent Info */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           <img
             src={`${API_URL}/api/baseball-logo/${encodeURIComponent(game.opponent)}`}
             alt={`${game.opponent} logo`}
-            className="w-10 h-10 object-contain"
+            className="w-12 h-12 object-contain flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={handleOpponentClick}
             onError={(e) => {
               e.currentTarget.style.display = 'none';
             }}
           />
-          <div>
-            <p className="font-semibold text-gray-900 dark:text-white">
-              {game.opponent}
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-lg text-gray-900 dark:text-white truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" onClick={handleOpponentClick}>
+              {game.opponent_net ? `#${game.opponent_net} ` : ''}{game.opponent}
             </p>
-            {game.opponent_net && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                NET: #{game.opponent_net}
-              </p>
-            )}
           </div>
         </div>
 
-        <div className="flex flex-col items-end gap-1">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-gray-400">Win Prob:</span>
-            <span className="text-sm font-semibold text-gray-900 dark:text-white">
+        {/* Metrics */}
+        <div className="flex items-center gap-6">
+          <div className="text-center">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Win Prob</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white">
               {formatWinProbability(game.team_win_prob)}
-            </span>
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-gray-400">RQI:</span>
-            <span className="text-sm font-semibold text-gray-900 dark:text-white">
+          <div className="text-center">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">RQI</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white">
               {game.resume_quality?.toFixed(2) || 'N/A'}
-            </span>
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-600 dark:text-gray-400">GQI:</span>
-            <span className="text-sm font-semibold text-gray-900 dark:text-white">
+          <div className="text-center">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">GQI</p>
+            <p className="text-lg font-bold text-gray-900 dark:text-white">
               {game.gqi?.toFixed(3) || 'N/A'}
-            </span>
+            </p>
           </div>
+        </div>
+
+        {/* PEAR */}
+        <div className="flex-shrink-0">
+          {game.pear && (
+            <span className="px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-lg font-bold">
+              {game.pear}
+            </span>
+          )}
         </div>
       </div>
     </div>
@@ -213,6 +234,12 @@ function TeamProfileContent() {
   const [profileData, setProfileData] = useState<TeamProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedGame, setSelectedGame] = useState<GameData | null>(null);
+  const [matchupImageUrl, setMatchupImageUrl] = useState<string | null>(null);
+  const [matchupLoading, setMatchupLoading] = useState(false);
+  const [teamImageUrl, setTeamImageUrl] = useState<string | null>(null);
+  const [teamImageLoading, setTeamImageLoading] = useState(false);
+  const [showTeamImage, setShowTeamImage] = useState(false);
 
   useEffect(() => {
     if (teamName) {
@@ -250,6 +277,92 @@ function TeamProfileContent() {
     }
   };
 
+  const fetchMatchupImage = async (game: GameData) => {
+    try {
+      setMatchupLoading(true);
+      const response = await fetch(`${API_URL}/api/cbase/matchup-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          home_team: game.home_team,
+          away_team: game.away_team,
+          location: game.location,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate matchup image');
+      }
+
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+      setMatchupImageUrl(imageUrl);
+    } catch (err) {
+      console.error('Error fetching matchup image:', err);
+      setMatchupImageUrl(null);
+    } finally {
+      setMatchupLoading(false);
+    }
+  };
+
+  const fetchTeamImage = async (team: string) => {
+    try {
+      setTeamImageLoading(true);
+      const response = await fetch(`${API_URL}/api/cbase/team-profile`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          team_name: team,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate team image');
+      }
+
+      const blob = await response.blob();
+      const imageUrl = URL.createObjectURL(blob);
+      setTeamImageUrl(imageUrl);
+    } catch (err) {
+      console.error('Error fetching team image:', err);
+      setTeamImageUrl(null);
+    } finally {
+      setTeamImageLoading(false);
+    }
+  };
+
+  const handleGameClick = (game: GameData) => {
+    setSelectedGame(game);
+    fetchMatchupImage(game);
+  };
+
+  const handleTeamLogoClick = () => {
+    if (teamName) {
+      setShowTeamImage(true);
+      fetchTeamImage(teamName);
+    }
+  };
+
+  const closeMatchupModal = () => {
+    if (matchupImageUrl) {
+      URL.revokeObjectURL(matchupImageUrl);
+    }
+    setSelectedGame(null);
+    setMatchupImageUrl(null);
+  };
+
+  const closeTeamImageModal = () => {
+    if (teamImageUrl) {
+      URL.revokeObjectURL(teamImageUrl);
+    }
+    setShowTeamImage(false);
+    setTeamImageUrl(null);
+  };
+
   if (!teamName) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
@@ -284,7 +397,8 @@ function TeamProfileContent() {
             <img 
               src={`${API_URL}/api/baseball-logo/${encodeURIComponent(teamName)}`}
               alt={`${teamName} logo`}
-              className="w-20 h-20 object-contain"
+              className="w-20 h-20 object-contain cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={handleTeamLogoClick}
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
@@ -387,7 +501,7 @@ function TeamProfileContent() {
               </div>
             </div>
 
-            {/* Schedule Section */}
+            {/* Schedule Section with Scroll */}
             {profileData?.schedule && profileData.schedule.length > 0 ? (
               <>
                 {(() => {
@@ -398,34 +512,38 @@ function TeamProfileContent() {
                     <>
                       {/* Completed Games */}
                       {completedGames.length > 0 && (
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                          <div className="flex items-center gap-3 mb-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+                          <div className="flex items-center gap-3 p-6 pb-4">
                             <Trophy className="text-blue-600 dark:text-blue-400" size={24} />
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                               Completed Games ({completedGames.length})
                             </h2>
                           </div>
-                          <div className="space-y-3">
-                            {completedGames.map((game, index) => (
-                              <CompletedGame key={index} game={game} />
-                            ))}
+                          <div className="overflow-y-auto max-h-[600px] px-6 pb-6">
+                            <div className="space-y-3">
+                              {completedGames.map((game, index) => (
+                                <CompletedGame key={index} game={game} onGameClick={handleGameClick} />
+                              ))}
+                            </div>
                           </div>
                         </div>
                       )}
 
                       {/* Upcoming Games */}
                       {upcomingGames.length > 0 && (
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                          <div className="flex items-center gap-3 mb-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+                          <div className="flex items-center gap-3 p-6 pb-4">
                             <Calendar className="text-green-600 dark:text-green-400" size={24} />
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                               Upcoming Games ({upcomingGames.length})
                             </h2>
                           </div>
-                          <div className="space-y-3">
-                            {upcomingGames.map((game, index) => (
-                              <UpcomingGame key={index} game={game} />
-                            ))}
+                          <div className="overflow-y-auto max-h-[600px] px-6 pb-6">
+                            <div className="space-y-3">
+                              {upcomingGames.map((game, index) => (
+                                <UpcomingGame key={index} game={game} onGameClick={handleGameClick} />
+                              ))}
+                            </div>
                           </div>
                         </div>
                       )}
@@ -438,6 +556,94 @@ function TeamProfileContent() {
                 <p className="text-gray-600 dark:text-gray-400">No schedule data available</p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Matchup Image Modal */}
+        {selectedGame && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={closeMatchupModal}
+          >
+            <div 
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {selectedGame.home_team} vs {selectedGame.away_team}
+                </h2>
+                <button
+                  onClick={closeMatchupModal}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="p-6">
+                {matchupLoading ? (
+                  <div className="text-center py-12">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                    <p className="mt-4 text-gray-600 dark:text-gray-400">Loading matchup image...</p>
+                  </div>
+                ) : matchupImageUrl ? (
+                  <div className="flex justify-center">
+                    <img 
+                      src={matchupImageUrl} 
+                      alt="Matchup analysis"
+                      className="max-w-full h-auto rounded-lg"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-600 dark:text-gray-400">Failed to load matchup image</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Team Image Modal */}
+        {showTeamImage && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={closeTeamImageModal}
+          >
+            <div 
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {teamName} Profile
+                </h2>
+                <button
+                  onClick={closeTeamImageModal}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="p-6">
+                {teamImageLoading ? (
+                  <div className="text-center py-12">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+                    <p className="mt-4 text-gray-600 dark:text-gray-400">Loading team profile...</p>
+                  </div>
+                ) : teamImageUrl ? (
+                  <div className="flex justify-center">
+                    <img 
+                      src={teamImageUrl} 
+                      alt={`${teamName} profile`}
+                      className="max-w-full h-auto rounded-lg"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-600 dark:text-gray-400">Failed to load team profile image</p>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>
