@@ -1,14 +1,11 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
 import Navbar from '../components/Navbar'
 import { ThemeProvider } from './contexts/ThemeContext'
 
-const inter = Inter({ subsets: ['latin'] })
-
 export const metadata: Metadata = {
   title: 'PEARatings',
-  description: 'college football power ratings, spread predictions, and historical data analysis',
+  description: 'College Baseball, College Football, and College Softball Analytics',
   keywords: 'college football, power ratings, CFB, analytics, spreads, predictions, PEAR, pear, college baseball, college ratings',
 }
 
@@ -19,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className="font-sans">
         <ThemeProvider>
           <Navbar />
           {children}
