@@ -3090,9 +3090,12 @@ def baseball_team_profile(request: TeamProfileRequest):
                         fontsize=16, fontweight='bold', color='darkblue', 
                         ha='right', va='center')
 
-        # Save to BytesIO with Option 4 settings
+        # Before saving, add tight_layout back
+        plt.tight_layout()
+
+        # Save to BytesIO with proper settings
         buf = io.BytesIO()
-        fig.savefig(buf, format='png', dpi=200, facecolor='#CECEB2', bbox_inches=None, pad_inches=0)
+        fig.savefig(buf, format='png', dpi=200, facecolor='#CECEB2', bbox_inches='tight', pad_inches=0.1)
         buf.seek(0)
         
         # Get image data before closing
