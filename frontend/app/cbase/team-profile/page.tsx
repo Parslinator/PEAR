@@ -57,6 +57,38 @@ const formatWinProbability = (prob: number | null) => {
   return `${(prob * 100).toFixed(1)}%`;
 };
 
+const getWinProbColor = (prob: number | null) => {
+  if (prob === null) return 'text-gray-900 dark:text-white';
+  const percentage = prob * 100;
+  // Blue (100%) to Red (0%)
+  if (percentage >= 75) return 'text-blue-600 dark:text-blue-400';
+  if (percentage >= 50) return 'text-green-600 dark:text-green-400';
+  if (percentage >= 25) return 'text-orange-600 dark:text-orange-400';
+  return 'text-red-600 dark:text-red-400';
+};
+
+const getRQIColor = (rqi: number | null) => {
+  if (rqi === null) return 'text-gray-900 dark:text-white';
+  // Blue (0.75) to Red (-1)
+  // Normalize: 0.75 = 100%, -1 = 0%
+  const normalized = ((rqi - (-1)) / (0.75 - (-1))) * 100;
+  if (normalized >= 75) return 'text-blue-600 dark:text-blue-400';
+  if (normalized >= 50) return 'text-green-600 dark:text-green-400';
+  if (normalized >= 25) return 'text-orange-600 dark:text-orange-400';
+  return 'text-red-600 dark:text-red-400';
+};
+
+const getGQIColor = (gqi: number | null) => {
+  if (gqi === null) return 'text-gray-900 dark:text-white';
+  // Blue (10) to Red (1)
+  // Normalize: 10 = 100%, 1 = 0%
+  const normalized = ((gqi - 1) / (10 - 1)) * 100;
+  if (normalized >= 75) return 'text-blue-600 dark:text-blue-400';
+  if (normalized >= 50) return 'text-green-600 dark:text-green-400';
+  if (normalized >= 25) return 'text-orange-600 dark:text-orange-400';
+  return 'text-red-600 dark:text-red-400';
+};
+
 const getResultBadgeColor = (result: string | null) => {
   if (result === 'W') return 'bg-[#98fb98] text-gray-900';
   if (result === 'L') return 'bg-[#ff7f50] text-white';
@@ -96,9 +128,9 @@ function CompletedGame({ game, onGameClick }: { game: GameData; onGameClick: (ga
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-6">
         {/* Opponent Info */}
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="flex items-center gap-3 flex-shrink-0 w-64">
           <img
             src={`${API_URL}/api/baseball-logo/${encodeURIComponent(game.opponent)}`}
             alt={`${game.opponent} logo`}
@@ -115,30 +147,30 @@ function CompletedGame({ game, onGameClick }: { game: GameData; onGameClick: (ga
           </div>
         </div>
 
-        {/* Metrics */}
-        <div className="flex items-center gap-6">
+        {/* Metrics - Evenly Spaced */}
+        <div className="flex items-center flex-1 justify-evenly">
           <div className="text-center">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Win Prob</p>
-            <p className="text-lg font-bold text-gray-900 dark:text-white">
+            <p className={`text-2xl font-bold ${getWinProbColor(game.team_win_prob)}`}>
               {formatWinProbability(game.team_win_prob)}
             </p>
           </div>
           <div className="text-center">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">RQI</p>
-            <p className="text-lg font-bold text-gray-900 dark:text-white">
+            <p className={`text-2xl font-bold ${getRQIColor(game.resume_quality)}`}>
               {game.resume_quality?.toFixed(2) || 'N/A'}
             </p>
           </div>
           <div className="text-center">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">GQI</p>
-            <p className="text-lg font-bold text-gray-900 dark:text-white">
-              {game.gqi?.toFixed(3) || 'N/A'}
+            <p className={`text-2xl font-bold ${getGQIColor(game.gqi)}`}>
+              {game.gqi?.toFixed(1) || 'N/A'}
             </p>
           </div>
         </div>
 
         {/* Score */}
-        <div className="text-center flex-shrink-0">
+        <div className="text-center flex-shrink-0 w-32">
           <p className="text-3xl font-bold text-gray-900 dark:text-white whitespace-nowrap">
             {game.home_score} - {game.away_score}
           </p>
@@ -172,9 +204,9 @@ function UpcomingGame({ game, onGameClick }: { game: GameData; onGameClick: (gam
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-6">
         {/* Opponent Info */}
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="flex items-center gap-3 flex-shrink-0 w-64">
           <img
             src={`${API_URL}/api/baseball-logo/${encodeURIComponent(game.opponent)}`}
             alt={`${game.opponent} logo`}
@@ -191,34 +223,36 @@ function UpcomingGame({ game, onGameClick }: { game: GameData; onGameClick: (gam
           </div>
         </div>
 
-        {/* Metrics */}
-        <div className="flex items-center gap-6">
+        {/* Metrics - Evenly Spaced */}
+        <div className="flex items-center flex-1 justify-evenly">
           <div className="text-center">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Win Prob</p>
-            <p className="text-lg font-bold text-gray-900 dark:text-white">
+            <p className={`text-2xl font-bold ${getWinProbColor(game.team_win_prob)}`}>
               {formatWinProbability(game.team_win_prob)}
             </p>
           </div>
           <div className="text-center">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">RQI</p>
-            <p className="text-lg font-bold text-gray-900 dark:text-white">
+            <p className={`text-2xl font-bold ${getRQIColor(game.resume_quality)}`}>
               {game.resume_quality?.toFixed(2) || 'N/A'}
             </p>
           </div>
           <div className="text-center">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">GQI</p>
-            <p className="text-lg font-bold text-gray-900 dark:text-white">
-              {game.gqi?.toFixed(3) || 'N/A'}
+            <p className={`text-2xl font-bold ${getGQIColor(game.gqi)}`}>
+              {game.gqi?.toFixed(1) || 'N/A'}
             </p>
           </div>
         </div>
 
         {/* PEAR */}
-        <div className="flex-shrink-0">
-          {game.pear && (
+        <div className="flex-shrink-0 w-32 flex justify-center">
+          {game.pear ? (
             <span className="px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-lg font-bold">
               {game.pear}
             </span>
+          ) : (
+            <span className="text-gray-400">-</span>
           )}
         </div>
       </div>
