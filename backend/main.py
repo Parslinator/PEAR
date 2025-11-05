@@ -2844,10 +2844,10 @@ def baseball_team_profile(request: TeamProfileRequest):
         # ----------------
         # Calculate figure width based on number of columns
         col_width = 1  # Width per column in inches
-        stats_width = 4.5   # Width for stats section
+        stats_width = 5   # Width for stats section
         total_width = (num_cols * col_width) + stats_width
         
-        fig = plt.figure(figsize=(total_width, 12), dpi=300)
+        fig = plt.figure(figsize=(total_width, 12), dpi=200)
         fig.patch.set_facecolor('#CECEB2')
         
         # Create main grid: schedule area (left) and stats area (right)
@@ -5998,10 +5998,10 @@ def softball_team_profile(request: SoftballTeamProfileRequest):
         # ----------------
         # Calculate figure width based on number of columns
         col_width = 1  # Width per column in inches
-        stats_width = 4.5   # Width for stats section
+        stats_width = 5   # Width for stats section
         total_width = (num_cols * col_width) + stats_width
         
-        fig = plt.figure(figsize=(total_width, 12), dpi=300)
+        fig = plt.figure(figsize=(total_width, 12), dpi=200)
         fig.patch.set_facecolor('#CECEB2')
         
         # Create main grid: schedule area (left) and stats area (right)
