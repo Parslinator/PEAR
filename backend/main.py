@@ -2540,7 +2540,6 @@ def simulate_team_win_distribution(schedule_df, comparison_date, team_name, num_
 @app.post("/api/cbase/team-profile")
 def baseball_team_profile(request: TeamProfileRequest):
     logo = None
-    opponent_logos = {}
     try:
         stats_and_metrics, comparison_date = load_baseball_data()
         schedule_df = load_schedule_data()
@@ -2782,6 +2781,7 @@ def baseball_team_profile(request: TeamProfileRequest):
         # ----------------
         # Load opponent logos
         # ----------------
+        opponent_logos = {}
         opponents_set = set(team_schedule['Opponent'].dropna())
         for opponent in opponents_set:
             logo_path = os.path.join(logo_folder, f"{opponent}.png")
@@ -3090,12 +3090,10 @@ def baseball_team_profile(request: TeamProfileRequest):
                         fontsize=16, fontweight='bold', color='darkblue', 
                         ha='right', va='center')
 
-        # Before saving, add tight_layout back
         plt.tight_layout()
-
-        # Save to BytesIO with proper settings
+        # Save to BytesIO and get data before cleanup
         buf = io.BytesIO()
-        fig.savefig(buf, format='png', dpi=200, facecolor='#CECEB2', bbox_inches='tight', pad_inches=0.1)
+        fig.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
         buf.seek(0)
         
         # Get image data before closing
@@ -3111,7 +3109,7 @@ def baseball_team_profile(request: TeamProfileRequest):
         return Response(content=image_data, media_type="image/png")
         
     except HTTPException as e:
-        raise e
+            raise e
     except Exception as e:
         print(f"Error generating team profile: {e}")
         import traceback
@@ -3120,21 +3118,14 @@ def baseball_team_profile(request: TeamProfileRequest):
     finally:
         # Always close the logo image
         if logo is not None:
-            try:
-                logo.close()
-            except:
-                pass
+            logo.close()
             del logo
         
         # Close all opponent logos
-        if opponent_logos:
-            for opponent, opp_logo in opponent_logos.items():
-                if opp_logo is not None:
-                    try:
-                        opp_logo.close()
-                    except:
-                        pass
-            opponent_logos.clear()
+        for opponent, opp_logo in opponent_logos.items():
+            if opp_logo is not None:
+                opp_logo.close()
+        opponent_logos.clear()
         
         gc.collect()
 
