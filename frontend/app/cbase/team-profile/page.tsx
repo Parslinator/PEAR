@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Trophy, TrendingUp, Calendar } from 'lucide-react';
 
@@ -15,7 +15,7 @@ interface TeamProfileData {
   // Add more fields as needed
 }
 
-export default function TeamProfilePage() {
+function TeamProfileContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const teamName = searchParams.get('team');
@@ -213,5 +213,17 @@ export default function TeamProfilePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function TeamProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 dark:border-blue-400"></div>
+      </div>
+    }>
+      <TeamProfileContent />
+    </Suspense>
   );
 }
