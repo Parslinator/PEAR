@@ -2859,164 +2859,164 @@ def baseball_team_profile(request: TeamProfileRequest):
         stats_ax.hlines(y=0.9, xmin=0.0, xmax=1, colors='black', linewidth=1)
         stats_ax.vlines(x=0.5, ymin=0.55, ymax=0.9, colors='black', linewidth=1)
 
-        stats_ax.text(0.0, 0.868, "RPG", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.868, f"{rpg:.2f}", fontsize=16, fontweight='bold', ha='left')
+        fontsize = 12
+        stats_ax.text(0.0, 0.868, "RPG", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.868, f"{rpg:.2f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.873+0.002, f"{rpg_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(rpg_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(rpg_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(rpg_rank))
 
-        stats_ax.text(0.0, 0.818, "BA", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.818, f"{ba:.3f}", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.0, 0.818, "BA", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.818, f"{ba:.3f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.823+0.002, f"{ba_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(ba_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(ba_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(ba_rank))
         
-        stats_ax.text(0.0, 0.768, "OBP", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.768, f"{obp:.3f}", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.0, 0.768, "OBP", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.768, f"{obp:.3f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.773+0.002, f"{obp_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(obp_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(obp_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(obp_rank))
 
-        stats_ax.text(0.0, 0.718, "SLG", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.718, f"{slg:.3f}", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.0, 0.718, "SLG", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.718, f"{slg:.3f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.723+0.002, f"{slg_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(slg_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(slg_rank))
-
-        stats_ax.text(0.0, 0.668, "OPS", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.668, f"{ops:.3f}", fontsize=16, fontweight='bold', ha='left')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(slg_rank))
+        
+        stats_ax.text(0.0, 0.668, "OPS", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.668, f"{ops:.3f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.673+0.002, f"{ops_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(ops_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(ops_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(ops_rank))
 
-        stats_ax.text(0.0, 0.618, "ISO", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.618, f"{iso:.3f}", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.0, 0.618, "ISO", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.618, f"{iso:.3f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.623+0.002, f"{iso_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(iso_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(iso_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(iso_rank))
 
-        stats_ax.text(0.0, 0.568, "wOBA", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.568, f"{wOBA:.3f}", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.0, 0.568, "wOBA", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.568, f"{wOBA:.3f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.573+0.002, f"{wOBA_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(wOBA_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(wOBA_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(wOBA_rank))
         
         stats_ax.text(0.77, 0.923, f"PITCHING", fontsize=16, fontweight='bold', 
                     ha='center', va='center')
-        
-        stats_ax.text(1, 0.868, "ERA", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.868, f"{era:.2f}", fontsize=16, fontweight='bold', ha='right')
+
+        stats_ax.text(1, 0.868, "ERA", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.868, f"{era:.2f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.873+0.002, f"{era_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(era_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(era_rank))
-
-        stats_ax.text(1, 0.818, "WHIP", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.818, f"{whip:.2f}", fontsize=16, fontweight='bold', ha='right')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(era_rank))
+        
+        stats_ax.text(1, 0.818, "WHIP", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.818, f"{whip:.2f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.823+0.002, f"{whip_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(whip_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(whip_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(whip_rank))
 
-        stats_ax.text(1, 0.768, "K/9", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.768, f"{kp9:.1f}", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(1, 0.768, "K/9", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.768, f"{kp9:.1f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.773+0.002, f"{kp9_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(kp9_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(kp9_rank))
-
-        stats_ax.text(1, 0.718, "LOB%", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.718, f"{lob:.3f}", fontsize=16, fontweight='bold', ha='right')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(kp9_rank))
+        
+        stats_ax.text(1, 0.718, "LOB%", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.718, f"{lob:.3f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.723+0.002, f"{lob_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(lob_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(lob_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(lob_rank))
 
-        stats_ax.text(1, 0.668, "K/BB", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.668, f"{kbb:.2f}", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(1, 0.668, "K/BB", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.668, f"{kbb:.2f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.673+0.002, f"{kbb_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(kbb_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(kbb_rank))
-        
-        stats_ax.text(1, 0.618, "FIP", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.618, f"{fip:.2f}", fontsize=16, fontweight='bold', ha='right')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(kbb_rank))
+
+        stats_ax.text(1, 0.618, "FIP", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.618, f"{fip:.2f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.623+0.002, f"{fip_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(fip_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(fip_rank))
-        
-        stats_ax.text(1, 0.568, "PCT", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.568, f"{pct:.3f}", fontsize=16, fontweight='bold', ha='right')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(fip_rank))
+
+        stats_ax.text(1, 0.568, "PCT", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.568, f"{pct:.3f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.573+0.002, f"{pct_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(pct_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(pct_rank))
-        
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(pct_rank))
+
         stats_ax.text(0.5, 0.523, f"TEAM METRICS", fontsize=16, fontweight='bold', 
                     ha='center', va='center')
         stats_ax.hlines(y=0.5, xmin=0.0, xmax=1, colors='black', linewidth=1)
         stats_ax.vlines(x=0.5, ymin=0.25, ymax=0.5, colors='black', linewidth=1)
 
-        stats_ax.text(0.0, 0.468, "NET", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.468, f"{net_score:.3f}", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.0, 0.468, "NET", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.468, f"{net_score:.3f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.473+0.002, f"{net_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(net_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(net_rank))
-
-        stats_ax.text(0.0, 0.418, "RAT", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.418, f"{rating:.2f}", fontsize=16, fontweight='bold', ha='left')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(net_rank))
+        
+        stats_ax.text(0.0, 0.418, "RAT", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.418, f"{rating:.2f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.423+0.002, f"{rating_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(rating_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(rating_rank))
-        
-        stats_ax.text(0.0, 0.368, "RQI", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.368, f"{rqi:.2f}", fontsize=16, fontweight='bold', ha='left')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(rating_rank))
+
+        stats_ax.text(0.0, 0.368, "RQI", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.368, f"{rqi:.2f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.373+0.002, f"{rqi_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(rqi_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(rqi_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(rqi_rank))
 
-        stats_ax.text(0.0, 0.318, "SOS", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.318, f"{sos:.3f}", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.0, 0.318, "SOS", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.318, f"{sos:.3f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.323+0.002, f"{sos_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(sos_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(sos_rank))
-
-        stats_ax.text(0.0, 0.268, "WAR", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.268, f"{war:.2f}", fontsize=16, fontweight='bold', ha='left')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(sos_rank))
+        
+        stats_ax.text(0.0, 0.268, "WAR", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.268, f"{war:.2f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.273+0.002, f"{war_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(war_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(war_rank))
-        
-        stats_ax.text(1, 0.468, "WPOE", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.468, f"{wpoe:.2f}", fontsize=16, fontweight='bold', ha='right')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(war_rank))
+
+        stats_ax.text(1, 0.468, "WPOE", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.468, f"{wpoe:.2f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.473+0.002, f"{wpoe_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(wpoe_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(wpoe_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(wpoe_rank))
 
-        stats_ax.text(1, 0.418, "PYT", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.418, f"{pythag:.3f}", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(1, 0.418, "PYT", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.418, f"{pythag:.3f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.423+0.002, f"{pythag_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(pythag_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(pythag_rank))
-        
-        stats_ax.text(0.0, 0.218, "REC", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.23, 0.218, f"{record}", fontsize=16, fontweight='bold', ha='center')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(pythag_rank))
 
-        stats_ax.text(0.0, 0.168, "Q1", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.23, 0.168, f"{q1}", fontsize=16, fontweight='bold', ha='center')
+        stats_ax.text(0.0, 0.218, "REC", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.218, f"{record}", fontsize=fontsize, fontweight='bold', ha='center')
 
-        stats_ax.text(0.0, 0.118, "Q2", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.23, 0.118, f"{q2}", fontsize=16, fontweight='bold', ha='center')
+        stats_ax.text(0.0, 0.168, "Q1", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.168, f"{q1}", fontsize=fontsize, fontweight='bold', ha='center')
 
-        stats_ax.text(0.0, 0.068, "Q3", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.23, 0.068, f"{q3}", fontsize=16, fontweight='bold', ha='center')
+        stats_ax.text(0.0, 0.118, "Q2", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.118, f"{q2}", fontsize=fontsize, fontweight='bold', ha='center')
 
-        stats_ax.text(0.0, 0.018, "Q4", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.23, 0.018, f"{q4}", fontsize=16, fontweight='bold', ha='center')
-        
-        stats_ax.text(1.0, 0.368, "HOME", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.368, f"{home_record}", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.0, 0.068, "Q3", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.068, f"{q3}", fontsize=fontsize, fontweight='bold', ha='center')
 
-        stats_ax.text(1.0, 0.318, "AWAY", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.318, f"{away_record}", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.0, 0.018, "Q4", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.018, f"{q4}", fontsize=fontsize, fontweight='bold', ha='center')
 
-        stats_ax.text(1.0, 0.268, "NEUTRAL", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.268, f"{neutral_record}", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(1.0, 0.368, "HOME", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.368, f"{home_record}", fontsize=fontsize, fontweight='bold', ha='right')
 
+        stats_ax.text(1.0, 0.318, "AWAY", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.318, f"{away_record}", fontsize=fontsize, fontweight='bold', ha='right')
+
+        stats_ax.text(1.0, 0.268, "NEUTRAL", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.268, f"{neutral_record}", fontsize=fontsize, fontweight='bold', ha='right')
         # Add team logo
         if logo is not None:
             plot_logo(stats_ax, logo, (0.685, 0.125), zoom=0.2)
@@ -3082,12 +3082,12 @@ def baseball_team_profile(request: TeamProfileRequest):
                 team_color = "black"
             opponent_text = "Non D-I" if pd.isna(opponent) else str(opponent)
             game_ax.text(name_x_offset, 0.5, opponent_text, 
-                        fontsize=16, fontweight='bold', color=team_color, 
+                        fontsize=fontsize, fontweight='bold', color=team_color, 
                         ha='left', va='center')
             
             # Add quadrant
             game_ax.text(quad_x_offset, 0.5, quadrant, 
-                        fontsize=16, fontweight='bold', color='darkblue', 
+                        fontsize=fontsize, fontweight='bold', color='darkblue', 
                         ha='right', va='center')
 
         plt.tight_layout()
@@ -6013,164 +6013,164 @@ def softball_team_profile(request: SoftballTeamProfileRequest):
         stats_ax.hlines(y=0.9, xmin=0.0, xmax=1, colors='black', linewidth=1)
         stats_ax.vlines(x=0.5, ymin=0.55, ymax=0.9, colors='black', linewidth=1)
 
-        stats_ax.text(0.0, 0.868, "RPG", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.868, f"{rpg:.2f}", fontsize=16, fontweight='bold', ha='left')
+        fontsize = 12
+        stats_ax.text(0.0, 0.868, "RPG", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.868, f"{rpg:.2f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.873+0.002, f"{rpg_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(rpg_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(rpg_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(rpg_rank))
 
-        stats_ax.text(0.0, 0.818, "BA", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.818, f"{ba:.3f}", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.0, 0.818, "BA", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.818, f"{ba:.3f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.823+0.002, f"{ba_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(ba_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(ba_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(ba_rank))
         
-        stats_ax.text(0.0, 0.768, "OBP", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.768, f"{obp:.3f}", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.0, 0.768, "OBP", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.768, f"{obp:.3f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.773+0.002, f"{obp_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(obp_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(obp_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(obp_rank))
 
-        stats_ax.text(0.0, 0.718, "SLG", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.718, f"{slg:.3f}", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.0, 0.718, "SLG", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.718, f"{slg:.3f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.723+0.002, f"{slg_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(slg_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(slg_rank))
-
-        stats_ax.text(0.0, 0.668, "OPS", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.668, f"{ops:.3f}", fontsize=16, fontweight='bold', ha='left')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(slg_rank))
+        
+        stats_ax.text(0.0, 0.668, "OPS", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.668, f"{ops:.3f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.673+0.002, f"{ops_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(ops_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(ops_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(ops_rank))
 
-        stats_ax.text(0.0, 0.618, "ISO", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.618, f"{iso:.3f}", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.0, 0.618, "ISO", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.618, f"{iso:.3f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.623+0.002, f"{iso_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(iso_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(iso_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(iso_rank))
 
-        stats_ax.text(0.0, 0.568, "wOBA", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.568, f"{wOBA:.3f}", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.0, 0.568, "wOBA", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.568, f"{wOBA:.3f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.573+0.002, f"{wOBA_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(wOBA_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(wOBA_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(wOBA_rank))
         
         stats_ax.text(0.77, 0.923, f"PITCHING", fontsize=16, fontweight='bold', 
                     ha='center', va='center')
-        
-        stats_ax.text(1, 0.868, "ERA", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.868, f"{era:.2f}", fontsize=16, fontweight='bold', ha='right')
+
+        stats_ax.text(1, 0.868, "ERA", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.868, f"{era:.2f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.873+0.002, f"{era_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(era_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(era_rank))
-
-        stats_ax.text(1, 0.818, "WHIP", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.818, f"{whip:.2f}", fontsize=16, fontweight='bold', ha='right')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(era_rank))
+        
+        stats_ax.text(1, 0.818, "WHIP", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.818, f"{whip:.2f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.823+0.002, f"{whip_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(whip_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(whip_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(whip_rank))
 
-        stats_ax.text(1, 0.768, "K/9", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.768, f"{kp9:.1f}", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(1, 0.768, "K/9", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.768, f"{kp9:.1f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.773+0.002, f"{kp9_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(kp9_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(kp9_rank))
-
-        stats_ax.text(1, 0.718, "LOB%", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.718, f"{lob:.3f}", fontsize=16, fontweight='bold', ha='right')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(kp9_rank))
+        
+        stats_ax.text(1, 0.718, "LOB%", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.718, f"{lob:.3f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.723+0.002, f"{lob_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(lob_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(lob_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(lob_rank))
 
-        stats_ax.text(1, 0.668, "K/BB", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.668, f"{kbb:.2f}", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(1, 0.668, "K/BB", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.668, f"{kbb:.2f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.673+0.002, f"{kbb_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(kbb_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(kbb_rank))
-        
-        stats_ax.text(1, 0.618, "FIP", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.618, f"{fip:.2f}", fontsize=16, fontweight='bold', ha='right')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(kbb_rank))
+
+        stats_ax.text(1, 0.618, "FIP", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.618, f"{fip:.2f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.623+0.002, f"{fip_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(fip_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(fip_rank))
-        
-        stats_ax.text(1, 0.568, "PCT", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.568, f"{pct:.3f}", fontsize=16, fontweight='bold', ha='right')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(fip_rank))
+
+        stats_ax.text(1, 0.568, "PCT", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.568, f"{pct:.3f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.573+0.002, f"{pct_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(pct_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(pct_rank))
-        
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(pct_rank))
+
         stats_ax.text(0.5, 0.523, f"TEAM METRICS", fontsize=16, fontweight='bold', 
                     ha='center', va='center')
         stats_ax.hlines(y=0.5, xmin=0.0, xmax=1, colors='black', linewidth=1)
         stats_ax.vlines(x=0.5, ymin=0.25, ymax=0.5, colors='black', linewidth=1)
 
-        stats_ax.text(0.0, 0.468, "NET", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.468, f"{net_score:.3f}", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.0, 0.468, "NET", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.468, f"{net_score:.3f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.473+0.002, f"{net_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(net_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(net_rank))
-
-        stats_ax.text(0.0, 0.418, "RAT", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.418, f"{rating:.2f}", fontsize=16, fontweight='bold', ha='left')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(net_rank))
+        
+        stats_ax.text(0.0, 0.418, "RAT", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.418, f"{rating:.2f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.423+0.002, f"{rating_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(rating_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(rating_rank))
-        
-        stats_ax.text(0.0, 0.368, "RQI", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.368, f"{rqi:.2f}", fontsize=16, fontweight='bold', ha='left')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(rating_rank))
+
+        stats_ax.text(0.0, 0.368, "RQI", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.368, f"{rqi:.2f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.373+0.002, f"{rqi_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(rqi_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(rqi_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(rqi_rank))
 
-        stats_ax.text(0.0, 0.318, "SOS", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.318, f"{sos:.3f}", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.0, 0.318, "SOS", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.318, f"{sos:.3f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.323+0.002, f"{sos_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(sos_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(sos_rank))
-
-        stats_ax.text(0.0, 0.268, "WAR", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.325, 0.268, f"{war:.2f}", fontsize=16, fontweight='bold', ha='left')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(sos_rank))
+        
+        stats_ax.text(0.0, 0.268, "WAR", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.268, f"{war:.2f}", fontsize=fontsize, fontweight='bold', ha='left')
         fixed_width_text(stats_ax, 0.23, 0.273+0.002, f"{war_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(war_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(war_rank))
-        
-        stats_ax.text(1, 0.468, "WPOE", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.468, f"{wpoe:.2f}", fontsize=16, fontweight='bold', ha='right')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(war_rank))
+
+        stats_ax.text(1, 0.468, "WPOE", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.468, f"{wpoe:.2f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.473+0.002, f"{wpoe_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(wpoe_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(wpoe_rank))
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(wpoe_rank))
 
-        stats_ax.text(1, 0.418, "PYT", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.418, f"{pythag:.3f}", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(1, 0.418, "PYT", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.418, f"{pythag:.3f}", fontsize=fontsize, fontweight='bold', ha='right')
         fixed_width_text(stats_ax, 0.77, 0.423+0.002, f"{pythag_rank}", width=0.15, height=0.05,
                                 facecolor=rank_to_color(pythag_rank), alpha=alpha_val,
-                                fontsize=16, fontweight='bold', color=rank_text_color(pythag_rank))
-        
-        stats_ax.text(0.0, 0.218, "REC", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.23, 0.218, f"{record}", fontsize=16, fontweight='bold', ha='center')
+                                fontsize=fontsize, fontweight='bold', color=rank_text_color(pythag_rank))
 
-        stats_ax.text(0.0, 0.168, "Q1", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.23, 0.168, f"{q1}", fontsize=16, fontweight='bold', ha='center')
+        stats_ax.text(0.0, 0.218, "REC", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.218, f"{record}", fontsize=fontsize, fontweight='bold', ha='center')
 
-        stats_ax.text(0.0, 0.118, "Q2", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.23, 0.118, f"{q2}", fontsize=16, fontweight='bold', ha='center')
+        stats_ax.text(0.0, 0.168, "Q1", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.168, f"{q1}", fontsize=fontsize, fontweight='bold', ha='center')
 
-        stats_ax.text(0.0, 0.068, "Q3", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.23, 0.068, f"{q3}", fontsize=16, fontweight='bold', ha='center')
+        stats_ax.text(0.0, 0.118, "Q2", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.118, f"{q2}", fontsize=fontsize, fontweight='bold', ha='center')
 
-        stats_ax.text(0.0, 0.018, "Q4", fontsize=16, fontweight='bold', ha='left')
-        stats_ax.text(0.23, 0.018, f"{q4}", fontsize=16, fontweight='bold', ha='center')
-        
-        stats_ax.text(1.0, 0.368, "HOME", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.368, f"{home_record}", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.0, 0.068, "Q3", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.068, f"{q3}", fontsize=fontsize, fontweight='bold', ha='center')
 
-        stats_ax.text(1.0, 0.318, "AWAY", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.318, f"{away_record}", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.0, 0.018, "Q4", fontsize=fontsize, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.018, f"{q4}", fontsize=fontsize, fontweight='bold', ha='center')
 
-        stats_ax.text(1.0, 0.268, "NEUTRAL", fontsize=16, fontweight='bold', ha='right')
-        stats_ax.text(0.675, 0.268, f"{neutral_record}", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(1.0, 0.368, "HOME", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.368, f"{home_record}", fontsize=fontsize, fontweight='bold', ha='right')
 
+        stats_ax.text(1.0, 0.318, "AWAY", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.318, f"{away_record}", fontsize=fontsize, fontweight='bold', ha='right')
+
+        stats_ax.text(1.0, 0.268, "NEUTRAL", fontsize=fontsize, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.268, f"{neutral_record}", fontsize=fontsize, fontweight='bold', ha='right')
         # Add team logo
         if logo is not None:
             plot_logo(stats_ax, logo, (0.685, 0.125), zoom=0.2)
@@ -6236,12 +6236,12 @@ def softball_team_profile(request: SoftballTeamProfileRequest):
                 team_color = "black"
             opponent_text = "Non D-I" if pd.isna(opponent) else str(opponent)
             game_ax.text(name_x_offset, 0.5, opponent_text, 
-                        fontsize=16, fontweight='bold', color=team_color, 
+                        fontsize=fontsize, fontweight='bold', color=team_color, 
                         ha='left', va='center')
             
             # Add quadrant
             game_ax.text(quad_x_offset, 0.5, quadrant, 
-                        fontsize=16, fontweight='bold', color='darkblue', 
+                        fontsize=fontsize, fontweight='bold', color='darkblue', 
                         ha='right', va='center')
 
         plt.tight_layout()
