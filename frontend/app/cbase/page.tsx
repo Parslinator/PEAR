@@ -489,12 +489,11 @@ export default function CbasePage() {
                     <p className="mt-4 text-gray-600 dark:text-gray-400">Loading team profile...</p>
                   </div>
                 ) : teamProfile?.imageUrl ? (
-                  <div className="mt-6 overflow-x-auto">
-                    <img
-                      src={teamProfile.imageUrl}
+                  <div className="flex justify-center">
+                    <img 
+                      src={teamProfile.imageUrl} 
                       alt={`${selectedTeam} profile`}
-                      style={{ width: 'auto', height: 'auto', maxWidth: 'none' }}
-                      className="block"
+                      className="max-w-full h-auto rounded-lg"
                     />
                   </div>
                 ) : (

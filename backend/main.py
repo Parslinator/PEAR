@@ -3024,7 +3024,7 @@ def baseball_team_profile(request: TeamProfileRequest):
         # Fixed positions within each game axis (0-1 scale)
         logo_x_offset = 0.06       # Logo position
         rank_x_offset = 0.13       # NET ranking position
-        name_x_offset = 0.27       # Team name position (center-left)
+        name_x_offset = 0.29       # Team name position (center-left)
         quad_x_offset = 0.98       # Quadrant position
         prob_x_offset = 0.85       # Win probability position
 
@@ -6178,7 +6178,7 @@ def softball_team_profile(request: SoftballTeamProfileRequest):
         # Fixed positions within each game axis (0-1 scale)
         logo_x_offset = 0.06       # Logo position
         rank_x_offset = 0.13       # NET ranking position
-        name_x_offset = 0.27       # Team name position (center-left)
+        name_x_offset = 0.29       # Team name position (center-left)
         quad_x_offset = 0.98       # Quadrant position
         prob_x_offset = 0.85       # Win probability position
 
