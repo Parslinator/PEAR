@@ -27,6 +27,7 @@ import re
 import random
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Rectangle
+import matplotlib.gridspec as gridspec
 
 app = FastAPI(title="PEAR Ratings API")
 
@@ -2537,350 +2538,559 @@ def simulate_team_win_distribution(schedule_df, comparison_date, team_name, num_
     return win_distribution
 
 @app.post("/api/cbase/team-profile")
-def team_profile(request: TeamProfileRequest):
-    """Generate team profile visualization"""
-    logo_img = None  # Initialize outside try block
+def baseball_team_profile(request: TeamProfileRequest):
+    logo = None
     try:
         stats_and_metrics, comparison_date = load_baseball_data()
         schedule_df = load_schedule_data()
         team_name = request.team_name
-        
-        BASE_URL = "https://www.warrennolan.com"
-        completed_schedule = schedule_df[
-            (schedule_df["Date"] <= comparison_date) & (schedule_df["home_score"] != schedule_df["away_score"])
-        ].reset_index(drop=True)
-        team_schedule = schedule_df[schedule_df['Team'] == team_name].reset_index(drop=True)
-        team_data = stats_and_metrics[stats_and_metrics['Team'] == team_name]
-        team_net = team_data['NET'].values[0]
-        team_conference = team_data['Conference'].values[0]
-        team_record = get_total_record(team_data.iloc[0])
-        Conf_Record = get_conference_record(team_name, team_schedule, stats_and_metrics)
-        team_Q1 = team_data['Q1'].values[0]
-        team_Q2 = team_data['Q2'].values[0]
-        team_Q3 = team_data['Q3'].values[0]
-        team_Q4 = team_data['Q4'].values[0]
-        team_rpi = team_data['RPI'].values[0]
-        team_elo = int(team_data['ELO_Rank'].values[0])
-        team_rqi = team_data['RQI'].values[0]
-        team_tsr = team_data['PRR'].values[0]
-        team_sos = team_data['SOS'].values[0]
-        record = get_location_records(team_name, team_schedule)
-        home_record = record['Home']
-        away_record = record['Away']
-        neutral_record = record['Neutral']
-        
-        fig, ax = plt.subplots(figsize=(8, 10), dpi=500)
-        fig.patch.set_facecolor('#CECEB2')
-        ax.set_facecolor('#CECEB2')
 
-        # percentile sliders code
-        percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
-        team_data = team_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
-        cmap = plt.get_cmap('seismic')
-        colors = [cmap(p / 100) for p in team_data['Percentile']]
-        def darken_color(color, factor=0.3):
-            color = mcolors.hex2color(color)
-            darkened_color = [max(c - factor, 0) for c in color]
-            return mcolors.rgb2hex(darkened_color)
-        darkened_colors = [darken_color(c) for c in colors]
-        ax.barh(team_data['Metric'], 99, color='gray', height=0.1, left=0)
-        bars = ax.barh(team_data['Metric'], team_data['Percentile'], color=colors, height=0.6, edgecolor=darkened_colors, linewidth=3)
-        i = 0
-        for idx, (bar, percentile) in enumerate(zip(bars, team_data['Percentile'])):
-            text = ax.text(bar.get_width(), bar.get_y() + bar.get_height()/2, 
-                        str(percentile), ha='center', va='center', 
-                        fontsize=16, fontweight='bold', color='white', zorder=2,
-                        bbox=dict(facecolor=colors[i], edgecolor=darkened_colors[i], boxstyle='circle,pad=0.4', linewidth=3))
-            text.set_path_effects([
-                pe.withStroke(linewidth=2, foreground='black')
-            ])
-            if idx == 4 or idx == 8:
-                y_position = bar.get_y() + bar.get_height() + 0.185
-                ax.hlines(y_position, 0, 99,
-                        colors='black', linestyles='dashed', linewidth=2, zorder=1)
-                    
-            i = i + 1
-        ax.set_xlim(0, 102)
-        ax.set_xticks([])
-        custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'fWAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
-        ax.set_yticks(range(len(custom_labels)))
-        ax.set_yticklabels(custom_labels, fontweight='bold', fontsize=16)
-        ax.tick_params(axis='y', which='both', length=0, pad=14)
-        ax.invert_yaxis()
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_visible(False)
-        ax.spines['bottom'].set_visible(False)
-
-        # team logo - must stay above all text calls
         logo_folder = os.path.join(BASEBALL_BASE_PATH, "logos")
-        logo_path = os.path.join(logo_folder, f"{team_name}.png")
-        logo_img = Image.open(logo_path).convert("RGBA")
-        ax_img1 = fig.add_axes([0.04, 0.85, 0.2, 0.2])
-        ax_img1.imshow(logo_img)
-        ax_img1.axis("off")
 
-        ### PLOT TITLE
-        plt.text(0.18, 1.16, f'#{team_net} {team_name}', fontsize=34, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
-        plt.text(0.18, 1.11, f"{team_record} ({Conf_Record})", fontsize=24, ha='left', va='center', transform=ax.transAxes)
-        plt.text(0.18, 1.06, f'@PEARatings', fontsize=24, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
-        plt.text(0.18, 1.01, f'Team Profile', fontsize=24, ha='left', va='center', transform=ax.transAxes)
+        def plot_box(x, y, width, height, color='black', fill=False, linewidth=2, ax=None):
+            if ax is None:
+                fig, ax = plt.subplots()
 
-        ### TEAM SCHEDULE
-        def get_opponent_net(row, team):
-            if row['home_team'] == team:
-                return row['away_net']
-            elif row['away_team'] == team:
-                return row['home_net']
+            rect = Rectangle((x, y), width, height,
+                                    linewidth=linewidth,
+                                    edgecolor="black",
+                                    facecolor=color if fill else 'none')
+            ax.add_patch(rect)
+
+            return ax
+
+        def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
+            if location != "Neutral":
+                home_pr += 0.3
+            rating_diff = home_pr - away_pr
+            return round(1 / (1 + 10 ** (-rating_diff / 6)) * 100, 2)
+
+        def fixed_width_text(ax, x, y, text, width=0.06, height=0.04,
+                            facecolor="lightgrey", edgecolor="none", alpha=1.0, **kwargs):
+            # Draw rectangle behind text
+            ax.add_patch(Rectangle(
+                (x - width/2, y - height/2), width, height,
+                transform=ax.transAxes,
+                facecolor=facecolor,
+                edgecolor=edgecolor,
+                alpha=alpha,
+                zorder=1
+            ))
+
+            # Draw text centered on top
+            ax.text(x, y, text,
+                    ha="center", va="center", zorder=2, **kwargs)
+            
+        def get_text_color(bg_color: str) -> str:
+            """Determine if text should be black or white based on background color luminance"""
+            import re
+            
+            # Handle hex colors
+            if bg_color.startswith('#'):
+                # Convert hex to RGB
+                bg_color = bg_color.lstrip('#')
+                r = int(bg_color[0:2], 16)
+                g = int(bg_color[2:4], 16)
+                b = int(bg_color[4:6], 16)
             else:
-                return np.nan
+                # Handle rgb() format
+                match = re.match(r'rgb\((\d+),\s*(\d+),\s*(\d+)\)', bg_color)
+                if not match:
+                    return 'white'
+                
+                r = int(match.group(1))
+                g = int(match.group(2))
+                b = int(match.group(3))
+            
+            luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+            return 'black' if luminance > 0.5 else 'white'
 
-        team_schedule['opponent_net'] = team_schedule.apply(lambda row: get_opponent_net(row, team_name), axis=1)
+        def rank_text_color(rank, vmin=1, vmax=300):
+            """Get appropriate text color (black or white) based on rank background color"""
+            if rank == "":
+                return 'black'
+            
+            bg_color = rank_to_color(rank, vmin=vmin, vmax=vmax)
+            return get_text_color(bg_color)
 
-        conditions = [
-            ((team_schedule["Location"] == "Home") & (team_schedule["opponent_net"] <= 25)) |
-            ((team_schedule["Location"] == "Neutral") & (team_schedule["opponent_net"] <= 40)) |
-            ((team_schedule["Location"] == "Away") & (team_schedule["home_net"] <= 60)),
+        def percent_text_color(win_pct, vmin=0.0, vmax=1.0):
+            """Get appropriate text color (black or white) based on win percentage background color"""
+            if win_pct == "":
+                return 'black'
+            
+            bg_color = rank_to_color(win_pct, vmin=vmin, vmax=vmax)
+            return get_text_color(bg_color)
 
-            ((team_schedule["Location"] == "Home") & (team_schedule["opponent_net"] <= 50)) |
-            ((team_schedule["Location"] == "Neutral") & (team_schedule["opponent_net"] <= 80)) |
-            ((team_schedule["Location"] == "Away") & (team_schedule["opponent_net"] <= 120)),
+        def plot_logo(ax, img, xy, zoom=0.2, zorder=3):
+            """Helper to plot a logo at given xy coords."""
+            imagebox = OffsetImage(img, zoom=zoom)
+            ab = AnnotationBbox(imagebox, xy, frameon=False, zorder=zorder,
+                            xycoords='axes fraction', box_alignment=(0.5, 0.5))
+            ax.add_artist(ab)
 
-            ((team_schedule["Location"] == "Home") & (team_schedule["opponent_net"] <= 100)) |
-            ((team_schedule["Location"] == "Neutral") & (team_schedule["opponent_net"] <= 160)) |
-            ((team_schedule["Location"] == "Away") & (team_schedule["opponent_net"] <= 240))
-        ]
+        def rank_to_color(rank, vmin=1, vmax=300):
+            """
+            Map a rank (1–300) to a hex color.
+            Dark blue = best (1), grey = middle, dark red = worst (300).
+            Color scale: Dark Red (#8B0000) → Orange (#FFA500) → Light Gray (#D3D3D3) → Cyan (#00FFFF) → Dark Blue (#00008B)
+            """
+            # Define colormap from blue → grey → red
+            cmap = mcolors.LinearSegmentedColormap.from_list(
+                "rank_cmap", ["#00008B", "#00FFFF", "#D3D3D3", "#FFA500", "#8B0000"]  # dark blue, cyan, light gray, orange, dark red
+            )
+            
+            # Normalize rank to [0,1]
+            norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+            rgba = cmap(norm(rank))
+            
+            # Convert RGBA to hex
+            return mcolors.to_hex(rgba)
 
-        # Define corresponding quadrant labels
-        quadrants = ["Q1", "Q2", "Q3"]
+        def percent_to_color(win_pct, vmin=0.0, vmax=1.0):
+            """
+            Map a win percentage (0.0–1.0) to a hex color.
+            Dark blue = best (1.0), grey = middle (0.5), dark red = worst (0.0).
+            Color scale: Dark Red (#8B0000) → Orange (#FFA500) → Light Gray (#D3D3D3) → Cyan (#00FFFF) → Dark Blue (#00008B)
+            """
+            # Define colormap from red → grey → blue
+            cmap = mcolors.LinearSegmentedColormap.from_list(
+                "percent_cmap", ["#8B0000", "#FFA500", "#D3D3D3", "#00FFFF", "#00008B"]  # dark red, orange, light gray, cyan, dark blue
+            )
+            
+            # Normalize percentage to [0,1]
+            norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+            rgba = cmap(norm(win_pct))
+            
+            # Convert RGBA to hex
+            return mcolors.to_hex(rgba)
 
-        # Assign Quadrant values
-        team_schedule["Quad"] = np.select(conditions, quadrants, default="Q4")
-        num_items = len(team_schedule)
-        schedule_x = 0.9
-        schedule_y = 0.95
-        schedule_size = 15
-        counter = 0
-        columns = 0
-        best_rq_row = None
-        worst_rq_row = None
-        max_rq = float('-inf')
-        min_rq = float('inf')
-        for idx, (_, row) in enumerate(team_schedule.iterrows()):
-            if row['resume_quality'] > max_rq and row['Result'].startswith("W"):
-                max_rq = row['resume_quality']
-                best_rq_row = row
-            if row['resume_quality'] < min_rq and row['Result'].startswith("L"):
-                min_rq = row['resume_quality']
-                worst_rq_row = row
-            if counter % 15 == 0:
-                schedule_x +=0.35
-                schedule_y = 0.95
-                columns += 1
-            if row['home_team'] == team_name:
-                opponent = row['away_team']
-                net = row['away_net']
-                win_prob = row['home_win_prob']
-                symbol = ""
+        def get_value_and_rank(df, team, column, higher_is_better=True):
+            """
+            Return (value, rank) for a given team and column.
+            
+            Args:
+                df (pd.DataFrame): Data source with 'team' and stat columns.
+                team (str): Team name to look up.
+                column (str): Column name to extract.
+                higher_is_better (bool): If True, high values rank better (1 = highest).
+                                        If False, low values rank better (1 = lowest).
+            """
+            ascending = not higher_is_better
+            ranks = df[column].rank(ascending=ascending, method="first").astype(int)
+
+            value = df.loc[df['Team'] == team, column].values[0]
+            rank = ranks.loc[df['Team'] == team].values[0]
+
+            return value, rank
+        
+        def get_record_value_and_rank(df, team, column, higher_is_better=True):
+            """
+            Return (record_string, win_percentage, rank) for a given team and column containing W-L records.
+            
+            Args:
+                df (pd.DataFrame): Data source with 'team' and record columns.
+                team (str): Team name to look up.
+                column (str): Column name containing records in "W-L" format.
+                higher_is_better (bool): If True, high win% ranks better (1 = highest).
+                                        If False, low win% ranks better (1 = lowest).
+            
+            Returns:
+                tuple: (record_string, win_percentage as float, rank as int)
+            """
+            def calculate_win_pct(record):
+                """Convert 'W-L' string to win percentage."""
+                if pd.isna(record) or record == '':
+                    return 0.0
+                parts = str(record).split('-')
+                wins = int(parts[0])
+                losses = int(parts[1])
+                total = wins + losses
+                return wins / total if total > 0 else 0.0
+            
+            # Calculate win percentages for all teams
+            win_pcts = df[column].apply(calculate_win_pct)
+            
+            # Calculate ranks
+            ascending = not higher_is_better
+            ranks = win_pcts.rank(ascending=ascending, method="first").astype(int)
+            
+            # Get values for specified team
+            team_idx = df['Team'] == team
+            record_string = df.loc[team_idx, column].values[0]
+            win_pct = win_pcts.loc[team_idx].values[0]
+            rank = ranks.loc[team_idx].values[0]
+            
+            return record_string, win_pct
+        
+        def get_game_color(result):
+            if "W" in result:
+                return "palegreen"
+            elif "L" in result:
+                return "lightcoral"
             else:
-                opponent = row['home_team']
-                net = row['home_net']
-                win_prob = 1 - row['home_win_prob']
-                symbol = "@"
-            if row['Location'] == "Neutral":
-                symbol = "vs"
-            if "Non Div I" in opponent:
-                opponent = "Non Div I"
-            if pd.notna(net):
-                net = int(net)
-            if row['resume_quality'] < 0:
-                color = '#8B0000' #red
-            else:
-                color = '#2C5E00' #green
-            # # ax.text(0.5, 0.8, opponent, ha='center', va='center', fontsize=40, fontweight='bold', color=color)
-            # # ax.text(0.1, 0.3, f'#{net}', ha='left', va='center', fontsize=32)
-            # # ax.text(0.5, 0.5, row['Quad'], ha='right', va='center', fontsize=32, fontweight='bold')
-            result_first_letter = row['Result'][0].upper() if row['Result'][0].upper() in ['W', 'L'] else ''
+                return "whitesmoke"
 
-            if result_first_letter:
-                if (row['home_team'] == team_name) & (row['Location'] == "Home"):
-                    plt.text(schedule_x, schedule_y, f'{opponent}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color=color, transform=ax.transAxes)
+        def get_quadrant(opponent_net, location):
+            thresholds = {
+                "Home": [25, 50, 100, 307],
+                "Neutral": [40, 80, 160, 307],
+                "Away": [60, 120, 240, 307]
+            }
+            
+            # Get the thresholds for the given location
+            location_thresholds = thresholds.get(location, thresholds["Neutral"])
+            
+            # Determine quadrant based on opponent NET ranking
+            if opponent_net <= location_thresholds[0]:
+                return "Q1"
+            elif opponent_net <= location_thresholds[1]:
+                return "Q2"
+            elif opponent_net <= location_thresholds[2]:
+                return "Q3"
+            else:
+                return "Q4"
+
+        def get_location_records(team, team_schedule):
+            """Get home, away, and neutral records for a team"""
+            
+            team_schedule['is_win'] = team_schedule['Result'].str.startswith('W')
+            
+            records = {}
+            for loc in ['Home', 'Away', 'Neutral']:
+                group = team_schedule[team_schedule['Location'] == loc]
+                wins = group['is_win'].sum()
+                losses = len(group) - wins
+                records[loc] = f"{int(wins)}-{int(losses)}"
+            
+            return records
+
+        if os.path.exists(logo_folder):
+            # Try to find logo for the team (keep spaces, don't replace with underscores)
+            logo_path = os.path.join(logo_folder, f"{team_name}.png")
+
+            if os.path.exists(logo_path):
+                logo = Image.open(logo_path).convert("RGBA")
+
+        team_schedule = schedule_df[schedule_df['Team'] == team_name].reset_index(drop=True)
+        
+        # Calculate layout
+        num_games = len(team_schedule)
+        games_per_col = 20
+        num_cols = (num_games + games_per_col - 1) // games_per_col
+
+        # ----------------
+        # Load opponent logos
+        # ----------------
+        opponent_logos = {}
+        opponents_set = set(team_schedule['Opponent'].dropna())
+        for opponent in opponents_set:
+            logo_path = os.path.join(logo_folder, f"{opponent}.png")
+            if os.path.exists(logo_path):
+                opponent_logos[opponent] = Image.open(logo_path).convert("RGBA")
+            else:
+                opponent_logos[opponent] = None
+
+        # ----------------
+        # Create figure with GridSpec
+        # ----------------
+        # Calculate figure width based on number of columns
+        col_width = 3.5  # Width per column in inches
+        stats_width = 4   # Width for stats section
+        total_width = (num_cols * col_width) + stats_width
+        
+        fig = plt.figure(figsize=(total_width, 12), dpi=200)
+        fig.patch.set_facecolor('#CECEB2')
+        
+        # Create main grid: schedule area (left) and stats area (right)
+        main_gs = gridspec.GridSpec(1, 2, figure=fig, 
+                                width_ratios=[num_cols * col_width, stats_width], 
+                                left=0.02, right=0.98, wspace=0.02)
+        
+        # Create nested grid for schedule columns
+        schedule_gs = gridspec.GridSpecFromSubplotSpec(games_per_col, num_cols, 
+                                                    subplot_spec=main_gs[0],
+                                                    hspace=0.01, wspace=0.01)
+        
+        # Create stats area
+        alpha_val = 0.9
+        stats_ax = fig.add_subplot(main_gs[1])
+        stats_ax.set_xlim(0, 1)
+        stats_ax.set_ylim(0, 1)
+        stats_ax.axis('off')
+        stats_ax.set_facecolor('#CECEB2')
+        net_score, net_rank = get_value_and_rank(stats_and_metrics, team_name, "NET_Score")
+        rpg, rpg_rank = get_value_and_rank(stats_and_metrics, team_name, "RPG")
+        ba, ba_rank = get_value_and_rank(stats_and_metrics, team_name, "BA")
+        obp, obp_rank = get_value_and_rank(stats_and_metrics, team_name, "OBP")
+        slg, slg_rank = get_value_and_rank(stats_and_metrics, team_name, "SLG")
+        ops, ops_rank = get_value_and_rank(stats_and_metrics, team_name, "OPS")
+        iso, iso_rank = get_value_and_rank(stats_and_metrics, team_name, "ISO")
+        wOBA, wOBA_rank = get_value_and_rank(stats_and_metrics, team_name, "wOBA")
+        era, era_rank = get_value_and_rank(stats_and_metrics, team_name, "ERA", False)
+        whip, whip_rank = get_value_and_rank(stats_and_metrics, team_name, "WHIP", False)
+        kp9, kp9_rank = get_value_and_rank(stats_and_metrics, team_name, "KP9")
+        lob, lob_rank = get_value_and_rank(stats_and_metrics, team_name, "LOB%")
+        kbb, kbb_rank = get_value_and_rank(stats_and_metrics, team_name, "K/BB")
+        fip, fip_rank = get_value_and_rank(stats_and_metrics, team_name, "FIP", False)
+        pct, pct_rank = get_value_and_rank(stats_and_metrics, team_name, "PCT")
+        rating, rating_rank = get_value_and_rank(stats_and_metrics, team_name, "Rating")
+        rqi, rqi_rank = get_value_and_rank(stats_and_metrics, team_name, "resume_quality")
+        sos, sos_rank = get_value_and_rank(stats_and_metrics, team_name, "avg_expected_wins", False)
+        war, war_rank = get_value_and_rank(stats_and_metrics, team_name, "fWAR")
+        wpoe, wpoe_rank = get_value_and_rank(stats_and_metrics, team_name, "wpoe_pct")
+        pythag, pythag_rank = get_value_and_rank(stats_and_metrics, team_name, "PYTHAG")
+        record, record_rank = get_record_value_and_rank(stats_and_metrics, team_name, "Record")
+        q1, q1_rank = get_value_and_rank(stats_and_metrics, team_name, "Q1")
+        q2, q2_rank = get_value_and_rank(stats_and_metrics, team_name, "Q2")
+        q3, q3_rank = get_value_and_rank(stats_and_metrics, team_name, "Q3")
+        q4, q4_rank = get_value_and_rank(stats_and_metrics, team_name, "Q4")
+        location_records = get_location_records(team_name, team_schedule)
+        home_record = location_records.get("Home", "0-0")
+        away_record = location_records.get("Away", "0-0")
+        neutral_record = location_records.get("Neutral", "0-0")
+        
+        # Add team stats
+        stats_ax.text(0.5, 0.973, f"#{net_rank} {team_name}", fontsize=24, fontweight='bold', 
+                    ha='center', va='center')
+
+        stats_ax.text(0.23, 0.923, f"OFFENSE", fontsize=16, fontweight='bold', 
+                    ha='center', va='center')
+        
+        stats_ax.hlines(y=0.9, xmin=0.0, xmax=1, colors='black', linewidth=1)
+        stats_ax.vlines(x=0.5, ymin=0.55, ymax=0.9, colors='black', linewidth=1)
+
+        stats_ax.text(0.0, 0.868, "RPG", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.868, f"{rpg:.2f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.873+0.002, f"{rpg_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(rpg_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(rpg_rank))
+
+        stats_ax.text(0.0, 0.818, "BA", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.818, f"{ba:.3f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.823+0.002, f"{ba_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(ba_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(ba_rank))
+        
+        stats_ax.text(0.0, 0.768, "OBP", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.768, f"{obp:.3f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.773+0.002, f"{obp_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(obp_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(obp_rank))
+
+        stats_ax.text(0.0, 0.718, "SLG", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.718, f"{slg:.3f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.723+0.002, f"{slg_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(slg_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(slg_rank))
+
+        stats_ax.text(0.0, 0.668, "OPS", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.668, f"{ops:.3f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.673+0.002, f"{ops_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(ops_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(ops_rank))
+
+        stats_ax.text(0.0, 0.618, "ISO", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.618, f"{iso:.3f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.623+0.002, f"{iso_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(iso_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(iso_rank))
+
+        stats_ax.text(0.0, 0.568, "wOBA", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.568, f"{wOBA:.3f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.573+0.002, f"{wOBA_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(wOBA_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(wOBA_rank))
+        
+        stats_ax.text(0.77, 0.923, f"PITCHING", fontsize=16, fontweight='bold', 
+                    ha='center', va='center')
+        
+        stats_ax.text(1, 0.868, "ERA", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.868, f"{era:.2f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.873+0.002, f"{era_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(era_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(era_rank))
+
+        stats_ax.text(1, 0.818, "WHIP", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.818, f"{whip:.2f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.823+0.002, f"{whip_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(whip_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(whip_rank))
+
+        stats_ax.text(1, 0.768, "K/9", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.768, f"{kp9:.1f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.773+0.002, f"{kp9_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(kp9_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(kp9_rank))
+
+        stats_ax.text(1, 0.718, "LOB%", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.718, f"{lob:.3f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.723+0.002, f"{lob_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(lob_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(lob_rank))
+
+        stats_ax.text(1, 0.668, "K/BB", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.668, f"{kbb:.2f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.673+0.002, f"{kbb_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(kbb_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(kbb_rank))
+        
+        stats_ax.text(1, 0.618, "FIP", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.618, f"{fip:.2f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.623+0.002, f"{fip_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(fip_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(fip_rank))
+        
+        stats_ax.text(1, 0.568, "PCT", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.568, f"{pct:.3f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.573+0.002, f"{pct_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(pct_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(pct_rank))
+        
+        stats_ax.text(0.5, 0.523, f"TEAM METRICS", fontsize=16, fontweight='bold', 
+                    ha='center', va='center')
+        stats_ax.hlines(y=0.5, xmin=0.0, xmax=1, colors='black', linewidth=1)
+        stats_ax.vlines(x=0.5, ymin=0.25, ymax=0.5, colors='black', linewidth=1)
+
+        stats_ax.text(0.0, 0.468, "NET", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.468, f"{net_score:.3f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.473+0.002, f"{net_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(net_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(net_rank))
+
+        stats_ax.text(0.0, 0.418, "RAT", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.418, f"{rating:.2f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.423+0.002, f"{rating_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(rating_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(rating_rank))
+        
+        stats_ax.text(0.0, 0.368, "RQI", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.368, f"{rqi:.2f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.373+0.002, f"{rqi_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(rqi_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(rqi_rank))
+
+        stats_ax.text(0.0, 0.318, "SOS", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.318, f"{sos:.3f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.323+0.002, f"{sos_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(sos_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(sos_rank))
+
+        stats_ax.text(0.0, 0.268, "WAR", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.268, f"{war:.2f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.273+0.002, f"{war_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(war_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(war_rank))
+        
+        stats_ax.text(1, 0.468, "WPOE", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.468, f"{wpoe:.2f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.473+0.002, f"{wpoe_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(wpoe_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(wpoe_rank))
+
+        stats_ax.text(1, 0.418, "PYT", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.418, f"{pythag:.3f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.423+0.002, f"{pythag_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(pythag_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(pythag_rank))
+        
+        stats_ax.text(0.0, 0.218, "REC", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.218, f"{record}", fontsize=16, fontweight='bold', ha='center')
+
+        stats_ax.text(0.0, 0.168, "Q1", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.168, f"{q1}", fontsize=16, fontweight='bold', ha='center')
+
+        stats_ax.text(0.0, 0.118, "Q2", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.118, f"{q2}", fontsize=16, fontweight='bold', ha='center')
+
+        stats_ax.text(0.0, 0.068, "Q3", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.068, f"{q3}", fontsize=16, fontweight='bold', ha='center')
+
+        stats_ax.text(0.0, 0.018, "Q4", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.018, f"{q4}", fontsize=16, fontweight='bold', ha='center')
+        
+        stats_ax.text(1.0, 0.368, "HOME", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.368, f"{home_record}", fontsize=16, fontweight='bold', ha='right')
+
+        stats_ax.text(1.0, 0.318, "AWAY", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.318, f"{away_record}", fontsize=16, fontweight='bold', ha='right')
+
+        stats_ax.text(1.0, 0.268, "NEUTRAL", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.268, f"{neutral_record}", fontsize=16, fontweight='bold', ha='right')
+
+        # Add team logo
+        if logo is not None:
+            plot_logo(stats_ax, logo, (0.685, 0.125), zoom=0.2)
+
+        # Fixed positions within each game axis (0-1 scale)
+        logo_x_offset = 0.06       # Logo position
+        rank_x_offset = 0.13       # NET ranking position
+        name_x_offset = 0.27       # Team name position (center-left)
+        quad_x_offset = 0.98       # Quadrant position
+        prob_x_offset = 0.85       # Win probability position
+
+        # ----------------
+        # Create axes for each game
+        # ----------------
+        for idx, (_, game_row) in enumerate(team_schedule.iterrows()):
+            row = idx % games_per_col
+            col = idx // games_per_col
+            
+            # Create axis for this game
+            game_ax = fig.add_subplot(schedule_gs[row, col])
+            game_ax.set_xlim(0, 1)
+            game_ax.set_ylim(0, 1)
+            game_ax.axis('off')
+            
+            # Set background color based on result
+            game_color = get_game_color(game_row["Result"])
+            bg_rect = Rectangle((0, 0), 1, 1, transform=game_ax.transAxes,
+                        facecolor=game_color, edgecolor='black', 
+                        linewidth=1, zorder=0)
+            game_ax.add_patch(bg_rect)
+            
+            if pd.notna(game_row.get('home_net')) and pd.notna(game_row.get('away_net')):
+                if game_row['home_team'] == team_name:
+                    opponent_net = int(game_row['away_net'])
+                    win_prob = round(100 * game_row['home_win_prob'], 1)
                 else:
-                    plt.text(schedule_x, schedule_y, f'{symbol} {opponent}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color=color, transform=ax.transAxes)
-                ax.text(schedule_x, schedule_y-0.026, f'{row["Quad"]} | {round(win_prob*100)}% | {row["resume_quality"]:.2f}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color=color, transform=ax.transAxes)
+                    opponent_net = int(game_row['home_net'])
+                    win_prob = round(100 * (1 - game_row['home_win_prob']), 1)
+                quadrant = get_quadrant(opponent_net, game_row['Location'])
+                has_net_data = True
             else:
-                if (row['home_team'] == team_name) & (row['Location'] == "Home"):
-                    ax.text(schedule_x, schedule_y, f'{opponent}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color='#555555', transform=ax.transAxes)
-                else:
-                    ax.text(schedule_x, schedule_y, f'{symbol} {opponent}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color='#555555', transform=ax.transAxes)
-                ax.text(schedule_x, schedule_y-0.026, f'{row["Quad"]} | {round(win_prob*100)}% | {1 - abs(row["resume_quality"]):.2f}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color='#555555', transform=ax.transAxes)
-            schedule_y = schedule_y - 0.062
-            counter += 1
-
-        ### TOP TEXT
-
-        team_completed = completed_schedule[completed_schedule['Team'] == team_name].reset_index(drop=True)
-        num_rows = len(team_completed)
-        last_n_games = team_completed['Result'].iloc[-10 if num_rows >= 10 else -num_rows:]
-        wins = last_n_games.str.count('W').sum()
-        losses = (10 if num_rows >= 10 else num_rows) - wins
-        last_ten = f'{wins}-{losses}'
-        team_completed['is_home'] = team_completed['home_team'] == team_name
-        team_completed['runs_scored'] = team_completed.apply(
-            lambda row: row['home_score'] if row['is_home'] else row['away_score'], axis=1
-        )
-        team_completed['runs_allowed'] = team_completed.apply(
-            lambda row: row['away_score'] if row['is_home'] else row['home_score'], axis=1
-        )
-        run_diff = team_completed['runs_scored'].sub(team_completed['runs_allowed']).mean()
-
-        if columns == 4:
-            plt.text(1.20, 0.00, f"Best: {best_rq_row['Quad']} {best_rq_row['Opponent']} {best_rq_row['resume_quality']:.2f}", ha='left', va='center', fontsize=15, fontweight='bold', color='#2C5E00', transform=ax.transAxes)
-            plt.text(2.35, 0.00, f"Worst: {worst_rq_row['Quad']} {worst_rq_row['Opponent']} {worst_rq_row['resume_quality']:.2f}", ha='right', va='center', fontsize=15, fontweight='bold', color='#8B0000', transform=ax.transAxes)
-            plt.text(1.25, 1.16, f"RPI: {team_rpi}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.60, 1.16, f"ELO: {team_elo}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.95, 1.16, f"RQI: {team_rqi}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.30, 1.16, f"TSR: {team_tsr}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.25, 1.11, f"H: {home_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.60, 1.11, f"A: {away_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.95, 1.11, f"N: {neutral_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.30, 1.11, f"SOS: {team_sos}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.25, 1.06, f"Q1: {team_Q1}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.60, 1.06, f"Q2: {team_Q2}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.95, 1.06, f"Q3: {team_Q3}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.30, 1.06, f"Q4: {team_Q4}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.25, 1.01, f"L10: {last_ten}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.30, 1.01, f"MOV: {run_diff:.1f}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.775, 1.005, "Quad | Win Prob | Resume Points", fontsize=16, ha='center', va='center', transform=ax.transAxes)
-        elif columns == 5:
-            plt.text(1.20, 0.00, f"Best: {best_rq_row['Quad']} {best_rq_row['Opponent']} {best_rq_row['resume_quality']:.2f}", ha='left', va='center', fontsize=15, fontweight='bold', color='#2C5E00', transform=ax.transAxes)
-            plt.text(2.70, 0.00, f"Worst: {worst_rq_row['Quad']} {worst_rq_row['Opponent']} {worst_rq_row['resume_quality']:.2f}", ha='right', va='center', fontsize=15, fontweight='bold', color='#8B0000', transform=ax.transAxes)
-            plt.text(1.425, 1.16, f"RPI: {team_rpi}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.775, 1.16, f"ELO: {team_elo}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.125, 1.16, f"RQI: {team_rqi}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.475, 1.16, f"TSR: {team_tsr}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.425, 1.11, f"H: {home_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.775, 1.11, f"A: {away_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.125, 1.11, f"N: {neutral_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.475, 1.11, f"SOS: {team_sos}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.425, 1.06, f"Q1: {team_Q1}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.775, 1.06, f"Q2: {team_Q2}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.125, 1.06, f"Q3: {team_Q3}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.475, 1.06, f"Q4: {team_Q4}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.425, 1.01, f"L10: {last_ten}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.475, 1.01, f"MOV: {run_diff:.1f}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.95, 1.005, "Quad | Win Prob | Resume Points", fontsize=16, ha='center', va='center', transform=ax.transAxes)
-
-
-        automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
-        at_large = stats_and_metrics.drop(automatic_qualifiers.index)
-        at_large = at_large.nsmallest(34, "NET")
-        last_four_in = at_large[-8:].reset_index()
-        next_4_teams = stats_and_metrics.drop(automatic_qualifiers.index).nsmallest(38, "NET").iloc[34:].reset_index(drop=True)
-        projected = ""
-        if team_net <= 16:
-            projected = "Host"
-        elif team_name in last_four_in['Team'].values:
-            projected = "Last Four In"
-        elif team_name in at_large['Team'].values:
-            projected = "At-Large"
-        elif team_name in automatic_qualifiers['Team'].values:
-            projected = "Autobid"
-        elif team_name in next_4_teams['Team'].values:
-            projected = "First Four Out"
-        else:
-            projected = "Miss"
-        if columns == 4:
-            plt.text(0.82, 1.06, f"Projection:", fontsize=24, fontweight='bold', ha='center', va='center', transform=ax.transAxes)
-            plt.text(0.82, 1.01, f"{projected}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-        elif columns == 5:
-            plt.text(0.92, 1.06, f"Projection:", fontsize=24, fontweight='bold', ha='center', va='center', transform=ax.transAxes)
-            plt.text(0.92, 1.01, f"{projected}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-
-        ### PREVIOUS YEARS DATA
-        data_2022 = pd.read_csv(f"{BASEBALL_BASE_PATH}/y2022/Data/baseball_06_26_2022.csv")
-        team_2022 = data_2022[data_2022['Team'] == team_name]
-        data_2023 = pd.read_csv(f"{BASEBALL_BASE_PATH}/y2023/Data/baseball_06_26_2023.csv")
-        team_2023 = data_2023[data_2023['Team'] == team_name]
-        data_2024 = pd.read_csv(f"{BASEBALL_BASE_PATH}/y2024/Data/baseball_06_25_2024.csv")
-        team_2024 = data_2024[data_2024['Team'] == team_name]
-        # Column labels
-        plt.text(-0.11, -0.06, "2024", fontsize=20, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
-        plt.text(-0.11, -0.12, "2023", fontsize=20, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
-        plt.text(-0.11, -0.18, "2022", fontsize=20, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
-
-        def draw_metric_column(x, label, values, y_start=0.00, y_step=-0.06):
-            plt.text(x, y_start, label, fontsize=20, fontweight='bold', ha='center', va='center', transform=ax.transAxes)
-
-            # Find the lowest numeric value
-            numeric_values = [(i, v) for i, v in enumerate(values) if isinstance(v, (int, float, float))]
-            bold_index = min(numeric_values, key=lambda t: t[1])[0] if numeric_values else -1
-
-            for i, val in enumerate(values):
-                y = y_start + y_step * (i + 1)
-                if val == "N/A":
-                    display_val = "N/A"
-                else:
-                    display_val = f"{int(val)}"
-                fontweight = 'bold' if i == bold_index else 'normal'
-                color = '#9932CC' if i == bold_index else 'black'
-                plt.text(x, y, display_val, fontsize=20, fontweight=fontweight, ha='center', va='center', color=color, transform=ax.transAxes)
-
-        teams = [team_2024, team_2023, team_2022]
-        draw_metric_column(0.1, "NET", get_metric_values(teams, "NET"))
-        draw_metric_column(0.3, "RPI", get_metric_values(teams, "RPI"))
-        draw_metric_column(0.5, "ELO", get_metric_values(teams, "ELO_Rank"))
-        draw_metric_column(0.7, "RQI", get_metric_values(teams, "RQI"))
-        draw_metric_column(0.9, "TSR", get_metric_values(teams, "PRR"))
-
-        ### PROJECTED WINS
-        projected_wins = simulate_team_win_distribution(schedule_df, comparison_date, team_name)
-        peak = projected_wins.idxmax()
-        start = max(0, peak - 4)
-        end = peak + 5
-        while (end - start + 1) < 10:
-            end += 1
-        full_range = range(start, end + 1)
-        filled_distribution = projected_wins.reindex(full_range, fill_value=0)
-
-        stat_rankings = stats_and_metrics.copy()
-        higher = ["TB", "SLG", "KP9", "BB", "RS", "H", "BA", "PCT", "HBP", "OBP", "OPS", 
-                "PYTHAG", "wOBA", "wRAA", "ISO", "BB%", "LOB%", "K/BB"]
-        lower = ["WP9", "ERA", "E", "RA9", "FIP", "WHIP"]
-        all_ranked_stats = higher + lower
-        stat_rankings[higher] = stat_rankings[higher].rank(ascending=False, method="min")
-        stat_rankings[lower] = stat_rankings[lower].rank(ascending=True, method="min")
-        team_stats = stat_rankings[stat_rankings['Team'] == team_name].squeeze()
-        team_stats = team_stats[all_ranked_stats]
-        team_stats = pd.to_numeric(team_stats, errors='coerce')
-        best_stats = team_stats.nsmallest(3)
-        worst_stats = team_stats.nlargest(3)
-        plt.text(1.4,-0.06, "Best Stats", fontsize=20, ha='center', va='center', fontweight='bold', transform=ax.transAxes)
-        plt.text(1.2,-0.12, f'{best_stats.index[0]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-        plt.text(1.2,-0.18, f'{int(best_stats.values[0])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-        plt.text(1.4,-0.12, f'{best_stats.index[1]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-        plt.text(1.4,-0.18, f'{int(best_stats.values[1])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-        plt.text(1.6,-0.12, f'{best_stats.index[2]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-        plt.text(1.6,-0.18, f'{int(best_stats.values[2])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-        if columns == 4:
-            plt.text(2.1,-0.06, "Worst Stats", fontsize=20, ha='center', va='center', fontweight='bold', transform=ax.transAxes)
-            plt.text(1.9,-0.12, f'{worst_stats.index[2]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.9,-0.18, f'{int(worst_stats.values[2])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.1,-0.12, f'{worst_stats.index[1]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.1,-0.18, f'{int(worst_stats.values[1])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.3,-0.12, f'{worst_stats.index[0]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.3,-0.18, f'{int(worst_stats.values[0])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-        elif columns == 5:
-            plt.text(2.5,-0.06, "Worst Stats", fontsize=20, ha='center', va='center', fontweight='bold', transform=ax.transAxes)
-            plt.text(2.3,-0.12, f'{worst_stats.index[2]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.3,-0.18, f'{int(worst_stats.values[2])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.5,-0.12, f'{worst_stats.index[1]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.5,-0.18, f'{int(worst_stats.values[1])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.7,-0.12, f'{worst_stats.index[0]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.7,-0.18, f'{int(worst_stats.values[0])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+                opponent_net = ""
+                win_prob = ""
+                quadrant = ""
+                has_net_data = False
+            
+            # Add opponent logo
+            opponent = game_row["Opponent"]
+            if not pd.isna(opponent) and opponent in opponent_logos and opponent_logos[opponent] is not None:
+                plot_logo(game_ax, opponent_logos[opponent], (logo_x_offset, 0.5), zoom=0.03)
+            
+            # Add NET ranking
+            game_ax.text(rank_x_offset, 0.5, f"#{opponent_net}", 
+                        fontsize=12, fontweight='bold', color='black', 
+                        ha='left', va='center')
+            
+            # Add opponent name
+            if game_row['Location'] == 'Home':
+                team_color = "darkgreen"
+            elif game_row['Location'] == 'Away':
+                team_color = "darkblue"
+            else:
+                team_color = "black"
+            opponent_text = "Non D-I" if pd.isna(opponent) else str(opponent)
+            game_ax.text(name_x_offset, 0.5, opponent_text, 
+                        fontsize=16, fontweight='bold', color=team_color, 
+                        ha='left', va='center')
+            
+            # Add quadrant
+            game_ax.text(quad_x_offset, 0.5, quadrant, 
+                        fontsize=16, fontweight='bold', color='darkblue', 
+                        ha='right', va='center')
 
         plt.tight_layout()
-            
         # Save to BytesIO and get data before cleanup
         buf = io.BytesIO()
         fig.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
@@ -2899,7 +3109,7 @@ def team_profile(request: TeamProfileRequest):
         return Response(content=image_data, media_type="image/png")
         
     except HTTPException as e:
-        raise e
+            raise e
     except Exception as e:
         print(f"Error generating team profile: {e}")
         import traceback
@@ -2907,9 +3117,16 @@ def team_profile(request: TeamProfileRequest):
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
     finally:
         # Always close the logo image
-        if logo_img is not None:
-            logo_img.close()
-            del logo_img
+        if logo is not None:
+            logo.close()
+            del logo
+        
+        # Close all opponent logos
+        for opponent, opp_logo in opponent_logos.items():
+            if opp_logo is not None:
+                opp_logo.close()
+        opponent_logos.clear()
+        
         gc.collect()
 
 @app.post("/api/cbase/historical-performance")
@@ -5476,349 +5693,558 @@ def simulate_team_win_distribution(schedule_df, comparison_date, team_name, num_
 
 @app.post("/api/softball/team-profile")
 def softball_team_profile(request: SoftballTeamProfileRequest):
-    """Generate team profile visualization"""
-    logo_img = None  # Initialize outside try block
+    logo = None
     try:
         stats_and_metrics, comparison_date = load_softball_data()
         schedule_df = load_softball_schedule_data()
         team_name = request.team_name
-        
-        BASE_URL = "https://www.warrennolan.com"
-        completed_schedule = schedule_df[
-            (schedule_df["Date"] <= comparison_date) & (schedule_df["home_score"] != schedule_df["away_score"])
-        ].reset_index(drop=True)
-        team_schedule = schedule_df[schedule_df['Team'] == team_name].reset_index(drop=True)
-        team_data = stats_and_metrics[stats_and_metrics['Team'] == team_name]
-        team_net = team_data['NET'].values[0]
-        team_conference = team_data['Conference'].values[0]
-        team_record = get_total_record(team_data.iloc[0])
-        Conf_Record = get_conference_record(team_name, team_schedule, stats_and_metrics)
-        team_Q1 = team_data['Q1'].values[0]
-        team_Q2 = team_data['Q2'].values[0]
-        team_Q3 = team_data['Q3'].values[0]
-        team_Q4 = team_data['Q4'].values[0]
-        team_rpi = team_data['RPI'].values[0]
-        team_elo = int(team_data['ELO_Rank'].values[0])
-        team_rqi = team_data['RQI'].values[0]
-        team_tsr = team_data['PRR'].values[0]
-        team_sos = team_data['SOS'].values[0]
-        record = get_location_records(team_name, team_schedule)
-        home_record = record['Home']
-        away_record = record['Away']
-        neutral_record = record['Neutral']
-        
-        fig, ax = plt.subplots(figsize=(8, 10), dpi=500)
-        fig.patch.set_facecolor('#CECEB2')
-        ax.set_facecolor('#CECEB2')
 
-        # percentile sliders code
-        percentile_columns = ['pNET_Score', 'pRating', 'pResume_Quality', 'pPYTHAG', 'pfWAR', 'pwOBA', 'pOPS', 'pISO', 'pBB%', 'pFIP', 'pWHIP', 'pLOB%', 'pK/BB']
-        team_data = team_data[percentile_columns].melt(var_name='Metric', value_name='Percentile')
-        cmap = plt.get_cmap('seismic')
-        colors = [cmap(p / 100) for p in team_data['Percentile']]
-        def darken_color(color, factor=0.3):
-            color = mcolors.hex2color(color)
-            darkened_color = [max(c - factor, 0) for c in color]
-            return mcolors.rgb2hex(darkened_color)
-        darkened_colors = [darken_color(c) for c in colors]
-        ax.barh(team_data['Metric'], 99, color='gray', height=0.1, left=0)
-        bars = ax.barh(team_data['Metric'], team_data['Percentile'], color=colors, height=0.6, edgecolor=darkened_colors, linewidth=3)
-        i = 0
-        for idx, (bar, percentile) in enumerate(zip(bars, team_data['Percentile'])):
-            text = ax.text(bar.get_width(), bar.get_y() + bar.get_height()/2, 
-                        str(percentile), ha='center', va='center', 
-                        fontsize=16, fontweight='bold', color='white', zorder=2,
-                        bbox=dict(facecolor=colors[i], edgecolor=darkened_colors[i], boxstyle='circle,pad=0.4', linewidth=3))
-            text.set_path_effects([
-                pe.withStroke(linewidth=2, foreground='black')
-            ])
-            if idx == 4 or idx == 8:
-                y_position = bar.get_y() + bar.get_height() + 0.185
-                ax.hlines(y_position, 0, 99,
-                        colors='black', linestyles='dashed', linewidth=2, zorder=1)
-                    
-            i = i + 1
-        ax.set_xlim(0, 102)
-        ax.set_xticks([])
-        custom_labels = ['NET', 'TSR', 'RQI', 'PWP', 'fWAR', 'wOBA', 'OPS', 'ISO', 'BB%', 'FIP', 'WHIP', 'LOB%', 'K/BB']
-        ax.set_yticks(range(len(custom_labels)))
-        ax.set_yticklabels(custom_labels, fontweight='bold', fontsize=16)
-        ax.tick_params(axis='y', which='both', length=0, pad=14)
-        ax.invert_yaxis()
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_visible(False)
-        ax.spines['bottom'].set_visible(False)
-
-        # team logo - must stay above all text calls
         logo_folder = os.path.join(SOFTBALL_BASE_PATH, "logos")
-        logo_path = os.path.join(logo_folder, f"{team_name}.png")
-        logo_img = Image.open(logo_path).convert("RGBA")
-        ax_img1 = fig.add_axes([0.04, 0.85, 0.2, 0.2])
-        ax_img1.imshow(logo_img)
-        ax_img1.axis("off")
 
-        ### PLOT TITLE
-        plt.text(0.18, 1.16, f'#{team_net} {team_name}', fontsize=34, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
-        plt.text(0.18, 1.11, f"{team_record} ({Conf_Record})", fontsize=24, ha='left', va='center', transform=ax.transAxes)
-        plt.text(0.18, 1.06, f'@PEARatings', fontsize=24, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
-        plt.text(0.18, 1.01, f'Team Profile', fontsize=24, ha='left', va='center', transform=ax.transAxes)
+        def plot_box(x, y, width, height, color='black', fill=False, linewidth=2, ax=None):
+            if ax is None:
+                fig, ax = plt.subplots()
 
-        ### TEAM SCHEDULE
-        def get_opponent_net(row, team):
-            if row['home_team'] == team:
-                return row['away_net']
-            elif row['away_team'] == team:
-                return row['home_net']
+            rect = Rectangle((x, y), width, height,
+                                    linewidth=linewidth,
+                                    edgecolor="black",
+                                    facecolor=color if fill else 'none')
+            ax.add_patch(rect)
+
+            return ax
+
+        def PEAR_Win_Prob(home_pr, away_pr, location="Neutral"):
+            if location != "Neutral":
+                home_pr += 0.3
+            rating_diff = home_pr - away_pr
+            return round(1 / (1 + 10 ** (-rating_diff / 6)) * 100, 2)
+
+        def fixed_width_text(ax, x, y, text, width=0.06, height=0.04,
+                            facecolor="lightgrey", edgecolor="none", alpha=1.0, **kwargs):
+            # Draw rectangle behind text
+            ax.add_patch(Rectangle(
+                (x - width/2, y - height/2), width, height,
+                transform=ax.transAxes,
+                facecolor=facecolor,
+                edgecolor=edgecolor,
+                alpha=alpha,
+                zorder=1
+            ))
+
+            # Draw text centered on top
+            ax.text(x, y, text,
+                    ha="center", va="center", zorder=2, **kwargs)
+            
+        def get_text_color(bg_color: str) -> str:
+            """Determine if text should be black or white based on background color luminance"""
+            import re
+            
+            # Handle hex colors
+            if bg_color.startswith('#'):
+                # Convert hex to RGB
+                bg_color = bg_color.lstrip('#')
+                r = int(bg_color[0:2], 16)
+                g = int(bg_color[2:4], 16)
+                b = int(bg_color[4:6], 16)
             else:
-                return np.nan
+                # Handle rgb() format
+                match = re.match(r'rgb\((\d+),\s*(\d+),\s*(\d+)\)', bg_color)
+                if not match:
+                    return 'white'
+                
+                r = int(match.group(1))
+                g = int(match.group(2))
+                b = int(match.group(3))
+            
+            luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+            return 'black' if luminance > 0.5 else 'white'
 
-        team_schedule['opponent_net'] = team_schedule.apply(lambda row: get_opponent_net(row, team_name), axis=1)
+        def rank_text_color(rank, vmin=1, vmax=300):
+            """Get appropriate text color (black or white) based on rank background color"""
+            if rank == "":
+                return 'black'
+            
+            bg_color = rank_to_color(rank, vmin=vmin, vmax=vmax)
+            return get_text_color(bg_color)
 
-        conditions = [
-            ((team_schedule["Location"] == "Home") & (team_schedule["opponent_net"] <= 25)) |
-            ((team_schedule["Location"] == "Neutral") & (team_schedule["opponent_net"] <= 40)) |
-            ((team_schedule["Location"] == "Away") & (team_schedule["home_net"] <= 60)),
+        def percent_text_color(win_pct, vmin=0.0, vmax=1.0):
+            """Get appropriate text color (black or white) based on win percentage background color"""
+            if win_pct == "":
+                return 'black'
+            
+            bg_color = rank_to_color(win_pct, vmin=vmin, vmax=vmax)
+            return get_text_color(bg_color)
 
-            ((team_schedule["Location"] == "Home") & (team_schedule["opponent_net"] <= 50)) |
-            ((team_schedule["Location"] == "Neutral") & (team_schedule["opponent_net"] <= 80)) |
-            ((team_schedule["Location"] == "Away") & (team_schedule["opponent_net"] <= 120)),
+        def plot_logo(ax, img, xy, zoom=0.2, zorder=3):
+            """Helper to plot a logo at given xy coords."""
+            imagebox = OffsetImage(img, zoom=zoom)
+            ab = AnnotationBbox(imagebox, xy, frameon=False, zorder=zorder,
+                            xycoords='axes fraction', box_alignment=(0.5, 0.5))
+            ax.add_artist(ab)
 
-            ((team_schedule["Location"] == "Home") & (team_schedule["opponent_net"] <= 100)) |
-            ((team_schedule["Location"] == "Neutral") & (team_schedule["opponent_net"] <= 160)) |
-            ((team_schedule["Location"] == "Away") & (team_schedule["opponent_net"] <= 240))
-        ]
+        def rank_to_color(rank, vmin=1, vmax=300):
+            """
+            Map a rank (1–300) to a hex color.
+            Dark blue = best (1), grey = middle, dark red = worst (300).
+            Color scale: Dark Red (#8B0000) → Orange (#FFA500) → Light Gray (#D3D3D3) → Cyan (#00FFFF) → Dark Blue (#00008B)
+            """
+            # Define colormap from blue → grey → red
+            cmap = mcolors.LinearSegmentedColormap.from_list(
+                "rank_cmap", ["#00008B", "#00FFFF", "#D3D3D3", "#FFA500", "#8B0000"]  # dark blue, cyan, light gray, orange, dark red
+            )
+            
+            # Normalize rank to [0,1]
+            norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+            rgba = cmap(norm(rank))
+            
+            # Convert RGBA to hex
+            return mcolors.to_hex(rgba)
 
-        # Define corresponding quadrant labels
-        quadrants = ["Q1", "Q2", "Q3"]
+        def percent_to_color(win_pct, vmin=0.0, vmax=1.0):
+            """
+            Map a win percentage (0.0–1.0) to a hex color.
+            Dark blue = best (1.0), grey = middle (0.5), dark red = worst (0.0).
+            Color scale: Dark Red (#8B0000) → Orange (#FFA500) → Light Gray (#D3D3D3) → Cyan (#00FFFF) → Dark Blue (#00008B)
+            """
+            # Define colormap from red → grey → blue
+            cmap = mcolors.LinearSegmentedColormap.from_list(
+                "percent_cmap", ["#8B0000", "#FFA500", "#D3D3D3", "#00FFFF", "#00008B"]  # dark red, orange, light gray, cyan, dark blue
+            )
+            
+            # Normalize percentage to [0,1]
+            norm = mcolors.Normalize(vmin=vmin, vmax=vmax)
+            rgba = cmap(norm(win_pct))
+            
+            # Convert RGBA to hex
+            return mcolors.to_hex(rgba)
 
-        # Assign Quadrant values
-        team_schedule["Quad"] = np.select(conditions, quadrants, default="Q4")
-        num_items = len(team_schedule)
-        schedule_x = 0.9
-        schedule_y = 0.95
-        schedule_size = 15
-        counter = 0
-        columns = 0
-        best_rq_row = None
-        worst_rq_row = None
-        max_rq = float('-inf')
-        min_rq = float('inf')
-        for idx, (_, row) in enumerate(team_schedule.iterrows()):
-            if row['resume_quality'] > max_rq and row['Result'].startswith("W"):
-                max_rq = row['resume_quality']
-                best_rq_row = row
-            if row['resume_quality'] < min_rq and row['Result'].startswith("L"):
-                min_rq = row['resume_quality']
-                worst_rq_row = row
-            if counter % 15 == 0:
-                schedule_x +=0.35
-                schedule_y = 0.95
-                columns += 1
-            if row['home_team'] == team_name:
-                opponent = row['away_team']
-                net = row['away_net']
-                win_prob = row['home_win_prob']
-                symbol = ""
+        def get_value_and_rank(df, team, column, higher_is_better=True):
+            """
+            Return (value, rank) for a given team and column.
+            
+            Args:
+                df (pd.DataFrame): Data source with 'team' and stat columns.
+                team (str): Team name to look up.
+                column (str): Column name to extract.
+                higher_is_better (bool): If True, high values rank better (1 = highest).
+                                        If False, low values rank better (1 = lowest).
+            """
+            ascending = not higher_is_better
+            ranks = df[column].rank(ascending=ascending, method="first").astype(int)
+
+            value = df.loc[df['Team'] == team, column].values[0]
+            rank = ranks.loc[df['Team'] == team].values[0]
+
+            return value, rank
+        
+        def get_record_value_and_rank(df, team, column, higher_is_better=True):
+            """
+            Return (record_string, win_percentage, rank) for a given team and column containing W-L records.
+            
+            Args:
+                df (pd.DataFrame): Data source with 'team' and record columns.
+                team (str): Team name to look up.
+                column (str): Column name containing records in "W-L" format.
+                higher_is_better (bool): If True, high win% ranks better (1 = highest).
+                                        If False, low win% ranks better (1 = lowest).
+            
+            Returns:
+                tuple: (record_string, win_percentage as float, rank as int)
+            """
+            def calculate_win_pct(record):
+                """Convert 'W-L' string to win percentage."""
+                if pd.isna(record) or record == '':
+                    return 0.0
+                parts = str(record).split('-')
+                wins = int(parts[0])
+                losses = int(parts[1])
+                total = wins + losses
+                return wins / total if total > 0 else 0.0
+            
+            # Calculate win percentages for all teams
+            win_pcts = df[column].apply(calculate_win_pct)
+            
+            # Calculate ranks
+            ascending = not higher_is_better
+            ranks = win_pcts.rank(ascending=ascending, method="first").astype(int)
+            
+            # Get values for specified team
+            team_idx = df['Team'] == team
+            record_string = df.loc[team_idx, column].values[0]
+            win_pct = win_pcts.loc[team_idx].values[0]
+            rank = ranks.loc[team_idx].values[0]
+            
+            return record_string, win_pct
+        
+        def get_game_color(result):
+            if "W" in result:
+                return "palegreen"
+            elif "L" in result:
+                return "lightcoral"
             else:
-                opponent = row['home_team']
-                net = row['home_net']
-                win_prob = 1 - row['home_win_prob']
-                symbol = "@"
-            if row['Location'] == "Neutral":
-                symbol = "vs"
-            if "Non Div I" in opponent:
-                opponent = "Non Div I"
-            if pd.notna(net):
-                net = int(net)
-            if row['resume_quality'] < 0:
-                color = '#8B0000' #red
-            else:
-                color = '#2C5E00' #green
-            # # ax.text(0.5, 0.8, opponent, ha='center', va='center', fontsize=40, fontweight='bold', color=color)
-            # # ax.text(0.1, 0.3, f'#{net}', ha='left', va='center', fontsize=32)
-            # # ax.text(0.5, 0.5, row['Quad'], ha='right', va='center', fontsize=32, fontweight='bold')
-            result_first_letter = row['Result'][0].upper() if row['Result'][0].upper() in ['W', 'L'] else ''
+                return "whitesmoke"
 
-            if result_first_letter:
-                if (row['home_team'] == team_name) & (row['Location'] == "Home"):
-                    plt.text(schedule_x, schedule_y, f'{opponent}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color=color, transform=ax.transAxes)
+        def get_quadrant(opponent_net, location):
+            thresholds = {
+                "Home": [25, 50, 100, 307],
+                "Neutral": [40, 80, 160, 307],
+                "Away": [60, 120, 240, 307]
+            }
+            
+            # Get the thresholds for the given location
+            location_thresholds = thresholds.get(location, thresholds["Neutral"])
+            
+            # Determine quadrant based on opponent NET ranking
+            if opponent_net <= location_thresholds[0]:
+                return "Q1"
+            elif opponent_net <= location_thresholds[1]:
+                return "Q2"
+            elif opponent_net <= location_thresholds[2]:
+                return "Q3"
+            else:
+                return "Q4"
+
+        def get_location_records(team, team_schedule):
+            """Get home, away, and neutral records for a team"""
+            
+            team_schedule['is_win'] = team_schedule['Result'].str.startswith('W')
+            
+            records = {}
+            for loc in ['Home', 'Away', 'Neutral']:
+                group = team_schedule[team_schedule['Location'] == loc]
+                wins = group['is_win'].sum()
+                losses = len(group) - wins
+                records[loc] = f"{int(wins)}-{int(losses)}"
+            
+            return records
+
+        if os.path.exists(logo_folder):
+            # Try to find logo for the team (keep spaces, don't replace with underscores)
+            logo_path = os.path.join(logo_folder, f"{team_name}.png")
+
+            if os.path.exists(logo_path):
+                logo = Image.open(logo_path).convert("RGBA")
+
+        team_schedule = schedule_df[schedule_df['Team'] == team_name].reset_index(drop=True)
+        
+        # Calculate layout
+        num_games = len(team_schedule)
+        games_per_col = 20
+        num_cols = (num_games + games_per_col - 1) // games_per_col
+
+        # ----------------
+        # Load opponent logos
+        # ----------------
+        opponent_logos = {}
+        opponents_set = set(team_schedule['Opponent'].dropna())
+        for opponent in opponents_set:
+            logo_path = os.path.join(logo_folder, f"{opponent}.png")
+            if os.path.exists(logo_path):
+                opponent_logos[opponent] = Image.open(logo_path).convert("RGBA")
+            else:
+                opponent_logos[opponent] = None
+
+        # ----------------
+        # Create figure with GridSpec
+        # ----------------
+        # Calculate figure width based on number of columns
+        col_width = 3.5  # Width per column in inches
+        stats_width = 4   # Width for stats section
+        total_width = (num_cols * col_width) + stats_width
+        
+        fig = plt.figure(figsize=(total_width, 12), dpi=200)
+        fig.patch.set_facecolor('#CECEB2')
+        
+        # Create main grid: schedule area (left) and stats area (right)
+        main_gs = gridspec.GridSpec(1, 2, figure=fig, 
+                                width_ratios=[num_cols * col_width, stats_width], 
+                                left=0.02, right=0.98, wspace=0.02)
+        
+        # Create nested grid for schedule columns
+        schedule_gs = gridspec.GridSpecFromSubplotSpec(games_per_col, num_cols, 
+                                                    subplot_spec=main_gs[0],
+                                                    hspace=0.01, wspace=0.01)
+        
+        # Create stats area
+        alpha_val = 0.9
+        stats_ax = fig.add_subplot(main_gs[1])
+        stats_ax.set_xlim(0, 1)
+        stats_ax.set_ylim(0, 1)
+        stats_ax.axis('off')
+        stats_ax.set_facecolor('#CECEB2')
+        net_score, net_rank = get_value_and_rank(stats_and_metrics, team_name, "NET_Score")
+        rpg, rpg_rank = get_value_and_rank(stats_and_metrics, team_name, "RPG")
+        ba, ba_rank = get_value_and_rank(stats_and_metrics, team_name, "BA")
+        obp, obp_rank = get_value_and_rank(stats_and_metrics, team_name, "OBP")
+        slg, slg_rank = get_value_and_rank(stats_and_metrics, team_name, "SLG")
+        ops, ops_rank = get_value_and_rank(stats_and_metrics, team_name, "OPS")
+        iso, iso_rank = get_value_and_rank(stats_and_metrics, team_name, "ISO")
+        wOBA, wOBA_rank = get_value_and_rank(stats_and_metrics, team_name, "wOBA")
+        era, era_rank = get_value_and_rank(stats_and_metrics, team_name, "ERA", False)
+        whip, whip_rank = get_value_and_rank(stats_and_metrics, team_name, "WHIP", False)
+        kp9, kp9_rank = get_value_and_rank(stats_and_metrics, team_name, "KP7")
+        lob, lob_rank = get_value_and_rank(stats_and_metrics, team_name, "LOB%")
+        kbb, kbb_rank = get_value_and_rank(stats_and_metrics, team_name, "K/BB")
+        fip, fip_rank = get_value_and_rank(stats_and_metrics, team_name, "FIP", False)
+        pct, pct_rank = get_value_and_rank(stats_and_metrics, team_name, "PCT")
+        rating, rating_rank = get_value_and_rank(stats_and_metrics, team_name, "Rating")
+        rqi, rqi_rank = get_value_and_rank(stats_and_metrics, team_name, "resume_quality")
+        sos, sos_rank = get_value_and_rank(stats_and_metrics, team_name, "avg_expected_wins", False)
+        war, war_rank = get_value_and_rank(stats_and_metrics, team_name, "fWAR")
+        wpoe, wpoe_rank = get_value_and_rank(stats_and_metrics, team_name, "wpoe_pct")
+        pythag, pythag_rank = get_value_and_rank(stats_and_metrics, team_name, "PYTHAG")
+        record, record_rank = get_record_value_and_rank(stats_and_metrics, team_name, "Record")
+        q1, q1_rank = get_value_and_rank(stats_and_metrics, team_name, "Q1")
+        q2, q2_rank = get_value_and_rank(stats_and_metrics, team_name, "Q2")
+        q3, q3_rank = get_value_and_rank(stats_and_metrics, team_name, "Q3")
+        q4, q4_rank = get_value_and_rank(stats_and_metrics, team_name, "Q4")
+        location_records = get_location_records(team_name, team_schedule)
+        home_record = location_records.get("Home", "0-0")
+        away_record = location_records.get("Away", "0-0")
+        neutral_record = location_records.get("Neutral", "0-0")
+        
+        # Add team stats
+        stats_ax.text(0.5, 0.973, f"#{net_rank} {team_name}", fontsize=24, fontweight='bold', 
+                    ha='center', va='center')
+
+        stats_ax.text(0.23, 0.923, f"OFFENSE", fontsize=16, fontweight='bold', 
+                    ha='center', va='center')
+        
+        stats_ax.hlines(y=0.9, xmin=0.0, xmax=1, colors='black', linewidth=1)
+        stats_ax.vlines(x=0.5, ymin=0.55, ymax=0.9, colors='black', linewidth=1)
+
+        stats_ax.text(0.0, 0.868, "RPG", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.868, f"{rpg:.2f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.873+0.002, f"{rpg_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(rpg_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(rpg_rank))
+
+        stats_ax.text(0.0, 0.818, "BA", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.818, f"{ba:.3f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.823+0.002, f"{ba_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(ba_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(ba_rank))
+        
+        stats_ax.text(0.0, 0.768, "OBP", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.768, f"{obp:.3f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.773+0.002, f"{obp_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(obp_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(obp_rank))
+
+        stats_ax.text(0.0, 0.718, "SLG", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.718, f"{slg:.3f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.723+0.002, f"{slg_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(slg_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(slg_rank))
+
+        stats_ax.text(0.0, 0.668, "OPS", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.668, f"{ops:.3f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.673+0.002, f"{ops_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(ops_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(ops_rank))
+
+        stats_ax.text(0.0, 0.618, "ISO", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.618, f"{iso:.3f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.623+0.002, f"{iso_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(iso_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(iso_rank))
+
+        stats_ax.text(0.0, 0.568, "wOBA", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.568, f"{wOBA:.3f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.573+0.002, f"{wOBA_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(wOBA_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(wOBA_rank))
+        
+        stats_ax.text(0.77, 0.923, f"PITCHING", fontsize=16, fontweight='bold', 
+                    ha='center', va='center')
+        
+        stats_ax.text(1, 0.868, "ERA", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.868, f"{era:.2f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.873+0.002, f"{era_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(era_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(era_rank))
+
+        stats_ax.text(1, 0.818, "WHIP", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.818, f"{whip:.2f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.823+0.002, f"{whip_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(whip_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(whip_rank))
+
+        stats_ax.text(1, 0.768, "K/9", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.768, f"{kp9:.1f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.773+0.002, f"{kp9_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(kp9_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(kp9_rank))
+
+        stats_ax.text(1, 0.718, "LOB%", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.718, f"{lob:.3f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.723+0.002, f"{lob_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(lob_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(lob_rank))
+
+        stats_ax.text(1, 0.668, "K/BB", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.668, f"{kbb:.2f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.673+0.002, f"{kbb_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(kbb_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(kbb_rank))
+        
+        stats_ax.text(1, 0.618, "FIP", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.618, f"{fip:.2f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.623+0.002, f"{fip_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(fip_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(fip_rank))
+        
+        stats_ax.text(1, 0.568, "PCT", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.568, f"{pct:.3f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.573+0.002, f"{pct_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(pct_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(pct_rank))
+        
+        stats_ax.text(0.5, 0.523, f"TEAM METRICS", fontsize=16, fontweight='bold', 
+                    ha='center', va='center')
+        stats_ax.hlines(y=0.5, xmin=0.0, xmax=1, colors='black', linewidth=1)
+        stats_ax.vlines(x=0.5, ymin=0.25, ymax=0.5, colors='black', linewidth=1)
+
+        stats_ax.text(0.0, 0.468, "NET", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.468, f"{net_score:.3f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.473+0.002, f"{net_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(net_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(net_rank))
+
+        stats_ax.text(0.0, 0.418, "RAT", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.418, f"{rating:.2f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.423+0.002, f"{rating_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(rating_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(rating_rank))
+        
+        stats_ax.text(0.0, 0.368, "RQI", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.368, f"{rqi:.2f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.373+0.002, f"{rqi_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(rqi_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(rqi_rank))
+
+        stats_ax.text(0.0, 0.318, "SOS", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.318, f"{sos:.3f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.323+0.002, f"{sos_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(sos_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(sos_rank))
+
+        stats_ax.text(0.0, 0.268, "WAR", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.325, 0.268, f"{war:.2f}", fontsize=16, fontweight='bold', ha='left')
+        fixed_width_text(stats_ax, 0.23, 0.273+0.002, f"{war_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(war_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(war_rank))
+        
+        stats_ax.text(1, 0.468, "WPOE", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.468, f"{wpoe:.2f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.473+0.002, f"{wpoe_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(wpoe_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(wpoe_rank))
+
+        stats_ax.text(1, 0.418, "PYT", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.418, f"{pythag:.3f}", fontsize=16, fontweight='bold', ha='right')
+        fixed_width_text(stats_ax, 0.77, 0.423+0.002, f"{pythag_rank}", width=0.15, height=0.05,
+                                facecolor=rank_to_color(pythag_rank), alpha=alpha_val,
+                                fontsize=16, fontweight='bold', color=rank_text_color(pythag_rank))
+        
+        stats_ax.text(0.0, 0.218, "REC", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.218, f"{record}", fontsize=16, fontweight='bold', ha='center')
+
+        stats_ax.text(0.0, 0.168, "Q1", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.168, f"{q1}", fontsize=16, fontweight='bold', ha='center')
+
+        stats_ax.text(0.0, 0.118, "Q2", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.118, f"{q2}", fontsize=16, fontweight='bold', ha='center')
+
+        stats_ax.text(0.0, 0.068, "Q3", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.068, f"{q3}", fontsize=16, fontweight='bold', ha='center')
+
+        stats_ax.text(0.0, 0.018, "Q4", fontsize=16, fontweight='bold', ha='left')
+        stats_ax.text(0.23, 0.018, f"{q4}", fontsize=16, fontweight='bold', ha='center')
+        
+        stats_ax.text(1.0, 0.368, "HOME", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.368, f"{home_record}", fontsize=16, fontweight='bold', ha='right')
+
+        stats_ax.text(1.0, 0.318, "AWAY", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.318, f"{away_record}", fontsize=16, fontweight='bold', ha='right')
+
+        stats_ax.text(1.0, 0.268, "NEUTRAL", fontsize=16, fontweight='bold', ha='right')
+        stats_ax.text(0.675, 0.268, f"{neutral_record}", fontsize=16, fontweight='bold', ha='right')
+
+        # Add team logo
+        if logo is not None:
+            plot_logo(stats_ax, logo, (0.685, 0.125), zoom=0.2)
+
+        # Fixed positions within each game axis (0-1 scale)
+        logo_x_offset = 0.06       # Logo position
+        rank_x_offset = 0.13       # NET ranking position
+        name_x_offset = 0.27       # Team name position (center-left)
+        quad_x_offset = 0.98       # Quadrant position
+        prob_x_offset = 0.85       # Win probability position
+
+        # ----------------
+        # Create axes for each game
+        # ----------------
+        for idx, (_, game_row) in enumerate(team_schedule.iterrows()):
+            row = idx % games_per_col
+            col = idx // games_per_col
+            
+            # Create axis for this game
+            game_ax = fig.add_subplot(schedule_gs[row, col])
+            game_ax.set_xlim(0, 1)
+            game_ax.set_ylim(0, 1)
+            game_ax.axis('off')
+            
+            # Set background color based on result
+            game_color = get_game_color(game_row["Result"])
+            bg_rect = Rectangle((0, 0), 1, 1, transform=game_ax.transAxes,
+                        facecolor=game_color, edgecolor='black', 
+                        linewidth=1, zorder=0)
+            game_ax.add_patch(bg_rect)
+            
+            if pd.notna(game_row.get('home_net')) and pd.notna(game_row.get('away_net')):
+                if game_row['home_team'] == team_name:
+                    opponent_net = int(game_row['away_net'])
+                    win_prob = round(100 * game_row['home_win_prob'], 1)
                 else:
-                    plt.text(schedule_x, schedule_y, f'{symbol} {opponent}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color=color, transform=ax.transAxes)
-                ax.text(schedule_x, schedule_y-0.026, f'{row["Quad"]} | {round(win_prob*100)}% | {row["resume_quality"]:.2f}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color=color, transform=ax.transAxes)
+                    opponent_net = int(game_row['home_net'])
+                    win_prob = round(100 * (1 - game_row['home_win_prob']), 1)
+                quadrant = get_quadrant(opponent_net, game_row['Location'])
+                has_net_data = True
             else:
-                if (row['home_team'] == team_name) & (row['Location'] == "Home"):
-                    ax.text(schedule_x, schedule_y, f'{opponent}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color='#555555', transform=ax.transAxes)
-                else:
-                    ax.text(schedule_x, schedule_y, f'{symbol} {opponent}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color='#555555', transform=ax.transAxes)
-                ax.text(schedule_x, schedule_y-0.026, f'{row["Quad"]} | {round(win_prob*100)}% | {1 - abs(row["resume_quality"]):.2f}', ha='center', va='center', fontsize=schedule_size, fontweight='bold', color='#555555', transform=ax.transAxes)
-            schedule_y = schedule_y - 0.062
-            counter += 1
-
-        ### TOP TEXT
-
-        team_completed = completed_schedule[completed_schedule['Team'] == team_name].reset_index(drop=True)
-        num_rows = len(team_completed)
-        last_n_games = team_completed['Result'].iloc[-10 if num_rows >= 10 else -num_rows:]
-        wins = last_n_games.str.count('W').sum()
-        losses = (10 if num_rows >= 10 else num_rows) - wins
-        last_ten = f'{wins}-{losses}'
-        team_completed['is_home'] = team_completed['home_team'] == team_name
-        team_completed['runs_scored'] = team_completed.apply(
-            lambda row: row['home_score'] if row['is_home'] else row['away_score'], axis=1
-        )
-        team_completed['runs_allowed'] = team_completed.apply(
-            lambda row: row['away_score'] if row['is_home'] else row['home_score'], axis=1
-        )
-        run_diff = team_completed['runs_scored'].sub(team_completed['runs_allowed']).mean()
-
-        if columns == 4:
-            plt.text(1.20, 0.00, f"Best: {best_rq_row['Quad']} {best_rq_row['Opponent']} {best_rq_row['resume_quality']:.2f}", ha='left', va='center', fontsize=15, fontweight='bold', color='#2C5E00', transform=ax.transAxes)
-            plt.text(2.35, 0.00, f"Worst: {worst_rq_row['Quad']} {worst_rq_row['Opponent']} {worst_rq_row['resume_quality']:.2f}", ha='right', va='center', fontsize=15, fontweight='bold', color='#8B0000', transform=ax.transAxes)
-            plt.text(1.25, 1.16, f"RPI: {team_rpi}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.60, 1.16, f"ELO: {team_elo}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.95, 1.16, f"RQI: {team_rqi}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.30, 1.16, f"TSR: {team_tsr}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.25, 1.11, f"H: {home_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.60, 1.11, f"A: {away_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.95, 1.11, f"N: {neutral_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.30, 1.11, f"SOS: {team_sos}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.25, 1.06, f"Q1: {team_Q1}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.60, 1.06, f"Q2: {team_Q2}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.95, 1.06, f"Q3: {team_Q3}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.30, 1.06, f"Q4: {team_Q4}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.25, 1.01, f"L10: {last_ten}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.30, 1.01, f"MOV: {run_diff:.1f}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.775, 1.005, "Quad | Win Prob | Resume Points", fontsize=16, ha='center', va='center', transform=ax.transAxes)
-        elif columns == 5:
-            plt.text(1.20, 0.00, f"Best: {best_rq_row['Quad']} {best_rq_row['Opponent']} {best_rq_row['resume_quality']:.2f}", ha='left', va='center', fontsize=15, fontweight='bold', color='#2C5E00', transform=ax.transAxes)
-            plt.text(2.70, 0.00, f"Worst: {worst_rq_row['Quad']} {worst_rq_row['Opponent']} {worst_rq_row['resume_quality']:.2f}", ha='right', va='center', fontsize=15, fontweight='bold', color='#8B0000', transform=ax.transAxes)
-            plt.text(1.425, 1.16, f"RPI: {team_rpi}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.775, 1.16, f"ELO: {team_elo}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.125, 1.16, f"RQI: {team_rqi}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.475, 1.16, f"TSR: {team_tsr}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.425, 1.11, f"H: {home_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.775, 1.11, f"A: {away_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.125, 1.11, f"N: {neutral_record}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.475, 1.11, f"SOS: {team_sos}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.425, 1.06, f"Q1: {team_Q1}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.775, 1.06, f"Q2: {team_Q2}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.125, 1.06, f"Q3: {team_Q3}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.475, 1.06, f"Q4: {team_Q4}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.425, 1.01, f"L10: {last_ten}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.475, 1.01, f"MOV: {run_diff:.1f}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.95, 1.005, "Quad | Win Prob | Resume Points", fontsize=16, ha='center', va='center', transform=ax.transAxes)
-
-
-        automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
-        at_large = stats_and_metrics.drop(automatic_qualifiers.index)
-        at_large = at_large.nsmallest(34, "NET")
-        last_four_in = at_large[-8:].reset_index()
-        next_4_teams = stats_and_metrics.drop(automatic_qualifiers.index).nsmallest(38, "NET").iloc[34:].reset_index(drop=True)
-        projected = ""
-        if team_net <= 16:
-            projected = "Host"
-        elif team_name in last_four_in['Team'].values:
-            projected = "Last Four In"
-        elif team_name in at_large['Team'].values:
-            projected = "At-Large"
-        elif team_name in automatic_qualifiers['Team'].values:
-            projected = "Autobid"
-        elif team_name in next_4_teams['Team'].values:
-            projected = "First Four Out"
-        else:
-            projected = "Miss"
-        if columns == 4:
-            plt.text(0.82, 1.06, f"Projection:", fontsize=24, fontweight='bold', ha='center', va='center', transform=ax.transAxes)
-            plt.text(0.82, 1.01, f"{projected}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-        elif columns == 5:
-            plt.text(0.92, 1.06, f"Projection:", fontsize=24, fontweight='bold', ha='center', va='center', transform=ax.transAxes)
-            plt.text(0.92, 1.01, f"{projected}", fontsize=24, ha='center', va='center', transform=ax.transAxes)
-
-        # ### PREVIOUS YEARS DATA
-        # data_2022 = pd.read_csv(f"{BASEBALL_BASE_PATH}/y2022/Data/baseball_06_26_2022.csv")
-        # team_2022 = data_2022[data_2022['Team'] == team_name]
-        # data_2023 = pd.read_csv(f"{BASEBALL_BASE_PATH}/y2023/Data/baseball_06_26_2023.csv")
-        # team_2023 = data_2023[data_2023['Team'] == team_name]
-        # data_2024 = pd.read_csv(f"{BASEBALL_BASE_PATH}/y2024/Data/baseball_06_25_2024.csv")
-        # team_2024 = data_2024[data_2024['Team'] == team_name]
-        # # Column labels
-        # plt.text(-0.11, -0.06, "2024", fontsize=20, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
-        # plt.text(-0.11, -0.12, "2023", fontsize=20, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
-        # plt.text(-0.11, -0.18, "2022", fontsize=20, fontweight='bold', ha='left', va='center', transform=ax.transAxes)
-
-        # def draw_metric_column(x, label, values, y_start=0.00, y_step=-0.06):
-        #     plt.text(x, y_start, label, fontsize=20, fontweight='bold', ha='center', va='center', transform=ax.transAxes)
-
-        #     # Find the lowest numeric value
-        #     numeric_values = [(i, v) for i, v in enumerate(values) if isinstance(v, (int, float, float))]
-        #     bold_index = min(numeric_values, key=lambda t: t[1])[0] if numeric_values else -1
-
-        #     for i, val in enumerate(values):
-        #         y = y_start + y_step * (i + 1)
-        #         if val == "N/A":
-        #             display_val = "N/A"
-        #         else:
-        #             display_val = f"{int(val)}"
-        #         fontweight = 'bold' if i == bold_index else 'normal'
-        #         color = '#9932CC' if i == bold_index else 'black'
-        #         plt.text(x, y, display_val, fontsize=20, fontweight=fontweight, ha='center', va='center', color=color, transform=ax.transAxes)
-
-        # teams = [team_2024, team_2023, team_2022]
-        # draw_metric_column(0.1, "NET", get_metric_values(teams, "NET"))
-        # draw_metric_column(0.3, "RPI", get_metric_values(teams, "RPI"))
-        # draw_metric_column(0.5, "ELO", get_metric_values(teams, "ELO_Rank"))
-        # draw_metric_column(0.7, "RQI", get_metric_values(teams, "RQI"))
-        # draw_metric_column(0.9, "TSR", get_metric_values(teams, "PRR"))
-
-        ### PROJECTED WINS
-        projected_wins = simulate_team_win_distribution(schedule_df, comparison_date, team_name)
-        peak = projected_wins.idxmax()
-        start = max(0, peak - 4)
-        end = peak + 5
-        while (end - start + 1) < 10:
-            end += 1
-        full_range = range(start, end + 1)
-        filled_distribution = projected_wins.reindex(full_range, fill_value=0)
-
-        stat_rankings = stats_and_metrics.copy()
-        higher = ["TB", "SLG", "KP7", "BB", "RS", "H", "BA", "PCT", "HBP", "OBP", "OPS", 
-                "PYTHAG", "wOBA", "wRAA", "ISO", "BB%", "LOB%", "K/BB"]
-        lower = ["ERA", "E", "FIP", "WHIP"]
-        all_ranked_stats = higher + lower
-        stat_rankings[higher] = stat_rankings[higher].rank(ascending=False, method="min")
-        stat_rankings[lower] = stat_rankings[lower].rank(ascending=True, method="min")
-        team_stats = stat_rankings[stat_rankings['Team'] == team_name].squeeze()
-        team_stats = team_stats[all_ranked_stats]
-        team_stats = pd.to_numeric(team_stats, errors='coerce')
-        best_stats = team_stats.nsmallest(3)
-        worst_stats = team_stats.nlargest(3)
-        plt.text(1.4,-0.06, "Best Stats", fontsize=20, ha='center', va='center', fontweight='bold', transform=ax.transAxes)
-        plt.text(1.2,-0.12, f'{best_stats.index[0]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-        plt.text(1.2,-0.18, f'{int(best_stats.values[0])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-        plt.text(1.4,-0.12, f'{best_stats.index[1]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-        plt.text(1.4,-0.18, f'{int(best_stats.values[1])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-        plt.text(1.6,-0.12, f'{best_stats.index[2]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-        plt.text(1.6,-0.18, f'{int(best_stats.values[2])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-        if columns == 4:
-            plt.text(2.1,-0.06, "Worst Stats", fontsize=20, ha='center', va='center', fontweight='bold', transform=ax.transAxes)
-            plt.text(1.9,-0.12, f'{worst_stats.index[2]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(1.9,-0.18, f'{int(worst_stats.values[2])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.1,-0.12, f'{worst_stats.index[1]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.1,-0.18, f'{int(worst_stats.values[1])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.3,-0.12, f'{worst_stats.index[0]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.3,-0.18, f'{int(worst_stats.values[0])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-        elif columns == 5:
-            plt.text(2.5,-0.06, "Worst Stats", fontsize=20, ha='center', va='center', fontweight='bold', transform=ax.transAxes)
-            plt.text(2.3,-0.12, f'{worst_stats.index[2]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.3,-0.18, f'{int(worst_stats.values[2])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.5,-0.12, f'{worst_stats.index[1]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.5,-0.18, f'{int(worst_stats.values[1])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.7,-0.12, f'{worst_stats.index[0]}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
-            plt.text(2.7,-0.18, f'{int(worst_stats.values[0])}', fontsize=20, ha='center', va='center', transform=ax.transAxes)
+                opponent_net = ""
+                win_prob = ""
+                quadrant = ""
+                has_net_data = False
+            
+            # Add opponent logo
+            opponent = game_row["Opponent"]
+            if not pd.isna(opponent) and opponent in opponent_logos and opponent_logos[opponent] is not None:
+                plot_logo(game_ax, opponent_logos[opponent], (logo_x_offset, 0.5), zoom=0.03)
+            
+            # Add NET ranking
+            game_ax.text(rank_x_offset, 0.5, f"#{opponent_net}", 
+                        fontsize=12, fontweight='bold', color='black', 
+                        ha='left', va='center')
+            
+            # Add opponent name
+            if game_row['Location'] == 'Home':
+                team_color = "darkgreen"
+            elif game_row['Location'] == 'Away':
+                team_color = "darkblue"
+            else:
+                team_color = "black"
+            opponent_text = "Non D-I" if pd.isna(opponent) else str(opponent)
+            game_ax.text(name_x_offset, 0.5, opponent_text, 
+                        fontsize=16, fontweight='bold', color=team_color, 
+                        ha='left', va='center')
+            
+            # Add quadrant
+            game_ax.text(quad_x_offset, 0.5, quadrant, 
+                        fontsize=16, fontweight='bold', color='darkblue', 
+                        ha='right', va='center')
 
         plt.tight_layout()
-            
         # Save to BytesIO and get data before cleanup
         buf = io.BytesIO()
         fig.savefig(buf, format='png', dpi=150, bbox_inches='tight', facecolor='#CECEB2')
@@ -5837,7 +6263,7 @@ def softball_team_profile(request: SoftballTeamProfileRequest):
         return Response(content=image_data, media_type="image/png")
         
     except HTTPException as e:
-        raise e
+            raise e
     except Exception as e:
         print(f"Error generating team profile: {e}")
         import traceback
@@ -5845,9 +6271,16 @@ def softball_team_profile(request: SoftballTeamProfileRequest):
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
     finally:
         # Always close the logo image
-        if logo_img is not None:
-            logo_img.close()
-            del logo_img
+        if logo is not None:
+            logo.close()
+            del logo
+        
+        # Close all opponent logos
+        for opponent, opp_logo in opponent_logos.items():
+            if opp_logo is not None:
+                opp_logo.close()
+        opponent_logos.clear()
+        
         gc.collect()
 
 @app.get("/api/softball/teams")
