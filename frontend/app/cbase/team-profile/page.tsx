@@ -169,6 +169,19 @@ const getGQIColor = (gqi: number | null) => {
 const getRankColor = (rank: number) => {
   return getRatingColor(rank, 1, 300, false);
 };
+const getStatDecimals = (statKey: string): number => {
+  const key = statKey.toLowerCase();
+  
+  // 1 decimal
+  if (key === 'kp9') return 1;
+  
+  // 2 decimals
+  if (['rating', 'rpg', 'era', 'whip', 'kbb'].includes(key)) return 2;
+  
+  // 3 decimals (default)
+  return 3;
+};
+
 
 const getResultBadgeColor = (result: string | null) => {
   if (!result) return { backgroundColor: '#d1d5db', color: '#374151' };
@@ -650,29 +663,29 @@ function TeamProfileContent() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Left Side - Team Metrics */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 h-[640px] flex flex-col">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 h-[640px] flex flex-col overflow-hidden">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
                 Team Metrics
               </h2>
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 overflow-y-auto">
                 {profileData?.metrics && (
-                  <div className="h-full flex flex-col gap-3">
+                  <div className="space-y-6">
                     {/* Team Stats Section */}
                     {profileData.metrics.team_stats && (
                       <div>
-                        <h3 className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
+                        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
                           Team Statistics
                         </h3>
-                        <div className="grid grid-cols-1 gap-1">
+                        <div className="grid grid-cols-1 gap-2">
                           {Object.entries(profileData.metrics.team_stats).map(([key, stat]) => {
                             const statName = key.toUpperCase().replaceAll('_', ' ');
                             const rankBg = getRankColor(stat.rank);
                             return (
-                              <div key={key} className="flex items-center justify-between py-1 px-2 bg-gray-50 dark:bg-gray-700/30 rounded text-xs">
-                                <span className="font-medium text-gray-700 dark:text-gray-300">{statName}</span>
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(3)}</span>
-                                  <div className="px-1.5 py-0.5 rounded min-w-[2.5rem] text-center" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
+                              <div key={key} className="flex items-center justify-between py-1.5 px-3 bg-gray-50 dark:bg-gray-700/30 rounded">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{statName}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(getStatDecimals(key))}</span>
+                                  <div className="px-2 py-1 rounded min-w-[3rem] text-center" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
                                     <span className="text-xs font-bold">#{stat.rank}</span>
                                   </div>
                                 </div>
@@ -684,24 +697,24 @@ function TeamProfileContent() {
                     )}
 
                     {/* Offense and Pitching Stats - Side by Side */}
-                    <div className="grid grid-cols-2 gap-3 flex-1">
+                    <div className="grid grid-cols-2 gap-4">
                       {/* Offense Stats */}
                       {profileData.metrics.offense && (
-                        <div className="flex flex-col">
-                          <h3 className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
+                        <div>
+                          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
                             Offense
                           </h3>
-                          <div className="space-y-1 flex-1">
+                          <div className="space-y-2">
                             {Object.entries(profileData.metrics.offense).map(([key, stat]) => {
                               const statName = key.toUpperCase();
                               const rankBg = getRankColor(stat.rank);
                               return (
-                                <div key={key} className="flex items-center justify-between py-1 px-1.5 bg-gray-50 dark:bg-gray-700/30 rounded">
-                                  <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                                <div key={key} className="flex flex-col gap-1 py-1.5 px-2 bg-gray-50 dark:bg-gray-700/30 rounded">
+                                  <div className="flex items-center justify-between">
                                     <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{statName}</span>
-                                    <span className="text-xs font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(3)}</span>
+                                    <span className="text-xs font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(getStatDecimals(key))}</span>
                                   </div>
-                                  <div className="px-1.5 py-0.5 rounded text-center ml-1" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
+                                  <div className="px-1.5 py-0.5 rounded text-center" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
                                     <span className="text-xs font-bold">#{stat.rank}</span>
                                   </div>
                                 </div>
@@ -713,21 +726,21 @@ function TeamProfileContent() {
 
                       {/* Pitching Stats */}
                       {profileData.metrics.pitching && (
-                        <div className="flex flex-col">
-                          <h3 className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
+                        <div>
+                          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
                             Pitching
                           </h3>
-                          <div className="space-y-1 flex-1">
+                          <div className="space-y-2">
                             {Object.entries(profileData.metrics.pitching).map(([key, stat]) => {
                               const statName = key.toUpperCase();
                               const rankBg = getRankColor(stat.rank);
                               return (
-                                <div key={key} className="flex items-center justify-between py-1 px-1.5 bg-gray-50 dark:bg-gray-700/30 rounded">
-                                  <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                                <div key={key} className="flex flex-col gap-1 py-1.5 px-2 bg-gray-50 dark:bg-gray-700/30 rounded">
+                                  <div className="flex items-center justify-between">
                                     <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{statName}</span>
-                                    <span className="text-xs font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(3)}</span>
+                                    <span className="text-xs font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(getStatDecimals(key))}</span>
                                   </div>
-                                  <div className="px-1.5 py-0.5 rounded text-center ml-1" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
+                                  <div className="px-1.5 py-0.5 rounded text-center" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
                                     <span className="text-xs font-bold">#{stat.rank}</span>
                                   </div>
                                 </div>
