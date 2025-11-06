@@ -25,6 +25,47 @@ interface GameData {
   pear: string | null;
 }
 
+interface StatWithRank {
+  value: number;
+  rank: number;
+}
+
+interface OffenseStats {
+  rpg: StatWithRank;
+  ba: StatWithRank;
+  obp: StatWithRank;
+  slg: StatWithRank;
+  ops: StatWithRank;
+  iso: StatWithRank;
+  woba: StatWithRank;
+}
+
+interface PitchingStats {
+  era: StatWithRank;
+  whip: StatWithRank;
+  kp9: StatWithRank;
+  lob: StatWithRank;
+  kbb: StatWithRank;
+  fip: StatWithRank;
+  pct: StatWithRank;
+}
+
+interface TeamStats {
+  net_score: StatWithRank;
+  rating: StatWithRank;
+  rqi: StatWithRank;
+  sos: StatWithRank;
+  war: StatWithRank;
+  wpoe: StatWithRank;
+  pythag: StatWithRank;
+}
+
+interface LocationRecords {
+  home: string;
+  away: string;
+  neutral: string;
+}
+
 interface TeamMetrics {
   conference: string | null;
   rating: number | null;
@@ -40,6 +81,10 @@ interface TeamMetrics {
   q2: string | null;
   q3: string | null;
   q4: string | null;
+  offense?: OffenseStats;
+  pitching?: PitchingStats;
+  team_stats?: TeamStats;
+  location_records?: LocationRecords;
 }
 
 interface TeamProfileData {
@@ -119,6 +164,10 @@ const getRQIColor = (rqi: number | null) => {
 const getGQIColor = (gqi: number | null) => {
   if (gqi === null) return 'rgb(107, 114, 128)';
   return getRatingColor(gqi, 1, 10, true);
+};
+
+const getRankColor = (rank: number) => {
+  return getRatingColor(rank, 1, 300, false);
 };
 
 const getResultBadgeColor = (result: string | null) => {
@@ -582,15 +631,119 @@ function TeamProfileContent() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Left Side - Team Metrics Placeholder */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 h-[640px] flex flex-col">
+            {/* Left Side - Team Metrics */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 h-[640px] flex flex-col overflow-hidden">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
                 Team Metrics
               </h2>
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-8 text-center flex-1 flex items-center justify-center">
-                <p className="text-gray-600 dark:text-gray-400 text-lg">
-                  Advanced team metrics will be displayed here
-                </p>
+              <div className="flex-1 overflow-y-auto">
+                {profileData?.metrics && (
+                  <div className="space-y-6">
+                    {/* Team Stats Section */}
+                    {profileData.metrics.team_stats && (
+                      <div>
+                        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
+                          Team Statistics
+                        </h3>
+                        <div className="grid grid-cols-1 gap-2">
+                          {Object.entries(profileData.metrics.team_stats).map(([key, stat]) => {
+                            const statName = key.toUpperCase().replaceAll('_', ' ');
+                            const rankBg = getRankColor(stat.rank);
+                            return (
+                              <div key={key} className="flex items-center justify-between py-1.5 px-3 bg-gray-50 dark:bg-gray-700/30 rounded">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{statName}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(3)}</span>
+                                  <div className="px-2 py-1 rounded min-w-[3rem] text-center" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
+                                    <span className="text-xs font-bold">#{stat.rank}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Location Records Section */}
+                    {profileData.metrics.location_records && (
+                      <div>
+                        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
+                          Record by Location
+                        </h3>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="text-center py-2 px-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                            <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">Home</div>
+                            <div className="text-sm font-bold text-gray-900 dark:text-white">{profileData.metrics.location_records.home}</div>
+                          </div>
+                          <div className="text-center py-2 px-3 bg-orange-50 dark:bg-orange-900/20 rounded border border-orange-200 dark:border-orange-800">
+                            <div className="text-xs font-semibold text-orange-600 dark:text-orange-400 mb-1">Away</div>
+                            <div className="text-sm font-bold text-gray-900 dark:text-white">{profileData.metrics.location_records.away}</div>
+                          </div>
+                          <div className="text-center py-2 px-3 bg-purple-50 dark:bg-purple-900/20 rounded border border-purple-200 dark:border-purple-800">
+                            <div className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-1">Neutral</div>
+                            <div className="text-sm font-bold text-gray-900 dark:text-white">{profileData.metrics.location_records.neutral}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Offense and Pitching Stats - Side by Side */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Offense Stats */}
+                      {profileData.metrics.offense && (
+                        <div>
+                          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
+                            Offense
+                          </h3>
+                          <div className="space-y-2">
+                            {Object.entries(profileData.metrics.offense).map(([key, stat]) => {
+                              const statName = key.toUpperCase();
+                              const rankBg = getRankColor(stat.rank);
+                              return (
+                                <div key={key} className="flex flex-col gap-1 py-1.5 px-2 bg-gray-50 dark:bg-gray-700/30 rounded">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{statName}</span>
+                                    <span className="text-xs font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(3)}</span>
+                                  </div>
+                                  <div className="px-1.5 py-0.5 rounded text-center" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
+                                    <span className="text-xs font-bold">#{stat.rank}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Pitching Stats */}
+                      {profileData.metrics.pitching && (
+                        <div>
+                          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
+                            Pitching
+                          </h3>
+                          <div className="space-y-2">
+                            {Object.entries(profileData.metrics.pitching).map(([key, stat]) => {
+                              const statName = key.toUpperCase();
+                              const rankBg = getRankColor(stat.rank);
+                              return (
+                                <div key={key} className="flex flex-col gap-1 py-1.5 px-2 bg-gray-50 dark:bg-gray-700/30 rounded">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{statName}</span>
+                                    <span className="text-xs font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(3)}</span>
+                                  </div>
+                                  <div className="px-1.5 py-0.5 rounded text-center" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
+                                    <span className="text-xs font-bold">#{stat.rank}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -611,7 +764,7 @@ function TeamProfileContent() {
                             <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 pb-2 z-10">
                               <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                                  Completed Games (Win Prob, Win Quality, Game Quality)
+                                  Completed Games
                                 </h3>
                               </div>
                             </div>
