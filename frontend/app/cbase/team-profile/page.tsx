@@ -469,7 +469,7 @@ function TeamProfileContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 pt-20">
       <div className="max-w-[1600px] mx-auto px-4 py-6">
         {/* Back Button */}
         <button
@@ -482,7 +482,7 @@ function TeamProfileContent() {
 
         {/* Header with Search */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
-          <div className="flex items-start gap-4 justify-between">
+          <div className="flex items-center gap-4 justify-between">
             {/* Left side - Team Info (50%) */}
             <div className="flex items-start gap-4 flex-1 min-w-0">
               <img 
@@ -542,7 +542,7 @@ function TeamProfileContent() {
             </div>
 
             {/* Right side - Search Box (50%) */}
-            <div className="relative w-64 flex-shrink-0">
+            <div className="relative w-64 flex-shrink-0 self-center">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 <input
@@ -617,14 +617,14 @@ function TeamProfileContent() {
                           <div>
                             {/* Sticky Header */}
                             <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 pb-2 z-10">
-                              <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                                   Completed Games ({completedGames.length})
                                 </h3>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center">Win Prob</span>
-                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center">RQI</span>
-                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center">GQI</span>
+                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center px-2">Win Prob</span>
+                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center px-2">RQI</span>
+                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center px-2">GQI</span>
                                 </div>
                               </div>
                             </div>
@@ -645,14 +645,14 @@ function TeamProfileContent() {
                           <div>
                             {/* Sticky Header */}
                             <div className={`sticky ${completedGames.length > 0 ? 'top-[72px]' : 'top-0'} bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 pb-2 z-10`}>
-                              <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                                   Upcoming Games ({upcomingGames.length})
                                 </h3>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center">Win Prob</span>
-                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center">RQI</span>
-                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center">GQI</span>
+                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center px-2">Win Prob</span>
+                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center px-2">RQI</span>
+                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center px-2">GQI</span>
                                 </div>
                               </div>
                             </div>
