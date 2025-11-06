@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -471,17 +471,9 @@ function TeamProfileContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 pt-20">
       <div className="max-w-[1600px] mx-auto px-4 py-6">
-        {/* Back Button */}
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors mb-4"
-        >
-          <ArrowLeft size={20} />
-          <span className="font-medium">Back to Rankings</span>
-        </button>
 
         {/* Header with Search */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
+        <div className="sticky top-16 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4 z-20">
           <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 justify-between">
             {/* Left side - Team Info (50%) */}
             <div className="flex items-start gap-4 flex-1 min-w-0 w-full lg:w-auto">
@@ -591,11 +583,11 @@ function TeamProfileContent() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Left Side - Team Metrics Placeholder */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 h-[640px] flex flex-col">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
                 Team Metrics
               </h2>
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-8 text-center">
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-8 text-center flex-1 flex items-center justify-center">
                 <p className="text-gray-600 dark:text-gray-400 text-lg">
                   Advanced team metrics will be displayed here
                 </p>
@@ -611,7 +603,7 @@ function TeamProfileContent() {
                     const upcomingGames = profileData.schedule.filter(game => game.result === null);
 
                     return (
-                      <div className="h-[800px] overflow-y-auto">
+                      <div className="h-[640px] overflow-y-auto">
                         {/* Completed Games */}
                         {completedGames.length > 0 && (
                           <div>
@@ -619,7 +611,7 @@ function TeamProfileContent() {
                             <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 pb-2 z-10">
                               <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                                  Completed Games
+                                  Completed Games (Win Prob, Win Quality, Game Quality)
                                 </h3>
                               </div>
                             </div>

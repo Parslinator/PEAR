@@ -3010,7 +3010,7 @@ def baseball_team_profile(request: TeamProfileRequest):
                         "NET", net_score, ".3f", net_rank, "left")
 
         display_stat_row(stats_ax, 0.0, 0.418, 0.48, 0.418, 0.23, 0.423+0.002, 
-                        "RAT", rating, ".2f", rating_rank, "left")
+                        "TSR", rating, ".2f", rating_rank, "left")
 
         display_stat_row(stats_ax, 0.0, 0.368, 0.48, 0.368, 0.23, 0.373+0.002, 
                         "RQI", rqi, ".2f", rqi_rank, "left")
@@ -6233,7 +6233,7 @@ def softball_team_profile(request: SoftballTeamProfileRequest):
                         "NET", net_score, ".3f", net_rank, "left")
 
         display_stat_row(stats_ax, 0.0, 0.418, 0.48, 0.418, 0.23, 0.423+0.002, 
-                        "RAT", rating, ".2f", rating_rank, "left")
+                        "TSR", rating, ".2f", rating_rank, "left")
 
         display_stat_row(stats_ax, 0.0, 0.368, 0.48, 0.368, 0.23, 0.373+0.002, 
                         "RQI", rqi, ".2f", rqi_rank, "left")
