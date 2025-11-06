@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Trophy, TrendingUp, Calendar } from 'lucide-react';
+import { ArrowLeft, Search } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -94,37 +94,44 @@ const getRatingColor = (value: number, min: number, max: number, higherIsBetter:
   }
 };
 
+const getTextColor = (bgColor: string) => {
+  const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if (!match) return 'white';
+  
+  const r = parseInt(match[1]);
+  const g = parseInt(match[2]);
+  const b = parseInt(match[3]);
+  
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.5 ? 'black' : 'white';
+};
+
 const getWinProbColor = (prob: number | null) => {
-  if (prob === null) return { color: 'rgb(107, 114, 128)' }; // gray
-  return { color: getRatingColor(prob * 100, 0, 100, true) };
+  if (prob === null) return 'rgb(107, 114, 128)';
+  return getRatingColor(prob * 100, 0, 100, true);
 };
 
 const getRQIColor = (rqi: number | null) => {
-  if (rqi === null) return { color: 'rgb(107, 114, 128)' }; // gray
-  return { color: getRatingColor(rqi, -1, 0.75, true) };
+  if (rqi === null) return 'rgb(107, 114, 128)';
+  return getRatingColor(rqi, -1, 0.75, true);
 };
 
 const getGQIColor = (gqi: number | null) => {
-  if (gqi === null) return { color: 'rgb(107, 114, 128)' }; // gray
-  return { color: getRatingColor(gqi, 1, 10, true) };
+  if (gqi === null) return 'rgb(107, 114, 128)';
+  return getRatingColor(gqi, 1, 10, true);
 };
 
 const getResultBadgeColor = (result: string | null) => {
-  if (result === 'W') return 'text-gray-900';
-  if (result === 'L') return 'text-white';
-  return 'text-gray-700 dark:text-white';
-};
-
-const getResultBadgeBackground = (result: string | null) => {
-  if (result === 'W') return { backgroundColor: '#98fb98' }; // palegreen
-  if (result === 'L') return { backgroundColor: '#ff7f50' }; // coral
-  return { backgroundColor: '#d1d5db' }; // gray
+  if (!result) return { backgroundColor: '#d1d5db', color: '#374151' };
+  if (result.startsWith('W')) return { backgroundColor: '#98fb98', color: '#000000' };
+  if (result.startsWith('L')) return { backgroundColor: '#ff7f50', color: '#ffffff' };
+  return { backgroundColor: '#d1d5db', color: '#374151' };
 };
 
 const getLocationBadge = (location: string) => {
-  if (location === 'Home') return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300';
-  if (location === 'Away') return 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300';
-  return 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300';
+  if (location === 'Home') return { bg: 'bg-blue-500', text: 'text-white' };
+  if (location === 'Away') return { bg: 'bg-orange-500', text: 'text-white' };
+  return { bg: 'bg-purple-500', text: 'text-white' };
 };
 
 function CompletedGame({ game, onGameClick }: { game: GameData; onGameClick: (game: GameData) => void }) {
@@ -135,74 +142,68 @@ function CompletedGame({ game, onGameClick }: { game: GameData; onGameClick: (ga
     router.push(`/cbase/team-profile?team=${encodeURIComponent(game.opponent)}`);
   };
 
+  const winProbBg = getWinProbColor(game.team_win_prob);
+  const rqiBg = getRQIColor(game.resume_quality);
+  const gqiBg = getGQIColor(game.gqi);
+  const locationStyle = getLocationBadge(game.location);
+  const resultStyle = getResultBadgeColor(game.result);
+
   return (
     <div 
-      className="bg-white dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow cursor-pointer"
+      className="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow cursor-pointer"
       onClick={() => onGameClick(game)}
     >
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
           <span 
-            className={`px-3 py-1 rounded text-sm font-bold ${getResultBadgeColor(game.result)}`}
-            style={getResultBadgeBackground(game.result)}
+            className="px-2 py-1 rounded text-xs font-bold"
+            style={resultStyle}
           >
             {game.result}
           </span>
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
             {formatDate(game.date)}
           </span>
-          <span className={`px-2 py-1 rounded text-xs font-semibold ${getLocationBadge(game.location)}`}>
+          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${locationStyle.bg} ${locationStyle.text}`}>
             {game.location}
           </span>
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-6">
+      <div className="flex items-center justify-between gap-3">
         {/* Opponent Info */}
-        <div className="flex items-center gap-3 flex-shrink-0 w-64">
+        <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
           <img
             src={`${API_URL}/api/baseball-logo/${encodeURIComponent(game.opponent)}`}
             alt={`${game.opponent} logo`}
-            className="w-12 h-12 object-contain flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            className="w-8 h-8 object-contain cursor-pointer hover:opacity-80 transition-opacity"
             onClick={handleOpponentClick}
             onError={(e) => {
               e.currentTarget.style.display = 'none';
             }}
           />
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-lg text-gray-900 dark:text-white truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" onClick={handleOpponentClick}>
-              {game.opponent_net ? `#${game.opponent_net} ` : ''}{game.opponent}
-            </p>
-          </div>
+          <p className="font-medium text-sm text-gray-900 dark:text-white truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" onClick={handleOpponentClick}>
+            {game.opponent_net ? `#${game.opponent_net} ` : ''}{game.opponent}
+          </p>
         </div>
 
-        {/* Metrics - Evenly Spaced */}
-        <div className="flex items-center flex-1 justify-evenly">
-          <div className="text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Win Prob</p>
-            <p className="text-2xl font-bold" style={getWinProbColor(game.team_win_prob)}>
+        {/* Metrics */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="px-2 py-1 rounded" style={{ backgroundColor: winProbBg, color: getTextColor(winProbBg) }}>
+            <p className="text-sm font-bold whitespace-nowrap">
               {formatWinProbability(game.team_win_prob)}
             </p>
           </div>
-          <div className="text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">RQI</p>
-            <p className="text-2xl font-bold" style={getRQIColor(game.resume_quality)}>
+          <div className="px-2 py-1 rounded" style={{ backgroundColor: rqiBg, color: getTextColor(rqiBg) }}>
+            <p className="text-sm font-bold whitespace-nowrap">
               {game.resume_quality?.toFixed(2) || 'N/A'}
             </p>
           </div>
-          <div className="text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">GQI</p>
-            <p className="text-2xl font-bold" style={getGQIColor(game.gqi)}>
+          <div className="px-2 py-1 rounded" style={{ backgroundColor: gqiBg, color: getTextColor(gqiBg) }}>
+            <p className="text-sm font-bold whitespace-nowrap">
               {game.gqi?.toFixed(1) || 'N/A'}
             </p>
           </div>
-        </div>
-
-        {/* Score */}
-        <div className="text-center flex-shrink-0 w-32">
-          <p className="text-3xl font-bold text-gray-900 dark:text-white whitespace-nowrap">
-            {game.home_score} - {game.away_score}
-          </p>
         </div>
       </div>
     </div>
@@ -217,72 +218,66 @@ function UpcomingGame({ game, onGameClick }: { game: GameData; onGameClick: (gam
     router.push(`/cbase/team-profile?team=${encodeURIComponent(game.opponent)}`);
   };
 
+  const winProbBg = getWinProbColor(game.team_win_prob);
+  const rqiBg = getRQIColor(game.resume_quality);
+  const gqiBg = getGQIColor(game.gqi);
+  const locationStyle = getLocationBadge(game.location);
+
   return (
     <div 
-      className="bg-white dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow cursor-pointer"
+      className="bg-white dark:bg-gray-700 rounded-lg p-3 border border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow cursor-pointer"
       onClick={() => onGameClick(game)}
     >
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500 dark:text-gray-400">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
             {formatDate(game.date)}
           </span>
-          <span className={`px-2 py-1 rounded text-xs font-semibold ${getLocationBadge(game.location)}`}>
+          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${locationStyle.bg} ${locationStyle.text}`}>
             {game.location}
           </span>
         </div>
+        {game.pear && (
+          <span className="px-2 py-1 bg-indigo-500 text-white rounded text-xs font-bold">
+            {game.pear}
+          </span>
+        )}
       </div>
 
-      <div className="flex items-center justify-between gap-6">
+      <div className="flex items-center justify-between gap-3">
         {/* Opponent Info */}
-        <div className="flex items-center gap-3 flex-shrink-0 w-64">
+        <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
           <img
             src={`${API_URL}/api/baseball-logo/${encodeURIComponent(game.opponent)}`}
             alt={`${game.opponent} logo`}
-            className="w-12 h-12 object-contain flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+            className="w-8 h-8 object-contain cursor-pointer hover:opacity-80 transition-opacity"
             onClick={handleOpponentClick}
             onError={(e) => {
               e.currentTarget.style.display = 'none';
             }}
           />
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-lg text-gray-900 dark:text-white truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" onClick={handleOpponentClick}>
-              {game.opponent_net ? `#${game.opponent_net} ` : ''}{game.opponent}
-            </p>
-          </div>
+          <p className="font-medium text-sm text-gray-900 dark:text-white truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" onClick={handleOpponentClick}>
+            {game.opponent_net ? `#${game.opponent_net} ` : ''}{game.opponent}
+          </p>
         </div>
 
-        {/* Metrics - Evenly Spaced */}
-        <div className="flex items-center flex-1 justify-evenly">
-          <div className="text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Win Prob</p>
-            <p className="text-2xl font-bold" style={getWinProbColor(game.team_win_prob)}>
+        {/* Metrics */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="px-2 py-1 rounded" style={{ backgroundColor: winProbBg, color: getTextColor(winProbBg) }}>
+            <p className="text-sm font-bold whitespace-nowrap">
               {formatWinProbability(game.team_win_prob)}
             </p>
           </div>
-          <div className="text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">RQI</p>
-            <p className="text-2xl font-bold" style={getRQIColor(game.resume_quality)}>
+          <div className="px-2 py-1 rounded" style={{ backgroundColor: rqiBg, color: getTextColor(rqiBg) }}>
+            <p className="text-sm font-bold whitespace-nowrap">
               {game.resume_quality?.toFixed(2) || 'N/A'}
             </p>
           </div>
-          <div className="text-center">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">GQI</p>
-            <p className="text-2xl font-bold" style={getGQIColor(game.gqi)}>
+          <div className="px-2 py-1 rounded" style={{ backgroundColor: gqiBg, color: getTextColor(gqiBg) }}>
+            <p className="text-sm font-bold whitespace-nowrap">
               {game.gqi?.toFixed(1) || 'N/A'}
             </p>
           </div>
-        </div>
-
-        {/* PEAR */}
-        <div className="flex-shrink-0 w-32 flex justify-center">
-          {game.pear ? (
-            <span className="px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-lg font-bold">
-              {game.pear}
-            </span>
-          ) : (
-            <span className="text-gray-400">-</span>
-          )}
         </div>
       </div>
     </div>
@@ -303,12 +298,28 @@ function TeamProfileContent() {
   const [teamImageUrl, setTeamImageUrl] = useState<string | null>(null);
   const [teamImageLoading, setTeamImageLoading] = useState(false);
   const [showTeamImage, setShowTeamImage] = useState(false);
+  const [allTeams, setAllTeams] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchResults, setShowSearchResults] = useState(false);
 
   useEffect(() => {
     if (teamName) {
       fetchTeamProfile(teamName);
     }
+    fetchAllTeams();
   }, [teamName]);
+
+  const fetchAllTeams = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/cbase/teams`);
+      if (response.ok) {
+        const data = await response.json();
+        setAllTeams(data.teams || []);
+      }
+    } catch (err) {
+      console.error('Error fetching teams:', err);
+    }
+  };
 
   const fetchTeamProfile = async (team: string) => {
     try {
@@ -426,6 +437,21 @@ function TeamProfileContent() {
     setTeamImageUrl(null);
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setShowSearchResults(e.target.value.length > 0);
+  };
+
+  const handleTeamSelect = (team: string) => {
+    setSearchQuery('');
+    setShowSearchResults(false);
+    router.push(`/cbase/team-profile?team=${encodeURIComponent(team)}`);
+  };
+
+  const filteredTeams = allTeams.filter(team => 
+    team.toLowerCase().includes(searchQuery.toLowerCase())
+  ).slice(0, 10);
+
   if (!teamName) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
@@ -444,42 +470,103 @@ function TeamProfileContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Back Button */}
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors mb-6"
-        >
-          <ArrowLeft size={20} />
-          <span className="font-medium">Back to Rankings</span>
-        </button>
+      <div className="max-w-[1600px] mx-auto px-4 py-6">
+        {/* Back Button and Search */}
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+          >
+            <ArrowLeft size={20} />
+            <span className="font-medium">Back to Rankings</span>
+          </button>
+
+          {/* Search Box */}
+          <div className="relative w-64">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onFocus={() => setShowSearchResults(searchQuery.length > 0)}
+                placeholder="Search teams..."
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            
+            {showSearchResults && filteredTeams.length > 0 && (
+              <div className="absolute top-full mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-h-64 overflow-y-auto z-50">
+                {filteredTeams.map((team) => (
+                  <div
+                    key={team}
+                    onClick={() => handleTeamSelect(team)}
+                    className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-gray-900 dark:text-white text-sm"
+                  >
+                    {team}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Header */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex items-center gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
+          <div className="flex items-start gap-4">
             <img 
               src={`${API_URL}/api/baseball-logo/${encodeURIComponent(teamName)}`}
               alt={`${teamName} logo`}
-              className="w-20 h-20 object-contain cursor-pointer hover:opacity-80 transition-opacity"
+              className="w-16 h-16 object-contain cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
               onClick={handleTeamLogoClick}
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-3 flex-wrap">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                   {teamName}
                 </h1>
                 {!loading && profileData?.metrics?.record && (
-                  <span className="text-2xl text-gray-600 dark:text-gray-400">
+                  <span className="text-xl font-semibold text-gray-600 dark:text-gray-400">
                     {profileData.metrics.record}
                   </span>
                 )}
               </div>
-              <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">
-                Team Profile
-              </p>
+              
+              {!loading && profileData?.metrics && (
+                <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">NET: </span>
+                    <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.net || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">ELO: </span>
+                    <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.elo_rank || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">RPI: </span>
+                    <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.rpi || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">Q1: </span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q1 || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">Q2: </span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q2 || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">Q3: </span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q3 || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">Q4: </span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q4 || 'N/A'}</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -501,161 +588,66 @@ function TeamProfileContent() {
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
-            {/* Stats Overview */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Left Side - Team Metrics Placeholder */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                Season Overview
+                Team Metrics
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {/* NET Box */}
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">
-                      NET
-                    </h3>
-                  </div>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    #{profileData?.metrics?.net || 'N/A'}
-                  </p>
-                  {profileData?.metrics?.net_score && (
-                    <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">
-                      {profileData.metrics.net_score.toFixed(3)}
-                    </p>
-                  )}
-                </div>
-
-                {/* TSR Box */}
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">
-                      TSR
-                    </h3>
-                  </div>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    #{profileData?.metrics?.tsr || 'N/A'}
-                  </p>
-                  {profileData?.metrics?.rating && (
-                    <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">
-                      {profileData.metrics.rating.toFixed(2)}
-                    </p>
-                  )}
-                </div>
-
-                {/* Rankings Box */}
-                <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">
-                      Rankings
-                    </h3>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">ELO:</span>
-                      <span className="text-lg font-bold text-gray-900 dark:text-white">
-                        #{profileData?.metrics?.elo_rank || 'N/A'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">RPI:</span>
-                      <span className="text-lg font-bold text-gray-900 dark:text-white">
-                        #{profileData?.metrics?.rpi || 'N/A'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quadrant Record Box */}
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">
-                      Quadrant Record
-                    </h3>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Q1:</span>
-                      <span className="text-sm font-bold text-gray-900 dark:text-white">
-                        {profileData?.metrics?.q1 || 'N/A'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Q2:</span>
-                      <span className="text-sm font-bold text-gray-900 dark:text-white">
-                        {profileData?.metrics?.q2 || 'N/A'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Q3:</span>
-                      <span className="text-sm font-bold text-gray-900 dark:text-white">
-                        {profileData?.metrics?.q3 || 'N/A'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Q4:</span>
-                      <span className="text-sm font-bold text-gray-900 dark:text-white">
-                        {profileData?.metrics?.q4 || 'N/A'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-8 text-center">
+                <p className="text-gray-600 dark:text-gray-400 text-lg">
+                  Advanced team metrics will be displayed here
+                </p>
               </div>
             </div>
 
-            {/* Schedule Section with Scroll */}
-            {profileData?.schedule && profileData.schedule.length > 0 ? (
-              <>
-                {(() => {
-                  const completedGames = profileData.schedule.filter(game => game.result !== null);
-                  const upcomingGames = profileData.schedule.filter(game => game.result === null);
+            {/* Right Side - Schedule */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+              {profileData?.schedule && profileData.schedule.length > 0 ? (
+                <>
+                  {(() => {
+                    const completedGames = profileData.schedule.filter(game => game.result !== null);
+                    const upcomingGames = profileData.schedule.filter(game => game.result === null);
 
-                  return (
-                    <>
-                      {/* Completed Games */}
-                      {completedGames.length > 0 && (
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-                          <div className="flex items-center gap-3 p-6 pb-4">
-                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                              Completed Games
-                            </h2>
-                          </div>
-                          <div className="overflow-y-auto max-h-[600px] px-6 pb-6">
-                            <div className="space-y-3">
+                    return (
+                      <div className="h-[800px] overflow-y-auto">
+                        {/* Completed Games */}
+                        {completedGames.length > 0 && (
+                          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+                              Completed Games ({completedGames.length})
+                            </h3>
+                            <div className="space-y-2">
                               {completedGames.map((game, index) => (
                                 <CompletedGame key={index} game={game} onGameClick={handleGameClick} />
                               ))}
                             </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                      {/* Upcoming Games */}
-                      {upcomingGames.length > 0 && (
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-                          <div className="flex items-center gap-3 p-6 pb-4">
-                            <Calendar className="text-green-600 dark:text-green-400" size={24} />
-                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {/* Upcoming Games */}
+                        {upcomingGames.length > 0 && (
+                          <div className="p-4">
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
                               Upcoming Games ({upcomingGames.length})
-                            </h2>
-                          </div>
-                          <div className="overflow-y-auto max-h-[600px] px-6 pb-6">
-                            <div className="space-y-3">
+                            </h3>
+                            <div className="space-y-2">
                               {upcomingGames.map((game, index) => (
                                 <UpcomingGame key={index} game={game} onGameClick={handleGameClick} />
                               ))}
                             </div>
                           </div>
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-              </>
-            ) : (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12 text-center">
-                <p className="text-gray-600 dark:text-gray-400">No schedule data available</p>
-              </div>
-            )}
+                        )}
+                      </div>
+                    );
+                  })()}
+                </>
+              ) : (
+                <div className="p-12 text-center">
+                  <p className="text-gray-600 dark:text-gray-400">No schedule data available</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
