@@ -511,7 +511,6 @@ function TeamProfileContent() {
                 {/* NET Box */}
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-2">
-                    <Trophy className="text-blue-600 dark:text-blue-400" size={20} />
                     <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">
                       NET
                     </h3>
@@ -529,7 +528,6 @@ function TeamProfileContent() {
                 {/* TSR Box */}
                 <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-2">
-                    <TrendingUp className="text-purple-600 dark:text-purple-400" size={20} />
                     <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">
                       TSR
                     </h3>
@@ -547,7 +545,6 @@ function TeamProfileContent() {
                 {/* Rankings Box */}
                 <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-3">
-                    <Calendar className="text-green-600 dark:text-green-400" size={20} />
                     <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">
                       Rankings
                     </h3>
@@ -571,7 +568,6 @@ function TeamProfileContent() {
                 {/* Quadrant Record Box */}
                 <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-3">
-                    <Trophy className="text-orange-600 dark:text-orange-400" size={20} />
                     <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">
                       Quadrant Record
                     </h3>
@@ -619,9 +615,8 @@ function TeamProfileContent() {
                       {completedGames.length > 0 && (
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
                           <div className="flex items-center gap-3 p-6 pb-4">
-                            <Trophy className="text-blue-600 dark:text-blue-400" size={24} />
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                              Completed Games ({completedGames.length})
+                              Completed Games
                             </h2>
                           </div>
                           <div className="overflow-y-auto max-h-[600px] px-6 pb-6">
