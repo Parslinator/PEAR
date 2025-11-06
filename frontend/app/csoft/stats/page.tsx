@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Download, Search, Camera } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Download, Search } from 'lucide-react';
 import axios from 'axios';
 import html2canvas from 'html2canvas';
 
@@ -26,13 +27,10 @@ interface TeamStats {
   PCT: number;
 }
 
-interface TeamProfile {
-  [key: string]: any;
-}
-
 type SortField = keyof TeamStats;
 
 export default function CsoftStatsPage() {
+  const router = useRouter();
   const [stats, setStats] = useState<TeamStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -40,9 +38,6 @@ export default function CsoftStatsPage() {
   const [dataDate, setDataDate] = useState('');
   const [sortField, setSortField] = useState<SortField>('Rating');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
-  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
-  const [teamProfile, setTeamProfile] = useState<TeamProfile | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -61,45 +56,8 @@ export default function CsoftStatsPage() {
     }
   };
 
-  const fetchTeamProfile = async (teamName: string) => {
-    try {
-      setProfileLoading(true);
-      const response = await fetch(`${API_URL}/api/softball/team-profile`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          team_name: teamName,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate team profile');
-      }
-
-      const blob = await response.blob();
-      const imageUrl = URL.createObjectURL(blob);
-      setTeamProfile({ imageUrl });
-    } catch (error) {
-      console.error('Error fetching team profile:', error);
-      setTeamProfile(null);
-    } finally {
-      setProfileLoading(false);
-    }
-  };
-
   const handleTeamClick = (teamName: string) => {
-    setSelectedTeam(teamName);
-    fetchTeamProfile(teamName);
-  };
-
-  const closeModal = () => {
-    if (teamProfile?.imageUrl) {
-      URL.revokeObjectURL(teamProfile.imageUrl);
-    }
-    setSelectedTeam(null);
-    setTeamProfile(null);
+    router.push(`/csoft/team-profile?team=${encodeURIComponent(teamName)}`);
   };
 
   const handleSort = (field: SortField) => {
@@ -563,7 +521,7 @@ export default function CsoftStatsPage() {
 
                 <div className="mt-6 text-sm text-gray-600 dark:text-gray-400 space-y-1 border-t dark:border-gray-700 pt-4">
                   <p><strong className="dark:text-gray-300">@PEARatings</strong></p>
-                  <p><strong className="dark:text-gray-300">TSR</strong> - Team Strength Rating | <strong className="dark:text-gray-300">WAR</strong> - Team WAR Rank | <strong className="dark:text-gray-300">PYTHAG</strong> - Pythagorean Win Percentage | <strong className="dark:text-gray-300">ERA</strong> - Earned Run Average | <strong className="dark:text-gray-300">WHIP</strong> - Walks + Hits per Inning Pitched | <strong className="dark:text-gray-300">K/7</strong> - Strikeouts Per 9 Innings | <strong className="dark:text-gray-300">RPG</strong> - Runs Per Game | <strong className="dark:text-gray-300">BA</strong> - Batting Average | <strong className="dark:text-gray-300">OBP</strong> - On Base Percentage | <strong className="dark:text-gray-300">SLG</strong> - Slugging | <strong className="dark:text-gray-300">OPS</strong> - On Base Plus Slugging | <strong className="dark:text-gray-300">PCT</strong> - Fielding Percentage </p>
+                  <p><strong className="dark:text-gray-300">TSR</strong> - Team Strength Rating | <strong className="dark:text-gray-300">WAR</strong> - Team WAR Rank | <strong className="dark:text-gray-300">PYTHAG</strong> - Pythagorean Win Percentage | <strong className="dark:text-gray-300">ERA</strong> - Earned Run Average | <strong className="dark:text-gray-300">WHIP</strong> - Walks + Hits per Inning Pitched | <strong className="dark:text-gray-300">K/7</strong> - Strikeouts Per 7 Innings | <strong className="dark:text-gray-300">RPG</strong> - Runs Per Game | <strong className="dark:text-gray-300">BA</strong> - Batting Average | <strong className="dark:text-gray-300">OBP</strong> - On Base Percentage | <strong className="dark:text-gray-300">SLG</strong> - Slugging | <strong className="dark:text-gray-300">OPS</strong> - On Base Plus Slugging | <strong className="dark:text-gray-300">PCT</strong> - Fielding Percentage </p>
                 </div>
               </>
             )}
@@ -571,46 +529,6 @@ export default function CsoftStatsPage() {
         </div>
       </div>
 
-      {selectedTeam && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          onClick={closeModal}
-        >
-          <div 
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedTeam}</h2>
-              <button
-                onClick={closeModal}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl font-bold"
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="p-6">
-              {profileLoading ? (
-                <div className="text-center py-12">
-                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
-                  <p className="mt-4 text-gray-600 dark:text-gray-400">Loading team profile...</p>
-                </div>
-              ) : teamProfile?.imageUrl ? (
-                <div className="flex justify-center">
-                  <img 
-                    src={teamProfile.imageUrl} 
-                    alt={`${selectedTeam} profile`}
-                    className="max-w-full h-auto rounded-lg"
-                  />
-                </div>
-              ) : (
-                <p className="text-center text-gray-600 dark:text-gray-400">Failed to load team profile</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
