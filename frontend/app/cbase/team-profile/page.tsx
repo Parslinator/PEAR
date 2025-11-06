@@ -621,7 +621,7 @@ function TeamProfileContent() {
                                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                                   Completed Games
                                 </h3>
-                                <div className="flex items-center gap-2 -ml-4">
+                                <div className="flex items-center gap-2 -ml-2">
                                   <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center px-2">Win Prob</span>
                                   <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center px-2">RQI</span>
                                   <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center px-2">GQI</span>
