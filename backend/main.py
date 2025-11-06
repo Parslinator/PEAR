@@ -2688,8 +2688,8 @@ def baseball_team_schedule(request: TeamScheduleRequest):
             
             # Add team stats
             'team_stats': {
-                'net_score': {'value': float(net_score), 'rank': int(net_rank)},
-                'rating': {'value': float(rating), 'rank': int(rating_rank)},
+                'net': {'value': float(net_score), 'rank': int(net_rank)},
+                'tsr': {'value': float(rating), 'rank': int(rating_rank)},
                 'rqi': {'value': float(rqi), 'rank': int(rqi_rank)},
                 'sos': {'value': float(sos), 'rank': int(sos_rank)},
                 'war': {'value': float(war), 'rank': int(war_rank)},
@@ -4962,8 +4962,8 @@ def softball_team_schedule(request: SoftballTeamScheduleRequest):
             
             # Add team stats
             'team_stats': {
-                'net_score': {'value': float(net_score), 'rank': int(net_rank)},
-                'rating': {'value': float(rating), 'rank': int(rating_rank)},
+                'net': {'value': float(net_score), 'rank': int(net_rank)},
+                'tsr': {'value': float(rating), 'rank': int(rating_rank)},
                 'rqi': {'value': float(rqi), 'rank': int(rqi_rank)},
                 'sos': {'value': float(sos), 'rank': int(sos_rank)},
                 'war': {'value': float(war), 'rank': int(war_rank)},

@@ -51,8 +51,8 @@ interface PitchingStats {
 }
 
 interface TeamStats {
-  net_score: StatWithRank;
-  rating: StatWithRank;
+  net: StatWithRank;
+  tsr: StatWithRank;
   rqi: StatWithRank;
   sos: StatWithRank;
   war: StatWithRank;
