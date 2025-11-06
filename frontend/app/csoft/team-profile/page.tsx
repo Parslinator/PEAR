@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -25,6 +25,47 @@ interface GameData {
   pear: string | null;
 }
 
+interface StatWithRank {
+  value: number;
+  rank: number;
+}
+
+interface OffenseStats {
+  rpg: StatWithRank;
+  ba: StatWithRank;
+  obp: StatWithRank;
+  slg: StatWithRank;
+  ops: StatWithRank;
+  iso: StatWithRank;
+  woba: StatWithRank;
+}
+
+interface PitchingStats {
+  era: StatWithRank;
+  whip: StatWithRank;
+  kp7: StatWithRank;
+  lob: StatWithRank;
+  kbb: StatWithRank;
+  fip: StatWithRank;
+  pct: StatWithRank;
+}
+
+interface TeamStats {
+  net_score: StatWithRank;
+  rating: StatWithRank;
+  rqi: StatWithRank;
+  sos: StatWithRank;
+  war: StatWithRank;
+  wpoe: StatWithRank;
+  pythag: StatWithRank;
+}
+
+interface LocationRecords {
+  home: string;
+  away: string;
+  neutral: string;
+}
+
 interface TeamMetrics {
   conference: string | null;
   rating: number | null;
@@ -40,6 +81,10 @@ interface TeamMetrics {
   q2: string | null;
   q3: string | null;
   q4: string | null;
+  offense?: OffenseStats;
+  pitching?: PitchingStats;
+  team_stats?: TeamStats;
+  location_records?: LocationRecords;
 }
 
 interface TeamProfileData {
@@ -120,6 +165,23 @@ const getGQIColor = (gqi: number | null) => {
   if (gqi === null) return 'rgb(107, 114, 128)';
   return getRatingColor(gqi, 1, 10, true);
 };
+
+const getRankColor = (rank: number) => {
+  return getRatingColor(rank, 1, 300, false);
+};
+const getStatDecimals = (statKey: string): number => {
+  const key = statKey.toLowerCase();
+  
+  // 1 decimal
+  if (key === 'kp7') return 1;
+  
+  // 2 decimals
+  if (['rating', 'rpg', 'era', 'whip', 'kbb'].includes(key)) return 2;
+  
+  // 3 decimals (default)
+  return 3;
+};
+
 
 const getResultBadgeColor = (result: string | null) => {
   if (!result) return { backgroundColor: '#d1d5db', color: '#374151' };
@@ -471,17 +533,9 @@ function TeamProfileContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 pt-20">
       <div className="max-w-[1600px] mx-auto px-4 py-6">
-        {/* Back Button */}
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors mb-4"
-        >
-          <ArrowLeft size={20} />
-          <span className="font-medium">Back to Rankings</span>
-        </button>
 
         {/* Header with Search */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
+        <div className="sticky top-16 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4 z-20">
           <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 justify-between">
             {/* Left side - Team Info (50%) */}
             <div className="flex items-start gap-4 flex-1 min-w-0 w-full lg:w-auto">
@@ -507,35 +561,53 @@ function TeamProfileContent() {
                 </div>
                 
                 {!loading && profileData?.metrics && (
-                  <div className="mt-2 grid grid-cols-2 sm:flex sm:flex-wrap gap-x-3 sm:gap-x-6 gap-y-1 text-xs sm:text-sm">
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">NET: </span>
-                      <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.net || 'N/A'}</span>
+                  <div className="mt-2 space-y-2">
+                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-x-3 sm:gap-x-6 gap-y-1 text-xs sm:text-sm">
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">NET: </span>
+                        <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.net || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">ELO: </span>
+                        <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.elo_rank || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">RPI: </span>
+                        <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.rpi || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">Q1: </span>
+                        <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q1 || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">Q2: </span>
+                        <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q2 || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">Q3: </span>
+                        <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q3 || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">Q4: </span>
+                        <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q4 || 'N/A'}</span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">ELO: </span>
-                      <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.elo_rank || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">RPI: </span>
-                      <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.rpi || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">Q1: </span>
-                      <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q1 || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">Q2: </span>
-                      <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q2 || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">Q3: </span>
-                      <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q3 || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">Q4: </span>
-                      <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q4 || 'N/A'}</span>
-                    </div>
+                    {profileData.metrics.location_records && (
+                      <div className="flex flex-wrap gap-2 text-xs sm:text-sm">
+                        <div className="flex items-center gap-1">
+                          <span className="text-gray-600 dark:text-gray-400">Home: </span>
+                          <span className="font-semibold text-blue-600 dark:text-blue-400">{profileData.metrics.location_records.home}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-gray-600 dark:text-gray-400">Away: </span>
+                          <span className="font-semibold text-orange-600 dark:text-orange-400">{profileData.metrics.location_records.away}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-gray-600 dark:text-gray-400">Neutral: </span>
+                          <span className="font-semibold text-purple-600 dark:text-purple-400">{profileData.metrics.location_records.neutral}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -590,18 +662,98 @@ function TeamProfileContent() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Left Side - Team Metrics Placeholder */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            {/* Left Side - Team Metrics */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 h-[640px] flex flex-col overflow-hidden">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
                 Team Metrics
               </h2>
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-8 text-center">
-                <p className="text-gray-600 dark:text-gray-400 text-lg">
-                  Advanced team metrics will be displayed here
-                </p>
+              <div className="flex-1 overflow-y-auto">
+                {profileData?.metrics && (
+                  <div className="space-y-6">
+                    {/* Team Stats Section */}
+                    {profileData.metrics.team_stats && (
+                      <div>
+                        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
+                          Team Statistics
+                        </h3>
+                        <div className="grid grid-cols-1 gap-2">
+                          {Object.entries(profileData.metrics.team_stats).map(([key, stat]) => {
+                            const statName = key.toUpperCase().replaceAll('_', ' ');
+                            const rankBg = getRankColor(stat.rank);
+                            return (
+                              <div key={key} className="flex items-center justify-between py-1.5 px-3 bg-gray-50 dark:bg-gray-700/30 rounded">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{statName}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(getStatDecimals(key))}</span>
+                                  <div className="px-2 py-1 rounded min-w-[3rem] text-center" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
+                                    <span className="text-xs font-bold">#{stat.rank}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Offense and Pitching Stats - Side by Side */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Offense Stats */}
+                      {profileData.metrics.offense && (
+                        <div>
+                          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
+                            Offense
+                          </h3>
+                          <div className="space-y-2">
+                            {Object.entries(profileData.metrics.offense).map(([key, stat]) => {
+                              const statName = key.toUpperCase();
+                              const rankBg = getRankColor(stat.rank);
+                              return (
+                                <div key={key} className="flex flex-col gap-1 py-1.5 px-2 bg-gray-50 dark:bg-gray-700/30 rounded">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{statName}</span>
+                                    <span className="text-xs font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(getStatDecimals(key))}</span>
+                                  </div>
+                                  <div className="px-1.5 py-0.5 rounded text-center" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
+                                    <span className="text-xs font-bold">#{stat.rank}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Pitching Stats */}
+                      {profileData.metrics.pitching && (
+                        <div>
+                          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
+                            Pitching
+                          </h3>
+                          <div className="space-y-2">
+                            {Object.entries(profileData.metrics.pitching).map(([key, stat]) => {
+                              const statName = key.toUpperCase();
+                              const rankBg = getRankColor(stat.rank);
+                              return (
+                                <div key={key} className="flex flex-col gap-1 py-1.5 px-2 bg-gray-50 dark:bg-gray-700/30 rounded">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{statName}</span>
+                                    <span className="text-xs font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(getStatDecimals(key))}</span>
+                                  </div>
+                                  <div className="px-1.5 py-0.5 rounded text-center" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
+                                    <span className="text-xs font-bold">#{stat.rank}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-
             {/* Right Side - Schedule */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
               {profileData?.schedule && profileData.schedule.length > 0 ? (
@@ -611,7 +763,7 @@ function TeamProfileContent() {
                     const upcomingGames = profileData.schedule.filter(game => game.result === null);
 
                     return (
-                      <div className="h-[800px] overflow-y-auto">
+                      <div className="h-[640px] overflow-y-auto">
                         {/* Completed Games */}
                         {completedGames.length > 0 && (
                           <div>
@@ -619,7 +771,7 @@ function TeamProfileContent() {
                             <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 pb-2 z-10">
                               <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                                  Completed Games
+                                  Completed Games (Win Prob, Win Quality, Game Quality)
                                 </h3>
                               </div>
                             </div>

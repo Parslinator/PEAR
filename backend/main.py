@@ -4852,6 +4852,72 @@ def softball_team_schedule(request: SoftballTeamScheduleRequest):
             game_data['team_win_prob'] = 1 - game_data['home_win_prob'] if game_data['home_win_prob'] is not None else None
         
         schedule_data.append(game_data)
+
+    def get_value_and_rank(df, team, column, higher_is_better=True):
+        """
+        Return (value, rank) for a given team and column.
+        
+        Args:
+            df (pd.DataFrame): Data source with 'team' and stat columns.
+            team (str): Team name to look up.
+            column (str): Column name to extract.
+            higher_is_better (bool): If True, high values rank better (1 = highest).
+                                    If False, low values rank better (1 = lowest).
+        """
+        ascending = not higher_is_better
+        ranks = df[column].rank(ascending=ascending, method="first").astype(int)
+
+        value = df.loc[df['Team'] == team, column].values[0]
+        rank = ranks.loc[df['Team'] == team].values[0]
+
+        return value, rank
+    
+    def get_location_records(team, team_schedule):
+        """Get home, away, and neutral records for a team"""
+        
+        team_schedule['is_win'] = team_schedule['Result'].str.startswith('W')
+        
+        records = {}
+        for loc in ['Home', 'Away', 'Neutral']:
+            group = team_schedule[team_schedule['Location'] == loc]
+            wins = group['is_win'].sum()
+            losses = len(group) - wins
+            records[loc] = f"{int(wins)}-{int(losses)}"
+        
+        return records
+    
+    # offense stats
+    rpg, rpg_rank = get_value_and_rank(stats_and_metrics, team_name, "RPG")
+    ba, ba_rank = get_value_and_rank(stats_and_metrics, team_name, "BA")
+    obp, obp_rank = get_value_and_rank(stats_and_metrics, team_name, "OBP")
+    slg, slg_rank = get_value_and_rank(stats_and_metrics, team_name, "SLG")
+    ops, ops_rank = get_value_and_rank(stats_and_metrics, team_name, "OPS")
+    iso, iso_rank = get_value_and_rank(stats_and_metrics, team_name, "ISO")
+    wOBA, wOBA_rank = get_value_and_rank(stats_and_metrics, team_name, "wOBA")
+
+    # pitching stats
+    era, era_rank = get_value_and_rank(stats_and_metrics, team_name, "ERA", False)
+    whip, whip_rank = get_value_and_rank(stats_and_metrics, team_name, "WHIP", False)
+    kp7, kp7_rank = get_value_and_rank(stats_and_metrics, team_name, "KP7")
+    lob, lob_rank = get_value_and_rank(stats_and_metrics, team_name, "LOB%")
+    kbb, kbb_rank = get_value_and_rank(stats_and_metrics, team_name, "K/BB")
+    fip, fip_rank = get_value_and_rank(stats_and_metrics, team_name, "FIP", False)
+    pct, pct_rank = get_value_and_rank(stats_and_metrics, team_name, "PCT")
+
+    # team stats
+    net_score, net_rank = get_value_and_rank(stats_and_metrics, team_name, "NET_Score")
+    rating, rating_rank = get_value_and_rank(stats_and_metrics, team_name, "Rating")
+    rqi, rqi_rank = get_value_and_rank(stats_and_metrics, team_name, "resume_quality")
+    sos, sos_rank = get_value_and_rank(stats_and_metrics, team_name, "avg_expected_wins", False)
+    war, war_rank = get_value_and_rank(stats_and_metrics, team_name, "fWAR")
+    wpoe, wpoe_rank = get_value_and_rank(stats_and_metrics, team_name, "wpoe_pct")
+    pythag, pythag_rank = get_value_and_rank(stats_and_metrics, team_name, "PYTHAG")
+
+    # location stats
+    location_records = get_location_records(team_name, team_schedule)
+    home_record = location_records.get("Home", "0-0")
+    away_record = location_records.get("Away", "0-0")
+    neutral_record = location_records.get("Neutral", "0-0")
     
     # Get team metrics if available
     team_metrics = {}
@@ -4870,7 +4936,47 @@ def softball_team_schedule(request: SoftballTeamScheduleRequest):
             'q1': metrics.iloc[0]['Q1'] if 'Q1' in metrics.columns else None,
             'q2': metrics.iloc[0]['Q2'] if 'Q2' in metrics.columns else None,
             'q3': metrics.iloc[0]['Q3'] if 'Q3' in metrics.columns else None,
-            'q4': metrics.iloc[0]['Q4'] if 'Q4' in metrics.columns else None
+            'q4': metrics.iloc[0]['Q4'] if 'Q4' in metrics.columns else None,
+            
+            # Add offense stats
+            'offense': {
+                'rpg': {'value': float(rpg), 'rank': int(rpg_rank)},
+                'ba': {'value': float(ba), 'rank': int(ba_rank)},
+                'obp': {'value': float(obp), 'rank': int(obp_rank)},
+                'slg': {'value': float(slg), 'rank': int(slg_rank)},
+                'ops': {'value': float(ops), 'rank': int(ops_rank)},
+                'iso': {'value': float(iso), 'rank': int(iso_rank)},
+                'woba': {'value': float(wOBA), 'rank': int(wOBA_rank)}
+            },
+            
+            # Add pitching stats
+            'pitching': {
+                'era': {'value': float(era), 'rank': int(era_rank)},
+                'whip': {'value': float(whip), 'rank': int(whip_rank)},
+                'kp7': {'value': float(kp7), 'rank': int(kp7_rank)},
+                'lob': {'value': float(lob), 'rank': int(lob_rank)},
+                'kbb': {'value': float(kbb), 'rank': int(kbb_rank)},
+                'fip': {'value': float(fip), 'rank': int(fip_rank)},
+                'pct': {'value': float(pct), 'rank': int(pct_rank)}
+            },
+            
+            # Add team stats
+            'team_stats': {
+                'net_score': {'value': float(net_score), 'rank': int(net_rank)},
+                'rating': {'value': float(rating), 'rank': int(rating_rank)},
+                'rqi': {'value': float(rqi), 'rank': int(rqi_rank)},
+                'sos': {'value': float(sos), 'rank': int(sos_rank)},
+                'war': {'value': float(war), 'rank': int(war_rank)},
+                'wpoe': {'value': float(wpoe), 'rank': int(wpoe_rank)},
+                'pythag': {'value': float(pythag), 'rank': int(pythag_rank)}
+            },
+            
+            # Add location records
+            'location_records': {
+                'home': home_record,
+                'away': away_record,
+                'neutral': neutral_record
+            }
         }
     
     return {
