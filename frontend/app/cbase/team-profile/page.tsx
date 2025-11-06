@@ -619,9 +619,9 @@ function TeamProfileContent() {
                             <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 pb-2 z-10">
                               <div className="flex items-center justify-between">
                                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                                  Completed Games ({completedGames.length})
+                                  Completed Games
                                 </h3>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 -ml-4">
                                   <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center px-2">Win Prob</span>
                                   <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center px-2">RQI</span>
                                   <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center px-2">GQI</span>
