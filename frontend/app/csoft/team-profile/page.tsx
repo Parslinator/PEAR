@@ -132,7 +132,7 @@ function CompletedGame({ game, onGameClick }: { game: GameData; onGameClick: (ga
   
   const handleOpponentClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(`/softball/team-profile?team=${encodeURIComponent(game.opponent)}`);
+    router.push(`/csoft/team-profile?team=${encodeURIComponent(game.opponent)}`);
   };
 
   return (
@@ -214,7 +214,7 @@ function UpcomingGame({ game, onGameClick }: { game: GameData; onGameClick: (gam
   
   const handleOpponentClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(`/softball/team-profile?team=${encodeURIComponent(game.opponent)}`);
+    router.push(`/csoft/team-profile?team=${encodeURIComponent(game.opponent)}`);
   };
 
   return (
