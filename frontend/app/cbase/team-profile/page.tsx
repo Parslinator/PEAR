@@ -548,35 +548,53 @@ function TeamProfileContent() {
                 </div>
                 
                 {!loading && profileData?.metrics && (
-                  <div className="mt-2 grid grid-cols-2 sm:flex sm:flex-wrap gap-x-3 sm:gap-x-6 gap-y-1 text-xs sm:text-sm">
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">NET: </span>
-                      <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.net || 'N/A'}</span>
+                  <div className="mt-2 space-y-2">
+                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-x-3 sm:gap-x-6 gap-y-1 text-xs sm:text-sm">
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">NET: </span>
+                        <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.net || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">ELO: </span>
+                        <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.elo_rank || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">RPI: </span>
+                        <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.rpi || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">Q1: </span>
+                        <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q1 || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">Q2: </span>
+                        <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q2 || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">Q3: </span>
+                        <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q3 || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600 dark:text-gray-400">Q4: </span>
+                        <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q4 || 'N/A'}</span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">ELO: </span>
-                      <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.elo_rank || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">RPI: </span>
-                      <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.rpi || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">Q1: </span>
-                      <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q1 || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">Q2: </span>
-                      <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q2 || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">Q3: </span>
-                      <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q3 || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">Q4: </span>
-                      <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q4 || 'N/A'}</span>
-                    </div>
+                    {profileData.metrics.location_records && (
+                      <div className="flex flex-wrap gap-2 text-xs sm:text-sm">
+                        <div className="flex items-center gap-1">
+                          <span className="text-gray-600 dark:text-gray-400">Home: </span>
+                          <span className="font-semibold text-blue-600 dark:text-blue-400">{profileData.metrics.location_records.home}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-gray-600 dark:text-gray-400">Away: </span>
+                          <span className="font-semibold text-orange-600 dark:text-orange-400">{profileData.metrics.location_records.away}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-gray-600 dark:text-gray-400">Neutral: </span>
+                          <span className="font-semibold text-purple-600 dark:text-purple-400">{profileData.metrics.location_records.neutral}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -632,29 +650,29 @@ function TeamProfileContent() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Left Side - Team Metrics */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 h-[640px] flex flex-col overflow-hidden">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 h-[640px] flex flex-col">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
                 Team Metrics
               </h2>
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-hidden">
                 {profileData?.metrics && (
-                  <div className="space-y-6">
+                  <div className="h-full flex flex-col gap-3">
                     {/* Team Stats Section */}
                     {profileData.metrics.team_stats && (
                       <div>
-                        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
+                        <h3 className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
                           Team Statistics
                         </h3>
-                        <div className="grid grid-cols-1 gap-2">
+                        <div className="grid grid-cols-1 gap-1">
                           {Object.entries(profileData.metrics.team_stats).map(([key, stat]) => {
                             const statName = key.toUpperCase().replaceAll('_', ' ');
                             const rankBg = getRankColor(stat.rank);
                             return (
-                              <div key={key} className="flex items-center justify-between py-1.5 px-3 bg-gray-50 dark:bg-gray-700/30 rounded">
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{statName}</span>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(3)}</span>
-                                  <div className="px-2 py-1 rounded min-w-[3rem] text-center" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
+                              <div key={key} className="flex items-center justify-between py-1 px-2 bg-gray-50 dark:bg-gray-700/30 rounded text-xs">
+                                <span className="font-medium text-gray-700 dark:text-gray-300">{statName}</span>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(3)}</span>
+                                  <div className="px-1.5 py-0.5 rounded min-w-[2.5rem] text-center" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
                                     <span className="text-xs font-bold">#{stat.rank}</span>
                                   </div>
                                 </div>
@@ -665,48 +683,25 @@ function TeamProfileContent() {
                       </div>
                     )}
 
-                    {/* Location Records Section */}
-                    {profileData.metrics.location_records && (
-                      <div>
-                        <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
-                          Record by Location
-                        </h3>
-                        <div className="grid grid-cols-3 gap-2">
-                          <div className="text-center py-2 px-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-                            <div className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1">Home</div>
-                            <div className="text-sm font-bold text-gray-900 dark:text-white">{profileData.metrics.location_records.home}</div>
-                          </div>
-                          <div className="text-center py-2 px-3 bg-orange-50 dark:bg-orange-900/20 rounded border border-orange-200 dark:border-orange-800">
-                            <div className="text-xs font-semibold text-orange-600 dark:text-orange-400 mb-1">Away</div>
-                            <div className="text-sm font-bold text-gray-900 dark:text-white">{profileData.metrics.location_records.away}</div>
-                          </div>
-                          <div className="text-center py-2 px-3 bg-purple-50 dark:bg-purple-900/20 rounded border border-purple-200 dark:border-purple-800">
-                            <div className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-1">Neutral</div>
-                            <div className="text-sm font-bold text-gray-900 dark:text-white">{profileData.metrics.location_records.neutral}</div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
                     {/* Offense and Pitching Stats - Side by Side */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3 flex-1">
                       {/* Offense Stats */}
                       {profileData.metrics.offense && (
-                        <div>
-                          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
+                        <div className="flex flex-col">
+                          <h3 className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
                             Offense
                           </h3>
-                          <div className="space-y-2">
+                          <div className="space-y-1 flex-1">
                             {Object.entries(profileData.metrics.offense).map(([key, stat]) => {
                               const statName = key.toUpperCase();
                               const rankBg = getRankColor(stat.rank);
                               return (
-                                <div key={key} className="flex flex-col gap-1 py-1.5 px-2 bg-gray-50 dark:bg-gray-700/30 rounded">
-                                  <div className="flex items-center justify-between">
+                                <div key={key} className="flex items-center justify-between py-1 px-1.5 bg-gray-50 dark:bg-gray-700/30 rounded">
+                                  <div className="flex flex-col gap-0.5 flex-1 min-w-0">
                                     <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{statName}</span>
                                     <span className="text-xs font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(3)}</span>
                                   </div>
-                                  <div className="px-1.5 py-0.5 rounded text-center" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
+                                  <div className="px-1.5 py-0.5 rounded text-center ml-1" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
                                     <span className="text-xs font-bold">#{stat.rank}</span>
                                   </div>
                                 </div>
@@ -718,21 +713,21 @@ function TeamProfileContent() {
 
                       {/* Pitching Stats */}
                       {profileData.metrics.pitching && (
-                        <div>
-                          <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">
+                        <div className="flex flex-col">
+                          <h3 className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
                             Pitching
                           </h3>
-                          <div className="space-y-2">
+                          <div className="space-y-1 flex-1">
                             {Object.entries(profileData.metrics.pitching).map(([key, stat]) => {
                               const statName = key.toUpperCase();
                               const rankBg = getRankColor(stat.rank);
                               return (
-                                <div key={key} className="flex flex-col gap-1 py-1.5 px-2 bg-gray-50 dark:bg-gray-700/30 rounded">
-                                  <div className="flex items-center justify-between">
+                                <div key={key} className="flex items-center justify-between py-1 px-1.5 bg-gray-50 dark:bg-gray-700/30 rounded">
+                                  <div className="flex flex-col gap-0.5 flex-1 min-w-0">
                                     <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{statName}</span>
                                     <span className="text-xs font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(3)}</span>
                                   </div>
-                                  <div className="px-1.5 py-0.5 rounded text-center" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
+                                  <div className="px-1.5 py-0.5 rounded text-center ml-1" style={{ backgroundColor: rankBg, color: getTextColor(rankBg) }}>
                                     <span className="text-xs font-bold">#{stat.rank}</span>
                                   </div>
                                 </div>
@@ -746,7 +741,6 @@ function TeamProfileContent() {
                 )}
               </div>
             </div>
-
             {/* Right Side - Schedule */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
               {profileData?.schedule && profileData.schedule.length > 0 ? (
