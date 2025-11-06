@@ -170,7 +170,7 @@ function CompletedGame({ game, onGameClick }: { game: GameData; onGameClick: (ga
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
         {/* Opponent Info */}
         <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
           <img
@@ -244,7 +244,7 @@ function UpcomingGame({ game, onGameClick }: { game: GameData; onGameClick: (gam
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
         {/* Opponent Info */}
         <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
           <img
@@ -482,32 +482,32 @@ function TeamProfileContent() {
 
         {/* Header with Search */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
-          <div className="flex items-center gap-4 justify-between">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 justify-between">
             {/* Left side - Team Info (50%) */}
-            <div className="flex items-start gap-4 flex-1 min-w-0">
+            <div className="flex items-start gap-4 flex-1 min-w-0 w-full lg:w-auto">
               <img 
                 src={`${API_URL}/api/baseball-logo/${encodeURIComponent(teamName)}`}
                 alt={`${teamName} logo`}
-                className="w-16 h-16 object-contain cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+                className="w-12 h-12 sm:w-16 sm:h-16 object-contain cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
                 onClick={handleTeamLogoClick}
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
               />
               <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-3 flex-wrap">
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3 flex-wrap">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                     {teamName}
                   </h1>
                   {!loading && profileData?.metrics?.record && (
-                    <span className="text-xl font-semibold text-gray-600 dark:text-gray-400">
+                    <span className="text-lg sm:text-xl font-semibold text-gray-600 dark:text-gray-400">
                       {profileData.metrics.record}
                     </span>
                   )}
                 </div>
                 
                 {!loading && profileData?.metrics && (
-                  <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                  <div className="mt-2 grid grid-cols-2 sm:flex sm:flex-wrap gap-x-3 sm:gap-x-6 gap-y-1 text-xs sm:text-sm">
                     <div>
                       <span className="text-gray-600 dark:text-gray-400">NET: </span>
                       <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.net || 'N/A'}</span>
@@ -542,7 +542,7 @@ function TeamProfileContent() {
             </div>
 
             {/* Right side - Search Box (50%) */}
-            <div className="relative w-64 flex-shrink-0 self-center">
+            <div className="relative w-full lg:w-64 flex-shrink-0 lg:self-center">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 <input
@@ -621,11 +621,6 @@ function TeamProfileContent() {
                                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                                   Completed Games
                                 </h3>
-                                <div className="flex items-center gap-2 -ml-8">
-                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center px-2">Win Prob</span>
-                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center px-2">RQI</span>
-                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center px-2">GQI</span>
-                                </div>
                               </div>
                             </div>
                             
