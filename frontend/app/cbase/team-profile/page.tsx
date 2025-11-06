@@ -613,28 +613,56 @@ function TeamProfileContent() {
                       <div className="h-[800px] overflow-y-auto">
                         {/* Completed Games */}
                         {completedGames.length > 0 && (
-                          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-                              Completed Games ({completedGames.length})
-                            </h3>
-                            <div className="space-y-2">
-                              {completedGames.map((game, index) => (
-                                <CompletedGame key={index} game={game} onGameClick={handleGameClick} />
-                              ))}
+                          <div>
+                            {/* Sticky Header */}
+                            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 pb-2 z-10">
+                              <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                                  Completed Games ({completedGames.length})
+                                </h3>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center">Win Prob</span>
+                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center">RQI</span>
+                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center">GQI</span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Games List */}
+                            <div className="p-4 pt-2">
+                              <div className="space-y-2">
+                                {completedGames.map((game, index) => (
+                                  <CompletedGame key={index} game={game} onGameClick={handleGameClick} />
+                                ))}
+                              </div>
                             </div>
                           </div>
                         )}
 
                         {/* Upcoming Games */}
                         {upcomingGames.length > 0 && (
-                          <div className="p-4">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
-                              Upcoming Games ({upcomingGames.length})
-                            </h3>
-                            <div className="space-y-2">
-                              {upcomingGames.map((game, index) => (
-                                <UpcomingGame key={index} game={game} onGameClick={handleGameClick} />
-                              ))}
+                          <div>
+                            {/* Sticky Header */}
+                            <div className={`sticky ${completedGames.length > 0 ? 'top-[72px]' : 'top-0'} bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 pb-2 z-10`}>
+                              <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                                  Upcoming Games ({upcomingGames.length})
+                                </h3>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center">Win Prob</span>
+                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center">RQI</span>
+                                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 w-16 text-center">GQI</span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Games List */}
+                            <div className="p-4 pt-2">
+                              <div className="space-y-2">
+                                {upcomingGames.map((game, index) => (
+                                  <UpcomingGame key={index} game={game} onGameClick={handleGameClick} />
+                                ))}
+                              </div>
                             </div>
                           </div>
                         )}
