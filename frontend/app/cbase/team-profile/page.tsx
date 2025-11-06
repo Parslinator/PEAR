@@ -33,11 +33,13 @@ interface TeamMetrics {
   rpi: number | null;
   elo: number | null;
   elo_rank: number | null;
+  tsr: number | null;
   resume_quality: number | null;
   q1: string | null;
   q2: string | null;
   q3: string | null;
   q4: string | null;
+  result: string | null;
 }
 
 interface TeamProfileData {
@@ -57,42 +59,66 @@ const formatWinProbability = (prob: number | null) => {
   return `${(prob * 100).toFixed(1)}%`;
 };
 
+const getRatingColor = (value: number, min: number, max: number, higherIsBetter: boolean = true) => {
+  const range = max - min;
+  let normalized = (value - min) / range;
+  
+  if (!higherIsBetter) {
+    normalized = 1 - normalized;
+  }
+  
+  if (normalized < 0.25) {
+    const t = normalized / 0.25;
+    const r = Math.round(139 + (255 - 139) * t);
+    const g = Math.round(0 + (165 - 0) * t);
+    const b = 0;
+    return `rgb(${r}, ${g}, ${b})`;
+  } else if (normalized < 0.5) {
+    const t = (normalized - 0.25) / 0.25;
+    const r = Math.round(255 + (211 - 255) * t);
+    const g = Math.round(165 + (211 - 165) * t);
+    const b = Math.round(0 + (211 - 0) * t);
+    return `rgb(${r}, ${g}, ${b})`;
+  } else if (normalized < 0.75) {
+    const t = (normalized - 0.5) / 0.25;
+    const r = Math.round(211 + (0 - 211) * t);
+    const g = Math.round(211 + (255 - 211) * t);
+    const b = Math.round(211 + (255 - 211) * t);
+    return `rgb(${r}, ${g}, ${b})`;
+  } else {
+    const t = (normalized - 0.75) / 0.25;
+    const r = 0;
+    const g = Math.round(255 + (0 - 255) * t);
+    const b = Math.round(255 + (139 - 255) * t);
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+};
+
 const getWinProbColor = (prob: number | null) => {
-  if (prob === null) return 'text-gray-900 dark:text-white';
-  const percentage = prob * 100;
-  // Blue (100%) to Red (0%)
-  if (percentage >= 75) return 'text-blue-600 dark:text-blue-400';
-  if (percentage >= 50) return 'text-green-600 dark:text-green-400';
-  if (percentage >= 25) return 'text-orange-600 dark:text-orange-400';
-  return 'text-red-600 dark:text-red-400';
+  if (prob === null) return { color: 'rgb(107, 114, 128)' }; // gray
+  return { color: getRatingColor(prob * 100, 0, 100, true) };
 };
 
 const getRQIColor = (rqi: number | null) => {
-  if (rqi === null) return 'text-gray-900 dark:text-white';
-  // Blue (0.75) to Red (-1)
-  // Normalize: 0.75 = 100%, -1 = 0%
-  const normalized = ((rqi - (-1)) / (0.75 - (-1))) * 100;
-  if (normalized >= 75) return 'text-blue-600 dark:text-blue-400';
-  if (normalized >= 50) return 'text-green-600 dark:text-green-400';
-  if (normalized >= 25) return 'text-orange-600 dark:text-orange-400';
-  return 'text-red-600 dark:text-red-400';
+  if (rqi === null) return { color: 'rgb(107, 114, 128)' }; // gray
+  return { color: getRatingColor(rqi, -1, 0.75, true) };
 };
 
 const getGQIColor = (gqi: number | null) => {
-  if (gqi === null) return 'text-gray-900 dark:text-white';
-  // Blue (10) to Red (1)
-  // Normalize: 10 = 100%, 1 = 0%
-  const normalized = ((gqi - 1) / (10 - 1)) * 100;
-  if (normalized >= 75) return 'text-blue-600 dark:text-blue-400';
-  if (normalized >= 50) return 'text-green-600 dark:text-green-400';
-  if (normalized >= 25) return 'text-orange-600 dark:text-orange-400';
-  return 'text-red-600 dark:text-red-400';
+  if (gqi === null) return { color: 'rgb(107, 114, 128)' }; // gray
+  return { color: getRatingColor(gqi, 1, 10, true) };
 };
 
 const getResultBadgeColor = (result: string | null) => {
-  if (result === 'W') return 'bg-[#98fb98] text-gray-900';
-  if (result === 'L') return 'bg-[#ff7f50] text-white';
-  return 'bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300';
+  if (result === 'W') return 'text-gray-900';
+  if (result === 'L') return 'text-white';
+  return 'text-gray-700 dark:text-gray-300';
+};
+
+const getResultBadgeBackground = (result: string | null) => {
+  if (result === 'W') return { backgroundColor: '#98fb98' }; // palegreen
+  if (result === 'L') return { backgroundColor: '#ff7f50' }; // coral
+  return { backgroundColor: '#d1d5db' }; // gray
 };
 
 const getLocationBadge = (location: string) => {
@@ -116,7 +142,10 @@ function CompletedGame({ game, onGameClick }: { game: GameData; onGameClick: (ga
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <span className={`px-3 py-1 rounded text-sm font-bold ${getResultBadgeColor(game.result)}`}>
+          <span 
+            className={`px-3 py-1 rounded text-sm font-bold ${getResultBadgeColor(game.result)}`}
+            style={getResultBadgeBackground(game.result)}
+          >
             {game.result}
           </span>
           <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -151,19 +180,19 @@ function CompletedGame({ game, onGameClick }: { game: GameData; onGameClick: (ga
         <div className="flex items-center flex-1 justify-evenly">
           <div className="text-center">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Win Prob</p>
-            <p className={`text-2xl font-bold ${getWinProbColor(game.team_win_prob)}`}>
+            <p className="text-2xl font-bold" style={getWinProbColor(game.team_win_prob)}>
               {formatWinProbability(game.team_win_prob)}
             </p>
           </div>
           <div className="text-center">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">RQI</p>
-            <p className={`text-2xl font-bold ${getRQIColor(game.resume_quality)}`}>
+            <p className="text-2xl font-bold" style={getRQIColor(game.resume_quality)}>
               {game.resume_quality?.toFixed(2) || 'N/A'}
             </p>
           </div>
           <div className="text-center">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">GQI</p>
-            <p className={`text-2xl font-bold ${getGQIColor(game.gqi)}`}>
+            <p className="text-2xl font-bold" style={getGQIColor(game.gqi)}>
               {game.gqi?.toFixed(1) || 'N/A'}
             </p>
           </div>
@@ -227,19 +256,19 @@ function UpcomingGame({ game, onGameClick }: { game: GameData; onGameClick: (gam
         <div className="flex items-center flex-1 justify-evenly">
           <div className="text-center">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Win Prob</p>
-            <p className={`text-2xl font-bold ${getWinProbColor(game.team_win_prob)}`}>
+            <p className="text-2xl font-bold" style={getWinProbColor(game.team_win_prob)}>
               {formatWinProbability(game.team_win_prob)}
             </p>
           </div>
           <div className="text-center">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">RQI</p>
-            <p className={`text-2xl font-bold ${getRQIColor(game.resume_quality)}`}>
+            <p className="text-2xl font-bold" style={getRQIColor(game.resume_quality)}>
               {game.resume_quality?.toFixed(2) || 'N/A'}
             </p>
           </div>
           <div className="text-center">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">GQI</p>
-            <p className={`text-2xl font-bold ${getGQIColor(game.gqi)}`}>
+            <p className="text-2xl font-bold" style={getGQIColor(game.gqi)}>
               {game.gqi?.toFixed(1) || 'N/A'}
             </p>
           </div>
@@ -438,9 +467,16 @@ function TeamProfileContent() {
               }}
             />
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-                {teamName}
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+                  {teamName}
+                </h1>
+                {!loading && profileData?.metrics?.result && (
+                  <span className="text-2xl text-gray-600 dark:text-gray-400">
+                    {profileData.metrics.result}
+                  </span>
+                )}
+              </div>
               <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">
                 Team Profile
               </p>
@@ -472,23 +508,25 @@ function TeamProfileContent() {
                 Season Overview
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* NET Box */}
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-2">
                     <Trophy className="text-blue-600 dark:text-blue-400" size={20} />
                     <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">
-                      NET Rank
+                      NET
                     </h3>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
                     #{profileData?.metrics?.net || 'N/A'}
                   </p>
                   {profileData?.metrics?.net_score && (
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                      Score: {profileData.metrics.net_score.toFixed(3)}
+                    <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">
+                      {profileData.metrics.net_score.toFixed(3)}
                     </p>
                   )}
                 </div>
 
+                {/* TSR Box */}
                 <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-2">
                     <TrendingUp className="text-purple-600 dark:text-purple-400" size={20} />
@@ -496,40 +534,73 @@ function TeamProfileContent() {
                       TSR
                     </h3>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {profileData?.metrics?.rating?.toFixed(2) || 'N/A'}
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                    #{profileData?.metrics?.tsr || 'N/A'}
                   </p>
-                  {profileData?.metrics?.resume_quality && (
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                      RQI: {profileData.metrics.resume_quality.toFixed(3)}
+                  {profileData?.metrics?.rating && (
+                    <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">
+                      {profileData.metrics.rating.toFixed(2)}
                     </p>
                   )}
                 </div>
 
+                {/* Rankings Box */}
                 <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex items-center gap-3 mb-3">
                     <Calendar className="text-green-600 dark:text-green-400" size={20} />
                     <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">
-                      Conference
+                      Rankings
                     </h3>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {profileData?.metrics?.conference || 'N/A'}
-                  </p>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">ELO:</span>
+                      <span className="text-lg font-bold text-gray-900 dark:text-white">
+                        #{profileData?.metrics?.elo_rank || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">RPI:</span>
+                      <span className="text-lg font-bold text-gray-900 dark:text-white">
+                        #{profileData?.metrics?.rpi || 'N/A'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
+                {/* Quadrant Record Box */}
                 <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex items-center gap-3 mb-3">
                     <Trophy className="text-orange-600 dark:text-orange-400" size={20} />
                     <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">
                       Quadrant Record
                     </h3>
                   </div>
-                  <div className="text-xs text-gray-900 dark:text-white space-y-1">
-                    <p>Q1: {profileData?.metrics?.q1 || 'N/A'}</p>
-                    <p>Q2: {profileData?.metrics?.q2 || 'N/A'}</p>
-                    <p>Q3: {profileData?.metrics?.q3 || 'N/A'}</p>
-                    <p>Q4: {profileData?.metrics?.q4 || 'N/A'}</p>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Q1:</span>
+                      <span className="text-sm font-bold text-gray-900 dark:text-white">
+                        {profileData?.metrics?.q1 || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Q2:</span>
+                      <span className="text-sm font-bold text-gray-900 dark:text-white">
+                        {profileData?.metrics?.q2 || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Q3:</span>
+                      <span className="text-sm font-bold text-gray-900 dark:text-white">
+                        {profileData?.metrics?.q3 || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Q4:</span>
+                      <span className="text-sm font-bold text-gray-900 dark:text-white">
+                        {profileData?.metrics?.q4 || 'N/A'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
