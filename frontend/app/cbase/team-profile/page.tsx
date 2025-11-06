@@ -531,7 +531,7 @@ function TeamProfileContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 pt-16">
       <div className="max-w-[1600px] mx-auto px-4 py-6">
 
         {/* Header with Search */}
