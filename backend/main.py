@@ -4704,6 +4704,72 @@ def get_softball_team_info(team_name: str):
     except Exception as e:
         print(f"Error getting team info: {e}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+    
+@app.post("/api/softball/profile-page")
+def softball_team_schedule(request: TeamScheduleRequest):
+    stats_and_metrics, comparison_date = load_softball_data()
+    schedule_df = load_softball_schedule_data()
+    team_name = request.team_name
+
+    team_schedule = schedule_df[schedule_df['Team'] == team_name].reset_index(drop=True)
+    metrics = stats_and_metrics[stats_and_metrics['Team'] == team_name].reset_index(drop=True)
+    
+    # Process schedule data
+    schedule_data = []
+    for idx, row in team_schedule.iterrows():
+        game_data = {
+            'date': row['Date'],
+            'opponent': row['Opponent'] if pd.notna(row['Opponent']) else 'Non D-I',
+            'location': row['Location'],
+            'home_team': row['home_team'],
+            'away_team': row['away_team'],
+            'home_score': int(row['home_score']) if pd.notna(row['home_score']) else None,
+            'away_score': int(row['away_score']) if pd.notna(row['away_score']) else None,
+            'result': row['Result'] if pd.notna(row['Result']) else None,
+            'home_win_prob': float(row['home_win_prob']) if pd.notna(row['home_win_prob']) else None,
+            'resume_quality': float(row['resume_quality']) if pd.notna(row['resume_quality']) else None,
+            'home_net': int(row['home_net']) if pd.notna(row['home_net']) else None,
+            'away_net': int(row['away_net']) if pd.notna(row['away_net']) else None,
+            'gqi': float(row['GQI']) if pd.notna(row['GQI']) else None,
+            'pear': row['PEAR'] if pd.notna(row['PEAR']) else None,
+        }
+        
+        # Determine opponent NET ranking
+        if row['Team'] == row['home_team']:
+            game_data['opponent_net'] = game_data['away_net']
+            game_data['team_win_prob'] = game_data['home_win_prob']
+        else:
+            game_data['opponent_net'] = game_data['home_net']
+            game_data['team_win_prob'] = 1 - game_data['home_win_prob'] if game_data['home_win_prob'] is not None else None
+        
+        schedule_data.append(game_data)
+    
+    # Get team metrics if available
+    team_metrics = {}
+    if len(metrics) > 0:
+        team_metrics = {
+            'conference': metrics.iloc[0]['Conference'] if 'Conference' in metrics.columns else None,
+            'rating': float(metrics.iloc[0]['Rating']) if 'Rating' in metrics.columns and pd.notna(metrics.iloc[0]['Rating']) else None,
+            'tsr': int(metrics.iloc[0]['PRR']) if 'PRR' in metrics.columns else None,
+            'net': int(metrics.iloc[0]['NET']) if 'NET' in metrics.columns and pd.notna(metrics.iloc[0]['NET']) else None,
+            'net_score': float(metrics.iloc[0]['NET_Score']) if 'NET_Score' in metrics.columns and pd.notna(metrics.iloc[0]['NET_Score']) else None,
+            'rpi': int(metrics.iloc[0]['RPI']) if 'RPI' in metrics.columns and pd.notna(metrics.iloc[0]['RPI']) else None,
+            'elo': float(metrics.iloc[0]['ELO']) if 'ELO' in metrics.columns and pd.notna(metrics.iloc[0]['ELO']) else None,
+            'elo_rank': int(metrics.iloc[0]['ELO_Rank']) if 'ELO_Rank' in metrics.columns and pd.notna(metrics.iloc[0]['ELO_Rank']) else None,
+            'resume_quality': float(metrics.iloc[0]['resume_quality']) if 'resume_quality' in metrics.columns and pd.notna(metrics.iloc[0]['resume_quality']) else None,
+            'record': metrics.iloc[0]['Record'] if 'Record' in metrics.columns else None,
+            'q1': metrics.iloc[0]['Q1'] if 'Q1' in metrics.columns else None,
+            'q2': metrics.iloc[0]['Q2'] if 'Q2' in metrics.columns else None,
+            'q3': metrics.iloc[0]['Q3'] if 'Q3' in metrics.columns else None,
+            'q4': metrics.iloc[0]['Q4'] if 'Q4' in metrics.columns else None
+        }
+    
+    return {
+        'team_name': team_name,
+        'schedule': schedule_data,
+        'metrics': team_metrics,
+        'data_date': comparison_date
+    }
 
 @app.get("/api/softball/conferences")
 def get_softball_conferences():
