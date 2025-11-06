@@ -4705,8 +4705,11 @@ def get_softball_team_info(team_name: str):
         print(f"Error getting team info: {e}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
     
+class SoftballTeamScheduleRequest(BaseModel):
+    team_name: str
+    
 @app.post("/api/softball/profile-page")
-def softball_team_schedule(request: TeamScheduleRequest):
+def softball_team_schedule(request: SoftballTeamScheduleRequest):
     stats_and_metrics, comparison_date = load_softball_data()
     schedule_df = load_softball_schedule_data()
     team_name = request.team_name

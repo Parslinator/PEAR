@@ -315,7 +315,7 @@ function TeamProfileContent() {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`${API_URL}/api/csoft/profile-page`, {
+      const response = await fetch(`${API_URL}/api/softball/profile-page`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
