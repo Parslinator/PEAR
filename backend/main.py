@@ -2585,7 +2585,7 @@ def baseball_team_schedule(request: TeamScheduleRequest):
         team_metrics = {
             'conference': metrics.iloc[0]['Conference'] if 'Conference' in metrics.columns else None,
             'rating': float(metrics.iloc[0]['Rating']) if 'Rating' in metrics.columns and pd.notna(metrics.iloc[0]['Rating']) else None,
-            'tsr': metrics.iloc[0]['PRR'] if 'PRR' in metrics.columns else None,
+            'tsr': int(metrics.iloc[0]['PRR']) if 'PRR' in metrics.columns else None,
             'net': int(metrics.iloc[0]['NET']) if 'NET' in metrics.columns and pd.notna(metrics.iloc[0]['NET']) else None,
             'net_score': float(metrics.iloc[0]['NET_Score']) if 'NET_Score' in metrics.columns and pd.notna(metrics.iloc[0]['NET_Score']) else None,
             'rpi': int(metrics.iloc[0]['RPI']) if 'RPI' in metrics.columns and pd.notna(metrics.iloc[0]['RPI']) else None,
@@ -2596,7 +2596,7 @@ def baseball_team_schedule(request: TeamScheduleRequest):
             'q1': metrics.iloc[0]['Q1'] if 'Q1' in metrics.columns else None,
             'q2': metrics.iloc[0]['Q2'] if 'Q2' in metrics.columns else None,
             'q3': metrics.iloc[0]['Q3'] if 'Q3' in metrics.columns else None,
-            'q4': metrics.iloc[0]['Q4'] if 'Q4' in metrics.columns else None,
+            'q4': metrics.iloc[0]['Q4'] if 'Q4' in metrics.columns else None
         }
     
     return {
