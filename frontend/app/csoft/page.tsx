@@ -58,7 +58,7 @@ export default function CsoftPage() {
   };
 
   const handleTeamClick = (teamName: string) => {
-    router.push(`/softball/team-profile?team=${encodeURIComponent(teamName)}`);
+    router.push(`/csoft/team-profile?team=${encodeURIComponent(teamName)}`);
   };
 
   const handleSort = (field: SortField) => {
