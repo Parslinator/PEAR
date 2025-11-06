@@ -189,18 +189,18 @@ function CompletedGame({ game, onGameClick }: { game: GameData; onGameClick: (ga
 
         {/* Metrics */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="px-2 py-1 rounded" style={{ backgroundColor: winProbBg, color: getTextColor(winProbBg) }}>
-            <p className="text-sm font-bold whitespace-nowrap">
+          <div className="px-2 py-1 rounded w-16" style={{ backgroundColor: winProbBg, color: getTextColor(winProbBg) }}>
+            <p className="text-sm font-bold whitespace-nowrap text-center">
               {formatWinProbability(game.team_win_prob)}
             </p>
           </div>
-          <div className="px-2 py-1 rounded" style={{ backgroundColor: rqiBg, color: getTextColor(rqiBg) }}>
-            <p className="text-sm font-bold whitespace-nowrap">
+          <div className="px-2 py-1 rounded w-16" style={{ backgroundColor: rqiBg, color: getTextColor(rqiBg) }}>
+            <p className="text-sm font-bold whitespace-nowrap text-center">
               {game.resume_quality?.toFixed(2) || 'N/A'}
             </p>
           </div>
-          <div className="px-2 py-1 rounded" style={{ backgroundColor: gqiBg, color: getTextColor(gqiBg) }}>
-            <p className="text-sm font-bold whitespace-nowrap">
+          <div className="px-2 py-1 rounded w-16" style={{ backgroundColor: gqiBg, color: getTextColor(gqiBg) }}>
+            <p className="text-sm font-bold whitespace-nowrap text-center">
               {game.gqi?.toFixed(1) || 'N/A'}
             </p>
           </div>
@@ -263,18 +263,18 @@ function UpcomingGame({ game, onGameClick }: { game: GameData; onGameClick: (gam
 
         {/* Metrics */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="px-2 py-1 rounded" style={{ backgroundColor: winProbBg, color: getTextColor(winProbBg) }}>
-            <p className="text-sm font-bold whitespace-nowrap">
+          <div className="px-2 py-1 rounded w-16" style={{ backgroundColor: winProbBg, color: getTextColor(winProbBg) }}>
+            <p className="text-sm font-bold whitespace-nowrap text-center">
               {formatWinProbability(game.team_win_prob)}
             </p>
           </div>
-          <div className="px-2 py-1 rounded" style={{ backgroundColor: rqiBg, color: getTextColor(rqiBg) }}>
-            <p className="text-sm font-bold whitespace-nowrap">
+          <div className="px-2 py-1 rounded w-16" style={{ backgroundColor: rqiBg, color: getTextColor(rqiBg) }}>
+            <p className="text-sm font-bold whitespace-nowrap text-center">
               {game.resume_quality?.toFixed(2) || 'N/A'}
             </p>
           </div>
-          <div className="px-2 py-1 rounded" style={{ backgroundColor: gqiBg, color: getTextColor(gqiBg) }}>
-            <p className="text-sm font-bold whitespace-nowrap">
+          <div className="px-2 py-1 rounded w-16" style={{ backgroundColor: gqiBg, color: getTextColor(gqiBg) }}>
+            <p className="text-sm font-bold whitespace-nowrap text-center">
               {game.gqi?.toFixed(1) || 'N/A'}
             </p>
           </div>
@@ -471,100 +471,101 @@ function TeamProfileContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-[1600px] mx-auto px-4 py-6">
-        {/* Back Button and Search */}
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-          >
-            <ArrowLeft size={20} />
-            <span className="font-medium">Back to Rankings</span>
-          </button>
+        {/* Back Button */}
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors mb-4"
+        >
+          <ArrowLeft size={20} />
+          <span className="font-medium">Back to Rankings</span>
+        </button>
 
-          {/* Search Box */}
-          <div className="relative w-64">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                onFocus={() => setShowSearchResults(searchQuery.length > 0)}
-                placeholder="Search teams..."
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            {showSearchResults && filteredTeams.length > 0 && (
-              <div className="absolute top-full mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-h-64 overflow-y-auto z-50">
-                {filteredTeams.map((team) => (
-                  <div
-                    key={team}
-                    onClick={() => handleTeamSelect(team)}
-                    className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-gray-900 dark:text-white text-sm"
-                  >
-                    {team}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Header */}
+        {/* Header with Search */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-4">
-          <div className="flex items-start gap-4">
-            <img 
-              src={`${API_URL}/api/baseball-logo/${encodeURIComponent(teamName)}`}
-              alt={`${teamName} logo`}
-              className="w-16 h-16 object-contain cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
-              onClick={handleTeamLogoClick}
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-baseline gap-3 flex-wrap">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {teamName}
-                </h1>
-                {!loading && profileData?.metrics?.record && (
-                  <span className="text-xl font-semibold text-gray-600 dark:text-gray-400">
-                    {profileData.metrics.record}
-                  </span>
+          <div className="flex items-start gap-4 justify-between">
+            {/* Left side - Team Info (50%) */}
+            <div className="flex items-start gap-4 flex-1 min-w-0">
+              <img 
+                src={`${API_URL}/api/baseball-logo/${encodeURIComponent(teamName)}`}
+                alt={`${teamName} logo`}
+                className="w-16 h-16 object-contain cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+                onClick={handleTeamLogoClick}
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-3 flex-wrap">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                    {teamName}
+                  </h1>
+                  {!loading && profileData?.metrics?.record && (
+                    <span className="text-xl font-semibold text-gray-600 dark:text-gray-400">
+                      {profileData.metrics.record}
+                    </span>
+                  )}
+                </div>
+                
+                {!loading && profileData?.metrics && (
+                  <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">NET: </span>
+                      <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.net || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">ELO: </span>
+                      <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.elo_rank || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">RPI: </span>
+                      <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.rpi || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">Q1: </span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q1 || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">Q2: </span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q2 || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">Q3: </span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q3 || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600 dark:text-gray-400">Q4: </span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q4 || 'N/A'}</span>
+                    </div>
+                  </div>
                 )}
               </div>
+            </div>
+
+            {/* Right side - Search Box (50%) */}
+            <div className="relative w-64 flex-shrink-0">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  onFocus={() => setShowSearchResults(searchQuery.length > 0)}
+                  placeholder="Search teams..."
+                  className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
               
-              {!loading && profileData?.metrics && (
-                <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">NET: </span>
-                    <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.net || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">ELO: </span>
-                    <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.elo_rank || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">RPI: </span>
-                    <span className="font-bold text-gray-900 dark:text-white">#{profileData.metrics.rpi || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">Q1: </span>
-                    <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q1 || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">Q2: </span>
-                    <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q2 || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">Q3: </span>
-                    <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q3 || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">Q4: </span>
-                    <span className="font-semibold text-gray-900 dark:text-white">{profileData.metrics.q4 || 'N/A'}</span>
-                  </div>
+              {showSearchResults && filteredTeams.length > 0 && (
+                <div className="absolute top-full mt-1 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-h-64 overflow-y-auto z-50">
+                  {filteredTeams.map((team) => (
+                    <div
+                      key={team}
+                      onClick={() => handleTeamSelect(team)}
+                      className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-gray-900 dark:text-white text-sm"
+                    >
+                      {team}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
