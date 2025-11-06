@@ -28,18 +28,18 @@ interface GameData {
 interface TeamMetrics {
   conference: string | null;
   rating: number | null;
+  tsr: number | null;
   net: number | null;
   net_score: number | null;
   rpi: number | null;
   elo: number | null;
   elo_rank: number | null;
-  tsr: number | null;
   resume_quality: number | null;
+  record: string | null;
   q1: string | null;
   q2: string | null;
   q3: string | null;
   q4: string | null;
-  result: string | null;
 }
 
 interface TeamProfileData {
@@ -471,9 +471,9 @@ function TeamProfileContent() {
                 <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
                   {teamName}
                 </h1>
-                {!loading && profileData?.metrics?.result && (
+                {!loading && profileData?.metrics?.record && (
                   <span className="text-2xl text-gray-600 dark:text-gray-400">
-                    {profileData.metrics.result}
+                    {profileData.metrics.record}
                   </span>
                 )}
               </div>
