@@ -76,7 +76,7 @@ export default function Navbar() {
     { name: 'Games', path: '/cbase/games' },
     { name: 'Tournament', path: '/cbase/tournament' },
     { name: 'Matchups', path: '/cbase/matchups' },
-    { name: 'Profiles', path: '/cbase/profiles' },
+    { name: 'Teams', path: '/cbase/teams' },
   ];
 
   const softballNavItems = [
@@ -85,6 +85,7 @@ export default function Navbar() {
     { name: 'Games', path: '/csoft/games' },
     { name: 'Tournament', path: '/csoft/tournament' },
     { name: 'Matchups', path: '/csoft/matchups' },
+    { name: 'Teams', path: '/csoft/teams' },
   ];
 
   const getNavItems = () => {
