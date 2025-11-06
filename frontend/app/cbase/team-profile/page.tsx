@@ -112,7 +112,7 @@ const getGQIColor = (gqi: number | null) => {
 const getResultBadgeColor = (result: string | null) => {
   if (result === 'W') return 'text-gray-900';
   if (result === 'L') return 'text-white';
-  return 'text-gray-700 dark:text-gray-300';
+  return 'text-gray-700 dark:text-white';
 };
 
 const getResultBadgeBackground = (result: string | null) => {
