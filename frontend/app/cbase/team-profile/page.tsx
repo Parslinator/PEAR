@@ -531,7 +531,7 @@ function TeamProfileContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 pt-16">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 pt-14">
       <div className="max-w-[1600px] mx-auto px-4 py-6">
 
         {/* Header with Search */}
@@ -663,7 +663,7 @@ function TeamProfileContent() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Left Side - Team Metrics */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 h-[600px] flex flex-col overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 h-[580px] flex flex-col overflow-hidden">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
                 Team Metrics
               </h2>
@@ -763,7 +763,7 @@ function TeamProfileContent() {
                     const upcomingGames = profileData.schedule.filter(game => game.result === null);
 
                     return (
-                      <div className="h-[600px] overflow-y-auto">
+                      <div className="h-[580px] overflow-y-auto">
                         {/* Completed Games */}
                         {completedGames.length > 0 && (
                           <div>
