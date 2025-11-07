@@ -806,86 +806,143 @@ def get_team_stats(team_name: str):
 
 @app.get("/api/profile-page/{team_name}")
 def get_profile_page(team_name: str):
-    schedule_df = load_football_schedule(CURRENT_YEAR)
-    team_schedule = schedule_df[(schedule_df['home_team'] == team_name) | (schedule_df['away_team'] == team_name)].copy()
+    try:
+        schedule_df = load_football_schedule(CURRENT_YEAR)
+        
+        # Filter for this team's games
+        team_schedule = schedule_df[(schedule_df['home_team'] == team_name) | (schedule_df['away_team'] == team_name)].copy()
+        
+        if len(team_schedule) == 0:
+            return {
+                "team_name": team_name,
+                "schedule": []
+            }
+        
+        # Basic fields
+        team_schedule['is_home'] = team_schedule['home_team'] == team_name
+        team_schedule['opponent_team'] = team_schedule.apply(
+            lambda x: x['away_team'] if x['is_home'] else x['home_team'], axis=1
+        )
+
+        # Location logic
+        team_schedule['location'] = team_schedule.apply(
+            lambda x: 'Home' if (x['is_home'] and x['neutral'] == False) else 
+                     ('Away' if (not x['is_home'] and x['neutral'] == False) else 'Neutral'), 
+            axis=1
+        )
+
+        # Map opponent stats (PR, OR, DR and their ranks)
+        team_schedule['opponent_pr'] = team_schedule.apply(
+            lambda x: x['away_pr'] if x['is_home'] else x['home_pr'], axis=1
+        )
+        team_schedule['opponent_pr_rank'] = team_schedule.apply(
+            lambda x: x['away_pr_rank'] if x['is_home'] else x['home_pr_rank'], axis=1
+        )
+        team_schedule['opponent_or'] = team_schedule.apply(
+            lambda x: x['away_or'] if x['is_home'] else x['home_or'], axis=1
+        )
+        team_schedule['opponent_or_rank'] = team_schedule.apply(
+            lambda x: x['away_or_rank'] if x['is_home'] else x['home_or_rank'], axis=1
+        )
+        team_schedule['opponent_dr'] = team_schedule.apply(
+            lambda x: x['away_dr'] if x['is_home'] else x['home_dr'], axis=1
+        )
+        team_schedule['opponent_dr_rank'] = team_schedule.apply(
+            lambda x: x['away_dr_rank'] if x['is_home'] else x['home_dr_rank'], axis=1
+        )
+
+        # Win probability from team's perspective
+        # PEAR_win_prob is always home team's win probability
+        team_schedule['team_win_prob'] = team_schedule.apply(
+            lambda x: x['PEAR_win_prob'] if x['is_home'] else 
+                     (1 - x['PEAR_win_prob'] if pd.notna(x['PEAR_win_prob']) else None), 
+            axis=1
+        )
+
+        # Check if game is completed (both home_points and away_points are not NaN)
+        team_schedule['is_completed'] = team_schedule.apply(
+            lambda x: pd.notna(x['home_points']) and pd.notna(x['away_points']), axis=1
+        )
+
+        # Get scores from team's perspective
+        team_schedule['team_score'] = team_schedule.apply(
+            lambda x: x['home_points'] if x['is_home'] else x['away_points'], axis=1
+        )
+        team_schedule['opponent_score'] = team_schedule.apply(
+            lambda x: x['away_points'] if x['is_home'] else x['home_points'], axis=1
+        )
+
+        # Select columns for output
+        output_columns = [
+            'week',
+            'start_date',
+            'location',
+            'opponent_team',
+            'is_completed',
+            'team_score',
+            'opponent_score',
+            'home_points',
+            'away_points',
+            'neutral',
+            'conference_game',
+            'opponent_pr',
+            'opponent_pr_rank',
+            'opponent_or',
+            'opponent_or_rank',
+            'opponent_dr',
+            'opponent_dr_rank',
+            'team_win_prob',
+            'PEAR',
+            'total',
+            'home_score',
+            'away_score',
+            'GQI'
+        ]
+        
+        team_schedule_dict = team_schedule[output_columns].to_dict(orient='records')
+        
+        # Clean up NaN values - convert to None for JSON
+        for record in team_schedule_dict:
+            for key, value in record.items():
+                if pd.isna(value):
+                    record[key] = None
+                # Convert numpy bool to Python bool
+                elif isinstance(value, (np.bool_, bool)):
+                    record[key] = bool(value)
+                # Convert numpy integers to Python int
+                elif isinstance(value, (np.integer,)):
+                    record[key] = int(value)
+                # Convert numpy floats to Python float
+                elif isinstance(value, (np.floating,)):
+                    record[key] = float(value)
+        
+        return {
+            "team_name": team_name,
+            "schedule": team_schedule_dict
+        }
     
-    team_schedule['is_home'] = team_schedule['home_team'] == team_name
-    team_schedule['opponent_team'] = team_schedule.apply(
-        lambda x: x['away_team'] if x['is_home'] else x['home_team'], axis=1
-    )
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error in get_profile_page for {team_name}: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error loading profile: {str(e)}")
 
-    team_schedule['location'] = team_schedule.apply(
-        lambda x: 'Home' if (x['is_home'] and x['neutral'] == False) else ('Away' if (not x['is_home'] and x['neutral'] == False) else 'Neutral'), axis=1
-    )
 
-    # Map opponent stats depending on side
-    team_schedule['opponent_pr'] = team_schedule.apply(
-        lambda x: x['away_pr'] if x['is_home'] else x['home_pr'], axis=1
-    )
-    team_schedule['opponent_pr_rank'] = team_schedule.apply(
-        lambda x: x['away_pr_rank'] if x['is_home'] else x['home_pr_rank'], axis=1
-    )
-    team_schedule['opponent_or'] = team_schedule.apply(
-        lambda x: x['away_or'] if x['is_home'] else x['home_or'], axis=1
-    )
-    team_schedule['opponent_or_rank'] = team_schedule.apply(
-        lambda x: x['away_or_rank'] if x['is_home'] else x['home_or_rank'], axis=1
-    )
-    team_schedule['opponent_dr'] = team_schedule.apply(
-        lambda x: x['away_dr'] if x['is_home'] else x['home_dr'], axis=1
-    )
-    team_schedule['opponent_dr_rank'] = team_schedule.apply(
-        lambda x: x['away_dr_rank'] if x['is_home'] else x['home_dr_rank'], axis=1
-    )
-
-    # Adjust win probability to be from the team's perspective
-    team_schedule['team_win_prob'] = team_schedule.apply(
-        lambda x: x['PEAR_win_prob'] if x['is_home'] else (1 - x['PEAR_win_prob'] if pd.notna(x['PEAR_win_prob']) else None), axis=1
-    )
-
-    # Determine if game is completed
-    team_schedule['is_completed'] = team_schedule.apply(
-        lambda x: pd.notna(x['home_points']) and pd.notna(x['away_points']), axis=1
-    )
-
-    # Get final score from team's perspective
-    team_schedule['team_score'] = team_schedule.apply(
-        lambda x: x['home_points'] if x['is_home'] else x['away_points'], axis=1
-    )
-    team_schedule['opponent_score'] = team_schedule.apply(
-        lambda x: x['away_points'] if x['is_home'] else x['home_points'], axis=1
-    )
-
-    # Select desired columns and convert to dict
-    team_schedule_dict = team_schedule[[
-        'week',
-        'start_date',
-        'location',
-        'opponent_team',
-        'is_completed',
-        'team_score',
-        'opponent_score',
-        'home_points',
-        'away_points',
-        'neutral',
-        'conference_game',
-        'opponent_pr',
-        'opponent_pr_rank',
-        'opponent_or',
-        'opponent_or_rank',
-        'opponent_dr',
-        'opponent_dr_rank',
-        'team_win_prob',
-        'PEAR',
-        'total',
-        'home_score',
-        'away_score'
-    ]].to_dict(orient='records')
-    
-    return {
-        "team_name": team_name,
-        "schedule": team_schedule_dict
-    }
+def load_football_schedule(year: int):
+    try:
+        path = os.path.join(BASE_PATH, f"y{year}", f"schedule_{year}.csv")
+        if not os.path.exists(path):
+            raise HTTPException(status_code=404, detail=f"Schedule file not found at: {path}")
+        schedule = pd.read_csv(path)
+        return schedule
+    except FileNotFoundError as e:
+        print(f"File not found error: {e}")
+        raise HTTPException(status_code=404, detail=f"Schedule file not found for year {year}: {str(e)}")
+    except Exception as e:
+        print(f"Error loading schedule: {e}")
+        raise HTTPException(status_code=500, detail=f"Error loading schedule: {str(e)}")
 
 @app.get("/api/historical-ratings")
 def get_historical_ratings():
