@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, Shuffle } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -77,6 +77,13 @@ export default function TeamsPage() {
     router.push(`/csoft/team-profile?team=${encodeURIComponent(teamName)}`);
   };
 
+  const handleRandomTeam = () => {
+    if (teams.length === 0) return;
+    const randomIndex = Math.floor(Math.random() * teams.length);
+    const randomTeam = teams[randomIndex];
+    router.push(`/csoft/team-profile?team=${encodeURIComponent(randomTeam)}`);
+  };
+
   const filteredTeams = teams.filter(team => {
     const matchesSearch = team.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesConference = selectedConference === 'All' || teamConferences[team] === selectedConference;
@@ -96,7 +103,7 @@ export default function TeamsPage() {
           </p>
         </div>
 
-        {/* Search and Filter Bar */}
+        {/* Search, Filter, and Random Bar */}
         <div className="mb-6 flex flex-col sm:flex-row gap-4">
           {/* Search Bar */}
           <div className="relative flex-1">
@@ -132,6 +139,16 @@ export default function TeamsPage() {
               </svg>
             </div>
           </div>
+
+          {/* Random Team Button */}
+          <button
+            onClick={handleRandomTeam}
+            disabled={teams.length === 0}
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap sm:w-auto"
+          >
+            <Shuffle size={20} />
+            <span className="hidden sm:inline">Random</span>
+          </button>
         </div>
 
         {/* Active Filter Display */}

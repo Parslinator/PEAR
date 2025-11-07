@@ -99,7 +99,7 @@ export default function TeamsPage() {
             College Baseball Teams
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Browse all {teams.length} Division I college baseball teams
+            Browse {teams.length} Division I college baseball teams
           </p>
         </div>
 
