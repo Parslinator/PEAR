@@ -2,19 +2,34 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
+interface TeamConferences {
+  [teamName: string]: string;
+}
 
 export default function TeamsPage() {
   const router = useRouter();
   const [teams, setTeams] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [conferences, setConferences] = useState<string[]>([]);
+  const [teamConferences, setTeamConferences] = useState<TeamConferences>({});
+  const [selectedConference, setSelectedConference] = useState<string>('All');
 
   useEffect(() => {
-    fetchTeams();
+    fetchData();
   }, []);
+
+  const fetchData = async () => {
+    await Promise.all([
+      fetchTeams(),
+      fetchConferences(),
+      fetchTeamConferences()
+    ]);
+  };
 
   const fetchTeams = async () => {
     try {
@@ -22,7 +37,6 @@ export default function TeamsPage() {
       const response = await fetch(`${API_URL}/api/cbase/teams`);
       if (response.ok) {
         const data = await response.json();
-        // Sort teams alphabetically
         const sortedTeams = (data.teams || []).sort((a: string, b: string) => 
           a.localeCompare(b)
         );
@@ -35,13 +49,39 @@ export default function TeamsPage() {
     }
   };
 
+  const fetchConferences = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/cbase/conferences`);
+      if (response.ok) {
+        const data = await response.json();
+        setConferences(data.conferences || []);
+      }
+    } catch (err) {
+      console.error('Error fetching conferences:', err);
+    }
+  };
+
+  const fetchTeamConferences = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/cbase/team-conferences`);
+      if (response.ok) {
+        const data = await response.json();
+        setTeamConferences(data.team_conferences || {});
+      }
+    } catch (err) {
+      console.error('Error fetching team conferences:', err);
+    }
+  };
+
   const handleTeamClick = (teamName: string) => {
     router.push(`/cbase/team-profile?team=${encodeURIComponent(teamName)}`);
   };
 
-  const filteredTeams = teams.filter(team =>
-    team.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTeams = teams.filter(team => {
+    const matchesSearch = team.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesConference = selectedConference === 'All' || teamConferences[team] === selectedConference;
+    return matchesSearch && matchesConference;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 pt-20">
@@ -56,9 +96,10 @@ export default function TeamsPage() {
           </p>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
+        {/* Search and Filter Bar */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-4">
+          {/* Search Bar */}
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
@@ -68,7 +109,48 @@ export default function TeamsPage() {
               className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
+
+          {/* Conference Filter */}
+          <div className="relative sm:w-64">
+            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={20} />
+            <select
+              value={selectedConference}
+              onChange={(e) => setSelectedConference(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+            >
+              <option value="All">All Conferences</option>
+              {conferences.map((conference) => (
+                <option key={conference} value={conference}>
+                  {conference}
+                </option>
+              ))}
+            </select>
+            {/* Custom dropdown arrow */}
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
         </div>
+
+        {/* Active Filter Display */}
+        {selectedConference !== 'All' && (
+          <div className="mb-4 flex items-center gap-2">
+            <span className="text-sm text-gray-600 dark:text-gray-400">Filtering by:</span>
+            <span className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm font-medium">
+              {selectedConference}
+              <button
+                onClick={() => setSelectedConference('All')}
+                className="hover:text-blue-900 dark:hover:text-blue-100"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </span>
+          </div>
+        )}
 
         {/* Teams Grid */}
         {loading ? (
@@ -105,11 +187,16 @@ export default function TeamsPage() {
                           />
                         </div>
 
-                        {/* Team Name */}
+                        {/* Team Name and Conference */}
                         <div className="flex-1 min-w-0">
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
                             {team}
                           </h3>
+                          {teamConferences[team] && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400 truncate mt-1">
+                              {teamConferences[team]}
+                            </p>
+                          )}
                         </div>
 
                         {/* Arrow indicator */}
@@ -136,8 +223,18 @@ export default function TeamsPage() {
             ) : (
               <div className="text-center py-20">
                 <p className="text-xl text-gray-600 dark:text-gray-400">
-                  No teams found matching "{searchQuery}"
+                  No teams found {searchQuery && `matching "${searchQuery}"`}
+                  {selectedConference !== 'All' && ` in ${selectedConference}`}
                 </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedConference('All');
+                  }}
+                  className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Clear Filters
+                </button>
               </div>
             )}
           </>
