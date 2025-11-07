@@ -124,10 +124,115 @@ team_power_rankings.to_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_w
 
 print("---------- Power Ratings Done! ----------")
 
+all_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}.csv")
+team_data = pd.read_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv')
+
 def PEAR_Win_Prob(home_power_rating, away_power_rating, neutral):
     if neutral == False:
         home_power_rating = home_power_rating + 1.5
     return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
+
+games = []
+for week in range(1,18):
+    response = games_api.get_games(year=current_year, week=week,classification = 'fbs')
+    games = [*games, *response]
+games = [dict(
+            id=g.id,
+            season=g.season,
+            week=g.week,
+            start_date=g.start_date,
+            home_team=g.home_team,
+            home_elo=g.home_pregame_elo,
+            away_team=g.away_team,
+            away_elo=g.away_pregame_elo,
+            home_points = g.home_points,
+            away_points = g.away_points,
+            neutral = g.neutral_site,
+            conference_game = g.conference_game
+            ) for g in games]
+schedule_info = pd.DataFrame(games)
+
+fallback_value = round(all_data['power_rating'].mean() - 2 * all_data['power_rating'].std(),1)
+schedule_info['home_win_prob'] = round((10**((schedule_info['home_elo'] - schedule_info['away_elo']) / 400)) / ((10**((schedule_info['home_elo'] - schedule_info['away_elo']) / 400)) + 1)*100,2)
+
+# Add ranking columns to all_data before merging
+schedule_all_data = all_data.copy()
+schedule_all_data['power_rank'] = schedule_all_data['power_rating'].rank(ascending=False).astype(int)
+schedule_all_data['offense_rank'] = schedule_all_data['offensive_rating'].rank(ascending=False).astype(int)
+schedule_all_data['defense_rank'] = schedule_all_data['defensive_rating'].rank(ascending=True).astype(int)
+
+# Merge home team data
+schedule_info = schedule_info.merge(
+    schedule_all_data[['team', 'power_rating', 'power_rank', 'offensive_rating', 'offense_rank', 'defensive_rating', 'defense_rank']],
+    left_on='home_team',
+    right_on='team',
+    how='left'
+).rename(columns={
+    'power_rating': 'home_pr',
+    'power_rank': 'home_pr_rank',
+    'offensive_rating': 'home_or',
+    'offense_rank': 'home_or_rank',
+    'defensive_rating': 'home_dr',
+    'defense_rank': 'home_dr_rank'
+}).drop(columns=['team'])
+
+# Merge away team data
+schedule_info = schedule_info.merge(
+    schedule_all_data[['team', 'power_rating', 'power_rank', 'offensive_rating', 'offense_rank', 'defensive_rating', 'defense_rank']],
+    left_on='away_team',
+    right_on='team',
+    how='left'
+).rename(columns={
+    'power_rating': 'away_pr',
+    'power_rank': 'away_pr_rank',
+    'offensive_rating': 'away_or',
+    'offense_rank': 'away_or_rank',
+    'defensive_rating': 'away_dr',
+    'defense_rank': 'away_dr_rank'
+}).drop(columns=['team'])
+
+schedule_info['home_pr'] = schedule_info['home_pr'].fillna(fallback_value)
+schedule_info['away_pr'] = schedule_info['away_pr'].fillna(fallback_value)
+schedule_info['home_win_prob'] = schedule_info['home_win_prob'].fillna(50)
+schedule_info['home_or'] = round(schedule_info['home_or'].fillna(schedule_info['home_or'].mean() - 2*schedule_info['home_or'].std()),1)
+schedule_info['away_or'] = round(schedule_info['away_or'].fillna(schedule_info['away_or'].mean() - 2*schedule_info['away_or'].std()),1)
+schedule_info['home_dr'] = round(schedule_info['home_dr'].fillna(schedule_info['home_dr'].mean() - 2*schedule_info['home_dr'].std()),1)
+schedule_info['away_dr'] = round(schedule_info['away_dr'].fillna(schedule_info['away_dr'].mean() - 2*schedule_info['away_dr'].std()),1)
+schedule_info['PEAR_win_prob'] = schedule_info.apply(
+    lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'], row['neutral']), axis=1
+)
+
+home_adj = ((schedule_info['home_win_prob'] - 50) / 50) * 1
+schedule_info['pr_spread'] = (
+    GLOBAL_HFA + schedule_info['home_pr'] + home_adj - schedule_info['away_pr']
+).round(1)
+
+# Adjust for neutral site
+schedule_info.loc[schedule_info['neutral'], 'pr_spread'] -= 3
+schedule_info['pr_spread'] = schedule_info['pr_spread'].round(1)
+schedule_info['PEAR'] = schedule_info.apply(
+    lambda row: f"{row['away_team']} {-abs(row['pr_spread'])}" if row['pr_spread'] <= 0
+    else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1
+)
+
+# Calculate totals
+schedule_info['total'] = (
+    (schedule_info['home_or'] + schedule_info['away_dr']) / 2 +
+    (schedule_info['away_or'] + schedule_info['home_dr']) / 2
+).round(1)
+schedule_info['home_score'] = round((schedule_info['total'] + schedule_info['pr_spread'])/2, 1)
+schedule_info['away_score'] = round((schedule_info['total'] - schedule_info['pr_spread'])/2, 1)
+# Calculate Game Quality Index
+pr_min = team_data['power_rating'].min()
+pr_max = team_data['power_rating'].max()
+schedule_info['GQI'] = _calculate_game_quality(
+    schedule_info, pr_min, pr_max, spread_cap=30
+)
+schedule_info['start_date'] = pd.to_datetime(schedule_info['start_date'], utc=True)
+schedule_info['start_date'] = schedule_info['start_date'].dt.tz_convert('US/Central')
+schedule_info['start_date'] = schedule_info['start_date'].dt.date
+
+schedule_info.to_csv(f"./PEAR/PEAR Football/y{current_year}/schedule_{current_year}.csv")
 
 games = []
 for week in range(1,current_week):
@@ -180,9 +285,6 @@ from football_helper import best_and_worst, other_best_and_worst, draw_playoff_b
 from football_helper import create_conference_projection, plot_matchup_new, display_schedule_visual, conference_standings, prob_win_at_least_x
 
 logos = outputs["logos"]
-
-all_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}.csv")
-team_data = pd.read_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv')
 
 start_season_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv")
 if os.path.exists(f"./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week-1}.csv"):

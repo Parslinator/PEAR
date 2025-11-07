@@ -68,6 +68,7 @@ export default function Navbar() {
     { name: 'Games', path: '/spreads' },
     { name: 'Matchups', path: '/matchups' },
     { name: 'Previews', path: '/previews' },
+    { name: 'Teams', path: '/teams' },
   ];
 
   const baseballNavItems = [
