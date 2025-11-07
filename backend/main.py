@@ -855,7 +855,7 @@ def get_profile_page(team_name: str):
         # PEAR_win_prob is always home team's win probability
         team_schedule['team_win_prob'] = team_schedule.apply(
             lambda x: x['PEAR_win_prob'] if x['is_home'] else 
-                     (1 - x['PEAR_win_prob'] if pd.notna(x['PEAR_win_prob']) else None), 
+                     (100 - x['PEAR_win_prob'] if pd.notna(x['PEAR_win_prob']) else None), 
             axis=1
         )
 
