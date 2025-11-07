@@ -43,7 +43,7 @@ const formatDate = (dateStr: string) => {
 
 const formatWinProbability = (prob: number | null) => {
   if (prob === null) return 'N/A';
-  return `${(prob * 100).toFixed(1)}%`;
+  return `${(prob).toFixed(1)}%`;
 };
 
 const getLocationBadge = (location: string) => {
@@ -220,7 +220,7 @@ function UpcomingGame({ game, onGameClick }: { game: GameData; onGameClick: (gam
           <div className="flex flex-col items-center px-3 py-1 bg-gray-100 dark:bg-gray-600 rounded">
             <span className="text-xs text-gray-600 dark:text-gray-400">Score</span>
             <span className="text-sm font-bold text-gray-900 dark:text-white">
-              {game.home_score?.toFixed(0)}-{game.away_score?.toFixed(0)}
+              {game.home_score?.toFixed(1)}-{game.away_score?.toFixed(1)}
             </span>
           </div>
         </div>
