@@ -94,29 +94,16 @@ export default function TeamsPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 pt-20">
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-              College Baseball Teams
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Browse all {teams.length} Division I college baseball teams
-            </p>
-          </div>
-          
-          {/* Random Team Button */}
-          <button
-            onClick={handleRandomTeam}
-            disabled={teams.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-          >
-            <Shuffle size={20} />
-            <span className="hidden sm:inline">Random Team</span>
-            <span className="sm:hidden">Random</span>
-          </button>
+        <div className="mb-6">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+            College Baseball Teams
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Browse all {teams.length} Division I college baseball teams
+          </p>
         </div>
 
-        {/* Search and Filter Bar */}
+        {/* Search, Filter, and Random Bar */}
         <div className="mb-6 flex flex-col sm:flex-row gap-4">
           {/* Search Bar */}
           <div className="relative flex-1">
@@ -152,6 +139,16 @@ export default function TeamsPage() {
               </svg>
             </div>
           </div>
+
+          {/* Random Team Button */}
+          <button
+            onClick={handleRandomTeam}
+            disabled={teams.length === 0}
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap sm:w-auto"
+          >
+            <Shuffle size={20} />
+            <span className="hidden sm:inline">Random</span>
+          </button>
         </div>
 
         {/* Active Filter Display */}
