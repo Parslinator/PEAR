@@ -59,7 +59,7 @@ drives_api = cfbd.DrivesApi(api_client)
 
 from football_helper import modeling_data_import, build_power_ratings_multi_target, in_house_power_ratings, average_team_distribution, metric_creation, stats_formatting
 
-outputs = modeling_data_import(11)
+outputs = modeling_data_import(12)
 team_data = outputs["team_data"]
 opponent_adjustment_schedule = outputs["opponent_adjustment_schedule"]
 updated_metrics = outputs["updated_metrics"]
@@ -123,6 +123,9 @@ team_data.to_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{curr
 team_power_rankings.to_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv')
 
 print("---------- Power Ratings Done! ----------")
+
+from football_helper import best_and_worst, other_best_and_worst, draw_playoff_bracket_new, all_136_teams, _calculate_game_quality
+from football_helper import create_conference_projection, plot_matchup_new, display_schedule_visual, conference_standings, prob_win_at_least_x
 
 all_data = pd.read_csv(f"./PEAR/PEAR Football/y{current_year}/Data/team_data_week{current_week}.csv")
 team_data = pd.read_csv(f'./PEAR/PEAR Football/y{current_year}/Ratings/PEAR_week{current_week}.csv')
@@ -1497,7 +1500,7 @@ def PEAR_Win_Prob(home_power_rating, away_power_rating, neutral):
         home_power_rating = home_power_rating + 1.5
     return round((1 / (1 + 10 ** ((away_power_rating - (home_power_rating)) / 20.5))) * 100, 2)
 
-visual = week_games[['week', 'start_date', 'start_time', 'home_team', 'away_team', 'home_pr', 'away_pr', 'PEAR', 'GQI']].dropna()
+visual = week_games[['week', 'start_date', 'start_time', 'neutral', 'home_team', 'away_team', 'home_pr', 'away_pr', 'PEAR', 'GQI']].dropna()
 time_thresholds = [
     datetime.time(14,30),  # morning -> afternoon
     datetime.time(18,0),   # afternoon -> evening
@@ -1520,7 +1523,7 @@ visual['time_class'] = visual['start_time'].apply(get_time_class)
 visual = visual.sort_values(['start_date', 'time_class', 'GQI'], ascending=[True, True, False]).reset_index(drop=True)
 
 visual['PEAR_win_prob'] = round(100*(visual.apply(
-    lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'])/100, axis=1
+    lambda row: PEAR_Win_Prob(row['home_pr'], row['away_pr'], row['neutral'])/100, axis=1
 )),1)
 
 save_dir = f"PEAR/PEAR Football/y{current_year}/Visuals/Schedule"
