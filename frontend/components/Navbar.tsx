@@ -67,7 +67,6 @@ export default function Navbar() {
     { name: 'Stats', path: '/stats' },
     { name: 'Games', path: '/games' },
     { name: 'Matchups', path: '/matchups' },
-    { name: 'Previews', path: '/previews' },
     { name: 'Teams', path: '/teams' },
   ];
 
