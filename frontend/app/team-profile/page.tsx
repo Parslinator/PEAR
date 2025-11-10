@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -65,68 +65,75 @@ function CompletedGame({ game, onGameClick }: { game: GameData; onGameClick: (ga
 
   return (
     <div 
-      className="bg-white dark:bg-gray-700 rounded-lg p-3 border-2 border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow cursor-pointer"
+      className="bg-white dark:bg-gray-700 rounded-lg p-4 border-2 border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow cursor-pointer"
       style={{ borderLeftWidth: '6px', borderLeftColor: didWin ? '#10b981' : '#ef4444' }}
       onClick={() => onGameClick(game)}
     >
-      <div className="flex items-center justify-between mb-2">
+      {/* Header Row */}
+      <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200 dark:border-gray-600">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
-            Week {game.week}
-          </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {formatDate(game.start_date)}
-          </span>
-          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${locationStyle.bg} ${locationStyle.text}`}>
-            {game.location}
+          <span className="text-sm font-bold text-gray-900 dark:text-white">Week {game.week}</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">•</span>
+          <span className="text-xs text-gray-600 dark:text-gray-400">{formatDate(game.start_date)}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${locationStyle.bg} ${locationStyle.text}`}>
+            {game.location === 'Home' ? 'H' : game.location === 'Away' ? 'A' : 'N'}
           </span>
           {game.conference_game && (
-            <span className="px-2 py-0.5 rounded text-xs font-semibold bg-yellow-500 text-black">
-              CONF
-            </span>
+            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-500 text-black">C</span>
           )}
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3">
+      {/* Main Content */}
+      <div className="flex items-center justify-between gap-4 mb-3">
         {/* Opponent Info */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <img
             src={`${API_URL}/api/football-logo/${encodeURIComponent(game.opponent_team)}`}
             alt={`${game.opponent_team} logo`}
-            className="w-10 h-10 object-contain cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+            className="w-12 h-12 object-contain cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
             onClick={handleOpponentClick}
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
+            onError={(e) => e.currentTarget.style.display = 'none'}
           />
-          <div className="flex flex-col min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-2 mb-1">
               {game.opponent_pr_rank && (
-                <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
-                  #{game.opponent_pr_rank}
-                </span>
+                <span className="text-xs font-bold text-blue-600 dark:text-blue-400">#{game.opponent_pr_rank}</span>
               )}
-              <p className="font-medium text-sm text-gray-900 dark:text-white truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" onClick={handleOpponentClick}>
+              <p className="font-bold text-base text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" onClick={handleOpponentClick}>
                 {game.opponent_team}
               </p>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-              {game.opponent_or_rank && <span>OR: #{game.opponent_or_rank}</span>}
-              {game.opponent_dr_rank && <span>DR: #{game.opponent_dr_rank}</span>}
             </div>
           </div>
         </div>
 
-        {/* Final Score */}
-        <div className="text-right flex-shrink-0">
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">
+        {/* Score */}
+        <div className="text-right">
+          <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
             {game.team_score} - {game.opponent_score}
           </div>
-          <div className="text-xs font-semibold" style={{ color: didWin ? '#10b981' : '#ef4444' }}>
-            {didWin ? 'W' : 'L'}
+          <div className="text-sm font-bold px-3 py-1 rounded-full inline-block" style={{ backgroundColor: didWin ? '#10b981' : '#ef4444', color: 'white' }}>
+            {didWin ? 'WIN' : 'LOSS'}
           </div>
         </div>
+      </div>
+
+      {/* Stats Row */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {game.opponent_or_rank && (
+          <div className="flex items-center gap-1 px-2.5 py-1 bg-blue-50 dark:bg-blue-900/30 rounded-md">
+            <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">OFF</span>
+            <span className="text-xs font-bold text-blue-900 dark:text-blue-100">#{game.opponent_or_rank}</span>
+          </div>
+        )}
+        {game.opponent_dr_rank && (
+          <div className="flex items-center gap-1 px-2.5 py-1 bg-red-50 dark:bg-red-900/30 rounded-md">
+            <span className="text-xs font-semibold text-red-700 dark:text-red-300">DEF</span>
+            <span className="text-xs font-bold text-red-900 dark:text-red-100">#{game.opponent_dr_rank}</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -144,86 +151,95 @@ function UpcomingGame({ game, onGameClick }: { game: GameData; onGameClick: (gam
 
   return (
     <div 
-      className="bg-white dark:bg-gray-700 rounded-lg p-3 border-2 border-gray-200 dark:border-gray-600 hover:shadow-md transition-shadow cursor-pointer"
+      className="bg-white dark:bg-gray-700 rounded-lg p-4 border-2 border-blue-200 dark:border-blue-800 hover:shadow-md transition-shadow cursor-pointer"
       onClick={() => onGameClick(game)}
     >
-      <div className="flex items-center justify-between mb-2">
+      {/* Header Row */}
+      <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200 dark:border-gray-600">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
-            Week {game.week}
-          </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            {formatDate(game.start_date)}
-          </span>
-          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${locationStyle.bg} ${locationStyle.text}`}>
-            {game.location}
+          <span className="text-sm font-bold text-gray-900 dark:text-white">Week {game.week}</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">•</span>
+          <span className="text-xs text-gray-600 dark:text-gray-400">{formatDate(game.start_date)}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${locationStyle.bg} ${locationStyle.text}`}>
+            {game.location === 'Home' ? 'H' : game.location === 'Away' ? 'A' : 'N'}
           </span>
           {game.conference_game && (
-            <span className="px-2 py-0.5 rounded text-xs font-semibold bg-yellow-500 text-black">
-              CONF
-            </span>
+            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-500 text-black">C</span>
           )}
         </div>
-        {game.PEAR && (
-          <span className="px-2 py-1 bg-indigo-500 text-white rounded text-xs font-bold">
-            {game.PEAR}
-          </span>
-        )}
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+      {/* Main Content */}
+      <div className="flex items-start justify-between gap-4 mb-3">
         {/* Opponent Info */}
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <img
             src={`${API_URL}/api/football-logo/${encodeURIComponent(game.opponent_team)}`}
             alt={`${game.opponent_team} logo`}
-            className="w-10 h-10 object-contain cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
+            className="w-12 h-12 object-contain cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0"
             onClick={handleOpponentClick}
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
+            onError={(e) => e.currentTarget.style.display = 'none'}
           />
-          <div className="flex flex-col min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-2 mb-1">
               {game.opponent_pr_rank && (
-                <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
-                  #{game.opponent_pr_rank}
-                </span>
+                <span className="text-xs font-bold text-blue-600 dark:text-blue-400">#{game.opponent_pr_rank}</span>
               )}
-              <p className="font-medium text-sm text-gray-900 dark:text-white truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" onClick={handleOpponentClick}>
+              <p className="font-bold text-base text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors" onClick={handleOpponentClick}>
                 {game.opponent_team}
               </p>
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-              {game.opponent_or_rank && <span>OR: #{game.opponent_or_rank}</span>}
-              {game.opponent_dr_rank && <span>DR: #{game.opponent_dr_rank}</span>}
+            {/* Opponent Ratings */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {game.opponent_or_rank && (
+                <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 rounded">
+                  <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300">OFF</span>
+                  <span className="text-[10px] font-bold text-blue-900 dark:text-blue-100">#{game.opponent_or_rank}</span>
+                </div>
+              )}
+              {game.opponent_dr_rank && (
+                <div className="flex items-center gap-1 px-2 py-0.5 bg-red-50 dark:bg-red-900/30 rounded">
+                  <span className="text-[10px] font-semibold text-red-700 dark:text-red-300">DEF</span>
+                  <span className="text-[10px] font-bold text-red-900 dark:text-red-100">#{game.opponent_dr_rank}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Prediction Stats */}
-        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
-          <div className="flex flex-col items-center px-3 py-1 bg-gray-100 dark:bg-gray-600 rounded">
-            <span className="text-xs text-gray-600 dark:text-gray-400">Win %</span>
-            <span className="text-sm font-bold text-gray-900 dark:text-white">
-              {formatWinProbability(game.team_win_prob)}
-            </span>
-          </div>
-          {game.total !== null && (
-            <div className="flex flex-col items-center px-3 py-1 bg-gray-100 dark:bg-gray-600 rounded">
-              <span className="text-xs text-gray-600 dark:text-gray-400">O/U</span>
-              <span className="text-sm font-bold text-gray-900 dark:text-white">
-                {game.total.toFixed(1)}
-              </span>
+        {/* Spread */}
+        {game.PEAR && (
+          <div className="flex-shrink-0">
+            <div className="px-3 py-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg text-center">
+              <div className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-300 mb-0.5">SPREAD</div>
+              <div className="text-lg font-bold text-indigo-900 dark:text-indigo-100">{game.PEAR}</div>
             </div>
-          )}
-          <div className="flex flex-col items-center px-3 py-1 bg-gray-100 dark:bg-gray-600 rounded">
-            <span className="text-xs text-gray-600 dark:text-gray-400">Score</span>
-            <span className="text-sm font-bold text-gray-900 dark:text-white">
-              {game.home_score?.toFixed(1)}-{game.away_score?.toFixed(1)}
-            </span>
           </div>
-        </div>
+        )}
+      </div>
+
+      {/* Prediction Stats Row */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {game.team_win_prob !== null && (
+          <div className="flex flex-col items-center px-3 py-1.5 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
+            <span className="text-[10px] font-semibold text-green-700 dark:text-green-300">WIN %</span>
+            <span className="text-sm font-bold text-green-900 dark:text-green-100">{formatWinProbability(game.team_win_prob)}</span>
+          </div>
+        )}
+        {game.total !== null && (
+          <div className="flex flex-col items-center px-3 py-1.5 bg-purple-50 dark:bg-purple-900/20 rounded-md border border-purple-200 dark:border-purple-800">
+            <span className="text-[10px] font-semibold text-purple-700 dark:text-purple-300">O/U</span>
+            <span className="text-sm font-bold text-purple-900 dark:text-purple-100">{game.total.toFixed(1)}</span>
+          </div>
+        )}
+        {game.home_score !== null && game.away_score !== null && (
+          <div className="flex flex-col items-center px-3 py-1.5 bg-gray-100 dark:bg-gray-600 rounded-md border border-gray-300 dark:border-gray-500">
+            <span className="text-[10px] font-semibold text-gray-700 dark:text-gray-300">PROJ SCORE</span>
+            <span className="text-sm font-bold text-gray-900 dark:text-white">{game.home_score.toFixed(1)}-{game.away_score.toFixed(1)}</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -241,6 +257,13 @@ function TeamProfileContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [selectedGame, setSelectedGame] = useState<GameData | null>(null);
+  const [showTeamProfile, setShowTeamProfile] = useState(false);
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
+  const [currentWeek, setCurrentWeek] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchCurrentSeason();
+  }, []);
 
   useEffect(() => {
     if (teamName) {
@@ -248,6 +271,22 @@ function TeamProfileContent() {
     }
     fetchAllTeams();
   }, [teamName]);
+
+  const fetchCurrentSeason = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/current-season`);
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentYear(data.year);
+        setCurrentWeek(data.week);
+      }
+    } catch (err) {
+      console.error('Error fetching current season:', err);
+      // Fallback to defaults if API fails
+      setCurrentYear(2025);
+      setCurrentWeek(8);
+    }
+  };
 
   const fetchAllTeams = async () => {
     try {
@@ -327,7 +366,8 @@ function TeamProfileContent() {
               <img 
                 src={`${API_URL}/api/football-logo/${encodeURIComponent(teamName)}`}
                 alt={`${teamName} logo`}
-                className="w-12 h-12 sm:w-16 sm:h-16 object-contain flex-shrink-0"
+                className="w-12 h-12 sm:w-16 sm:h-16 object-contain flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setShowTeamProfile(true)}
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
@@ -396,38 +436,38 @@ function TeamProfileContent() {
 
                   return (
                     <div className="max-h-[800px] overflow-y-auto">
-                      {/* Completed Games */}
-                      {completedGames.length > 0 && (
-                        <div>
-                          <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 pb-2 z-10">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                              Completed Games ({completedGames.length})
-                            </h3>
-                          </div>
-                          
-                          <div className="p-4 pt-2">
-                            <div className="space-y-2">
-                              {completedGames.map((game, index) => (
-                                <CompletedGame key={index} game={game} onGameClick={handleGameClick} />
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
                       {/* Upcoming Games */}
                       {upcomingGames.length > 0 && (
                         <div>
-                          <div className={`sticky ${completedGames.length > 0 ? 'top-[56px]' : 'top-0'} bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 pb-2 z-10`}>
+                          <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 pb-2 z-10">
                             <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                               Upcoming Games ({upcomingGames.length})
                             </h3>
                           </div>
                           
                           <div className="p-4 pt-2">
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                               {upcomingGames.map((game, index) => (
                                 <UpcomingGame key={index} game={game} onGameClick={handleGameClick} />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Completed Games */}
+                      {completedGames.length > 0 && (
+                        <div>
+                          <div className={`sticky ${upcomingGames.length > 0 ? 'top-[56px]' : 'top-0'} bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 pb-2 z-10`}>
+                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                              Completed Games ({completedGames.length})
+                            </h3>
+                          </div>
+                          
+                          <div className="p-4 pt-2">
+                            <div className="space-y-3">
+                              {completedGames.map((game, index) => (
+                                <CompletedGame key={index} game={game} onGameClick={handleGameClick} />
                               ))}
                             </div>
                           </div>
@@ -442,6 +482,37 @@ function TeamProfileContent() {
                 <p className="text-gray-600 dark:text-gray-400">No schedule data available</p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Team Profile Image Modal */}
+        {showTeamProfile && currentYear && currentWeek && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowTeamProfile(false)}
+          >
+            <div 
+              className="relative w-full max-w-6xl max-h-[90vh] bg-white dark:bg-gray-800 rounded-lg shadow-2xl overflow-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setShowTeamProfile(false)}
+                className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 bg-white dark:bg-gray-700 rounded-full p-2 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 dark:text-gray-200" />
+              </button>
+              <div className="p-4">
+                <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900 dark:text-white pr-10">{teamName} Profile</h2>
+                <img
+                  src={`${API_URL}/api/team-profile/${currentYear}/${currentWeek}/${encodeURIComponent(teamName)}`}
+                  alt={`${teamName} profile`}
+                  className="w-full h-auto"
+                  onError={(e) => {
+                    e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="%23f3f4f6"/><text x="50%" y="50%" text-anchor="middle" fill="%23374151" font-size="18">Profile image not available</text></svg>';
+                  }}
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>
