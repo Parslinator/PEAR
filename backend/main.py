@@ -80,7 +80,7 @@ CURRENT_YEAR = 2025
 # Check for the latest available week folder
 # Start from week 20 and work backwards to find the highest week number that exists
 for week in range(20, 0, -1):
-    folder_path = os.path.join(BASE_PATH, f"y{CURRENT_YEAR}", f"week_{week}")
+    folder_path = os.path.join(BASE_PATH, f"y{CURRENT_YEAR}", f"Visuals", f"week_{week}")
     if os.path.exists(folder_path):
         CURRENT_WEEK = week
         break
