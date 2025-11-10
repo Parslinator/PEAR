@@ -265,9 +265,9 @@ function UpcomingGame({ game, onGameClick }: { game: GameData; onGameClick: (gam
       </div>
 
       {/* Main Content */}
-      <div className="flex items-start justify-between gap-4 mb-3">
+      <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-3 mb-3">
         {/* Opponent Info */}
-        <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="flex items-center gap-3 min-w-0 flex-1 w-full sm:w-auto">
           <img
             src={`${API_URL}/api/football-logo/${encodeURIComponent(game.opponent_team)}`}
             alt={`${game.opponent_team} logo`}
@@ -275,8 +275,8 @@ function UpcomingGame({ game, onGameClick }: { game: GameData; onGameClick: (gam
             onClick={handleOpponentClick}
             onError={(e) => e.currentTarget.style.display = 'none'}
           />
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-2 mb-1">
+          <div className="flex flex-col min-w-0 flex-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               {game.opponent_pr_rank && (
                 <span className="text-xs font-bold text-blue-600 dark:text-blue-400">#{game.opponent_pr_rank}</span>
               )}
@@ -304,7 +304,7 @@ function UpcomingGame({ game, onGameClick }: { game: GameData; onGameClick: (gam
 
         {/* Spread */}
         {game.PEAR && (
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 w-full sm:w-auto">
             <div className="px-3 py-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg text-center">
               <div className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-300 mb-0.5">SPREAD</div>
               <div className="text-lg font-bold text-indigo-900 dark:text-indigo-100">{game.PEAR}</div>
@@ -338,6 +338,78 @@ function UpcomingGame({ game, onGameClick }: { game: GameData; onGameClick: (gam
   );
 }
 
+function MatchupImage({ game, teamName, year, week, onLoad, onError, loading }: { 
+  game: GameData; 
+  teamName: string; 
+  year: number; 
+  week: number; 
+  onLoad: () => void;
+  onError: () => void;
+  loading: boolean;
+}) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const generateImage = async () => {
+      try {
+        // Determine home and away teams
+        const isHome = game.location === 'Home';
+        const homeTeam = isHome ? teamName : game.opponent_team;
+        const awayTeam = isHome ? game.opponent_team : teamName;
+        const neutral = game.neutral;
+
+        const response = await fetch(`${API_URL}/api/generate-matchup-image`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            year,
+            week,
+            home_team: homeTeam,
+            away_team: awayTeam,
+            neutral
+          }),
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          setImageUrl(url);
+          onLoad();
+        } else {
+          onError();
+        }
+      } catch (error) {
+        console.error('Error generating matchup image:', error);
+        onError();
+      }
+    };
+
+    generateImage();
+
+    // Cleanup
+    return () => {
+      if (imageUrl) {
+        URL.revokeObjectURL(imageUrl);
+      }
+    };
+  }, [game, teamName, year, week]);
+
+  if (!imageUrl) {
+    return null;
+  }
+
+  return (
+    <img
+      src={imageUrl}
+      alt="Matchup preview"
+      className="w-full h-auto"
+      style={{ display: loading ? 'none' : 'block' }}
+    />
+  );
+}
+
 function TeamProfileContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -353,6 +425,7 @@ function TeamProfileContent() {
   const [showTeamProfile, setShowTeamProfile] = useState(false);
   const [currentYear, setCurrentYear] = useState<number | null>(null);
   const [currentWeek, setCurrentWeek] = useState<number | null>(null);
+  const [matchupImageLoading, setMatchupImageLoading] = useState(false);
 
   useEffect(() => {
     fetchCurrentSeason();
@@ -427,6 +500,7 @@ function TeamProfileContent() {
   };
 
   const handleGameClick = (game: GameData) => {
+    setMatchupImageLoading(true);
     setSelectedGame(game);
   };
 
@@ -583,64 +657,56 @@ function TeamProfileContent() {
                       </div>
                     </div>
 
-                    {/* Offensive & Defensive Stats - Side by Side */}
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Offense */}
-                      <div>
-                        <h3 className="text-sm font-bold text-blue-700 dark:text-blue-400 mb-3 uppercase tracking-wide">Offense</h3>
-                        <div className="space-y-2">
-                          {[
-                            { key: 'success_rate', label: 'Success Rate', stat: profileData.stats.offense.success_rate },
-                            { key: 'ppa', label: 'PPA', stat: profileData.stats.offense.ppa },
-                            { key: 'rushing', label: 'Rushing', stat: profileData.stats.offense.rushing },
-                            { key: 'passing', label: 'Passing', stat: profileData.stats.offense.passing },
-                            { key: 'ppo', label: 'PPO', stat: profileData.stats.offense.ppo },
-                            { key: 'drive_quality', label: 'Drive Quality', stat: profileData.stats.offense.drive_quality }
-                          ].map(({ key, label, stat }) => {
-                            const rankBg = getRankColor(stat.rank);
-                            const textColor = getTextColor(rankBg);
-                            return (
-                              <div key={key} className="bg-gray-50 dark:bg-gray-700/30 rounded p-2">
-                                <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{label}</div>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(2)}</span>
-                                  <div className="px-2 py-0.5 rounded text-center min-w-[2.5rem]" style={{ backgroundColor: rankBg, color: textColor }}>
-                                    <span className="text-xs font-bold">#{stat.rank}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
+                    {/* Offensive & Defensive Stats - Combined */}
+                    <div>
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        <h3 className="text-sm font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wide text-center">Offense</h3>
+                        <div></div>
+                        <h3 className="text-sm font-bold text-red-700 dark:text-red-400 uppercase tracking-wide text-center">Defense</h3>
                       </div>
-
-                      {/* Defense */}
-                      <div>
-                        <h3 className="text-sm font-bold text-red-700 dark:text-red-400 mb-3 uppercase tracking-wide">Defense</h3>
-                        <div className="space-y-2">
-                          {[
-                            { key: 'success_rate', label: 'Success Rate', stat: profileData.stats.defense.success_rate },
-                            { key: 'ppa', label: 'PPA', stat: profileData.stats.defense.ppa },
-                            { key: 'rushing', label: 'Rushing', stat: profileData.stats.defense.rushing },
-                            { key: 'passing', label: 'Passing', stat: profileData.stats.defense.passing },
-                            { key: 'ppo', label: 'PPO', stat: profileData.stats.defense.ppo },
-                            { key: 'drive_quality', label: 'Drive Quality', stat: profileData.stats.defense.drive_quality }
-                          ].map(({ key, label, stat }) => {
-                            const rankBg = getRankColor(stat.rank);
-                            const textColor = getTextColor(rankBg);
-                            return (
-                              <div key={key} className="bg-gray-50 dark:bg-gray-700/30 rounded p-2">
-                                <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{label}</div>
-                                <div className="flex items-center justify-between">
-                                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(2)}</span>
-                                  <div className="px-2 py-0.5 rounded text-center min-w-[2.5rem]" style={{ backgroundColor: rankBg, color: textColor }}>
-                                    <span className="text-xs font-bold">#{stat.rank}</span>
-                                  </div>
+                      <div className="space-y-2">
+                        {[
+                          { key: 'success_rate', label: 'Success Rate', offense: profileData.stats.offense.success_rate, defense: profileData.stats.defense.success_rate },
+                          { key: 'ppa', label: 'PPA', offense: profileData.stats.offense.ppa, defense: profileData.stats.defense.ppa },
+                          { key: 'rushing', label: 'Rushing', offense: profileData.stats.offense.rushing, defense: profileData.stats.defense.rushing },
+                          { key: 'passing', label: 'Passing', offense: profileData.stats.offense.passing, defense: profileData.stats.defense.passing },
+                          { key: 'ppo', label: 'PPO', offense: profileData.stats.offense.ppo, defense: profileData.stats.defense.ppo },
+                          { key: 'drive_quality', label: 'Drive Quality', offense: profileData.stats.offense.drive_quality, defense: profileData.stats.defense.drive_quality }
+                        ].map(({ key, label, offense, defense }) => {
+                          const offRankBg = getRankColor(offense.rank);
+                          const offTextColor = getTextColor(offRankBg);
+                          const defRankBg = getRankColor(defense.rank);
+                          const defTextColor = getTextColor(defRankBg);
+                          
+                          return (
+                            <div key={key} className="grid grid-cols-3 gap-2 items-center">
+                              {/* Offense: stat value + rank badge */}
+                              <div className="flex items-center justify-end gap-2">
+                                <span className="text-xs font-semibold text-gray-900 dark:text-white">
+                                  {offense.value.toFixed(2)}
+                                </span>
+                                <div className="px-2 py-1 rounded text-center min-w-[3rem]" style={{ backgroundColor: offRankBg, color: offTextColor }}>
+                                  <span className="text-xs font-bold">#{offense.rank}</span>
                                 </div>
                               </div>
-                            );
-                          })}
-                        </div>
+                              
+                              {/* Stat Label (centered) */}
+                              <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center">
+                                {label}
+                              </span>
+                              
+                              {/* Defense: rank badge + stat value */}
+                              <div className="flex items-center justify-start gap-2">
+                                <div className="px-2 py-1 rounded text-center min-w-[3rem]" style={{ backgroundColor: defRankBg, color: defTextColor }}>
+                                  <span className="text-xs font-bold">#{defense.rank}</span>
+                                </div>
+                                <span className="text-xs font-semibold text-gray-900 dark:text-white">
+                                  {defense.value.toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -686,7 +752,7 @@ function TeamProfileContent() {
                               </h3>
                             </div>
                             
-                            <div className="p-4 pt-2">
+                            <div className="p-4 pt-2 pb-4">
                               <div className="space-y-3">
                                 {completedGames.map((game, index) => (
                                   <CompletedGame key={index} game={game} onGameClick={handleGameClick} />
@@ -733,6 +799,45 @@ function TeamProfileContent() {
                   onError={(e) => {
                     e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="%23f3f4f6"/><text x="50%" y="50%" text-anchor="middle" fill="%23374151" font-size="18">Profile image not available</text></svg>';
                   }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Game Matchup Modal */}
+        {selectedGame && currentYear && currentWeek && teamName && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+            onClick={() => setSelectedGame(null)}
+          >
+            <div 
+              className="relative w-full max-w-6xl max-h-[90vh] bg-white dark:bg-gray-800 rounded-lg shadow-2xl overflow-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSelectedGame(null)}
+                className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 bg-white dark:bg-gray-700 rounded-full p-2 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 dark:text-gray-200" />
+              </button>
+              <div className="p-4">
+                <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900 dark:text-white pr-10">
+                  {selectedGame.location === 'Home' ? `${selectedGame.opponent_team} @ ${teamName}` : `${teamName} @ ${selectedGame.opponent_team}`}
+                </h2>
+                {matchupImageLoading && (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                  </div>
+                )}
+                <MatchupImage 
+                  game={selectedGame}
+                  teamName={teamName}
+                  year={currentYear}
+                  week={currentWeek}
+                  onLoad={() => setMatchupImageLoading(false)}
+                  onError={() => setMatchupImageLoading(false)}
+                  loading={matchupImageLoading}
                 />
               </div>
             </div>
