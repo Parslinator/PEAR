@@ -647,7 +647,7 @@ function TeamProfileContent() {
                               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
                               <div className="flex items-center gap-2">
                                 <span className="text-sm font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(getStatDecimals(key))}</span>
-                                <div className="px-3 py-1 rounded min-w-[3.5rem] text-center" style={{ backgroundColor: rankBg, color: textColor }}>
+                                <div className="px-3 py-1 rounded min-w-[3.5rem] flex items-center justify-center" style={{ backgroundColor: rankBg, color: textColor }}>
                                   <span className="text-xs font-bold">#{stat.rank}</span>
                                 </div>
                               </div>
@@ -659,10 +659,12 @@ function TeamProfileContent() {
 
                     {/* Offensive & Defensive Stats - Combined */}
                     <div>
-                      <div className="grid grid-cols-3 gap-2 mb-3">
-                        <h3 className="text-sm font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wide text-center">Offense</h3>
-                        <div></div>
-                        <h3 className="text-sm font-bold text-red-700 dark:text-red-400 uppercase tracking-wide text-center">Defense</h3>
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-12"></div>
+                        <h3 className="text-sm font-bold text-blue-700 dark:text-blue-400 uppercase tracking-wide text-center flex-1">Offense</h3>
+                        <div className="w-24 flex-shrink-0"></div>
+                        <h3 className="text-sm font-bold text-red-700 dark:text-red-400 uppercase tracking-wide text-center flex-1">Defense</h3>
+                        <div className="w-12"></div>
                       </div>
                       <div className="space-y-2">
                         {[
@@ -679,31 +681,31 @@ function TeamProfileContent() {
                           const defTextColor = getTextColor(defRankBg);
                           
                           return (
-                            <div key={key} className="grid grid-cols-3 gap-2 items-center">
-                              {/* Offense: stat value + rank badge */}
-                              <div className="flex items-center justify-end gap-2">
-                                <span className="text-xs font-semibold text-gray-900 dark:text-white">
-                                  {offense.value.toFixed(2)}
-                                </span>
-                                <div className="px-2 py-1 rounded text-center min-w-[3rem]" style={{ backgroundColor: offRankBg, color: offTextColor }}>
-                                  <span className="text-xs font-bold">#{offense.rank}</span>
-                                </div>
+                            <div key={key} className="flex items-center gap-2">
+                              {/* Offense stat value - far left */}
+                              <span className="text-xs font-semibold text-gray-900 dark:text-white w-12 text-left">
+                                {offense.value.toFixed(2)}
+                              </span>
+                              
+                              {/* Offense rank badge - flexible width */}
+                              <div className="px-3 py-1 rounded flex-1 flex items-center justify-center" style={{ backgroundColor: offRankBg, color: offTextColor }}>
+                                <span className="text-xs font-bold">#{offense.rank}</span>
                               </div>
                               
-                              {/* Stat Label (centered) */}
-                              <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center">
+                              {/* Stat Label (centered) - fixed width */}
+                              <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center w-24 flex-shrink-0">
                                 {label}
                               </span>
                               
-                              {/* Defense: rank badge + stat value */}
-                              <div className="flex items-center justify-start gap-2">
-                                <div className="px-2 py-1 rounded text-center min-w-[3rem]" style={{ backgroundColor: defRankBg, color: defTextColor }}>
-                                  <span className="text-xs font-bold">#{defense.rank}</span>
-                                </div>
-                                <span className="text-xs font-semibold text-gray-900 dark:text-white">
-                                  {defense.value.toFixed(2)}
-                                </span>
+                              {/* Defense rank badge - flexible width */}
+                              <div className="px-3 py-1 rounded flex-1 flex items-center justify-center" style={{ backgroundColor: defRankBg, color: defTextColor }}>
+                                <span className="text-xs font-bold">#{defense.rank}</span>
                               </div>
+                              
+                              {/* Defense stat value - far right */}
+                              <span className="text-xs font-semibold text-gray-900 dark:text-white w-12 text-right">
+                                {defense.value.toFixed(2)}
+                              </span>
                             </div>
                           );
                         })}
