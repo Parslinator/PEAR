@@ -135,7 +135,9 @@ const getTextColor = (bgColor: string) => {
 
 const getStatDecimals = (statKey: string): number => {
   if (statKey.includes('rating')) return 1;
-  if (statKey === 'most_deserving_wins' || statKey === 'sos' || statKey === 'fpi') return 2;
+  if (statKey === 'fpi') return 1;
+  if (statKey === 'sos') return 2;
+  if (statKey === 'most_deserving_wins') return 3;
   return 2; // default
 };
 
