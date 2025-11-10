@@ -890,14 +890,8 @@ def get_profile_page(team_name: str):
 
         # Filter for this team's games
         team_schedule = schedule_df[(schedule_df['home_team'] == team_name) | (schedule_df['away_team'] == team_name)].copy()
-        
-        if len(team_schedule) == 0:
-            return {
-                "team_name": team_name,
-                "schedule": [],
-                "records": {"overall": "0-0", "conference": "0-0", "home": "0-0", "away": "0-0", "neutral": "0-0"},
-                "stats": {}
-            }
+        # team records
+        records = get_team_records(team_schedule, team_name)
         
         # Basic fields
         team_schedule['is_home'] = team_schedule['home_team'] == team_name
@@ -911,9 +905,6 @@ def get_profile_page(team_name: str):
                      ('Away' if (not x['is_home'] and x['neutral'] == False) else 'Neutral'), 
             axis=1
         )
-
-        # team records
-        records = get_team_records(team_schedule, team_name)
 
         # Map opponent stats (PR, OR, DR and their ranks)
         team_schedule['opponent_pr'] = team_schedule.apply(
