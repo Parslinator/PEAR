@@ -31,9 +31,51 @@ interface GameData {
   away_score: number | null;
 }
 
+interface StatWithRank {
+  value: number;
+  rank: number;
+}
+
+interface TeamRecords {
+  overall: string;
+  conference: string;
+  home: string;
+  away: string;
+  neutral: string;
+}
+
+interface TeamStats {
+  power_rating: StatWithRank;
+  offensive_rating: StatWithRank;
+  defensive_rating: StatWithRank;
+  most_deserving_wins: StatWithRank;
+  sos: StatWithRank;
+  kford_rating: StatWithRank;
+  sp_rating: StatWithRank;
+  fpi: StatWithRank;
+  offense: {
+    success_rate: StatWithRank;
+    ppa: StatWithRank;
+    rushing: StatWithRank;
+    passing: StatWithRank;
+    ppo: StatWithRank;
+    drive_quality: StatWithRank;
+  };
+  defense: {
+    success_rate: StatWithRank;
+    ppa: StatWithRank;
+    rushing: StatWithRank;
+    passing: StatWithRank;
+    ppo: StatWithRank;
+    drive_quality: StatWithRank;
+  };
+}
+
 interface ProfileData {
   team_name: string;
   schedule: GameData[];
+  records: TeamRecords;
+  stats: TeamStats;
 }
 
 const formatDate = (dateStr: string) => {
@@ -44,6 +86,57 @@ const formatDate = (dateStr: string) => {
 const formatWinProbability = (prob: number | null) => {
   if (prob === null) return 'N/A';
   return `${(prob).toFixed(1)}%`;
+};
+
+const getRatingColor = (value: number, allValues: number[], higherIsBetter: boolean = true) => {
+  const max = Math.max(...allValues);
+  const min = Math.min(...allValues);
+  const range = max - min;
+  let normalized = (value - min) / range;
+  
+  if (!higherIsBetter) {
+    normalized = 1 - normalized;
+  }
+  
+  // Colors: Dark Blue #00008B (0, 0, 139), Light Gray #D3D3D3 (211, 211, 211), Dark Red #8B0000 (139, 0, 0)
+  if (normalized >= 0.5) {
+    const t = (normalized - 0.5) * 2;
+    const r = Math.round(211 + (0 - 211) * t);
+    const g = Math.round(211 + (0 - 211) * t);
+    const b = Math.round(211 + (139 - 211) * t);
+    return `rgb(${r}, ${g}, ${b})`;
+  } else {
+    const t = normalized * 2;
+    const r = Math.round(139 + (211 - 139) * t);
+    const g = Math.round(0 + (211 - 0) * t);
+    const b = Math.round(0 + (211 - 0) * t);
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+};
+
+const getRankColor = (rank: number, totalTeams: number = 133) => {
+  // Create array of all possible ranks for color gradient
+  const allRanks = Array.from({length: totalTeams}, (_, i) => i + 1);
+  return getRatingColor(rank, allRanks, false); // Lower rank is better
+};
+
+const getTextColor = (bgColor: string) => {
+  const match = bgColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+  if (!match) return 'white';
+  
+  const r = parseInt(match[1]);
+  const g = parseInt(match[2]);
+  const b = parseInt(match[3]);
+  
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  
+  return luminance > 0.5 ? 'black' : 'white';
+};
+
+const getStatDecimals = (statKey: string): number => {
+  if (statKey.includes('rating')) return 1;
+  if (statKey === 'most_deserving_wins' || statKey === 'sos' || statKey === 'fpi') return 2;
+  return 2; // default
 };
 
 const getLocationBadge = (location: string) => {
@@ -283,8 +376,8 @@ function TeamProfileContent() {
     } catch (err) {
       console.error('Error fetching current season:', err);
       // Fallback to defaults if API fails
-      setCurrentYear(2025);
-      setCurrentWeek(8);
+      setCurrentYear(2024);
+      setCurrentWeek(15);
     }
   };
 
@@ -373,9 +466,32 @@ function TeamProfileContent() {
                 }}
               />
               <div className="flex-1 min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                  {teamName}
-                </h1>
+                <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                    {teamName}
+                  </h1>
+                  {!loading && profileData?.records && (
+                    <span className="text-lg sm:text-xl font-semibold text-gray-600 dark:text-gray-400">
+                      {profileData.records.overall} ({profileData.records.conference})
+                    </span>
+                  )}
+                </div>
+                {!loading && profileData?.records && (
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs sm:text-sm">
+                    <div className="flex items-center gap-1">
+                      <span className="text-gray-600 dark:text-gray-400">Home:</span>
+                      <span className="font-semibold text-blue-600 dark:text-blue-400">{profileData.records.home}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-gray-600 dark:text-gray-400">Away:</span>
+                      <span className="font-semibold text-orange-600 dark:text-orange-400">{profileData.records.away}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-gray-600 dark:text-gray-400">Neutral:</span>
+                      <span className="font-semibold text-purple-600 dark:text-purple-400">{profileData.records.neutral}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -410,13 +526,13 @@ function TeamProfileContent() {
           </div>
         </div>
 
-        {/* Schedule */}
+        {/* Content Area - Two Column Layout */}
         {loading ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12">
             <div className="flex flex-col items-center justify-center">
               <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 dark:border-blue-400"></div>
               <p className="mt-4 text-gray-600 dark:text-gray-400 text-lg">
-                Loading schedule...
+                Loading team profile...
               </p>
             </div>
           </div>
@@ -427,61 +543,168 @@ function TeamProfileContent() {
             </div>
           </div>
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-            {profileData?.schedule && profileData.schedule.length > 0 ? (
-              <>
-                {(() => {
-                  const completedGames = profileData.schedule.filter(game => game.is_completed);
-                  const upcomingGames = profileData.schedule.filter(game => !game.is_completed);
-
-                  return (
-                    <div className="max-h-[800px] overflow-y-auto">
-                      {/* Upcoming Games */}
-                      {upcomingGames.length > 0 && (
-                        <div>
-                          <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 pb-2 z-10">
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                              Upcoming Games ({upcomingGames.length})
-                            </h3>
-                          </div>
-                          
-                          <div className="p-4 pt-2">
-                            <div className="space-y-3">
-                              {upcomingGames.map((game, index) => (
-                                <UpcomingGame key={index} game={game} onGameClick={handleGameClick} />
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Completed Games */}
-                      {completedGames.length > 0 && (
-                        <div>
-                          <div className={`sticky ${upcomingGames.length > 0 ? 'top-[56px]' : 'top-0'} bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 pb-2 z-10`}>
-                            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                              Completed Games ({completedGames.length})
-                            </h3>
-                          </div>
-                          
-                          <div className="p-4 pt-2">
-                            <div className="space-y-3">
-                              {completedGames.map((game, index) => (
-                                <CompletedGame key={index} game={game} onGameClick={handleGameClick} />
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-              </>
-            ) : (
-              <div className="p-12 text-center">
-                <p className="text-gray-600 dark:text-gray-400">No schedule data available</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Left Side - Team Metrics */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden flex flex-col">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Team Metrics</h2>
               </div>
-            )}
+              <div className="flex-1 overflow-y-auto p-4">
+                {profileData?.stats && (
+                  <div className="space-y-6">
+                    {/* Primary Ratings */}
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">Primary Ratings</h3>
+                      <div className="grid grid-cols-1 gap-2">
+                        {[
+                          { key: 'power_rating', label: 'Power Rating', stat: profileData.stats.power_rating },
+                          { key: 'offensive_rating', label: 'Offensive Rating', stat: profileData.stats.offensive_rating },
+                          { key: 'defensive_rating', label: 'Defensive Rating', stat: profileData.stats.defensive_rating },
+                          { key: 'most_deserving_wins', label: 'Most Deserving Wins', stat: profileData.stats.most_deserving_wins },
+                          { key: 'sos', label: 'Strength of Schedule', stat: profileData.stats.sos },
+                          { key: 'kford_rating', label: 'Kford Rating', stat: profileData.stats.kford_rating },
+                          { key: 'sp_rating', label: 'SP+ Rating', stat: profileData.stats.sp_rating },
+                          { key: 'fpi', label: 'FPI', stat: profileData.stats.fpi }
+                        ].map(({ key, label, stat }) => {
+                          const rankBg = getRankColor(stat.rank);
+                          const textColor = getTextColor(rankBg);
+                          return (
+                            <div key={key} className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-700/30 rounded">
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(getStatDecimals(key))}</span>
+                                <div className="px-3 py-1 rounded min-w-[3.5rem] text-center" style={{ backgroundColor: rankBg, color: textColor }}>
+                                  <span className="text-xs font-bold">#{stat.rank}</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Offensive & Defensive Stats - Side by Side */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Offense */}
+                      <div>
+                        <h3 className="text-sm font-bold text-blue-700 dark:text-blue-400 mb-3 uppercase tracking-wide">Offense</h3>
+                        <div className="space-y-2">
+                          {[
+                            { key: 'success_rate', label: 'Success Rate', stat: profileData.stats.offense.success_rate },
+                            { key: 'ppa', label: 'PPA', stat: profileData.stats.offense.ppa },
+                            { key: 'rushing', label: 'Rushing', stat: profileData.stats.offense.rushing },
+                            { key: 'passing', label: 'Passing', stat: profileData.stats.offense.passing },
+                            { key: 'ppo', label: 'PPO', stat: profileData.stats.offense.ppo },
+                            { key: 'drive_quality', label: 'Drive Quality', stat: profileData.stats.offense.drive_quality }
+                          ].map(({ key, label, stat }) => {
+                            const rankBg = getRankColor(stat.rank);
+                            const textColor = getTextColor(rankBg);
+                            return (
+                              <div key={key} className="bg-gray-50 dark:bg-gray-700/30 rounded p-2">
+                                <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{label}</div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(2)}</span>
+                                  <div className="px-2 py-0.5 rounded text-center min-w-[2.5rem]" style={{ backgroundColor: rankBg, color: textColor }}>
+                                    <span className="text-xs font-bold">#{stat.rank}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Defense */}
+                      <div>
+                        <h3 className="text-sm font-bold text-red-700 dark:text-red-400 mb-3 uppercase tracking-wide">Defense</h3>
+                        <div className="space-y-2">
+                          {[
+                            { key: 'success_rate', label: 'Success Rate', stat: profileData.stats.defense.success_rate },
+                            { key: 'ppa', label: 'PPA', stat: profileData.stats.defense.ppa },
+                            { key: 'rushing', label: 'Rushing', stat: profileData.stats.defense.rushing },
+                            { key: 'passing', label: 'Passing', stat: profileData.stats.defense.passing },
+                            { key: 'ppo', label: 'PPO', stat: profileData.stats.defense.ppo },
+                            { key: 'drive_quality', label: 'Drive Quality', stat: profileData.stats.defense.drive_quality }
+                          ].map(({ key, label, stat }) => {
+                            const rankBg = getRankColor(stat.rank);
+                            const textColor = getTextColor(rankBg);
+                            return (
+                              <div key={key} className="bg-gray-50 dark:bg-gray-700/30 rounded p-2">
+                                <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{label}</div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm font-semibold text-gray-900 dark:text-white">{stat.value.toFixed(2)}</span>
+                                  <div className="px-2 py-0.5 rounded text-center min-w-[2.5rem]" style={{ backgroundColor: rankBg, color: textColor }}>
+                                    <span className="text-xs font-bold">#{stat.rank}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right Side - Schedule */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+              {profileData?.schedule && profileData.schedule.length > 0 ? (
+                <>
+                  {(() => {
+                    const completedGames = profileData.schedule.filter(game => game.is_completed);
+                    const upcomingGames = profileData.schedule.filter(game => !game.is_completed);
+
+                    return (
+                      <div className="max-h-[800px] overflow-y-auto">
+                        {/* Upcoming Games */}
+                        {upcomingGames.length > 0 && (
+                          <div>
+                            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 pb-2 z-10">
+                              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                                Upcoming Games ({upcomingGames.length})
+                              </h3>
+                            </div>
+                            
+                            <div className="p-4 pt-2">
+                              <div className="space-y-3">
+                                {upcomingGames.map((game, index) => (
+                                  <UpcomingGame key={index} game={game} onGameClick={handleGameClick} />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Completed Games */}
+                        {completedGames.length > 0 && (
+                          <div>
+                            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 pb-2 z-10">
+                              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                                Completed Games ({completedGames.length})
+                              </h3>
+                            </div>
+                            
+                            <div className="p-4 pt-2">
+                              <div className="space-y-3">
+                                {completedGames.map((game, index) => (
+                                  <CompletedGame key={index} game={game} onGameClick={handleGameClick} />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </>
+              ) : (
+                <div className="p-12 text-center">
+                  <p className="text-gray-600 dark:text-gray-400">No schedule data available</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

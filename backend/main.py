@@ -803,14 +803,100 @@ def get_team_stats(team_name: str):
 def get_profile_page(team_name: str):
     try:
         schedule_df = load_football_schedule(CURRENT_YEAR)
+        ratings, all_data = load_data(CURRENT_YEAR, CURRENT_WEEK)
+
+        def get_value_and_rank(df, team, column, higher_is_better=True):
+            """
+            Return (value, rank) for a given team and column.
+            
+            Args:
+                df (pd.DataFrame): Data source with 'team' and stat columns.
+                team (str): Team name to look up.
+                column (str): Column name to extract.
+                higher_is_better (bool): If True, high values rank better (1 = highest).
+                                        If False, low values rank better (1 = lowest).
+            """
+            ascending = not higher_is_better
+            ranks = df[column].rank(ascending=ascending, method="first").astype(int)
+
+            value = df.loc[df['Team'] == team, column].values[0]
+            rank = ranks.loc[df['Team'] == team].values[0]
+
+            return value, rank
         
+        def get_team_records(team_schedule, team_name):
+            # determine win/loss for each row from team's perspective
+            completed = team_schedule[team_schedule['home_points'].notna()]
+            completed["team_is_home"] = completed["home_team"] == team_name
+            completed["team_is_away"] = completed["away_team"] == team_name
+
+            # only include games where this team played
+            team_games = completed[completed["team_is_home"] | completed["team_is_away"]].copy()
+            if team_games.empty:
+                return {"overall": "0-0", "conference": "0-0", "home": "0-0", "away": "0-0", "neutral": "0-0"}
+
+            # determine win result
+            team_games["win"] = (
+                (team_games["team_is_home"] & (team_games["home_points"] > team_games["away_points"])) |
+                (team_games["team_is_away"] & (team_games["away_points"] > team_games["home_points"]))
+            )
+
+            # helper to compute W-L record
+            def record(df):
+                wins = df["win"].sum()
+                losses = len(df) - wins
+                return f"{int(wins)}-{int(losses)}"
+
+            # overall
+            overall = record(team_games)
+
+            # conference games
+            conference = record(team_games[team_games["conference_game"] == True])
+
+            # home/away/neutral splits
+            home = record(team_games[team_games["team_is_home"] & (team_games["neutral"] == False)])
+            away = record(team_games[team_games["team_is_away"] & (team_games["neutral"] == False)])
+            neutral = record(team_games[team_games["neutral"] == True])
+
+            return {
+                "overall": overall,
+                "conference": conference,
+                "home": home,
+                "away": away,
+                "neutral": neutral
+            }
+
+        # team stats
+        power_rating, pr_rank = get_value_and_rank(all_data, team_name, 'power_rating')
+        off_rating, off_rank = get_value_and_rank(all_data, team_name, 'offensive_rating')
+        def_rating, def_rank = get_value_and_rank(all_data, team_name, 'defensive_rating', False)
+        kford_rating, kford_rank = get_value_and_rank(all_data, team_name, 'kford_rating')
+        sp_rating, sp_rank = get_value_and_rank(all_data, team_name, 'sp_rating')
+        fpi_rating, fpi_rank = get_value_and_rank(all_data, team_name, 'fpi')
+        most_deserving_wins, mdw_rank = get_value_and_rank(all_data, team_name, 'most_deserving_wins')
+        sos, sos_rank = get_value_and_rank(all_data, team_name, 'SOS', False)
+        off_sr, off_sr_rank = get_value_and_rank(all_data, team_name, 'Offense_successRate_adj')
+        def_sr, def_sr_rank = get_value_and_rank(all_data, team_name, 'Defense_successRate_adj', False)
+        off_ppa, off_ppa_rank = get_value_and_rank(all_data, team_name, 'Offense_ppa_adj')
+        def_ppa, def_ppa_rank = get_value_and_rank(all_data, team_name, 'Defense_ppa_adj', False)
+        off_rushing, off_rushing_rank = get_value_and_rank(all_data, team_name, 'Offense_rushing_adj')
+        off_passing, off_passing_rank = get_value_and_rank(all_data, team_name, 'Offense_passing_adj')
+        def_rushing, def_rushing_rank = get_value_and_rank(all_data, team_name, 'Defense_rushing_adj', False)
+        def_passing, def_passing_rank = get_value_and_rank(all_data, team_name, 'Defense_passing_adj', False)
+        off_ppo, off_ppo_rank = get_value_and_rank(all_data, team_name, 'adj_offense_ppo')
+        def_ppo, def_ppo_rank = get_value_and_rank(all_data, team_name, 'adj_defense_ppo', False)
+        off_dq, off_dq_rank = get_value_and_rank(all_data, team_name, 'adj_offense_drive_quality')
+        def_dq, def_dq_rank = get_value_and_rank(all_data, team_name, 'adj_defense_drive_quality', False)
+
         # Filter for this team's games
         team_schedule = schedule_df[(schedule_df['home_team'] == team_name) | (schedule_df['away_team'] == team_name)].copy()
         
         if len(team_schedule) == 0:
             return {
                 "team_name": team_name,
-                "schedule": []
+                "schedule": [],
+                "records": {"overall": "0-0", "conference": "0-0", "home": "0-0", "away": "0-0", "neutral": "0-0"},
+                "stats": {}
             }
         
         # Basic fields
@@ -825,6 +911,9 @@ def get_profile_page(team_name: str):
                      ('Away' if (not x['is_home'] and x['neutral'] == False) else 'Neutral'), 
             axis=1
         )
+
+        # team records
+        records = get_team_records(team_schedule, team_name)
 
         # Map opponent stats (PR, OR, DR and their ranks)
         team_schedule['opponent_pr'] = team_schedule.apply(
@@ -911,9 +1000,39 @@ def get_profile_page(team_name: str):
                 elif isinstance(value, (np.floating,)):
                     record[key] = float(value)
         
+        # Build stats dictionary
+        stats = {
+            "power_rating": {"value": float(power_rating), "rank": int(pr_rank)},
+            "offensive_rating": {"value": float(off_rating), "rank": int(off_rank)},
+            "defensive_rating": {"value": float(def_rating), "rank": int(def_rank)},
+            "most_deserving_wins": {"value": float(most_deserving_wins), "rank": int(mdw_rank)},
+            "sos": {"value": float(sos), "rank": int(sos_rank)},
+            "kford_rating": {"value": float(kford_rating), "rank": int(kford_rank)},
+            "sp_rating": {"value": float(sp_rating), "rank": int(sp_rank)},
+            "fpi": {"value": float(fpi_rating), "rank": int(fpi_rank)},
+            "offense": {
+                "success_rate": {"value": float(off_sr), "rank": int(off_sr_rank)},
+                "ppa": {"value": float(off_ppa), "rank": int(off_ppa_rank)},
+                "rushing": {"value": float(off_rushing), "rank": int(off_rushing_rank)},
+                "passing": {"value": float(off_passing), "rank": int(off_passing_rank)},
+                "ppo": {"value": float(off_ppo), "rank": int(off_ppo_rank)},
+                "drive_quality": {"value": float(off_dq), "rank": int(off_dq_rank)}
+            },
+            "defense": {
+                "success_rate": {"value": float(def_sr), "rank": int(def_sr_rank)},
+                "ppa": {"value": float(def_ppa), "rank": int(def_ppa_rank)},
+                "rushing": {"value": float(def_rushing), "rank": int(def_rushing_rank)},
+                "passing": {"value": float(def_passing), "rank": int(def_passing_rank)},
+                "ppo": {"value": float(def_ppo), "rank": int(def_ppo_rank)},
+                "drive_quality": {"value": float(def_dq), "rank": int(def_dq_rank)}
+            }
+        }
+        
         return {
             "team_name": team_name,
-            "schedule": team_schedule_dict
+            "schedule": team_schedule_dict,
+            "records": records,
+            "stats": stats
         }
     
     except HTTPException as e:
