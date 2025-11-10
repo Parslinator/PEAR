@@ -1,132 +1,132 @@
 ,team,power_rating,conference,week,year
-1,Georgia,26.3,SEC,16,2022
-2,Ohio State,24.6,Big Ten,16,2022
-3,Alabama,24.1,SEC,16,2022
-4,Michigan,20.5,Big Ten,16,2022
-5,LSU,18.7,SEC,16,2022
-6,Tennessee,17.5,SEC,16,2022
-7,Penn State,16.8,Big Ten,16,2022
-8,Clemson,15.7,ACC,16,2022
-9,Florida State,13.6,ACC,16,2022
-10,Oregon,12.9,Big Ten,16,2022
-11,Notre Dame,12.9,FBS Independents,16,2022
-12,Texas,12.7,SEC,16,2022
-13,Washington,11.4,Big Ten,16,2022
-14,Utah,11.4,Big 12,16,2022
-15,UCLA,11.3,Big Ten,16,2022
-16,Minnesota,10.9,Big Ten,16,2022
-17,Texas A&M,10.8,SEC,16,2022
-18,USC,10.5,Big Ten,16,2022
-19,Wisconsin,10.0,Big Ten,16,2022
-20,Mississippi State,9.8,SEC,16,2022
-21,Maryland,9.5,Big Ten,16,2022
-22,Oregon State,8.7,Pac-12,16,2022
-23,Ole Miss,7.9,SEC,16,2022
-24,Kansas State,7.3,Big 12,16,2022
-25,Illinois,7.0,Big Ten,16,2022
-26,Oklahoma,7.0,SEC,16,2022
-27,TCU,6.9,Big 12,16,2022
-28,UCF,6.9,Big 12,16,2022
-29,Florida,6.6,SEC,16,2022
-30,Kentucky,6.5,SEC,16,2022
-31,Pittsburgh,6.3,ACC,16,2022
-32,Tulane,6.2,American Athletic,16,2022
-33,North Carolina,5.7,ACC,16,2022
-34,Louisville,5.6,ACC,16,2022
-35,Texas Tech,5.2,Big 12,16,2022
-36,Air Force,5.0,Mountain West,16,2022
-37,Duke,4.8,ACC,16,2022
-38,Baylor,4.5,Big 12,16,2022
-39,Cincinnati,4.4,Big 12,16,2022
-40,Iowa,4.4,Big Ten,16,2022
-41,NC State,4.3,ACC,16,2022
-42,Boise State,4.2,Mountain West,16,2022
-43,Memphis,4.2,American Athletic,16,2022
-44,Auburn,4.2,SEC,16,2022
-45,Marshall,4.1,Sun Belt,16,2022
-46,Miami,4.1,ACC,16,2022
-47,Western Kentucky,3.5,Conference USA,16,2022
-48,South Carolina,3.5,SEC,16,2022
-49,Fresno State,3.0,Mountain West,16,2022
-50,Wake Forest,2.5,ACC,16,2022
-51,Syracuse,2.5,ACC,16,2022
-52,Arkansas,2.5,SEC,16,2022
-53,Iowa State,2.5,Big 12,16,2022
-54,Houston,2.4,Big 12,16,2022
-55,Missouri,1.8,SEC,16,2022
-56,UTSA,1.7,American Athletic,16,2022
-57,SMU,1.6,ACC,16,2022
-58,East Carolina,1.4,American Athletic,16,2022
-59,Washington State,0.7,Pac-12,16,2022
-60,Oklahoma State,0.7,Big 12,16,2022
-61,West Virginia,0.7,Big 12,16,2022
-62,Kansas,0.6,Big 12,16,2022
-63,Nebraska,0.6,Big Ten,16,2022
-64,San José State,0.1,Mountain West,16,2022
-65,Purdue,-0.0,Big Ten,16,2022
-66,South Alabama,-0.2,Sun Belt,16,2022
-67,App State,-0.4,Sun Belt,16,2022
-68,Michigan State,-0.6,Big Ten,16,2022
-69,California,-1.0,ACC,16,2022
-70,UAB,-1.3,American Athletic,16,2022
-71,Tulsa,-1.4,American Athletic,16,2022
-72,James Madison,-1.5,Sun Belt,16,2022
-73,North Texas,-1.8,American Athletic,16,2022
-74,Troy,-1.9,Sun Belt,16,2022
-75,Arizona State,-2.0,Big 12,16,2022
-76,Arizona,-2.1,Big 12,16,2022
-77,Army,-2.1,American Athletic,16,2022
-78,Georgia Tech,-2.2,ACC,16,2022
-79,Virginia Tech,-2.3,ACC,16,2022
-80,Toledo,-2.3,Mid-American,16,2022
-81,Middle Tennessee,-2.4,Conference USA,16,2022
-82,Florida Atlantic,-2.5,American Athletic,16,2022
-83,Southern Miss,-3.1,Sun Belt,16,2022
-84,BYU,-3.4,Big 12,16,2022
-85,Stanford,-3.6,ACC,16,2022
-86,Georgia State,-4.1,Sun Belt,16,2022
-87,Virginia,-4.7,ACC,16,2022
-88,Louisiana,-4.7,Sun Belt,16,2022
-89,Indiana,-4.9,Big Ten,16,2022
-90,Ohio,-5.0,Mid-American,16,2022
-91,San Diego State,-5.1,Mountain West,16,2022
-92,South Florida,-5.7,American Athletic,16,2022
-93,Coastal Carolina,-6.0,Sun Belt,16,2022
-94,Liberty,-6.2,Conference USA,16,2022
-95,Vanderbilt,-6.3,SEC,16,2022
-96,Northwestern,-6.5,Big Ten,16,2022
-97,Rutgers,-6.8,Big Ten,16,2022
-98,UNLV,-7.0,Mountain West,16,2022
-99,Georgia Southern,-7.2,Sun Belt,16,2022
-100,Boston College,-7.3,ACC,16,2022
-101,Texas State,-7.3,Sun Belt,16,2022
-102,Navy,-7.6,American Athletic,16,2022
-103,Temple,-7.7,American Athletic,16,2022
-104,Louisiana Tech,-7.8,Conference USA,16,2022
-105,Kent State,-8.7,Mid-American,16,2022
-106,Buffalo,-8.8,Mid-American,16,2022
-107,Old Dominion,-8.8,Sun Belt,16,2022
-108,Eastern Michigan,-9.1,Mid-American,16,2022
-109,New Mexico State,-9.2,Conference USA,16,2022
-110,Wyoming,-9.3,Mountain West,16,2022
-111,Charlotte,-9.3,American Athletic,16,2022
-112,UL Monroe,-9.3,Sun Belt,16,2022
-113,Miami (OH),-9.9,Mid-American,16,2022
-114,Rice,-10.0,American Athletic,16,2022
-115,Arkansas State,-10.6,Sun Belt,16,2022
-116,Utah State,-10.8,Mountain West,16,2022
-117,Central Michigan,-10.9,Mid-American,16,2022
-118,UTEP,-11.4,Conference USA,16,2022
-119,UConn,-11.9,FBS Independents,16,2022
-120,Northern Illinois,-12.5,Mid-American,16,2022
-121,Colorado State,-12.6,Mountain West,16,2022
-122,Ball State,-13.0,Mid-American,16,2022
-123,Florida International,-13.2,Conference USA,16,2022
-124,Nevada,-13.7,Mountain West,16,2022
-125,Bowling Green,-13.9,Mid-American,16,2022
-126,Western Michigan,-14.4,Mid-American,16,2022
-127,Hawai'i,-15.0,Mountain West,16,2022
-128,Akron,-15.9,Mid-American,16,2022
-129,Colorado,-16.1,Big 12,16,2022
-130,New Mexico,-18.3,Mountain West,16,2022
-131,Massachusetts,-23.7,FBS Independents,16,2022
+1,Georgia,31.6,SEC,16,2022
+2,Alabama,28.0,SEC,16,2022
+3,Ohio State,27.5,Big Ten,16,2022
+4,Michigan,26.7,Big Ten,16,2022
+5,Tennessee,23.2,SEC,16,2022
+6,Texas,20.5,Big 12,16,2022
+7,Penn State,20.2,Big Ten,16,2022
+8,Utah,18.6,Pac-12,16,2022
+9,TCU,18.0,Big 12,16,2022
+10,Clemson,17.1,ACC,16,2022
+11,Kansas State,16.9,Big 12,16,2022
+12,LSU,16.4,SEC,16,2022
+13,Oregon,15.7,Pac-12,16,2022
+14,USC,15.0,Pac-12,16,2022
+15,Florida State,14.0,ACC,16,2022
+16,Mississippi State,13.5,SEC,16,2022
+17,Ole Miss,13.4,SEC,16,2022
+18,Washington,12.8,Pac-12,16,2022
+19,Minnesota,12.7,Big Ten,16,2022
+20,Oregon State,12.6,Pac-12,16,2022
+21,Illinois,11.9,Big Ten,16,2022
+22,Oklahoma,11.8,Big 12,16,2022
+23,Notre Dame,11.2,FBS Independents,16,2022
+24,UCLA,10.8,Pac-12,16,2022
+25,Tulane,10.2,American Athletic,16,2022
+26,Louisville,9.6,ACC,16,2022
+27,Baylor,9.5,Big 12,16,2022
+28,Iowa,9.1,Big Ten,16,2022
+29,Maryland,8.8,Big Ten,16,2022
+30,Cincinnati,8.8,American Athletic,16,2022
+31,Arkansas,8.5,SEC,16,2022
+32,Kentucky,8.4,SEC,16,2022
+33,Florida,8.3,SEC,16,2022
+34,Oklahoma State,8.0,Big 12,16,2022
+35,UCF,7.8,American Athletic,16,2022
+36,Texas Tech,7.8,Big 12,16,2022
+37,Wisconsin,7.7,Big Ten,16,2022
+38,Pittsburgh,7.7,ACC,16,2022
+39,Texas A&M,7.5,SEC,16,2022
+40,South Carolina,7.4,SEC,16,2022
+41,Wake Forest,7.3,ACC,16,2022
+42,North Carolina,6.4,ACC,16,2022
+43,NC State,6.1,ACC,16,2022
+44,Washington State,5.6,Pac-12,16,2022
+45,Purdue,5.3,Big Ten,16,2022
+46,Iowa State,5.3,Big 12,16,2022
+47,Auburn,5.3,SEC,16,2022
+48,Memphis,4.8,American Athletic,16,2022
+49,Missouri,4.6,SEC,16,2022
+50,Duke,4.6,ACC,16,2022
+51,UTSA,4.3,Conference USA,16,2022
+52,Boise State,4.2,Mountain West,16,2022
+53,Troy,4.0,Sun Belt,16,2022
+54,Houston,3.8,American Athletic,16,2022
+55,James Madison,3.6,Sun Belt,16,2022
+56,Syracuse,3.5,ACC,16,2022
+57,Air Force,3.4,Mountain West,16,2022
+58,South Alabama,3.2,Sun Belt,16,2022
+59,Fresno State,3.1,Mountain West,16,2022
+60,Michigan State,3.0,Big Ten,16,2022
+61,Western Kentucky,3.0,Conference USA,16,2022
+62,West Virginia,2.8,Big 12,16,2022
+63,SMU,2.8,American Athletic,16,2022
+64,Kansas,2.7,Big 12,16,2022
+65,East Carolina,0.9,American Athletic,16,2022
+66,Marshall,0.5,Sun Belt,16,2022
+67,App State,0.5,Sun Belt,16,2022
+68,BYU,-0.7,FBS Independents,16,2022
+69,UAB,-0.7,Conference USA,16,2022
+70,Louisiana,-1.1,Sun Belt,16,2022
+71,Nebraska,-1.4,Big Ten,16,2022
+72,Miami,-1.9,ACC,16,2022
+73,California,-2.6,Pac-12,16,2022
+74,Army,-2.7,FBS Independents,16,2022
+75,Arizona,-2.9,Pac-12,16,2022
+76,North Texas,-3.1,Conference USA,16,2022
+77,Arizona State,-3.5,Pac-12,16,2022
+78,Liberty,-3.5,FBS Independents,16,2022
+79,Toledo,-4.0,Mid-American,16,2022
+80,Coastal Carolina,-4.0,Sun Belt,16,2022
+81,Georgia State,-4.7,Sun Belt,16,2022
+82,San Diego State,-5.3,Mountain West,16,2022
+83,Tulsa,-5.5,American Athletic,16,2022
+84,Navy,-5.6,American Athletic,16,2022
+85,Southern Miss,-5.6,Sun Belt,16,2022
+86,San José State,-5.7,Mountain West,16,2022
+87,Ohio,-5.9,Mid-American,16,2022
+88,Stanford,-5.9,Pac-12,16,2022
+89,Florida Atlantic,-6.0,Conference USA,16,2022
+90,Indiana,-6.0,Big Ten,16,2022
+91,Vanderbilt,-6.4,SEC,16,2022
+92,Virginia,-6.5,ACC,16,2022
+93,Georgia Southern,-6.7,Sun Belt,16,2022
+94,Middle Tennessee,-7.2,Conference USA,16,2022
+95,Georgia Tech,-7.3,ACC,16,2022
+96,Virginia Tech,-8.0,ACC,16,2022
+97,Buffalo,-8.9,Mid-American,16,2022
+98,Rutgers,-8.9,Big Ten,16,2022
+99,Eastern Michigan,-9.0,Mid-American,16,2022
+100,Kent State,-10.1,Mid-American,16,2022
+101,Wyoming,-10.5,Mountain West,16,2022
+102,Northwestern,-10.6,Big Ten,16,2022
+103,Boston College,-11.0,ACC,16,2022
+104,UTEP,-11.6,Conference USA,16,2022
+105,UNLV,-11.9,Mountain West,16,2022
+106,Old Dominion,-12.1,Sun Belt,16,2022
+107,Temple,-12.6,American Athletic,16,2022
+108,Miami (OH),-12.7,Mid-American,16,2022
+109,Texas State,-12.8,Sun Belt,16,2022
+110,Utah State,-12.8,Mountain West,16,2022
+111,Central Michigan,-12.9,Mid-American,16,2022
+112,Arkansas State,-13.0,Sun Belt,16,2022
+113,South Florida,-13.7,American Athletic,16,2022
+114,Ball State,-14.4,Mid-American,16,2022
+115,Western Michigan,-15.0,Mid-American,16,2022
+116,Rice,-15.0,Conference USA,16,2022
+117,UL Monroe,-15.1,Sun Belt,16,2022
+118,UConn,-15.2,FBS Independents,16,2022
+119,New Mexico State,-15.6,FBS Independents,16,2022
+120,Louisiana Tech,-15.7,Conference USA,16,2022
+121,Northern Illinois,-16.8,Mid-American,16,2022
+122,Bowling Green,-17.3,Mid-American,16,2022
+123,Charlotte,-17.5,Conference USA,16,2022
+124,Colorado,-19.0,Pac-12,16,2022
+125,Nevada,-19.5,Mountain West,16,2022
+126,Colorado State,-19.7,Mountain West,16,2022
+127,Akron,-20.3,Mid-American,16,2022
+128,Hawai'i,-22.1,Mountain West,16,2022
+129,New Mexico,-22.9,Mountain West,16,2022
+130,Florida International,-25.8,Conference USA,16,2022
+131,Massachusetts,-27.2,FBS Independents,16,2022

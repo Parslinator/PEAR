@@ -1,0 +1,134 @@
+,team,power_rating,conference,week,year
+1,Michigan,29.0,Big Ten,16,2023
+2,Georgia,27.5,SEC,16,2023
+3,Ohio State,26.3,Big Ten,16,2023
+4,Oregon,25.5,Pac-12,16,2023
+5,Penn State,24.5,Big Ten,16,2023
+6,Alabama,24.0,SEC,16,2023
+7,Texas,23.1,Big 12,16,2023
+8,Notre Dame,20.4,FBS Independents,16,2023
+9,LSU,20.0,SEC,16,2023
+10,Florida State,19.5,ACC,16,2023
+11,Oklahoma,19.0,Big 12,16,2023
+12,Kansas State,17.5,Big 12,16,2023
+13,Washington,17.0,Pac-12,16,2023
+14,Missouri,17.0,SEC,16,2023
+15,Ole Miss,16.4,SEC,16,2023
+16,Texas A&M,15.4,SEC,16,2023
+17,Tennessee,14.8,SEC,16,2023
+18,Oregon State,13.1,Pac-12,16,2023
+19,Arizona,12.5,Pac-12,16,2023
+20,Clemson,12.2,ACC,16,2023
+21,SMU,12.0,American Athletic,16,2023
+22,USC,11.3,Pac-12,16,2023
+23,Miami,10.3,ACC,16,2023
+24,Louisville,9.7,ACC,16,2023
+25,Utah,9.5,Pac-12,16,2023
+26,Kansas,9.4,Big 12,16,2023
+27,Maryland,9.3,Big Ten,16,2023
+28,North Carolina,8.9,ACC,16,2023
+29,James Madison,8.8,Sun Belt,16,2023
+30,Duke,8.7,ACC,16,2023
+31,TCU,8.7,Big 12,16,2023
+32,Kentucky,8.5,SEC,16,2023
+33,Auburn,8.2,SEC,16,2023
+34,UCLA,8.1,Pac-12,16,2023
+35,Iowa State,8.1,Big 12,16,2023
+36,Troy,7.4,Sun Belt,16,2023
+37,Wisconsin,7.4,Big Ten,16,2023
+38,NC State,7.1,ACC,16,2023
+39,UCF,6.7,Big 12,16,2023
+40,West Virginia,6.5,Big 12,16,2023
+41,Florida,6.5,SEC,16,2023
+42,Oklahoma State,6.2,Big 12,16,2023
+43,Texas Tech,6.1,Big 12,16,2023
+44,Iowa,5.8,Big Ten,16,2023
+45,Liberty,5.5,Conference USA,16,2023
+46,Boise State,5.4,Mountain West,16,2023
+47,South Carolina,5.2,SEC,16,2023
+48,Virginia Tech,4.8,ACC,16,2023
+49,Washington State,3.9,Pac-12,16,2023
+50,Memphis,2.9,American Athletic,16,2023
+51,Tulane,2.9,American Athletic,16,2023
+52,UTSA,2.9,American Athletic,16,2023
+53,Rutgers,2.8,Big Ten,16,2023
+54,Arkansas,2.7,SEC,16,2023
+55,South Alabama,2.6,Sun Belt,16,2023
+56,Air Force,2.2,Mountain West,16,2023
+57,California,2.1,Pac-12,16,2023
+58,Georgia Tech,1.7,ACC,16,2023
+59,Toledo,1.7,Mid-American,16,2023
+60,App State,1.3,Sun Belt,16,2023
+61,Mississippi State,0.6,SEC,16,2023
+62,Nebraska,0.4,Big Ten,16,2023
+63,Miami (OH),0.4,Mid-American,16,2023
+64,Minnesota,-0.3,Big Ten,16,2023
+65,UNLV,-0.5,Mountain West,16,2023
+66,Northwestern,-0.8,Big Ten,16,2023
+67,Syracuse,-0.8,ACC,16,2023
+68,Illinois,-0.9,Big Ten,16,2023
+69,Fresno State,-1.1,Mountain West,16,2023
+70,San José State,-1.4,Mountain West,16,2023
+71,Coastal Carolina,-2.2,Sun Belt,16,2023
+72,BYU,-2.6,Big 12,16,2023
+73,Louisiana,-2.8,Sun Belt,16,2023
+74,Jacksonville State,-2.9,Conference USA,16,2023
+75,Wyoming,-3.0,Mountain West,16,2023
+76,Pittsburgh,-3.5,ACC,16,2023
+77,Colorado,-3.5,Pac-12,16,2023
+78,Ohio,-3.6,Mid-American,16,2023
+79,Purdue,-3.7,Big Ten,16,2023
+80,Cincinnati,-3.8,Big 12,16,2023
+81,Western Kentucky,-3.9,Conference USA,16,2023
+82,New Mexico State,-4.0,Conference USA,16,2023
+83,Wake Forest,-4.5,ACC,16,2023
+84,Houston,-4.8,Big 12,16,2023
+85,Indiana,-5.0,Big Ten,16,2023
+86,Michigan State,-5.2,Big Ten,16,2023
+87,Texas State,-5.5,Sun Belt,16,2023
+88,Boston College,-5.6,ACC,16,2023
+89,Baylor,-6.5,Big 12,16,2023
+90,Bowling Green,-6.6,Mid-American,16,2023
+91,Georgia Southern,-6.8,Sun Belt,16,2023
+92,Army,-6.8,FBS Independents,16,2023
+93,Rice,-6.9,American Athletic,16,2023
+94,Marshall,-7.4,Sun Belt,16,2023
+95,Northern Illinois,-7.5,Mid-American,16,2023
+96,Arkansas State,-7.6,Sun Belt,16,2023
+97,Virginia,-7.7,ACC,16,2023
+98,Georgia State,-8.0,Sun Belt,16,2023
+99,Florida Atlantic,-8.2,American Athletic,16,2023
+100,South Florida,-8.4,American Athletic,16,2023
+101,North Texas,-8.7,American Athletic,16,2023
+102,Arizona State,-9.3,Pac-12,16,2023
+103,Utah State,-9.3,Mountain West,16,2023
+104,Old Dominion,-9.9,Sun Belt,16,2023
+105,Middle Tennessee,-9.9,Conference USA,16,2023
+106,East Carolina,-10.1,American Athletic,16,2023
+107,Colorado State,-10.6,Mountain West,16,2023
+108,San Diego State,-10.7,Mountain West,16,2023
+109,Vanderbilt,-10.8,SEC,16,2023
+110,Stanford,-10.9,Pac-12,16,2023
+111,UAB,-12.7,American Athletic,16,2023
+112,Navy,-12.9,American Athletic,16,2023
+113,Ball State,-13.2,Mid-American,16,2023
+114,Tulsa,-13.6,American Athletic,16,2023
+115,Eastern Michigan,-13.7,Mid-American,16,2023
+116,Sam Houston,-14.1,Conference USA,16,2023
+117,Louisiana Tech,-14.2,Conference USA,16,2023
+118,Buffalo,-14.4,Mid-American,16,2023
+119,Southern Miss,-14.4,Sun Belt,16,2023
+120,Western Michigan,-14.8,Mid-American,16,2023
+121,New Mexico,-15.4,Mountain West,16,2023
+122,UTEP,-15.5,Conference USA,16,2023
+123,Hawai'i,-15.7,Mountain West,16,2023
+124,Central Michigan,-15.8,Mid-American,16,2023
+125,UConn,-15.9,FBS Independents,16,2023
+126,Massachusetts,-17.8,FBS Independents,16,2023
+127,Charlotte,-17.9,American Athletic,16,2023
+128,Temple,-20.1,American Athletic,16,2023
+129,Nevada,-20.5,Mountain West,16,2023
+130,UL Monroe,-20.6,Sun Belt,16,2023
+131,Akron,-20.8,Mid-American,16,2023
+132,Florida International,-21.3,Conference USA,16,2023
+133,Kent State,-25.1,Mid-American,16,2023

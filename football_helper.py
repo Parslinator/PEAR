@@ -160,11 +160,16 @@ def team_exact_win_probs(team, current_wins, uncompleted_games):
     
     Args:
         team (str): Team name
+        current_wins (int): Current number of wins
         uncompleted_games (DataFrame): DataFrame with 'home_team', 'away_team', 'PEAR_win_prob'
     
     Returns:
         dict: {wins: probability of winning exactly that many games}
     """
+    # Handle empty or None uncompleted_games
+    if uncompleted_games is None or uncompleted_games.empty:
+        return {current_wins: 1.0}
+    
     team_games = uncompleted_games[
         (uncompleted_games['home_team'] == team) |
         (uncompleted_games['away_team'] == team)
@@ -173,7 +178,7 @@ def team_exact_win_probs(team, current_wins, uncompleted_games):
     
     probs = {}
     for wins_needed in range(0, n + 1):
-        probs[wins_needed+current_wins] = prob_win_exactly_x(team, wins_needed, uncompleted_games)
+        probs[wins_needed + current_wins] = prob_win_exactly_x(team, wins_needed, uncompleted_games)
     
     return probs
 
@@ -181,7 +186,20 @@ def team_win_probs(team, current_wins, uncompleted_games, max_wins):
     """
     Returns probability a team wins at least X total games, 
     starting from current_wins up to max_wins.
+    
+    Args:
+        team (str): Team name
+        current_wins (int): Current number of wins
+        uncompleted_games (DataFrame): DataFrame with 'home_team', 'away_team', 'PEAR_win_prob'
+        max_wins (int): Maximum wins to calculate (unused if no remaining games)
+    
+    Returns:
+        dict: {wins: probability of winning at least that many games}
     """
+    # Handle empty or None uncompleted_games
+    if uncompleted_games is None or uncompleted_games.empty:
+        return {current_wins: 1.0}
+    
     results = {}
     remaining_games = uncompleted_games[
         (uncompleted_games['home_team'] == team) |
@@ -1087,8 +1105,8 @@ def fetch_team_sp(year):
     ]
     return pd.DataFrame(sp_dict).dropna(subset=["team"])
 
-def fetch_team_info():
-    team_info_list = [*teams_api.get_fbs_teams()]
+def fetch_team_info(current_year):
+    team_info_list = [*teams_api.get_fbs_teams(current_year)]
     return pd.DataFrame([dict(team=t.school, conference=t.conference) for t in team_info_list])
 
 def fetch_logos_info():
@@ -1192,55 +1210,88 @@ def fetch_games_so_far(year, start_week, end_week_exclusive):
     games.sort(key=date_sort)
     return pd.DataFrame(games)
 
-def scrape_kford_ratings():
+def scrape_kford_ratings(use_kford_override=False):
     """Same scraper as original; returns standardized DataFrame or empty df with CSV fallback."""
     url = "https://kfordratings.com/power"
     headers = {'User-Agent': 'Mozilla/5.0'}
     
     # Try scraping first
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        from bs4 import BeautifulSoup
-        soup = BeautifulSoup(response.content, 'html.parser')
-        iframe = soup.find('iframe', {'srcdoc': True}) or soup.find('iframe')
-        if not iframe or not iframe.get('srcdoc'):
-            print("Could not find iframe or srcdoc for kford")
-            raise Exception("Iframe not found")
-        iframe_soup = BeautifulSoup(iframe.get('srcdoc'), 'html.parser')
-        table = iframe_soup.find('table')
-        if not table:
-            print("Could not find table in kford iframe")
-            raise Exception("Table not found")
-        rankings = []
-        rows = table.find_all('tr')[1:]
-        for row in rows:
-            cells = row.find_all('td')
-            if len(cells) >= 6:
-                rank = cells[0].get_text(strip=True)
-                team = cells[1].get_text(strip=True)
-                rating = cells[2].get_text(strip=True)
-                wins = cells[4].get_text(strip=True)
-                losses = cells[5].get_text(strip=True)
-                try:
-                    rank_int = int(rank) if rank.isdigit() else None
-                    rating_float = float(rating) if rating.replace('-', '').replace('.', '').isdigit() else None
-                    wins_int = int(wins) if wins.isdigit() else None
-                    losses_int = int(losses) if losses.isdigit() else None
-                    if all(v is not None for v in [rank_int, rating_float, wins_int, losses_int]):
-                        rankings.append({'team': team, 'kford_rank': rank_int, 'kford_rating': rating_float})
-                except Exception:
-                    continue
-        df = pd.DataFrame(rankings)
-        if not df.empty:
-            df = standardize_team_names(df)
-            print("Successfully scraped kford ratings from website")
-            return df
-        else:
-            raise Exception("No data scraped")
-    
-    except Exception as e:
-        print(f"Error scraping kford: {e}")
+    if not use_kford_override:
+        try:
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(response.content, 'html.parser')
+            iframe = soup.find('iframe', {'srcdoc': True}) or soup.find('iframe')
+            if not iframe or not iframe.get('srcdoc'):
+                print("Could not find iframe or srcdoc for kford")
+                raise Exception("Iframe not found")
+            iframe_soup = BeautifulSoup(iframe.get('srcdoc'), 'html.parser')
+            table = iframe_soup.find('table')
+            if not table:
+                print("Could not find table in kford iframe")
+                raise Exception("Table not found")
+            rankings = []
+            rows = table.find_all('tr')[1:]
+            for row in rows:
+                cells = row.find_all('td')
+                if len(cells) >= 6:
+                    rank = cells[0].get_text(strip=True)
+                    team = cells[1].get_text(strip=True)
+                    rating = cells[2].get_text(strip=True)
+                    wins = cells[4].get_text(strip=True)
+                    losses = cells[5].get_text(strip=True)
+                    try:
+                        rank_int = int(rank) if rank.isdigit() else None
+                        rating_float = float(rating) if rating.replace('-', '').replace('.', '').isdigit() else None
+                        wins_int = int(wins) if wins.isdigit() else None
+                        losses_int = int(losses) if losses.isdigit() else None
+                        if all(v is not None for v in [rank_int, rating_float, wins_int, losses_int]):
+                            rankings.append({'team': team, 'kford_rank': rank_int, 'kford_rating': rating_float})
+                    except Exception:
+                        continue
+            df = pd.DataFrame(rankings)
+            if not df.empty:
+                df = standardize_team_names(df)
+                print("Successfully scraped kford ratings from website")
+                return df
+            else:
+                raise Exception("No data scraped")
+        
+        except Exception as e:
+            print(f"Error scraping kford: {e}")
+            print("Attempting to read from CSV file...")
+            
+            # Fallback to Excel file
+            excel_path = "./PEAR/kford.xlsx"
+            try:
+                if os.path.exists(excel_path):
+                    # Try to read Excel file
+                    try:
+                        df = pd.read_excel(excel_path)
+                        print(f"Successfully loaded kford data from Excel file: {excel_path}")
+                    except Exception as e:
+                        print(f"Error reading Excel file: {e}")
+                        return pd.DataFrame()
+                    
+                    # Ensure the DataFrame has the expected columns
+                    if 'team' in df.columns and ('kford_rank' in df.columns or 'kford_rating' in df.columns):
+                        # Apply standardization if the function exists
+                        try:
+                            df = standardize_team_names(df)
+                        except NameError:
+                            print("Warning: standardize_team_names function not available")
+                        return df
+                    else:
+                        print(f"Warning: Excel file doesn't have expected columns. Available columns: {df.columns.tolist()}")
+                        return df
+                else:
+                    print(f"Excel file not found at: {excel_path}")
+                    return pd.DataFrame()
+            except Exception as excel_error:
+                print(f"Error reading Excel file: {excel_error}")
+                return pd.DataFrame()
+    else:
         print("Attempting to read from CSV file...")
         
         # Fallback to Excel file
@@ -1589,13 +1640,15 @@ def compute_last_week(team_data_df, opponent_adjustment_schedule_df, current_wee
 # ---------------------------
 # Main pipeline (coordinates fetch -> transforms)
 # ---------------------------
-def modeling_data_import(current_week_override=None):
+def modeling_data_import(current_week_override=None, current_year_override=None, use_kford_override=False):
     # --- current time and calendar / year/week logic (keeps original approach) ---
     current_time = datetime.datetime.now(pytz.UTC)
     if current_time.month < 6:
         calendar_year = current_time.year - 1
     else:
         calendar_year = current_time.year
+    if current_year_override is not None:
+        calendar_year = current_year_override
     calendar = fetch_calendar(calendar_year)
     current_year = int(calendar.loc[0, 'season'])
     first_game_start = calendar['first_game_start'].iloc[0]
@@ -1640,11 +1693,11 @@ def modeling_data_import(current_week_override=None):
     team_stats_df = fetch_team_stats(current_year)
     talent_df = fetch_talent(range(current_year-3, current_year+1))
     recruiting_df = fetch_recruiting(range(current_year-3, current_year+1))
-    team_info_df = fetch_team_info()
+    team_info_df = fetch_team_info(current_year)
     logos_info_df = fetch_logos_info()
     team_fpi_df = fetch_team_fpi(current_year)
     team_sp_df = fetch_team_sp(current_year)
-    kford_df = scrape_kford_ratings()
+    kford_df = scrape_kford_ratings(use_kford_override)
     opponent_adjustment_schedule_df = fetch_games_so_far(current_year, start_week=1, end_week_exclusive=current_week)
     # keep only games with elo values similar to original
     opponent_adjustment_schedule_df = opponent_adjustment_schedule_df.dropna(subset=['home_elo', 'away_elo']).reset_index(drop=True)
@@ -2837,11 +2890,9 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
     """Create SOS, SOR, and Most Deserving metrics for teams."""
     # --- Build Year-Long Schedule ---
     games_list = []
-    for week in range(1, 17):
+    for week in range(1, 20):
         response = games_api.get_games(year=current_year, week=week, classification='fbs')
         games_list.extend(response)
-    if postseason:
-        games_list.extend(games_api.get_games(year=current_year, classification='fbs', season_type='postseason'))
 
     games = [
         dict(
@@ -2938,7 +2989,7 @@ def metric_creation(team_data, records, current_week, current_year, postseason=F
     num_12_pr = team_data['power_rating'].iloc[11]
 
     def f(mov):
-        return np.clip(np.log(np.abs(mov) + 1) * np.sign(mov), -10, 10)
+        return np.clip(np.log(np.abs(mov) + 1) * np.sign(mov), -20, 20)
 
     completed_games['margin_of_victory'] = completed_games['home_points'] - completed_games['away_points']
 

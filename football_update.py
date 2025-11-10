@@ -59,7 +59,7 @@ drives_api = cfbd.DrivesApi(api_client)
 
 from football_helper import modeling_data_import, build_power_ratings_multi_target, in_house_power_ratings, average_team_distribution, metric_creation, stats_formatting
 
-outputs = modeling_data_import(12)
+outputs = modeling_data_import(current_week_override=12, current_year_override=None, use_kford_override=False)
 team_data = outputs["team_data"]
 opponent_adjustment_schedule = outputs["opponent_adjustment_schedule"]
 updated_metrics = outputs["updated_metrics"]
@@ -86,7 +86,7 @@ core_metrics = [
     'Defense_passing_adj'
 ]
 
-team_data, opt_weights, diagnostics = in_house_power_ratings(team_data, opponent_adjustment_schedule, current_week, core_metrics, target_col='kford_rating', fixed_scale=16, home_field_advantage=3)
+team_data, opt_weights, diagnostics = in_house_power_ratings(team_data, opponent_adjustment_schedule, current_week, core_metrics, target_col='sp_rating', fixed_scale=16, home_field_advantage=3)
 
 model_features = [
     'Offense_ppa_adj',
@@ -104,8 +104,9 @@ model_features = [
     'in_house'
 ]
 
-team_data, diag, sys = build_power_ratings_multi_target(team_data, opponent_adjustment_schedule, model_features, ['kford_rating', 'sp_rating'], 0.4)
+team_data, diag, sys = build_power_ratings_multi_target(team_data, opponent_adjustment_schedule, model_features, ['sp_rating', 'fpi'], 0.4)
 print(sys.print_diagnostics())
+print("Postseason:", postseason)
 
 team_data, team_power_rankings = stats_formatting(team_data, current_week, current_year)
 team_data, year_long_schedule, SOS, SOR, RTP, most_deserving, composite = metric_creation(team_data, records, current_week, current_year, postseason)
@@ -1171,14 +1172,12 @@ except Exception as e:
     print(f"Error occurred while drawing Conference Projections: {e}")
 
 start_week = 1
-end_week = 17
+end_week = 20
 games_list = []
 for week in range(start_week,end_week):
     response = games_api.get_games(year=current_year, week=week,classification = 'fbs')
     games_list = [*games_list, *response]
-if postseason:
-    response = games_api.get_games(year=current_year, division = 'fbs', season_type='postseason')
-    games_list = [*games_list, *response]
+
 games = [dict(
             id=g.id,
             season=g.season,
@@ -1259,13 +1258,10 @@ try:
         else f"{row['home_team']} {-abs(row['pr_spread'])}", axis=1)
     uncompleted_conference_games = uncompleted_games[uncompleted_games['conference_game'] == True].reset_index(drop=True)
     start_week = 1
-    end_week = 17
+    end_week = 20
     games_list = []
     for week in range(start_week,end_week):
         response = games_api.get_games(year=current_year, week=week,classification = 'fbs')
-        games_list = [*games_list, *response]
-    if postseason:
-        response = games_api.get_games(year=current_year, division = 'fbs', season_type='postseason')
         games_list = [*games_list, *response]
     games = [dict(
                 id=g.id,
