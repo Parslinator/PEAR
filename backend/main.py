@@ -819,8 +819,8 @@ def get_profile_page(team_name: str):
             ascending = not higher_is_better
             ranks = df[column].rank(ascending=ascending, method="first").astype(int)
 
-            value = df.loc[df['Team'] == team, column].values[0]
-            rank = ranks.loc[df['Team'] == team].values[0]
+            value = df.loc[df['team'] == team, column].values[0]
+            rank = ranks.loc[df['team'] == team].values[0]
 
             return value, rank
         
