@@ -199,7 +199,8 @@ export default function StatsTable({ data, year, week }: Props) {
 
   return (
     <div>
-      <div className="mb-4 flex gap-4">
+      {/* Search and Export - Stacked on mobile, side by side on desktop */}
+      <div className="mb-4 flex flex-col sm:flex-row gap-3">
         <input
           type="text"
           placeholder="Search teams..."
@@ -209,10 +210,10 @@ export default function StatsTable({ data, year, week }: Props) {
         />
         <button
           onClick={downloadCSV}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 font-semibold transition-colors"
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 font-semibold transition-colors whitespace-nowrap"
         >
           <Download className="w-4 h-4" />
-          Export CSV
+          <span>Export CSV</span>
         </button>
       </div>
 

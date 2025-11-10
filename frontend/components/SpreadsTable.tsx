@@ -251,8 +251,9 @@ export default function SpreadsBoxes({ data, year, week }: Props) {
         </div>
       ) : null}
 
-      <div className="mb-4 flex justify-between items-center">
-        <div className="flex gap-2">
+      {/* Sort Buttons and Export - Stacked on mobile, side by side on desktop */}
+      <div className="mb-4 flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center">
+        <div className="flex gap-2 flex-wrap justify-center sm:justify-start">
           <button
             onClick={() => setSortMode('date')}
             className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
@@ -286,10 +287,10 @@ export default function SpreadsBoxes({ data, year, week }: Props) {
         </div>
         <button
           onClick={downloadCSV}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 font-semibold transition-colors"
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 font-semibold transition-colors whitespace-nowrap"
         >
           <Download className="w-4 h-4" />
-          Export CSV
+          <span>Export CSV</span>
         </button>
       </div>
 

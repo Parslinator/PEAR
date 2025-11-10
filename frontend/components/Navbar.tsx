@@ -65,7 +65,7 @@ export default function Navbar() {
   const footballNavItems = [
     { name: 'Ratings', path: '/' },
     { name: 'Stats', path: '/stats' },
-    { name: 'Games', path: '/spreads' },
+    { name: 'Games', path: '/games' },
     { name: 'Matchups', path: '/matchups' },
     { name: 'Previews', path: '/previews' },
     { name: 'Teams', path: '/teams' },
