@@ -71,24 +71,16 @@ BASE_PATH = os.path.join(os.path.dirname(BACKEND_DIR), "PEAR", "PEAR Football")
 # print(f"Base path for data: {BASE_PATH}")
 # print(f"Base path exists: {os.path.exists(BASE_PATH)}")
 
-# Calculate current week
-central = pytz.timezone("US/Central")
-now_ct = datetime.now(central)
-start_dt = central.localize(datetime(2025, 9, 2, 9, 0, 0))
-
-if now_ct < start_dt:
-    CURRENT_WEEK = 1
-else:
-    CURRENT_WEEK = 2
-    first_sunday = start_dt + pd.Timedelta(days=(6 - start_dt.weekday()))
-    first_sunday = first_sunday.replace(hour=12, minute=0, second=0, microsecond=0)
-    if first_sunday <= start_dt:
-        first_sunday += pd.Timedelta(weeks=1)
-    if now_ct >= first_sunday:
-        weeks_since = ((now_ct - first_sunday).days // 7) + 1
-        CURRENT_WEEK += weeks_since
-
 CURRENT_YEAR = 2025
+CURRENT_WEEK = 1
+
+# Check for the latest available week folder
+# Start from week 20 and work backwards to find the highest week number that exists
+for week in range(20, 0, -1):
+    folder_path = os.path.join(BASE_PATH, f"y{CURRENT_YEAR}", f"week_{week}")
+    if os.path.exists(folder_path):
+        CURRENT_WEEK = week
+        break
 
 # Calculate current date for baseball
 cst = pytz.timezone('America/Chicago')

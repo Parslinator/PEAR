@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronUp, ChevronDown, Download, X } from 'lucide-react';
+import { ChevronUp, ChevronDown, Download } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -26,7 +26,6 @@ export default function RatingsTable({ data, year, week }: Props) {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [filter, setFilter] = useState('');
   const [conferenceFilter, setConferenceFilter] = useState('All');
-  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
 
   // Get unique conferences from data
   const conferences = useMemo(() => {
@@ -171,29 +170,26 @@ export default function RatingsTable({ data, year, week }: Props) {
   };
 
   const handleTeamClick = (teamName: string) => {
-    setSelectedTeam(teamName);
-  };
-
-  const closeModal = () => {
-    setSelectedTeam(null);
+    window.location.href = `/team-profile?team=${encodeURIComponent(teamName)}`;
   };
 
   return (
     <div>
-      <div className="mb-4 flex gap-4">
+      {/* Search and Export - Stacked on mobile, side by side on desktop */}
+      <div className="mb-4 flex flex-col sm:flex-row gap-3">
         <input
           type="text"
           placeholder="Search teams or conferences..."
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+          className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button
           onClick={downloadCSV}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 font-semibold transition-colors"
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors whitespace-nowrap"
         >
           <Download className="w-4 h-4" />
-          Export CSV
+          <span>Export CSV</span>
         </button>
       </div>
 
@@ -214,168 +210,139 @@ export default function RatingsTable({ data, year, week }: Props) {
         ))}
       </div>
 
-      <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10">
-            <tr>
-              <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200">Rank</th>
-              <th
-                className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                onClick={() => handleSort('Team')}
-              >
-                Team <SortIcon field="Team" />
-              </th>
-              <th
-                className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                onClick={() => handleSort('Rating')}
-              >
-                Rating <SortIcon field="Rating" />
-              </th>
-              <th
-                className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                onClick={() => handleSort('offensive_rating')}
-              >
-                OFF <SortIcon field="offensive_rating" />
-              </th>
-              <th
-                className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                onClick={() => handleSort('defensive_rating')}
-              >
-                DEF <SortIcon field="defensive_rating" />
-              </th>
-              <th
-                className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                onClick={() => handleSort('MD')}
-              >
-                MD <SortIcon field="MD" />
-              </th>
-              <th
-                className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                onClick={() => handleSort('SOS')}
-              >
-                SOS <SortIcon field="SOS" />
-              </th>
-              <th
-                className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600"
-                onClick={() => handleSort('CONF')}
-              >
-                CONF <SortIcon field="CONF" />
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {filteredData.map((item, index) => {
-              // Higher is better: Rating, OFF, MD
-              const ratingBg = getRatingColor(item.Rating, data.map(d => d.Rating), true);
-              const offBg = getRatingColor(item.offensive_rating, data.map(d => d.offensive_rating), true);
-              const mdBg = getRatingColor(item.MD, data.map(d => d.MD), true);
-              
-              // Lower is better: DEF, SOS
-              const defBg = getRatingColor(item.defensive_rating, data.map(d => d.defensive_rating), false);
-              const sosBg = getRatingColor(item.SOS, data.map(d => d.SOS), false);
+      {/* Table Container with improved mobile scrolling */}
+      <div className="overflow-x-auto max-h-[500px] overflow-y-auto -mx-4 sm:mx-0">
+        <div className="inline-block min-w-full align-middle px-4 sm:px-0">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0 z-10">
+              <tr>
+                <th className="px-2 sm:px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap">Rank</th>
+                <th
+                  className="px-2 sm:px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
+                  onClick={() => handleSort('Team')}
+                >
+                  Team <SortIcon field="Team" />
+                </th>
+                <th
+                  className="px-2 sm:px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
+                  onClick={() => handleSort('Rating')}
+                >
+                  Rating <SortIcon field="Rating" />
+                </th>
+                <th
+                  className="px-2 sm:px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
+                  onClick={() => handleSort('offensive_rating')}
+                >
+                  OFF <SortIcon field="offensive_rating" />
+                </th>
+                <th
+                  className="px-2 sm:px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
+                  onClick={() => handleSort('defensive_rating')}
+                >
+                  DEF <SortIcon field="defensive_rating" />
+                </th>
+                <th
+                  className="px-2 sm:px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
+                  onClick={() => handleSort('MD')}
+                >
+                  MD <SortIcon field="MD" />
+                </th>
+                <th
+                  className="px-2 sm:px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
+                  onClick={() => handleSort('SOS')}
+                >
+                  SOS <SortIcon field="SOS" />
+                </th>
+                <th
+                  className="px-2 sm:px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
+                  onClick={() => handleSort('CONF')}
+                >
+                  CONF <SortIcon field="CONF" />
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              {filteredData.map((item, index) => {
+                // Higher is better: Rating, OFF, MD
+                const ratingBg = getRatingColor(item.Rating, data.map(d => d.Rating), true);
+                const offBg = getRatingColor(item.offensive_rating, data.map(d => d.offensive_rating), true);
+                const mdBg = getRatingColor(item.MD, data.map(d => d.MD), true);
+                
+                // Lower is better: DEF, SOS
+                const defBg = getRatingColor(item.defensive_rating, data.map(d => d.defensive_rating), false);
+                const sosBg = getRatingColor(item.SOS, data.map(d => d.SOS), false);
 
-              // Get national ranks for Rating, OFF, DEF, MD, and SOS
-              const ratingRank = getNationalRank(item.Rating, 'Rating', true);
-              const offRank = getNationalRank(item.offensive_rating, 'offensive_rating', true);
-              const defRank = getNationalRank(item.defensive_rating, 'defensive_rating', false);
-              const mdRank = getNationalRank(item.MD, 'MD', true);
-              const sosRank = getNationalRank(item.SOS, 'SOS', false);
+                // Get national ranks for Rating, OFF, DEF, MD, and SOS
+                const ratingRank = getNationalRank(item.Rating, 'Rating', true);
+                const offRank = getNationalRank(item.offensive_rating, 'offensive_rating', true);
+                const defRank = getNationalRank(item.defensive_rating, 'defensive_rating', false);
+                const mdRank = getNationalRank(item.MD, 'MD', true);
+                const sosRank = getNationalRank(item.SOS, 'SOS', false);
 
-              return (
-                <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium">{index + 1}</td>
-                  <td className="px-4 py-3 font-semibold text-gray-900 dark:text-white">
-                    <div className="flex items-center gap-2 cursor-pointer hover:opacity-75 transition-opacity" onClick={() => handleTeamClick(item.Team)}>
-                      <img 
-                        src={`${API_URL}/api/football-logo/${encodeURIComponent(item.Team)}`}
-                        alt={`${item.Team} logo`}
-                        className="w-6 h-6 object-contain"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                      <span>{item.Team}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-2 min-w-[80px] mx-auto">
-                      <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300 text-right w-[35px]">
-                        {item.Rating.toFixed(1)}
-                      </span>
-                      <span className="inline-flex items-center justify-center px-2 py-1 rounded-full text-[10px] font-semibold min-w-[38px]" style={{ backgroundColor: ratingBg, color: getTextColor(ratingBg) }}>{ratingRank}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-2 min-w-[80px] mx-auto">
-                      <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300 text-right w-[35px]">
-                        {item.offensive_rating.toFixed(1)}
-                      </span>
-                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[10px] font-semibold min-w-[38px]" style={{ backgroundColor: offBg, color: getTextColor(offBg) }}>{offRank}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-2 min-w-[80px] mx-auto">
-                      <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300 text-right w-[35px]">
-                        {item.defensive_rating.toFixed(1)}
-                      </span>
-                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[10px] font-semibold min-w-[38px]" style={{ backgroundColor: defBg, color: getTextColor(defBg) }}>{defRank}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-2 min-w-[80px] mx-auto">
-                      <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300 text-right w-[35px]">
-                        {item.MD.toFixed(3)}
-                      </span>
-                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[10px] font-semibold min-w-[38px]" style={{ backgroundColor: mdBg, color: getTextColor(mdBg) }}>{mdRank}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-2 min-w-[80px] mx-auto">
-                      <span className="text-[11px] font-medium text-gray-700 dark:text-gray-300 text-right w-[35px]">
-                        {item.SOS.toFixed(2)}
-                      </span>
-                      <span className="inline-flex items-center justify-center px-2 py-1 rounded text-[10px] font-semibold min-w-[38px]" style={{ backgroundColor: sosBg, color: getTextColor(sosBg) }}>{sosRank}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-center text-xs text-gray-600 dark:text-gray-400">{item.CONF}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Modal for Team Profile */}
-      {selectedTeam && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-          onClick={closeModal}
-        >
-          <div 
-            className="relative max-w-6xl max-h-[90vh] bg-white dark:bg-gray-800 rounded-lg shadow-2xl overflow-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={closeModal}
-              className="absolute top-4 right-4 z-10 bg-white dark:bg-gray-700 rounded-full p-2 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-            >
-              <X className="w-6 h-6 text-gray-700 dark:text-gray-200" />
-            </button>
-            <div className="p-4">
-              <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{selectedTeam} Profile</h2>
-              <img
-                src={`${API_URL}/api/team-profile/${year}/${week}/${encodeURIComponent(selectedTeam)}`}
-                alt={`${selectedTeam} profile`}
-                className="w-full h-auto"
-                onError={(e) => {
-                  e.currentTarget.src = '';
-                  e.currentTarget.alt = 'Profile image not available';
-                }}
-              />
-            </div>
-          </div>
+                return (
+                  <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <td className="px-2 sm:px-4 py-3 text-gray-700 dark:text-gray-300 font-medium whitespace-nowrap">{index + 1}</td>
+                    <td className="px-2 sm:px-4 py-3 font-semibold text-gray-900 dark:text-white">
+                      <div className="flex items-center gap-2 cursor-pointer hover:opacity-75 transition-opacity whitespace-nowrap" onClick={() => handleTeamClick(item.Team)}>
+                        <img 
+                          src={`${API_URL}/api/football-logo/${encodeURIComponent(item.Team)}`}
+                          alt={`${item.Team} logo`}
+                          className="w-5 h-5 sm:w-6 sm:h-6 object-contain flex-shrink-0"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                        <span className="text-xs sm:text-sm">{item.Team}</span>
+                      </div>
+                    </td>
+                    <td className="px-2 sm:px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1 sm:gap-2 min-w-[70px] sm:min-w-[80px] mx-auto">
+                        <span className="text-[10px] sm:text-[11px] font-medium text-gray-700 dark:text-gray-300 text-right w-[30px] sm:w-[35px]">
+                          {item.Rating.toFixed(1)}
+                        </span>
+                        <span className="inline-flex items-center justify-center px-1.5 sm:px-2 py-1 rounded-full text-[9px] sm:text-[10px] font-semibold min-w-[32px] sm:min-w-[38px]" style={{ backgroundColor: ratingBg, color: getTextColor(ratingBg) }}>{ratingRank}</span>
+                      </div>
+                    </td>
+                    <td className="px-2 sm:px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1 sm:gap-2 min-w-[70px] sm:min-w-[80px] mx-auto">
+                        <span className="text-[10px] sm:text-[11px] font-medium text-gray-700 dark:text-gray-300 text-right w-[30px] sm:w-[35px]">
+                          {item.offensive_rating.toFixed(1)}
+                        </span>
+                        <span className="inline-flex items-center justify-center px-1.5 sm:px-2 py-1 rounded text-[9px] sm:text-[10px] font-semibold min-w-[32px] sm:min-w-[38px]" style={{ backgroundColor: offBg, color: getTextColor(offBg) }}>{offRank}</span>
+                      </div>
+                    </td>
+                    <td className="px-2 sm:px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1 sm:gap-2 min-w-[70px] sm:min-w-[80px] mx-auto">
+                        <span className="text-[10px] sm:text-[11px] font-medium text-gray-700 dark:text-gray-300 text-right w-[30px] sm:w-[35px]">
+                          {item.defensive_rating.toFixed(1)}
+                        </span>
+                        <span className="inline-flex items-center justify-center px-1.5 sm:px-2 py-1 rounded text-[9px] sm:text-[10px] font-semibold min-w-[32px] sm:min-w-[38px]" style={{ backgroundColor: defBg, color: getTextColor(defBg) }}>{defRank}</span>
+                      </div>
+                    </td>
+                    <td className="px-2 sm:px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1 sm:gap-2 min-w-[70px] sm:min-w-[80px] mx-auto">
+                        <span className="text-[10px] sm:text-[11px] font-medium text-gray-700 dark:text-gray-300 text-right w-[30px] sm:w-[35px]">
+                          {item.MD.toFixed(3)}
+                        </span>
+                        <span className="inline-flex items-center justify-center px-1.5 sm:px-2 py-1 rounded text-[9px] sm:text-[10px] font-semibold min-w-[32px] sm:min-w-[38px]" style={{ backgroundColor: mdBg, color: getTextColor(mdBg) }}>{mdRank}</span>
+                      </div>
+                    </td>
+                    <td className="px-2 sm:px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-1 sm:gap-2 min-w-[70px] sm:min-w-[80px] mx-auto">
+                        <span className="text-[10px] sm:text-[11px] font-medium text-gray-700 dark:text-gray-300 text-right w-[30px] sm:w-[35px]">
+                          {item.SOS.toFixed(2)}
+                        </span>
+                        <span className="inline-flex items-center justify-center px-1.5 sm:px-2 py-1 rounded text-[9px] sm:text-[10px] font-semibold min-w-[32px] sm:min-w-[38px]" style={{ backgroundColor: sosBg, color: getTextColor(sosBg) }}>{sosRank}</span>
+                      </div>
+                    </td>
+                    <td className="px-2 sm:px-4 py-3 text-center text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">{item.CONF}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
     </div>
   );
 }
