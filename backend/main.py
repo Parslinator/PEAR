@@ -874,7 +874,7 @@ def get_profile_page(team_name: str):
         sp_rating, sp_rank = get_value_and_rank(all_data, team_name, 'sp_rating')
         fpi_rating, fpi_rank = get_value_and_rank(all_data, team_name, 'fpi')
         most_deserving_wins, mdw_rank = get_value_and_rank(all_data, team_name, 'most_deserving_wins')
-        sos, sos_rank = get_value_and_rank(all_data, team_name, 'SOS', False)
+        sos, sos_rank = get_value_and_rank(all_data, team_name, 'avg_expected_wins', False)
         off_sr, off_sr_rank = get_value_and_rank(all_data, team_name, 'Offense_successRate_adj')
         def_sr, def_sr_rank = get_value_and_rank(all_data, team_name, 'Defense_successRate_adj', False)
         off_ppa, off_ppa_rank = get_value_and_rank(all_data, team_name, 'Offense_ppa_adj')
