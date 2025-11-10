@@ -549,7 +549,7 @@ function TeamProfileContent() {
               <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">Team Metrics</h2>
               </div>
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="max-h-[800px] overflow-y-auto p-4">
                 {profileData?.stats && (
                   <div className="space-y-6">
                     {/* Primary Ratings */}
@@ -557,14 +557,14 @@ function TeamProfileContent() {
                       <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wide">Primary Ratings</h3>
                       <div className="grid grid-cols-1 gap-2">
                         {[
-                          { key: 'power_rating', label: 'Power Rating', stat: profileData.stats.power_rating },
-                          { key: 'offensive_rating', label: 'Offensive Rating', stat: profileData.stats.offensive_rating },
-                          { key: 'defensive_rating', label: 'Defensive Rating', stat: profileData.stats.defensive_rating },
-                          { key: 'most_deserving_wins', label: 'Most Deserving Wins', stat: profileData.stats.most_deserving_wins },
-                          { key: 'sos', label: 'Strength of Schedule', stat: profileData.stats.sos },
-                          { key: 'kford_rating', label: 'Kford Rating', stat: profileData.stats.kford_rating },
+                          { key: 'power_rating', label: 'PEAR', stat: profileData.stats.power_rating },
+                          { key: 'kford_rating', label: 'KFord', stat: profileData.stats.kford_rating },
                           { key: 'sp_rating', label: 'SP+ Rating', stat: profileData.stats.sp_rating },
-                          { key: 'fpi', label: 'FPI', stat: profileData.stats.fpi }
+                          { key: 'fpi', label: 'FPI', stat: profileData.stats.fpi },
+                          { key: 'offensive_rating', label: 'OFF', stat: profileData.stats.offensive_rating },
+                          { key: 'defensive_rating', label: 'DEF', stat: profileData.stats.defensive_rating },
+                          { key: 'most_deserving_wins', label: 'MD', stat: profileData.stats.most_deserving_wins },
+                          { key: 'sos', label: 'SOS', stat: profileData.stats.sos }
                         ].map(({ key, label, stat }) => {
                           const rankBg = getRankColor(stat.rank);
                           const textColor = getTextColor(rankBg);
