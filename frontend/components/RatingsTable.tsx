@@ -186,7 +186,7 @@ export default function RatingsTable({ data, year, week }: Props) {
         />
         <button
           onClick={downloadCSV}
-          className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors whitespace-nowrap"
+          className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors whitespace-nowrap"
         >
           <Download className="w-4 h-4" />
           <span>Export CSV</span>

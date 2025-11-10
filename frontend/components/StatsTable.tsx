@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronUp, ChevronDown, Download, X } from 'lucide-react';
+import { ChevronUp, ChevronDown, Download } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -38,7 +38,6 @@ export default function StatsTable({ data, year, week }: Props) {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [filter, setFilter] = useState('');
   const [conferenceFilter, setConferenceFilter] = useState('All');
-  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
 
   const conferences = useMemo(() => {
     const uniqueConfs = Array.from(
@@ -195,11 +194,7 @@ export default function StatsTable({ data, year, week }: Props) {
   };
 
   const handleTeamClick = (teamName: string) => {
-    setSelectedTeam(teamName);
-  };
-
-  const closeModal = () => {
-    setSelectedTeam(null);
+    window.location.href = `/team-profile?team=${encodeURIComponent(teamName)}`;
   };
 
   return (
@@ -467,37 +462,6 @@ export default function StatsTable({ data, year, week }: Props) {
           </tbody>
         </table>
       </div>
-
-      {selectedTeam && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
-          onClick={closeModal}
-        >
-          <div 
-            className="relative max-w-6xl max-h-[90vh] bg-white dark:bg-gray-800 rounded-lg shadow-2xl overflow-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={closeModal}
-              className="absolute top-4 right-4 z-10 bg-white dark:bg-gray-700 rounded-full p-2 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-            >
-              <X className="w-6 h-6 text-gray-700 dark:text-gray-200" />
-            </button>
-            <div className="p-4">
-              <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{selectedTeam} Profile</h2>
-              <img
-                src={`${API_URL}/api/team-profile/${year}/${week}/${encodeURIComponent(selectedTeam)}`}
-                alt={`${selectedTeam} profile`}
-                className="w-full h-auto"
-                onError={(e) => {
-                  e.currentTarget.src = '';
-                  e.currentTarget.alt = 'Profile image not available';
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
