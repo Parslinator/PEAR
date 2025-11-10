@@ -71,8 +71,11 @@ BASE_PATH = os.path.join(os.path.dirname(BACKEND_DIR), "PEAR", "PEAR Football")
 # print(f"Base path for data: {BASE_PATH}")
 # print(f"Base path exists: {os.path.exists(BASE_PATH)}")
 
+# Calculate current week
+central = pytz.timezone("US/Central")
+now_ct = datetime.now(central)
+start_dt = central.localize(datetime(2025, 9, 2, 9, 0, 0))
 CURRENT_YEAR = 2025
-CURRENT_WEEK = 1
 
 # Check for the latest available week folder
 # Start from week 20 and work backwards to find the highest week number that exists
