@@ -559,7 +559,7 @@ function TeamProfileContent() {
                         {[
                           { key: 'power_rating', label: 'PEAR', stat: profileData.stats.power_rating },
                           { key: 'kford_rating', label: 'KFord', stat: profileData.stats.kford_rating },
-                          { key: 'sp_rating', label: 'SP+ Rating', stat: profileData.stats.sp_rating },
+                          { key: 'sp_rating', label: 'SP+', stat: profileData.stats.sp_rating },
                           { key: 'fpi', label: 'FPI', stat: profileData.stats.fpi },
                           { key: 'offensive_rating', label: 'OFF', stat: profileData.stats.offensive_rating },
                           { key: 'defensive_rating', label: 'DEF', stat: profileData.stats.defensive_rating },
