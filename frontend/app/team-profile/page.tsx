@@ -625,7 +625,7 @@ function TeamProfileContent() {
               <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white">Team Metrics</h2>
               </div>
-              <div className="max-h-[640px] overflow-y-auto p-4">
+              <div className="max-h-[700px] overflow-y-auto p-4">
                 {profileData?.stats && (
                   <div className="space-y-6">
                     {/* Primary Ratings */}
@@ -727,7 +727,7 @@ function TeamProfileContent() {
                     const upcomingGames = profileData.schedule.filter(game => !game.is_completed);
 
                     return (
-                      <div className="max-h-[640px] overflow-y-auto">
+                      <div className="max-h-[700px] overflow-y-auto">
                         {/* Upcoming Games */}
                         {upcomingGames.length > 0 && (
                           <div>
