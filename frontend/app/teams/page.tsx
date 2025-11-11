@@ -6,26 +6,81 @@ import { Search, Shuffle } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
+interface TeamData {
+  team: string;
+  conference: string;
+}
+
 export default function FootballTeamsPage() {
   const router = useRouter();
-  const [teams, setTeams] = useState<string[]>([]);
+  const [teams, setTeams] = useState<TeamData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [conferenceFilter, setConferenceFilter] = useState('All');
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
+  const [currentWeek, setCurrentWeek] = useState<number | null>(null);
+
+  // Get unique conferences from teams
+  const conferences = ['All', ...Array.from(new Set(teams.map(t => t.conference))).sort()];
+
+  // Map conference names to shorthand
+  const getConferenceShorthand = (conf: string): string => {
+    const shorthandMap: { [key: string]: string } = {
+      'American Athletic': 'AAC',
+      'Conference USA': 'CUSA',
+      'FBS Independents': 'IND',
+      'Mid-American': 'MAC',
+      'Mountain West': 'MW',
+      'Atlantic Coast': 'ACC',
+      'Big 12': 'Big 12',
+      'Big Ten': 'Big Ten',
+      'Pac-12': 'Pac-12',
+      'Southeastern': 'SEC',
+      'Sun Belt': 'Sun Belt',
+    };
+    return shorthandMap[conf] || conf;
+  };
 
   useEffect(() => {
-    fetchTeams();
+    fetchCurrentSeason();
   }, []);
 
-  const fetchTeams = async () => {
+  useEffect(() => {
+    if (currentYear && currentWeek) {
+      fetchTeams();
+    }
+  }, [currentYear, currentWeek]);
+
+  const fetchCurrentSeason = async () => {
     try {
-      setLoading(true);
-      const response = await fetch(`${API_URL}/api/teams`);
+      const response = await fetch(`${API_URL}/api/current-season`);
       if (response.ok) {
         const data = await response.json();
-        const sortedTeams = (data.teams || []).sort((a: string, b: string) => 
-          a.localeCompare(b)
-        );
-        setTeams(sortedTeams);
+        setCurrentYear(data.year);
+        setCurrentWeek(data.week);
+      }
+    } catch (err) {
+      console.error('Error fetching current season:', err);
+      // Fallback to defaults if API fails
+      setCurrentYear(2024);
+      setCurrentWeek(15);
+    }
+  };
+
+  const fetchTeams = async () => {
+    if (!currentYear || !currentWeek) return;
+    
+    try {
+      setLoading(true);
+      // Fetch from ratings endpoint to get conference data
+      const response = await fetch(`${API_URL}/api/ratings/${currentYear}/${currentWeek}`);
+      if (response.ok) {
+        const data = await response.json();
+        const teamData: TeamData[] = (data.ratings || []).map((item: any) => ({
+          team: item.Team,
+          conference: item.CONF
+        })).sort((a: TeamData, b: TeamData) => a.team.localeCompare(b.team));
+        setTeams(teamData);
       }
     } catch (err) {
       console.error('Error fetching teams:', err);
@@ -45,9 +100,12 @@ export default function FootballTeamsPage() {
     router.push(`/team-profile?team=${encodeURIComponent(randomTeam)}`);
   };
 
-  const filteredTeams = teams.filter(team =>
-    team.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTeams = teams.filter(teamData => {
+    const matchesSearch = teamData.team.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      teamData.conference.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesConference = conferenceFilter === 'All' || teamData.conference === conferenceFilter;
+    return matchesSearch && matchesConference;
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 pt-20">
@@ -87,6 +145,23 @@ export default function FootballTeamsPage() {
           </button>
         </div>
 
+        {/* Conference Filter Buttons */}
+        <div className="mb-6 flex flex-wrap gap-2 justify-center">
+          {conferences.map(conf => (
+            <button
+              key={conf}
+              onClick={() => setConferenceFilter(conf)}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                conferenceFilter === conf
+                  ? 'bg-blue-600 dark:bg-blue-500 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              {conf === 'All' ? 'All' : getConferenceShorthand(conf)}
+            </button>
+          ))}
+        </div>
+
         {/* Teams Grid */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
@@ -103,18 +178,18 @@ export default function FootballTeamsPage() {
                   Showing {filteredTeams.length} {filteredTeams.length === 1 ? 'team' : 'teams'}
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredTeams.map((team) => (
+                  {filteredTeams.map((teamData) => (
                     <div
-                      key={team}
-                      onClick={() => handleTeamClick(team)}
+                      key={teamData.team}
+                      onClick={() => handleTeamClick(teamData.team)}
                       className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-all duration-200 cursor-pointer border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 group"
                     >
                       <div className="p-6 flex items-center gap-4">
                         {/* Team Logo */}
                         <div className="flex-shrink-0">
                           <img
-                            src={`${API_URL}/api/football-logo/${encodeURIComponent(team)}`}
-                            alt={`${team} logo`}
+                            src={`${API_URL}/api/football-logo/${encodeURIComponent(teamData.team)}`}
+                            alt={`${teamData.team} logo`}
                             className="w-16 h-16 object-contain group-hover:scale-110 transition-transform duration-200"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
@@ -122,11 +197,14 @@ export default function FootballTeamsPage() {
                           />
                         </div>
 
-                        {/* Team Name */}
+                        {/* Team Name and Conference */}
                         <div className="flex-1 min-w-0">
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
-                            {team}
+                            {teamData.team}
                           </h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {getConferenceShorthand(teamData.conference)}
+                          </p>
                         </div>
 
                         {/* Arrow indicator */}
