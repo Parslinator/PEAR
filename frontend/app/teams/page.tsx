@@ -45,27 +45,37 @@ export default function FootballTeamsPage() {
     try {
       setLoading(true);
       
-      // Fetch team-conference mapping
-      const teamResponse = await fetch(`${API_URL}/api/team-conferences`);
-      if (teamResponse.ok) {
-        const teamData = await teamResponse.json();
-        const teamConferences = teamData.team_conferences;
-        
-        // Convert to array format
-        const teamsArray: TeamData[] = Object.entries(teamConferences).map(([team, conference]) => ({
-          team,
-          conference: conference as string
-        })).sort((a, b) => a.team.localeCompare(b.team));
-        
-        setTeams(teamsArray);
+      // Fetch list of all teams
+      const teamsResponse = await fetch(`${API_URL}/api/teams`);
+      if (!teamsResponse.ok) {
+        throw new Error('Failed to fetch teams');
       }
-
+      const teamsData = await teamsResponse.json();
+      const teamsList = teamsData.teams;
+      
+      // Fetch team-conference mapping
+      const confMapResponse = await fetch(`${API_URL}/api/team-conferences`);
+      if (!confMapResponse.ok) {
+        throw new Error('Failed to fetch conference mapping');
+      }
+      const confMapData = await confMapResponse.json();
+      const teamConferences = confMapData.team_conferences;
+      
       // Fetch conferences list
       const confResponse = await fetch(`${API_URL}/api/conferences`);
-      if (confResponse.ok) {
-        const confData = await confResponse.json();
-        setConferences(['All', ...confData.conferences]);
+      if (!confResponse.ok) {
+        throw new Error('Failed to fetch conferences');
       }
+      const confData = await confResponse.json();
+      setConferences(['All', ...confData.conferences]);
+      
+      // Map teams to their conferences
+      const teamsArray: TeamData[] = teamsList.map((team: string) => ({
+        team,
+        conference: teamConferences[team] || 'Unknown'
+      }));
+      
+      setTeams(teamsArray);
     } catch (err) {
       console.error('Error fetching teams and conferences:', err);
     } finally {
