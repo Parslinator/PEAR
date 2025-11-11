@@ -699,10 +699,15 @@ def analyze_vegas_predictions(current_week, current_year, postseason=False, post
             continue
         
         # Priority order for providers
+        consensus_lines = pd.DataFrame()
         for provider in ['consensus', 'Bovada', 'DraftKings', 'ESPN Bet']:
-            consensus_lines = lines[lines['provider'] == provider]
-            if not consensus_lines.empty:
-                break
+            provider_lines = lines[lines['provider'] == provider]
+            if not provider_lines.empty:
+                # Check if spread exists and is not null/empty
+                spread_value = provider_lines['spread'].iloc[0]
+                if pd.notna(spread_value) and spread_value != '':
+                    consensus_lines = provider_lines
+                    break
         
         if not consensus_lines.empty:
             consensus_lines = consensus_lines[['spread', 'formattedSpread', 'spreadOpen', 'overUnder']]

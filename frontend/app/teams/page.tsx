@@ -17,11 +17,7 @@ export default function FootballTeamsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [conferenceFilter, setConferenceFilter] = useState('All');
-  const [currentYear, setCurrentYear] = useState<number | null>(null);
-  const [currentWeek, setCurrentWeek] = useState<number | null>(null);
-
-  // Get unique conferences from teams
-  const conferences = ['All', ...Array.from(new Set(teams.map(t => t.conference))).sort()];
+  const [conferences, setConferences] = useState<string[]>(['All']);
 
   // Map conference names to shorthand
   const getConferenceShorthand = (conf: string): string => {
@@ -42,48 +38,36 @@ export default function FootballTeamsPage() {
   };
 
   useEffect(() => {
-    fetchCurrentSeason();
+    fetchTeamsAndConferences();
   }, []);
 
-  useEffect(() => {
-    if (currentYear && currentWeek) {
-      fetchTeams();
-    }
-  }, [currentYear, currentWeek]);
-
-  const fetchCurrentSeason = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/current-season`);
-      if (response.ok) {
-        const data = await response.json();
-        setCurrentYear(data.year);
-        setCurrentWeek(data.week);
-      }
-    } catch (err) {
-      console.error('Error fetching current season:', err);
-      // Fallback to defaults if API fails
-      setCurrentYear(2024);
-      setCurrentWeek(15);
-    }
-  };
-
-  const fetchTeams = async () => {
-    if (!currentYear || !currentWeek) return;
-    
+  const fetchTeamsAndConferences = async () => {
     try {
       setLoading(true);
-      // Fetch from ratings endpoint to get conference data
-      const response = await fetch(`${API_URL}/api/ratings/${currentYear}/${currentWeek}`);
-      if (response.ok) {
-        const data = await response.json();
-        const teamData: TeamData[] = (data.ratings || []).map((item: any) => ({
-          team: item.Team,
-          conference: item.CONF
-        })).sort((a: TeamData, b: TeamData) => a.team.localeCompare(b.team));
-        setTeams(teamData);
+      
+      // Fetch team-conference mapping
+      const teamResponse = await fetch(`${API_URL}/api/team-conferences`);
+      if (teamResponse.ok) {
+        const teamData = await teamResponse.json();
+        const teamConferences = teamData.team_conferences;
+        
+        // Convert to array format
+        const teamsArray: TeamData[] = Object.entries(teamConferences).map(([team, conference]) => ({
+          team,
+          conference: conference as string
+        })).sort((a, b) => a.team.localeCompare(b.team));
+        
+        setTeams(teamsArray);
+      }
+
+      // Fetch conferences list
+      const confResponse = await fetch(`${API_URL}/api/conferences`);
+      if (confResponse.ok) {
+        const confData = await confResponse.json();
+        setConferences(['All', ...confData.conferences]);
       }
     } catch (err) {
-      console.error('Error fetching teams:', err);
+      console.error('Error fetching teams and conferences:', err);
     } finally {
       setLoading(false);
     }
@@ -231,14 +215,16 @@ export default function FootballTeamsPage() {
             ) : (
               <div className="text-center py-20">
                 <p className="text-xl text-gray-600 dark:text-gray-400">
-                  No teams found matching "{searchQuery}"
+                  {searchQuery ? `No teams found matching "${searchQuery}"` : 'No teams found'}
                 </p>
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Clear Search
-                </button>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Clear Search
+                  </button>
+                )}
               </div>
             )}
           </>

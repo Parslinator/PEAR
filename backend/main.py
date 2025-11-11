@@ -626,6 +626,37 @@ def get_ratings(year: int, week: int):
     
     return {"data": result, "year": year, "week": week}
 
+@app.get("/api/team-conferences")
+def get_football_team_conferences():
+    """Get mapping of teams to their conferences"""
+    try:
+        ratings, all_data = load_data()
+        
+        # Create a dictionary mapping team names to conferences
+        team_conference_map = {}
+        for _, row in all_data[['team', 'conference']].drop_duplicates().iterrows():
+            team_conference_map[row['team']] = row['conference']
+        
+        return {"team_conferences": team_conference_map}
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error in get_team_conferences: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/api/conferences")
+def get_football_conferences():
+    """Get list of all conferences"""
+    try:
+        ratings, all_data = load_data()
+        conferences = sorted(all_data['conference'].unique().tolist())
+        return {"conferences": conferences}
+    
+    except Exception as e:
+        print(f"Error getting conferences: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
 @app.get("/api/team-stats/{year}/{week}")
 def get_team_stats(year: int, week: int):
     """Get detailed team statistics for offense and defense"""
