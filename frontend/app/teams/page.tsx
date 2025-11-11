@@ -97,7 +97,7 @@ export default function FootballTeamsPage() {
     if (teams.length === 0) return;
     const randomIndex = Math.floor(Math.random() * teams.length);
     const randomTeam = teams[randomIndex];
-    router.push(`/team-profile?team=${encodeURIComponent(randomTeam)}`);
+    router.push(`/team-profile?team=${encodeURIComponent(randomTeam.team)}`);
   };
 
   const filteredTeams = teams.filter(teamData => {
