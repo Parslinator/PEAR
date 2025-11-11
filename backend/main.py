@@ -630,7 +630,7 @@ def get_ratings(year: int, week: int):
 def get_football_team_conferences():
     """Get mapping of teams to their conferences"""
     try:
-        ratings, all_data = load_data()
+        ratings, all_data = load_data(CURRENT_YEAR, CURRENT_WEEK)
         
         # Create a dictionary mapping team names to conferences
         team_conference_map = {}
@@ -649,7 +649,7 @@ def get_football_team_conferences():
 def get_football_conferences():
     """Get list of all conferences"""
     try:
-        ratings, all_data = load_data()
+        ratings, all_data = load_data(CURRENT_YEAR, CURRENT_WEEK)
         conferences = sorted(all_data['conference'].unique().tolist())
         return {"conferences": conferences}
     
