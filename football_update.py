@@ -86,7 +86,7 @@ core_metrics = [
     'Defense_passing_adj'
 ]
 
-team_data, opt_weights, diagnostics = in_house_power_ratings(team_data, opponent_adjustment_schedule, current_week, core_metrics, target_col='sp_rating', fixed_scale=16, home_field_advantage=3)
+team_data, opt_weights, diagnostics = in_house_power_ratings(team_data, opponent_adjustment_schedule, current_week, core_metrics, target_col='kford_rating', fixed_scale=16, home_field_advantage=3)
 
 model_features = [
     'Offense_ppa_adj',
@@ -104,7 +104,7 @@ model_features = [
     'in_house'
 ]
 
-team_data, diag, sys = build_power_ratings_multi_target(team_data, opponent_adjustment_schedule, model_features, ['sp_rating', 'fpi'], 0.4)
+team_data, diag, sys = build_power_ratings_multi_target(team_data, opponent_adjustment_schedule, model_features, ['kford_rating', 'sp_rating'], 0.4)
 print(sys.print_diagnostics())
 print("Postseason:", postseason)
 
