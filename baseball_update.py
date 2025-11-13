@@ -2773,6 +2773,7 @@ now = datetime.now(central_time_zone)
 # Check if it's Monday and after 10:00 AM and before 3:00 PM
 if now.hour < 13 and now.hour > 7:
     print("Starting Visuals")
+    from matplotlib.patches import Rectangle
 
     # --- Config & Setup ---
     BASE_URL = "https://www.warrennolan.com"
@@ -2784,6 +2785,41 @@ if now.hour < 13 and now.hour > 7:
     days_since_start = (today - week_1_start).days
     current_week = (days_since_start // 7) + 1
     major_conferences = ['SEC', 'ACC', 'Independent', 'Big 12', 'Big Ten']
+
+    import os
+
+    logo_folder = "./PEAR/PEAR Baseball/logos/"
+    logo_cache = {}
+    for filename in os.listdir(logo_folder):
+        if filename.endswith(".png"):
+            team_name = filename[:-4].replace("_", " ")
+            file_path = os.path.join(logo_folder, filename)
+            try:
+                img = Image.open(file_path).convert("RGBA")
+                logo_cache[team_name] = img
+            except Exception as e:
+                print(f"Error reading {filename}: {e}")
+                logo_cache[team_name] = None
+
+    from concurrent.futures import ThreadPoolExecutor
+
+    logo_folder = "./PEAR/PEAR Baseball/logos/"
+    team_logos = {}
+    def load_image(filename):
+        team_name = filename[:-4].replace("_", " ")
+        file_path = os.path.join(logo_folder, filename)
+        try:
+            img = Image.open(file_path).convert("RGBA")
+            return (team_name, img)
+        except Exception as e:
+            print(f"Error reading {filename}: {e}")
+            return (team_name, None)
+
+    png_files = [f for f in os.listdir(logo_folder) if f.endswith(".png")]
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        results = executor.map(load_image, png_files)
+        team_logos = dict(results)
 
     # --- Build Team Image Cache ---
     def fetch_team_logo(team):
@@ -2810,10 +2846,7 @@ if now.hour < 13 and now.hour > 7:
         | set(todays_games['home_team']) \
         | set(todays_games['away_team'])
 
-    with ThreadPoolExecutor(max_workers=20) as executor:
-        results = list(executor.map(fetch_team_logo, all_top_teams))
-
-    team_images = {team: img for team, img in results if img is not None}
+    team_images = team_logos.copy()
 
     # --- Plotting Function ---
     def plot_top_25(title, subtitle, sorted_df, save_path):
@@ -2931,10 +2964,6 @@ if now.hour < 13 and now.hour > 7:
         data["percentage_away"] = round((data["NET_Score"] - reference_score) / reference_score * 100, 2)
         data = data.sort_values("percentage_away", ascending=False)
 
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            results = executor.map(fetch_team_logo, data["Team"])
-        team_logos = {team: img for team, img in results if img is not None}
-
         colors = ["#2ECC71" if x >= 0 else "#E74C3C" for x in data["percentage_away"]]
         fig, ax = plt.subplots(figsize=(10, 8))
         fig.set_facecolor("#CECEB2")
@@ -3032,78 +3061,347 @@ if now.hour < 13 and now.hour > 7:
     last_team_in = last_four_in.loc[7, "Team"]
     last_team_in_index = all_at_large[all_at_large["Team"] == last_team_in].index[0]
 
-    # Ratings vs Resume Scatter Plot
-    fig, ax = plt.subplots(figsize=(15, 12), dpi=125)
-    fig.patch.set_facecolor('#CECEB2')
-    ax.set_facecolor('#CECEB2')
-    logo_size = 5
-
-    for i, row in all_at_large.iterrows():
-        team = row["Team"]
-        x = row["PRR"]
-        y = row["aRQI"]
-        above = last_team_in_index - i
-        img = team_images.get(team)
-
-        if img:
-            ax.imshow(img, extent=(x - (logo_size - 1.2), x + (logo_size - 1.2), y - logo_size, y + logo_size), aspect='auto')
-
-        if team in last_four_in["Team"].values:
-            ax.add_patch(plt.Circle((x, y), logo_size, color='#2ECC71', alpha=0.3))
-            ax.text(x, y + logo_size, above, fontsize=14, fontweight='bold', ha='center')
-        elif team in next_8["Team"].values:
-            ax.add_patch(plt.Circle((x, y), logo_size, color='#F39C12', alpha=0.3))
-            ax.text(x, y + logo_size, above, fontsize=14, fontweight='bold', ha='center')
-        elif team in bubble_teams["Team"].values:
-            ax.add_patch(plt.Circle((x, y), logo_size, color='#E74C3C', alpha=0.3))
-            ax.text(x, y + logo_size, above, fontsize=14, fontweight='bold', ha='center')
-
-    max_range = max(all_at_large["PRR"].max(), all_at_large["aRQI"].max())
-    height = max_range + 4
-    plt.text(max_range + 24, height + 3, "Automatic Qualifiers", ha='center', fontweight='bold', fontsize=18)
-    for _, row in sorted_aqs.iterrows():
-        plt.text(max_range + 24, height, row["Team"], ha='center', fontsize=16)
-        height -= 3
-
-    ax.set_xlabel("Team Strength Rank", fontsize=16)
-    ax.set_ylabel("Adjusted Resume Rank", fontsize=16)
-    plt.text(0, max_range + 20, "At Large Team Strength vs. Adjusted Resume", fontsize=32, fontweight='bold')
-    plt.text(0, max_range + 16, f"Bubble Teams Highlighted - Through {(today - timedelta(days=1)).strftime('%m/%d')}", fontsize=24)
-    plt.text(0, max_range + 12, "@PEARatings", fontsize=24, fontweight='bold')
-    plt.text(max_range + 8, max_range + 7, "Projected At-Large Bids Only (Based on PEAR NET)", fontsize=16)
-    plt.text(max_range + 8, max_range + 4, "Green - Last 8 In, Orange - First 8 Out, Red - Next 8 Out", fontsize=16)
-    plt.text(max_range + 8, max_range + 1, "Value = Distance from Last Team In", fontsize=16)
-    plt.xlim(-2, max_range + 10)
-    plt.ylim(-2, max_range + 10)
-    plt.grid(False)
-    plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Ratings_vs_Resume/ratings_vs_resume_{formatted_date}.png", bbox_inches='tight')
-    plt.close()
-
     # ---------------------------
     # Bubble Distance Bar Plot
     # ---------------------------
 
-    bubble_df = pd.concat([last_four_in, next_8, bubble_teams]).sort_values("NET").reset_index(drop=True)[["Team", "NET", "NET_Score"]]
-    last_net_score = bubble_df[bubble_df["Team"] == last_team_in]["NET_Score"].values[0]
-    plot_logo_bar(
-        bubble_df,
-        title=f"NET Score Distance From Last Team In - Through {(today - timedelta(days=1)).strftime('%m-%d')}",
-        filename=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Team_In/last_team_in_{formatted_date}.png",
-        reference_score=last_net_score
-    )
+    bubble = pd.concat([last_four_in, next_8, bubble_teams]).sort_values('NET').reset_index(drop=True)[['Team', 'NET', 'NET_Score']]
+    last_net_score = bubble[bubble['Team'] == last_team_in]['NET_Score'].values[0]
+    bubble["percentage_away"] = round((
+        (bubble["NET_Score"] - last_net_score) / last_net_score
+    ) * 100, 2)
+
+    # Sort by percentage_away
+    bubble = bubble.sort_values(by="percentage_away", ascending=False).reset_index(drop=True)
+
+    # Create figure
+    fig, ax = plt.subplots(figsize=(12, len(bubble) * 0.6 + 2), dpi=400)
+    fig.patch.set_facecolor('#CECEB2')
+    ax.set_xlim(-13, 7)
+    ax.set_ylim(-1, len(bubble) + 0.5)
+    ax.axis('off')
+
+    # Column positions
+    logo_x = -12
+    team_x = -10.5
+    net_x = -5.5
+    bar_center = 2.5
+    bar_max_width = 10
+    pct_label_offset = 0.5
+
+    # Header
+    header_y = len(bubble) + 0.2
+    ax.text(team_x, header_y, 'Team', fontsize=13, weight='bold', ha='left')
+    ax.text(net_x, header_y, 'NET', fontsize=13, weight='bold', ha='center')
+    ax.text(bar_center, header_y, '% From Cut Line', fontsize=13, weight='bold', ha='center')
+
+    # Draw header underline
+    ax.plot([-14.5, 14.5], [header_y - 0.15, header_y - 0.15], 'k-', linewidth=2)
+
+    # Calculate max percentage for scaling
+    max_pct = max(abs(bubble['percentage_away'].min()), abs(bubble['percentage_away'].max()))
+
+    # Get min and max NET for gradient
+    min_net = bubble['NET'].min()
+    max_net = bubble['NET'].max()
+
+    # Function to get color for NET ranking box
+    def get_net_box_color(net_rank):
+        # Normalize NET rank to 0-1 range
+        if max_net > min_net:
+            normalized = (net_rank - min_net) / (max_net - min_net)
+        else:
+            normalized = 0.5
+        
+        # Dark Blue #00008B (0, 0, 139) -> Light Gray #D3D3D3 (211, 211, 211) -> Dark Red #8B0000 (139, 0, 0)
+        if normalized < 0.5:
+            # Interpolate between Dark Blue and Light Gray
+            t = normalized * 2  # Scale to 0-1
+            r = int(0 * (1 - t) + 211 * t)
+            g = int(0 * (1 - t) + 211 * t)
+            b = int(139 * (1 - t) + 211 * t)
+        else:
+            # Interpolate between Light Gray and Dark Red
+            t = (normalized - 0.5) * 2  # Scale to 0-1
+            r = int(211 * (1 - t) + 139 * t)
+            g = int(211 * (1 - t) + 0 * t)
+            b = int(211 * (1 - t) + 0 * t)
+        
+        return f'#{r:02x}{g:02x}{b:02x}'
+
+    # Draw each team
+    row_height = 1.0
+    start_y = len(bubble) - 0.5
+
+    for idx, row in bubble.iterrows():
+        y_pos = start_y - idx * row_height
+        team = row['Team']
+        net_rank = row['NET']
+        pct_away = row['percentage_away']
+        
+        # Team logo
+        logo = team_logos.get(team)
+        if logo:
+            imagebox = OffsetImage(logo, zoom=0.055)
+            ab = AnnotationBbox(imagebox, (logo_x, y_pos), frameon=False)
+            ax.add_artist(ab)
+        
+        # Team name
+        ax.text(team_x, y_pos, team, fontsize=14, weight='bold', ha='left', va='center')
+        
+        # NET ranking box with gradient color
+        net_box_width = 1.5
+        net_box_height = 0.6
+        box_color = get_net_box_color(net_rank)
+        
+        rect = Rectangle((net_x - net_box_width/2, y_pos - net_box_height/2), 
+                        net_box_width, net_box_height, 
+                        facecolor=box_color, edgecolor='black', linewidth=0.8, zorder=2)
+        ax.add_patch(rect)
+        
+        # Determine text color based on background brightness
+        # Extract RGB values
+        r = int(box_color[1:3], 16)
+        g = int(box_color[3:5], 16)
+        b_val = int(box_color[5:7], 16)
+        brightness = (r * 299 + g * 587 + b_val * 114) / 1000
+        text_color = 'white' if brightness < 128 else 'black'
+        
+        ax.text(net_x, y_pos, str(int(net_rank)), fontsize=13, weight='bold', 
+            ha='center', va='center', color=text_color, zorder=3)
+        
+        # Percentage bar
+        bar_color = "#00008B" if pct_away >= 0 else "#8B0000"
+        
+        # Scale bar width based on percentage
+        if max_pct > 0:
+            scaled_width = (abs(pct_away) / max_pct) * (bar_max_width / 2)
+        else:
+            scaled_width = 0
+        
+        bar_height = 0.5
+        
+        if pct_away >= 0:
+            # Positive (safe) - bar extends right
+            bar_x = bar_center
+            bar_width = scaled_width
+            label_x = bar_x + bar_width + pct_label_offset
+            label_ha = 'left'
+        else:
+            # Negative (danger) - bar extends left
+            bar_x = bar_center - scaled_width
+            bar_width = scaled_width
+            label_x = bar_x - pct_label_offset
+            label_ha = 'right'
+        
+        # Draw bar
+        rect = Rectangle((bar_x, y_pos - bar_height/2), 
+                        bar_width, bar_height, 
+                        facecolor=bar_color, edgecolor='black', linewidth=0.8, zorder=2)
+        ax.add_patch(rect)
+        
+        # Percentage label
+        pct_text = f"+{pct_away:.1f}%" if pct_away >= 0 else f"{pct_away:.1f}%"
+        text_color = "#00008B" if pct_away >= 0 else "#8B0000"
+        ax.text(label_x, y_pos, pct_text, fontsize=12, weight='bold', 
+            ha=label_ha, va='center', color=text_color, zorder=3)
+        
+        # Row separator
+        if idx < len(bubble) - 1:
+            separator_y = y_pos - row_height/2
+            ax.plot([-14.5, 14.5], [separator_y, separator_y], 'k-', linewidth=0.5, alpha=0.3)
+
+    # Draw vertical cutline at 0%
+    ax.axvline(x=bar_center, color='black', linewidth=2, linestyle='--', alpha=0.7, zorder=1)
+    ax.text(bar_center, -0.7, 'CUT LINE', fontsize=11, weight='bold', ha='center', 
+        bbox=dict(boxstyle='round,pad=0.3', facecolor='#FFFFFF', edgecolor='black'))
+
+    # Safe/Bubble zones labels
+    ax.text(bar_center + bar_max_width/4, len(bubble) + 0.7, 'SAFE', 
+        fontsize=12, weight='bold', ha='center', color='#00008B', alpha=0.9)
+    ax.text(bar_center - bar_max_width/4, len(bubble) + 0.7, 'BUBBLE', 
+        fontsize=12, weight='bold', ha='center', color='#8B0000', alpha=0.9)
+
+    # Title
+    today = datetime.today()
+    fig.text(0.02, 0.95, f"NET Score Distance From Last Team In Through {(today - timedelta(days=1)).strftime('%m/%d/%Y')}", 
+            ha='left', fontweight='bold', fontsize=28)
+    fig.text(0.02, 0.93, "@PEARatings", 
+            ha='left', fontweight='bold', fontsize=20)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.94])
+    plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Team_In/last_team_in_{formatted_date}.png")
 
     # ---------------------------
     # Hosting Distance Bar Plot
     # ---------------------------
 
-    hosting_df = stats_and_metrics.head(24)[["Team", "NET", "NET_Score"]]
-    last_host_score = hosting_df[hosting_df["NET"] == 16]["NET_Score"].values[0]
-    plot_logo_bar(
-        hosting_df,
-        title=f"NET Score Distance From Last Host Seed - Through {(today - timedelta(days=1)).strftime('%m-%d')}",
-        filename=f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Host/last_host_{formatted_date}.png",
-        reference_score=last_host_score
-    )
+    hosting = stats_and_metrics[0:24][['Team', 'NET', 'NET_Score']]
+    last_host_score = hosting[hosting['NET'] == 16]['NET_Score'].values[0]
+    hosting["percentage_away"] = round((
+        (hosting["NET_Score"] - last_host_score) / last_host_score
+    ) * 100, 2)
+
+    # Sort by percentage_away
+    hosting = hosting.sort_values(by="percentage_away", ascending=False).reset_index(drop=True)
+
+    # Create figure
+    fig, ax = plt.subplots(figsize=(12, len(hosting) * 0.6 + 2), dpi=400)
+    fig.patch.set_facecolor('#CECEB2')
+    ax.set_xlim(-13, 10)
+    ax.set_ylim(-1, len(hosting) + 0.5)
+    ax.axis('off')
+
+    # Column positions
+    logo_x = -12
+    team_x = -10.5
+    net_x = -5.5
+    bar_center = 2.5
+    bar_max_width = 10
+    pct_label_offset = 0.5
+
+    # Header
+    header_y = len(hosting) + 0.2
+    ax.text(team_x, header_y, 'Team', fontsize=13, weight='bold', ha='left')
+    ax.text(net_x, header_y, 'NET', fontsize=13, weight='bold', ha='center')
+    ax.text(bar_center, header_y, '% From Cut Line', fontsize=13, weight='bold', ha='center')
+
+    # Draw header underline
+    ax.plot([-14.5, 14.5], [header_y - 0.15, header_y - 0.15], 'k-', linewidth=2)
+
+    # Calculate max percentage for scaling
+    max_pct = max(abs(hosting['percentage_away'].min()), abs(hosting['percentage_away'].max()))
+
+    # Get min and max NET for gradient
+    min_net = hosting['NET'].min()
+    max_net = hosting['NET'].max()
+
+    # Function to get color for NET ranking box
+    def get_net_box_color(net_rank):
+        # Normalize NET rank to 0-1 range
+        if max_net > min_net:
+            normalized = (net_rank - min_net) / (max_net - min_net)
+        else:
+            normalized = 0.5
+        
+        # Dark Blue #00008B (0, 0, 139) -> Light Gray #D3D3D3 (211, 211, 211) -> Dark Red #8B0000 (139, 0, 0)
+        if normalized < 0.5:
+            # Interpolate between Dark Blue and Light Gray
+            t = normalized * 2  # Scale to 0-1
+            r = int(0 * (1 - t) + 211 * t)
+            g = int(0 * (1 - t) + 211 * t)
+            b = int(139 * (1 - t) + 211 * t)
+        else:
+            # Interpolate between Light Gray and Dark Red
+            t = (normalized - 0.5) * 2  # Scale to 0-1
+            r = int(211 * (1 - t) + 139 * t)
+            g = int(211 * (1 - t) + 0 * t)
+            b = int(211 * (1 - t) + 0 * t)
+        
+        return f'#{r:02x}{g:02x}{b:02x}'
+
+    # Draw each team
+    row_height = 1.0
+    start_y = len(hosting) - 0.5
+
+    for idx, row in hosting.iterrows():
+        y_pos = start_y - idx * row_height
+        team = row['Team']
+        net_rank = row['NET']
+        pct_away = row['percentage_away']
+        
+        # Team logo
+        logo = team_logos.get(team)
+        if logo:
+            imagebox = OffsetImage(logo, zoom=0.055)
+            ab = AnnotationBbox(imagebox, (logo_x, y_pos), frameon=False)
+            ax.add_artist(ab)
+        
+        # Team name
+        ax.text(team_x, y_pos, team, fontsize=14, weight='bold', ha='left', va='center')
+        
+        # NET ranking box with gradient color
+        net_box_width = 1.5
+        net_box_height = 0.6
+        box_color = get_net_box_color(net_rank)
+        
+        rect = Rectangle((net_x - net_box_width/2, y_pos - net_box_height/2), 
+                        net_box_width, net_box_height, 
+                        facecolor=box_color, edgecolor='black', linewidth=0.8, zorder=2)
+        ax.add_patch(rect)
+        
+        # Determine text color based on background brightness
+        # Extract RGB values
+        r = int(box_color[1:3], 16)
+        g = int(box_color[3:5], 16)
+        b_val = int(box_color[5:7], 16)
+        brightness = (r * 299 + g * 587 + b_val * 114) / 1000
+        text_color = 'white' if brightness < 128 else 'black'
+        
+        ax.text(net_x, y_pos, str(int(net_rank)), fontsize=13, weight='bold', 
+            ha='center', va='center', color=text_color, zorder=3)
+        
+        # Percentage bar
+        bar_color = "#00008B" if pct_away >= 0 else "#8B0000"
+        
+        # Scale bar width based on percentage
+        if max_pct > 0:
+            scaled_width = (abs(pct_away) / max_pct) * (bar_max_width / 2)
+        else:
+            scaled_width = 0
+        
+        bar_height = 0.5
+        
+        if pct_away >= 0:
+            # Positive (safe) - bar extends right
+            bar_x = bar_center
+            bar_width = scaled_width
+            label_x = bar_x + bar_width + pct_label_offset
+            label_ha = 'left'
+        else:
+            # Negative (danger) - bar extends left
+            bar_x = bar_center - scaled_width
+            bar_width = scaled_width
+            label_x = bar_x - pct_label_offset
+            label_ha = 'right'
+        
+        # Draw bar
+        rect = Rectangle((bar_x, y_pos - bar_height/2), 
+                        bar_width, bar_height, 
+                        facecolor=bar_color, edgecolor='black', linewidth=0.8, zorder=2)
+        ax.add_patch(rect)
+        
+        # Percentage label
+        pct_text = f"+{pct_away:.1f}%" if pct_away >= 0 else f"{pct_away:.1f}%"
+        text_color = "#00008B" if pct_away >= 0 else "#8B0000"
+        ax.text(label_x, y_pos, pct_text, fontsize=12, weight='bold', 
+            ha=label_ha, va='center', color=text_color, zorder=3)
+        
+        # Row separator
+        if idx < len(hosting) - 1:
+            separator_y = y_pos - row_height/2
+            ax.plot([-14.5, 14.5], [separator_y, separator_y], 'k-', linewidth=0.5, alpha=0.3)
+
+    # Draw vertical cutline at 0%
+    ax.axvline(x=bar_center, color='black', linewidth=2, linestyle='--', alpha=0.7, zorder=1)
+    ax.text(bar_center, -0.7, 'HOST LINE', fontsize=11, weight='bold', ha='center', 
+        bbox=dict(boxstyle='round,pad=0.3', facecolor='#FFFFFF', edgecolor='black'))
+
+    # Safe/Bubble zones labels
+    ax.text(bar_center + bar_max_width/4, len(hosting) + 0.7, 'HOST', 
+        fontsize=12, weight='bold', ha='center', color='#00008B', alpha=0.9)
+    ax.text(bar_center - bar_max_width/4, len(hosting) + 0.7, 'BUBBLE', 
+        fontsize=12, weight='bold', ha='center', color='#8B0000', alpha=0.9)
+
+    # Title
+    today = datetime.today()
+    fig.text(0.02, 0.95, f"NET Score Distance From Last Team In Through {(today - timedelta(days=1)).strftime('%m/%d/%Y')}", 
+            ha='left', fontweight='bold', fontsize=28)
+    fig.text(0.02, 0.93, "@PEARatings", 
+            ha='left', fontweight='bold', fontsize=20)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.94])
+    plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Last_Host/last_host_{formatted_date}.png")
 
     automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
     at_large = stats_and_metrics.drop(automatic_qualifiers.index)
@@ -3123,67 +3421,164 @@ if now.hour < 13 and now.hour > 7:
     formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
     formatted_df = resolve_conflicts(formatted_df, stats_and_metrics)
     formatted_df.index = formatted_df.index + 1
+    # current_season = 2025
+    # today = datetime.today()
+
     # Create a set of automatic qualifier teams for faster lookup
     automatic_teams = set(automatic_qualifiers["Team"])
 
     # Modify the DataFrame by appending '*' to teams in automatic qualifiers
     formatted_df_with_asterisk = formatted_df.copy()
-    for col in formatted_df_with_asterisk.columns[0:]:  # Exclude index column
-        formatted_df_with_asterisk[col] = formatted_df_with_asterisk[col].apply(lambda x: f"{x}*" if x in automatic_teams else x)
-    formatted_df_with_asterisk['Host'] = formatted_df_with_asterisk.index.to_series().apply(lambda i: f"#{i} {formatted_df_with_asterisk.loc[i, '1 Seed']}")
-    make_table = formatted_df_with_asterisk[['Host', '2 Seed', '3 Seed', '4 Seed']].set_index('Host')
+    for col in formatted_df_with_asterisk.columns[0:]:
+        formatted_df_with_asterisk[col] = formatted_df_with_asterisk[col].apply(
+            lambda x: f"{x}*" if x in automatic_teams else x
+        )
 
-    # Init a figure 
-    fig, ax = plt.subplots(figsize=(12, 10))
+    # Create figure
+    fig, ax = plt.subplots(figsize=(14, 16), dpi=400)
     fig.patch.set_facecolor('#CECEB2')
+    ax.set_xlim(0, 14)
+    ax.set_ylim(0, 18)
+    ax.axis('off')
 
-    column_definitions = [
-        ColumnDefinition(name='Host', # name of the column to change
-                        title='Host', # new title for the column
-                        textprops={"ha": "center", "weight": "bold", "fontsize": 16}, # properties to apply
-                        ),
-        ColumnDefinition(name='2 Seed', # name of the column to change
-                        title='2 Seed', # new title for the column
-                        textprops={"ha": "center", "fontsize": 16}, # properties to apply
-                        ),
-        ColumnDefinition(name='3 Seed', # name of the column to change
-                        title='3 Seed', # new title for the column
-                        textprops={"ha": "center", "fontsize": 16}, # properties to apply
-                        ),
-        ColumnDefinition(name='4 Seed', # name of the column to change
-                        title='4 Seed', # new title for the column
-                        textprops={"ha": "center", "fontsize": 16}, # properties to apply
-                        )
-    ]
+    # Column positions
+    rank_x = 0.7
+    host_logo_x = 1.5
+    host_name_x = 2.2
+    seed2_logo_x = 5
+    seed2_name_x = 5.5
+    seed3_logo_x = 8
+    seed3_name_x = 8.5
+    seed4_logo_x = 11
+    seed4_name_x = 11.5
 
-    # Create the table object with the column definitions parameter
-    tab = Table(make_table, column_definitions=column_definitions, footer_divider=True, row_divider_kw={"linewidth": 1})
+    # Header
+    header_y = 17.8
+    ax.text(host_name_x, header_y, 'Host (1 Seed)', fontsize=14, weight='bold', ha='left')
+    ax.text(seed2_name_x, header_y, '2 Seed', fontsize=14, weight='bold', ha='left')
+    ax.text(seed3_name_x, header_y, '3 Seed', fontsize=14, weight='bold', ha='left')
+    ax.text(seed4_name_x, header_y, '4 Seed', fontsize=14, weight='bold', ha='left')
 
+    # Draw header underline
+    ax.plot([0.5, 13.8], [header_y - 0.25, header_y - 0.25], 'k-', linewidth=2)
 
-    # Change the color
+    # Draw each regional
+    row_height = 1.05
+    start_y = 17.0
+
+    for idx in range(16):
+        y_pos = start_y - idx * row_height
+        
+        # Regional number
+        ax.text(rank_x, y_pos, f"#{idx + 1}", fontsize=16, weight='bold', ha='center', va='center')
+        
+        # Get teams
+        host_team = formatted_df.iloc[idx]['1 Seed']
+        seed2_team = formatted_df.iloc[idx]['2 Seed']
+        seed3_team = formatted_df.iloc[idx]['3 Seed']
+        seed4_team = formatted_df.iloc[idx]['4 Seed']
+        
+        # Host (1 Seed)
+        host_logo = team_logos.get(host_team)
+        if host_logo:
+            imagebox = OffsetImage(host_logo, zoom=0.07)
+            ab = AnnotationBbox(imagebox, (host_logo_x, y_pos), frameon=False)
+            ax.add_artist(ab)
+        
+        host_display = f"{host_team}*" if host_team in automatic_teams else host_team
+        ax.text(host_name_x, y_pos, host_display, fontsize=16, weight='bold', ha='left', va='center')
+        
+        # 2 Seed
+        seed2_logo = team_logos.get(seed2_team)
+        if seed2_logo:
+            imagebox = OffsetImage(seed2_logo, zoom=0.07)
+            ab = AnnotationBbox(imagebox, (seed2_logo_x, y_pos), frameon=False)
+            ax.add_artist(ab)
+        
+        seed2_display = f"{seed2_team}*" if seed2_team in automatic_teams else seed2_team
+        ax.text(seed2_name_x, y_pos, seed2_display, fontsize=14, ha='left', va='center')
+        
+        # 3 Seed
+        seed3_logo = team_logos.get(seed3_team)
+        if seed3_logo:
+            imagebox = OffsetImage(seed3_logo, zoom=0.07)
+            ab = AnnotationBbox(imagebox, (seed3_logo_x, y_pos), frameon=False)
+            ax.add_artist(ab)
+        
+        seed3_display = f"{seed3_team}*" if seed3_team in automatic_teams else seed3_team
+        ax.text(seed3_name_x, y_pos, seed3_display, fontsize=14, ha='left', va='center')
+        
+        # 4 Seed
+        seed4_logo = team_logos.get(seed4_team)
+        if seed4_logo:
+            imagebox = OffsetImage(seed4_logo, zoom=0.07)
+            ab = AnnotationBbox(imagebox, (seed4_logo_x, y_pos), frameon=False)
+            ax.add_artist(ab)
+        
+        seed4_display = f"{seed4_team}*" if seed4_team in automatic_teams else seed4_team
+        ax.text(seed4_name_x, y_pos, seed4_display, fontsize=14, ha='left', va='center')
+        
+        # Row separator
+        if idx < 15:
+            separator_y = y_pos - row_height/2
+            ax.plot([0.5, 13.8], [separator_y, separator_y], 'k-', linewidth=1, alpha=0.8)
+
+    # Bottom info section
+    info_start_y = 0.1
+    info_line_height = 0.3
+
+    # Last Four In
     last_four_in_teams = set(last_four_in["Team"])
-    for col in make_table.columns:
-        tab.columns[col].set_facecolor("#CECEB2")
+    lfi_text = f"Last Four In: {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}"
+    ax.text(0.4, info_start_y + 2 * info_line_height, lfi_text, fontsize=12, ha='left', va='top')
 
-    tab.col_label_row.set_facecolor('#CECEB2')
-    tab.columns["Host"].set_facecolor('#CECEB2')
-    # plt.figtext(0.89, 0.09, "* Indicates an automatic qualifier", ha="right", fontsize=14, fontstyle='italic')
-    plt.figtext(0.13, 0.975, f"PEAR {today.strftime('%m/%d')} Tournament Outlook", ha='left', fontsize=32, fontweight='bold')
-    plt.figtext(0.13, 0.945, f"No Considerations For Regional Proximity - Through {(today - timedelta(days=1)).strftime('%m/%d')}", ha='left', fontsize=16, fontweight='bold')
-    plt.figtext(0.13, 0.915, f"Regionals If Season Ended Today Based on PEAR NET Ranking", ha='left', fontsize=16)
-    plt.figtext(0.13, 0.885, "@PEARatings", ha='left', fontsize=16, fontweight='bold')
-    plt.figtext(0.13, 0.09, f"Last Four In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}", ha='left', fontsize=14)
-    plt.figtext(0.13, 0.06, f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}", ha='left', fontsize=14)
-    plt.figtext(0.13, 0.03, f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}", ha='left', fontsize=14)
-    text = " | ".join([f"{conference}: {count}" for conference, count in multibid.items()])
-    final_text = "Multibid - " + text
-    wrapped_text = textwrap.fill(final_text, width=100)
-    lines = wrapped_text.split('\n')
-    y_position = 0.00
-    vertical_spacing = -0.03
-    for line in lines:
-        plt.figtext(0.13, y_position, line, ha='left', fontsize=14)
-        y_position += vertical_spacing
+    # First Four Out
+    ffo_text = f"First Four Out: {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}"
+    ax.text(0.4, info_start_y + 1 * info_line_height, ffo_text, fontsize=12, ha='left', va='top')
+
+    # Next Four Out
+    nfo_text = f"Next Four Out: {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}"
+    ax.text(0.4, info_start_y, nfo_text, fontsize=12, ha='left', va='top')
+
+    # Multibid conferences
+    conference_counts = formatted_df[['1 Seed', '2 Seed', '3 Seed', '4 Seed']].stack().value_counts()
+    # Get conference for each team
+    team_conferences = {}
+    for team in formatted_df[['1 Seed', '2 Seed', '3 Seed', '4 Seed']].stack().unique():
+        clean_team = team.rstrip('*')
+        if clean_team in stats_and_metrics['Team'].values:
+            conf = stats_and_metrics.loc[stats_and_metrics['Team'] == clean_team, 'Conference'].iloc[0]
+            team_conferences[team] = conf
+
+    # Count by conference
+    conf_counts = {}
+    for team, conf in team_conferences.items():
+        conf_counts[conf] = conf_counts.get(conf, 0) + 1
+
+    multibid = {k: v for k, v in conf_counts.items() if v > 1}
+    multibid_text = " | ".join([f"{conference}: {count}" for conference, count in sorted(multibid.items(), key=lambda x: x[1], reverse=True)])
+    multibid_full = f"Multibid Conferences: {multibid_text}"
+
+    # Wrap multibid text
+    wrapped_multibid = textwrap.fill(multibid_full, width=120)
+    multibid_lines = wrapped_multibid.split('\n')
+    multibid_y = 0.7
+    for i, line in enumerate(multibid_lines):
+        ax.text(13.75, multibid_y - i * 0.3, line, fontsize=11, ha='right', va='top')
+
+    # Asterisk note
+    ax.text(13.75, multibid_y - len(multibid_lines) * 0.3, "* Indicates an automatic qualifier", 
+            fontsize=11, ha='right', va='top', style='italic')
+
+    # Titles at top
+    fig.text(0.05, 0.97, f"PEAR's NET Ranking {today.strftime('%m/%d')} Current Tournament Outlook", 
+            ha='left', fontweight='bold', fontsize=32)
+    fig.text(0.05, 0.95, f"No Considerations For Regional Proximity - Through {(today - timedelta(days=1)).strftime('%m/%d')}", 
+            ha='left', fontsize=24)
+    fig.text(0.05, 0.93, "@PEARatings", 
+            ha='left', fontweight='bold', fontsize=24)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.93])
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Tournament/tournament_{formatted_date}.png", bbox_inches='tight')
 
     automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["Projected_NET"].idxmin()]
@@ -3204,67 +3599,164 @@ if now.hour < 13 and now.hour > 7:
     formatted_df['Host'] = formatted_df['1 Seed'].apply(lambda x: f"{x}")
     formatted_df = resolve_conflicts(formatted_df, stats_and_metrics)
     formatted_df.index = formatted_df.index + 1
+    # current_season = 2025
+    # today = datetime.today()
+
     # Create a set of automatic qualifier teams for faster lookup
     automatic_teams = set(automatic_qualifiers["Team"])
 
     # Modify the DataFrame by appending '*' to teams in automatic qualifiers
     formatted_df_with_asterisk = formatted_df.copy()
-    for col in formatted_df_with_asterisk.columns[0:]:  # Exclude index column
-        formatted_df_with_asterisk[col] = formatted_df_with_asterisk[col].apply(lambda x: f"{x}*" if x in automatic_teams else x)
-    formatted_df_with_asterisk['Host'] = formatted_df_with_asterisk.index.to_series().apply(lambda i: f"#{i} {formatted_df_with_asterisk.loc[i, '1 Seed']}")
-    make_table = formatted_df_with_asterisk[['Host', '2 Seed', '3 Seed', '4 Seed']].set_index('Host')
+    for col in formatted_df_with_asterisk.columns[0:]:
+        formatted_df_with_asterisk[col] = formatted_df_with_asterisk[col].apply(
+            lambda x: f"{x}*" if x in automatic_teams else x
+        )
 
-    # Init a figure 
-    fig, ax = plt.subplots(figsize=(12, 10))
+    # Create figure
+    fig, ax = plt.subplots(figsize=(14, 16), dpi=400)
     fig.patch.set_facecolor('#CECEB2')
+    ax.set_xlim(0, 14)
+    ax.set_ylim(0, 18)
+    ax.axis('off')
 
-    column_definitions = [
-        ColumnDefinition(name='Host', # name of the column to change
-                        title='Host', # new title for the column
-                        textprops={"ha": "center", "weight": "bold", "fontsize": 16}, # properties to apply
-                        ),
-        ColumnDefinition(name='2 Seed', # name of the column to change
-                        title='2 Seed', # new title for the column
-                        textprops={"ha": "center", "fontsize": 16}, # properties to apply
-                        ),
-        ColumnDefinition(name='3 Seed', # name of the column to change
-                        title='3 Seed', # new title for the column
-                        textprops={"ha": "center", "fontsize": 16}, # properties to apply
-                        ),
-        ColumnDefinition(name='4 Seed', # name of the column to change
-                        title='4 Seed', # new title for the column
-                        textprops={"ha": "center", "fontsize": 16}, # properties to apply
-                        )
-    ]
+    # Column positions
+    rank_x = 0.7
+    host_logo_x = 1.5
+    host_name_x = 2.2
+    seed2_logo_x = 5
+    seed2_name_x = 5.5
+    seed3_logo_x = 8
+    seed3_name_x = 8.5
+    seed4_logo_x = 11
+    seed4_name_x = 11.5
 
-    # Create the table object with the column definitions parameter
-    tab = Table(make_table, column_definitions=column_definitions, footer_divider=True, row_divider_kw={"linewidth": 1})
+    # Header
+    header_y = 17.8
+    ax.text(host_name_x, header_y, 'Host (1 Seed)', fontsize=14, weight='bold', ha='left')
+    ax.text(seed2_name_x, header_y, '2 Seed', fontsize=14, weight='bold', ha='left')
+    ax.text(seed3_name_x, header_y, '3 Seed', fontsize=14, weight='bold', ha='left')
+    ax.text(seed4_name_x, header_y, '4 Seed', fontsize=14, weight='bold', ha='left')
 
+    # Draw header underline
+    ax.plot([0.5, 13.8], [header_y - 0.25, header_y - 0.25], 'k-', linewidth=2)
 
-    # Change the color
+    # Draw each regional
+    row_height = 1.05
+    start_y = 17.0
+
+    for idx in range(16):
+        y_pos = start_y - idx * row_height
+        
+        # Regional number
+        ax.text(rank_x, y_pos, f"#{idx + 1}", fontsize=16, weight='bold', ha='center', va='center')
+        
+        # Get teams
+        host_team = formatted_df.iloc[idx]['1 Seed']
+        seed2_team = formatted_df.iloc[idx]['2 Seed']
+        seed3_team = formatted_df.iloc[idx]['3 Seed']
+        seed4_team = formatted_df.iloc[idx]['4 Seed']
+        
+        # Host (1 Seed)
+        host_logo = team_logos.get(host_team)
+        if host_logo:
+            imagebox = OffsetImage(host_logo, zoom=0.07)
+            ab = AnnotationBbox(imagebox, (host_logo_x, y_pos), frameon=False)
+            ax.add_artist(ab)
+        
+        host_display = f"{host_team}*" if host_team in automatic_teams else host_team
+        ax.text(host_name_x, y_pos, host_display, fontsize=16, weight='bold', ha='left', va='center')
+        
+        # 2 Seed
+        seed2_logo = team_logos.get(seed2_team)
+        if seed2_logo:
+            imagebox = OffsetImage(seed2_logo, zoom=0.07)
+            ab = AnnotationBbox(imagebox, (seed2_logo_x, y_pos), frameon=False)
+            ax.add_artist(ab)
+        
+        seed2_display = f"{seed2_team}*" if seed2_team in automatic_teams else seed2_team
+        ax.text(seed2_name_x, y_pos, seed2_display, fontsize=14, ha='left', va='center')
+        
+        # 3 Seed
+        seed3_logo = team_logos.get(seed3_team)
+        if seed3_logo:
+            imagebox = OffsetImage(seed3_logo, zoom=0.07)
+            ab = AnnotationBbox(imagebox, (seed3_logo_x, y_pos), frameon=False)
+            ax.add_artist(ab)
+        
+        seed3_display = f"{seed3_team}*" if seed3_team in automatic_teams else seed3_team
+        ax.text(seed3_name_x, y_pos, seed3_display, fontsize=14, ha='left', va='center')
+        
+        # 4 Seed
+        seed4_logo = team_logos.get(seed4_team)
+        if seed4_logo:
+            imagebox = OffsetImage(seed4_logo, zoom=0.07)
+            ab = AnnotationBbox(imagebox, (seed4_logo_x, y_pos), frameon=False)
+            ax.add_artist(ab)
+        
+        seed4_display = f"{seed4_team}*" if seed4_team in automatic_teams else seed4_team
+        ax.text(seed4_name_x, y_pos, seed4_display, fontsize=14, ha='left', va='center')
+        
+        # Row separator
+        if idx < 15:
+            separator_y = y_pos - row_height/2
+            ax.plot([0.5, 13.8], [separator_y, separator_y], 'k-', linewidth=1, alpha=0.8)
+
+    # Bottom info section
+    info_start_y = 0.1
+    info_line_height = 0.3
+
+    # Last Four In
     last_four_in_teams = set(last_four_in["Team"])
-    for col in make_table.columns:
-        tab.columns[col].set_facecolor("#CECEB2")
+    lfi_text = f"Last Four In: {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}"
+    ax.text(0.4, info_start_y + 2 * info_line_height, lfi_text, fontsize=12, ha='left', va='top')
 
-    tab.col_label_row.set_facecolor('#CECEB2')
-    tab.columns["Host"].set_facecolor('#CECEB2')
-    # plt.figtext(0.89, 0.09, "* Indicates an automatic qualifier", ha="right", fontsize=14, fontstyle='italic')
-    plt.figtext(0.13, 0.975, f"PEAR {today.strftime('%m/%d')} Projected Tournament", ha='left', fontsize=32, fontweight='bold')
-    plt.figtext(0.13, 0.945, f"No Considerations For Regional Proximity - Through {(today - timedelta(days=1)).strftime('%m/%d')}", ha='left', fontsize=16, fontweight='bold')
-    plt.figtext(0.13, 0.915, f"Based on PEAR's Projected NET", ha='left', fontsize=16)
-    plt.figtext(0.13, 0.885, "@PEARatings", ha='left', fontsize=16, fontweight='bold')
-    plt.figtext(0.13, 0.09, f"Last Four In - {last_four_in.loc[0, 'Team']}, {last_four_in.loc[1, 'Team']}, {last_four_in.loc[2, 'Team']}, {last_four_in.loc[3, 'Team']}", ha='left', fontsize=14)
-    plt.figtext(0.13, 0.06, f"First Four Out - {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}", ha='left', fontsize=14)
-    plt.figtext(0.13, 0.03, f"Next Four Out - {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}", ha='left', fontsize=14)
-    text = " | ".join([f"{conference}: {count}" for conference, count in multibid.items()])
-    final_text = "Multibid - " + text
-    wrapped_text = textwrap.fill(final_text, width=100)
-    lines = wrapped_text.split('\n')
-    y_position = 0.00
-    vertical_spacing = -0.03
-    for line in lines:
-        plt.figtext(0.13, y_position, line, ha='left', fontsize=14)
-        y_position += vertical_spacing
+    # First Four Out
+    ffo_text = f"First Four Out: {next_8_teams.loc[0,'Team']}, {next_8_teams.loc[1,'Team']}, {next_8_teams.loc[2,'Team']}, {next_8_teams.loc[3,'Team']}"
+    ax.text(0.4, info_start_y + 1 * info_line_height, ffo_text, fontsize=12, ha='left', va='top')
+
+    # Next Four Out
+    nfo_text = f"Next Four Out: {next_8_teams.loc[4,'Team']}, {next_8_teams.loc[5,'Team']}, {next_8_teams.loc[6,'Team']}, {next_8_teams.loc[7,'Team']}"
+    ax.text(0.4, info_start_y, nfo_text, fontsize=12, ha='left', va='top')
+
+    # Multibid conferences
+    conference_counts = formatted_df[['1 Seed', '2 Seed', '3 Seed', '4 Seed']].stack().value_counts()
+    # Get conference for each team
+    team_conferences = {}
+    for team in formatted_df[['1 Seed', '2 Seed', '3 Seed', '4 Seed']].stack().unique():
+        clean_team = team.rstrip('*')
+        if clean_team in stats_and_metrics['Team'].values:
+            conf = stats_and_metrics.loc[stats_and_metrics['Team'] == clean_team, 'Conference'].iloc[0]
+            team_conferences[team] = conf
+
+    # Count by conference
+    conf_counts = {}
+    for team, conf in team_conferences.items():
+        conf_counts[conf] = conf_counts.get(conf, 0) + 1
+
+    multibid = {k: v for k, v in conf_counts.items() if v > 1}
+    multibid_text = " | ".join([f"{conference}: {count}" for conference, count in sorted(multibid.items(), key=lambda x: x[1], reverse=True)])
+    multibid_full = f"Multibid Conferences: {multibid_text}"
+
+    # Wrap multibid text
+    wrapped_multibid = textwrap.fill(multibid_full, width=120)
+    multibid_lines = wrapped_multibid.split('\n')
+    multibid_y = 0.7
+    for i, line in enumerate(multibid_lines):
+        ax.text(13.75, multibid_y - i * 0.3, line, fontsize=11, ha='right', va='top')
+
+    # Asterisk note
+    ax.text(13.75, multibid_y - len(multibid_lines) * 0.3, "* Indicates an automatic qualifier", 
+            fontsize=11, ha='right', va='top', style='italic')
+
+    # Titles at top
+    fig.text(0.05, 0.97, f"PEAR's NET Ranking {today.strftime('%m/%d')} Current Tournament Outlook", 
+            ha='left', fontweight='bold', fontsize=32)
+    fig.text(0.05, 0.95, f"No Considerations For Regional Proximity - Through {(today - timedelta(days=1)).strftime('%m/%d')}", 
+            ha='left', fontsize=24)
+    fig.text(0.05, 0.93, "@PEARatings", 
+            ha='left', fontweight='bold', fontsize=24)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.93])
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Projected_Tournament/proj_tournament_{formatted_date}.png", bbox_inches='tight')
 
     def net_tracker(X, Y):
@@ -3609,64 +4101,153 @@ if now.hour < 13 and now.hour > 7:
     formatted_df = resolve_conflicts(formatted_df, stats_and_metrics)
 
     tournament_sim = simulate_full_tournament(formatted_df, stats_and_metrics, 1000)
-    top_25_teams = tournament_sim[0:25]
+    top_25_teams = tournament_sim[0:32]
     top_25_teams.iloc[:, 1:] = top_25_teams.iloc[:, 1:] * 100
 
-    # Normalize values for color gradient (excluding 0 values)
-    min_value = top_25_teams.iloc[:, 1:].replace(0, np.nan).min().min()  # Min of all probabilities
-    max_value = top_25_teams.iloc[:, 1:].max().max()  # Max of all probabilities
+    # Determine if we're showing seeds
+    show_seeds = len(top_25_teams) < 20
 
-    def normalize(value, min_val, max_val):
-        """ Normalize values between 0 and 1 for colormap. """
-        if pd.isna(value) or value == 0:
-            return 0  # Keep 0 values at the lowest color
-        return (value - min_val) / (max_val - min_val)
+    # Create custom visualization
+    num_teams = len(top_25_teams)
+    teams_per_column = 16
+    num_columns = 2
 
-    # Define custom colormap (lighter green to dark green)
-    cmap = LinearSegmentedColormap.from_list('custom_green', ['#d5f5e3', '#006400'])
+    row_height = 1
+    fig_height = 1.2 + (teams_per_column * row_height)
+    fig_width = 24  # Double width for two columns
 
-    # Create figure and axis
-    fig, ax = plt.subplots(figsize=(8, 6), dpi=125)
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height), dpi=200)
     fig.patch.set_facecolor('#CECEB2')
-
-    ax.axis('tight')
+    ax.set_xlim(0, fig_width)
+    ax.set_ylim(0, fig_height)
     ax.axis('off')
 
-    # Add the table
-    table = ax.table(
-        cellText=top_25_teams.values,
-        colLabels=top_25_teams.columns,
-        cellLoc='center',
-        loc='center',
-        colColours=['#CECEB2'] * len(top_25_teams.columns)  # Set the header background color
-    )
-    for (i, j), cell in table.get_celld().items():
-        cell.set_edgecolor('black')
-        cell.set_linewidth(1.2)
-        if i == 0:
-            cell.set_facecolor('#CECEB2')  
-            cell.set_text_props(fontsize=14, weight='bold', color='black')
-        elif j == 0:
-            cell.set_facecolor('#CECEB2')
-            cell.set_text_props(fontsize=14, weight='bold', color='black')
+    # Color map for probabilities - blue gradient
+    cmap = LinearSegmentedColormap.from_list('custom_blue', ['#E8EAF6', '#1A237E'])
 
-        else:
-            value = top_25_teams.iloc[i-1, j]  # Skip header row
-            normalized_value = normalize(value, min_value, max_value)
-            color = cmap(normalized_value)
-            cell.set_facecolor(color)
-            cell.set_text_props(fontsize=14, weight='bold', color='black')
-            if value == 0:
-                cell.get_text().set_text("<1%")
+    # Get column names (excluding Team column)
+    prob_columns = [col for col in top_25_teams.columns if col != 'Team']
+    num_prob_cols = len(prob_columns)
+
+    # Calculate min/max for normalization (excluding zeros)
+    all_probs = top_25_teams[prob_columns].values.flatten()
+    all_probs = all_probs[all_probs > 0]
+    min_value = all_probs.min() if len(all_probs) > 0 else 0
+    max_value = all_probs.max() if len(all_probs) > 0 else 100
+
+    # Function to draw a column of teams
+    def draw_column(start_idx, end_idx, column_offset_x):
+        # Column positions
+        rank_x = 0.5 + column_offset_x
+        logo_x = 1.4 + column_offset_x
+        team_x = 2.2 + column_offset_x
+        
+        # Distribute probability columns evenly across remaining space
+        prob_start_x = 6.5 + column_offset_x
+        prob_end_x = 11 + column_offset_x
+        prob_spacing = (prob_end_x - prob_start_x) / (num_prob_cols - 1) if num_prob_cols > 1 else 0
+        prob_x_positions = [prob_start_x + i * prob_spacing for i in range(num_prob_cols)]
+        
+        # Header
+        header_y = fig_height - 0.7
+        ax.text(rank_x, header_y, 'Rank', fontsize=20, weight='bold', ha='center')
+        ax.text(team_x, header_y, 'Team', fontsize=20, weight='bold', ha='left')
+        
+        # Probability column headers
+        for i, col in enumerate(prob_columns):
+            ax.text(prob_x_positions[i], header_y, col, fontsize=20, weight='bold', ha='center')
+        # Draw header underline
+        ax.plot([0.2 + column_offset_x, 11.8 + column_offset_x], 
+                [header_y - 0.2, header_y - 0.2], 'k-', linewidth=2)
+        
+        # Draw each team row
+        start_y = header_y - 0.8
+        for idx in range(start_idx, min(end_idx, len(top_25_teams))):
+            row = top_25_teams.iloc[idx]
+            local_idx = idx - start_idx
+            y_pos = start_y - local_idx * row_height
+            
+            # Rank
+            ax.text(rank_x, y_pos + 0.05, str(idx + 1), fontsize=24, weight='bold', ha='center', va='center')
+            
+            # Logo
+            team_name = row['Team']
+            # Remove seed prefix if present
+            if show_seeds and team_name.startswith('#'):
+                clean_team_name = team_name.split(' ', 1)[1] if ' ' in team_name else team_name
             else:
-                cell.get_text().set_text(f"{value:.1f}%")
+                clean_team_name = team_name
+            
+            logo = team_logos[clean_team_name]
+            zoom_factor = 0.08
+            imagebox = OffsetImage(logo, zoom=zoom_factor)
+            ab = AnnotationBbox(imagebox, (logo_x, y_pos + 0.05), frameon=False, box_alignment=(0.5, 0.5))
+            ax.add_artist(ab)    
+            display_name = clean_team_name
+            
+            font_size = 24
+            ax.text(team_x, y_pos + 0.02, display_name, fontsize=font_size, weight='bold', ha='left', va='center')
+            
+            # Probabilities with color background
+            box_width = 0.85 if num_prob_cols > 4 else 1.2
+            box_height = 0.7
+            
+            for i, col in enumerate(prob_columns):
+                prob = row[col]
+                x_pos = prob_x_positions[i]
+                
+                # Normalize for color
+                if prob > 0:
+                    normalized = (prob - min_value) / (max_value - min_value) if max_value > min_value else 0
+                else:
+                    normalized = 0
+                
+                color = cmap(normalized)
+                
+                # Draw colored rectangle background
+                rect = Rectangle((x_pos - box_width/2, 0.05 + y_pos - box_height/2), 
+                                box_width, box_height, 
+                                facecolor=color, edgecolor='black', linewidth=0.8, zorder=2)
+                ax.add_patch(rect)
+                
+                # Display text
+                if prob < 0.05 and prob > 0:
+                    text = "<1%"
+                elif prob == 0:
+                    text = "<1%"
+                else:
+                    text = f"{prob:.1f}%"
+                
+                # Use white text for darker backgrounds
+                text_color = 'white' if normalized > 0.5 else 'black'
+                text_size = 24
+                ax.text(x_pos, y_pos + 0.05, text, fontsize=text_size, weight='bold', 
+                    ha='center', va='center', color=text_color, zorder=3)
+            
+            # Draw row separator line
+            if local_idx < teams_per_column - 1 and idx < len(top_25_teams) - 1:
+                separator_y = y_pos - row_height/2 + 0.05
+                ax.plot([0.2 + column_offset_x, 11.8 + column_offset_x], 
+                    [separator_y, separator_y], 'k-', linewidth=1, alpha=0.8)
 
-        cell.set_height(0.05)
+    # Draw left column (teams 1-16)
+    draw_column(0, teams_per_column, 0)
 
-    # Show the plot
-    plt.text(0, 0.086, 'Odds to Win Championship', fontsize=24, fontweight='bold', ha='center')
-    plt.text(0, 0.08, f"Based on Projected NET Tournament {today.strftime('%m/%d')}", fontsize=16, ha='center')
-    plt.text(0, 0.074, f"@PEARatings", fontsize=16, fontweight='bold', ha='center')
+    # Draw right column (teams 17-32)
+    draw_column(teams_per_column, teams_per_column * 2, 12)
+
+    # Draw vertical separator between columns
+    separator_x = 12
+    ax.plot([separator_x, separator_x], [0.5, fig_height - 1.15], 'k-', linewidth=2, alpha=0.5)
+
+    # Title section (centered across both columns)
+    title_y = fig_height - 0.1
+    brand_y = fig_height - 0.1
+
+    ax.text(0.2, title_y, 'Odds to Win Championship - PEAR\'s Tournament Projections', fontsize=40, weight='bold', ha='left')
+    ax.text(fig_width-0.2, brand_y, '@PEARatings', fontsize=40, weight='bold', ha='right')
+
+    plt.tight_layout()
     plt.savefig(f"./PEAR/PEAR Baseball/y{current_season}/Visuals/Tournament_Odds/tournament_odds_{formatted_date}.png", bbox_inches='tight')
 
     # --- Utility Functions ---
@@ -3683,37 +4264,91 @@ if now.hour < 13 and now.hour > 7:
 
     # --- Simulation Functions ---
 
-    def simulate_tournament(teams, ratings):
-        import random
-
+    def calculate_regional_probabilities(teams, ratings):
+        """
+        Calculate probabilities for a 4-team double elimination regional
+        Teams: [1 seed (host), 2 seed, 3 seed, 4 seed]
+        
+        Tournament structure:
+        Game 1: 1 vs 4
+        Game 2: 2 vs 3
+        Game 3: Loser G1 vs Loser G2 (elimination)
+        Game 4: Winner G1 vs Winner G2 (winner to championship)
+        Game 5: Loser G4 vs Winner G3 (elimination)
+        Game 6: Winner G4 vs Winner G5 (championship - if G4 winner loses, game 7)
+        Game 7: Winner G4 vs Winner G5 (if needed)
+        """
         team_a, team_b, team_c, team_d = teams
-        r = ratings
-
-        def adjusted(team):
-            return r[team] + 0.8 if team == team_a else r[team]
-
-        w1, l1 = (team_a, team_d) if random.random() < PEAR_Win_Prob(adjusted(team_a), adjusted(team_d)) else (team_d, team_a)
-        w2, l2 = (team_b, team_c) if random.random() < PEAR_Win_Prob(adjusted(team_b), adjusted(team_c)) else (team_c, team_b)
-        w3 = l2 if random.random() < PEAR_Win_Prob(adjusted(l2), adjusted(l1)) else l1
-        w4, l4 = (w1, w2) if random.random() < PEAR_Win_Prob(adjusted(w1), adjusted(w2)) else (w2, w1)
-        w5 = l4 if random.random() < PEAR_Win_Prob(adjusted(l4), adjusted(w3)) else w3
-        game6_prob = PEAR_Win_Prob(adjusted(w4), adjusted(w5))
-        w6 = w4 if random.random() < game6_prob else w5
-
-        return w6 if w6 == w4 else (w4 if random.random() < game6_prob else w5)
-
-    def run_simulation(teams, stats_and_metrics, num_simulations=5000):
-        ratings = {team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].iloc[0] for team in teams}
-        results = defaultdict(int)
-
-        for _ in range(num_simulations):
-            winner = simulate_tournament(teams, ratings)
-            results[winner] += 1
-
-        total = num_simulations
-        return defaultdict(float, {team: round(count / total, 3) for team, count in results.items()})
-
-    # --- Bracket Construction ---
+        
+        # Apply home field advantage to 1 seed
+        home_advantage = 0.3
+        
+        def get_rating(team):
+            return ratings[team] + (home_advantage if team == team_a else 0)
+        
+        # Initialize probabilities for each team
+        team_probs = {team: 0.0 for team in teams}
+        
+        # Game 1: 1 seed vs 4 seed
+        p_a_beats_d = PEAR_Win_Prob(get_rating(team_a), get_rating(team_d))
+        
+        # Game 2: 2 seed vs 3 seed  
+        p_b_beats_c = PEAR_Win_Prob(get_rating(team_b), get_rating(team_c))
+        
+        # Iterate through all possible game 1 outcomes
+        for g1_winner, g1_loser, p_g1 in [
+            (team_a, team_d, p_a_beats_d),
+            (team_d, team_a, 1 - p_a_beats_d)
+        ]:
+            # Iterate through all possible game 2 outcomes
+            for g2_winner, g2_loser, p_g2 in [
+                (team_b, team_c, p_b_beats_c),
+                (team_c, team_b, 1 - p_b_beats_c)
+            ]:
+                # Game 3: Loser's bracket (elimination game)
+                p_g1l_beats_g2l = PEAR_Win_Prob(get_rating(g1_loser), get_rating(g2_loser))
+                
+                for g3_winner, g3_loser, p_g3 in [
+                    (g1_loser, g2_loser, p_g1l_beats_g2l),
+                    (g2_loser, g1_loser, 1 - p_g1l_beats_g2l)
+                ]:
+                    # g3_loser is eliminated (doesn't win regional)
+                    
+                    # Game 4: Winner's bracket final
+                    p_g1w_beats_g2w = PEAR_Win_Prob(get_rating(g1_winner), get_rating(g2_winner))
+                    
+                    for g4_winner, g4_loser, p_g4 in [
+                        (g1_winner, g2_winner, p_g1w_beats_g2w),
+                        (g2_winner, g1_winner, 1 - p_g1w_beats_g2w)
+                    ]:
+                        # g4_winner advances to championship (still undefeated)
+                        # g4_loser drops to loser's bracket
+                        
+                        # Game 5: Loser's bracket final (elimination game)
+                        p_g4l_beats_g3w = PEAR_Win_Prob(get_rating(g4_loser), get_rating(g3_winner))
+                        
+                        for g5_winner, g5_loser, p_g5 in [
+                            (g4_loser, g3_winner, p_g4l_beats_g3w),
+                            (g3_winner, g4_loser, 1 - p_g4l_beats_g3w)
+                        ]:
+                            # g5_loser is eliminated
+                            
+                            # Championship: g4_winner (undefeated) vs g5_winner (one loss)
+                            p_champ = PEAR_Win_Prob(get_rating(g4_winner), get_rating(g5_winner))
+                            
+                            # Probability of reaching this state
+                            path_prob = p_g1 * p_g2 * p_g3 * p_g4 * p_g5
+                            
+                            # If g4_winner wins game 6, they win the regional
+                            team_probs[g4_winner] += path_prob * p_champ
+                            
+                            # If g5_winner wins game 6, play game 7
+                            # Game 7: same matchup
+                            p_g7 = PEAR_Win_Prob(get_rating(g4_winner), get_rating(g5_winner))
+                            team_probs[g4_winner] += path_prob * (1 - p_champ) * p_g7
+                            team_probs[g5_winner] += path_prob * (1 - p_champ) * (1 - p_g7)
+        
+        return team_probs
 
     automatic_qualifiers = stats_and_metrics.loc[stats_and_metrics.groupby("Conference")["NET"].idxmin()]
     at_large = stats_and_metrics.drop(automatic_qualifiers.index).nsmallest(34, "NET")
@@ -3727,74 +4362,91 @@ if now.hour < 13 and now.hour > 7:
     formatted_df.columns = [f"{col} Seed" for col in formatted_df.columns]
     formatted_df = formatted_df.reset_index()
     formatted_df['Host'] = formatted_df['1 Seed']
-    formatted_df = resolve_conflicts(formatted_df, stats_and_metrics)
 
     # --- Visualization ---
 
-    fig, axes = plt.subplots(4, 4, figsize=(12, 12), dpi=125)
+    fig, axes = plt.subplots(4, 4, figsize=(12, 10), dpi=400)
     fig.patch.set_facecolor('#CECEB2')
     axes = axes.flatten()
 
-    cmap = LinearSegmentedColormap.from_list('custom_green', ['#d5f5e3', '#006400'])
+    cmap = LinearSegmentedColormap.from_list('custom_blue', ['#E8EAF6', '#1A237E'])
 
     custom_order = [0, 15, 4, 11, 1, 14, 5, 10, 2, 13, 6, 9, 3, 12, 7, 8]
+    total_win_prob = 0
+
     for plot_idx, idx in enumerate(custom_order):
         teams = list(formatted_df.iloc[idx, 1:5])
-        sim_results = run_simulation(teams, stats_and_metrics)
-
-        seeded_teams = [f"#{i+1} {team}" for i, team in enumerate(teams)]
-        # Preserve team order from input
-        regional_prob = pd.DataFrame({
-            "Team": seeded_teams,
-            "Win": [sim_results.get(team, 0) * 100 for team in teams]
-        })
-
-        win_vals = regional_prob["Win"].values
-        norm_vals = normalize_array(win_vals)
-
+        ratings = {team: stats_and_metrics.loc[stats_and_metrics["Team"] == team, "Rating"].iloc[0] for team in teams}
+        
+        # Calculate probabilities
+        regional_probs = calculate_regional_probabilities(teams, ratings)
+        
+        # Create visualization for this regional
         ax = axes[plot_idx]
-        ax.axis('tight')
+        ax.set_xlim(0, 10)
+        ax.set_ylim(0, 4.2)
         ax.axis('off')
-
-        table = ax.table(
-            cellText=regional_prob.values,
-            colLabels=["Team", "Win %"],
-            cellLoc='center',
-            loc='center',
-            colColours=['#CECEB2'] * 2,
-            bbox=[0, 0, 1, 1]
-        )
-
-        for (i, j), cell in table.get_celld().items():
-            cell.set_edgecolor('black')
-            cell.set_linewidth(1.2)
-            cell.set_height(0.15)
-
-            if j == 0:
-                cell.set_width(0.7)
-            else:
-                cell.set_width(0.3)
-
-            font_props = {'fontsize': 16, 'weight': 'bold', 'color': 'black'}
-            cell.set_text_props(**font_props)
-
+        
+        # Column positions
+        seed_x = 0.6
+        logo_x = 0.5
+        team_x = 1.6
+        prob_x = 8.7
+        
+        # Regional title at top
+        ax.text(5.0, 4.1, f'#{idx + 1} {teams[0]} Regional',
+                fontsize=12, fontweight='bold', ha='center')
+        
+        # Draw each team (no header, more compact)
+        win_probs = [regional_probs.get(team, 0) * 100 for team in teams]
+        norm_vals = win_probs / np.max(win_probs) if np.max(win_probs) > 0 else win_probs
+        
+        start_y = 3.4
+        row_spacing = 1
+        
+        for i, team in enumerate(teams):
+            y_pos = start_y - i * row_spacing
+            
+            # Seed number
+            # ax.text(seed_x, y_pos, str(i + 1), fontsize=12, weight='bold', ha='center', va='center')
+            
+            # Logo
+            logo = team_logos[team]
+            imagebox = OffsetImage(logo, zoom=0.04)
+            ab = AnnotationBbox(imagebox, (logo_x, y_pos), frameon=False, box_alignment=(0.5, 0.5))
+            ax.add_artist(ab)
+            
+            # Team name
+            ax.text(team_x, y_pos, team, fontsize=11, weight='bold', ha='left', va='center')
+            
+            # Win probability box
+            prob = win_probs[i]
             if i == 0:
-                cell.set_facecolor('#CECEB2')
-            else:
-                if j == 1:
-                    color = cmap(norm_vals[i - 1])
-                    cell.set_facecolor(color)
-                    cell.get_text().set_text(f"{win_vals[i - 1]:.1f}%")
-                    cell.set_text_props(fontsize=16, fontweight='bold')
-                else:
-                    cell.set_facecolor('#CECEB2')
+                total_win_prob += prob
+            normalized = norm_vals[i]
+            color = cmap(normalized)
+            
+            box_width = 2.5
+            box_height = 0.8
+            rect = Rectangle((prob_x - box_width/2, y_pos - box_height/2), 
+                            box_width, box_height, 
+                            facecolor=color, edgecolor='black', linewidth=0.8, zorder=2)
+            ax.add_patch(rect)
+            
+            text_color = 'white' if normalized > 0.5 else 'black'
+            ax.text(prob_x, y_pos, f"{prob:.1f}%", fontsize=11, weight='bold', 
+                ha='center', va='center', color=text_color, zorder=3)
+            
+            # Row separator (subtle)
+            if i < 3:
+                ax.plot([0.1, 9.9], [y_pos - row_spacing/2, y_pos - row_spacing/2], 
+                    'k-', linewidth=0.5, alpha=0.8)
 
-        ax.text(0.5, 1.05, f'#{idx + 1} {teams[0]} Regional',
-                fontsize=10, fontweight='bold', ha='center', transform=ax.transAxes)
+    # Overall titles
+    fig.text(0.5, 0.98, "PEAR's Regional Winner Projections", ha='center', fontweight='bold', fontsize=30)
+    # fig.text(0.5, 0.96, "2025 NCAA Baseball Tournament Regionals", ha='center', fontsize=14)
+    fig.text(0.5, 0.95, "@PEARatings", ha='center', fontweight='bold', fontsize=20)
 
-    fig.text(0.5, 0.95, "PEAR's Regional Winner Projections", ha='center', fontweight='bold', fontsize=24)
-    fig.text(0.5, 0.93, "Based on PEAR's Tournament - No Consideration for Regional Proximity", 
-            ha='center', fontsize=16)
-    fig.text(0.5, 0.91, "@PEARatings", ha='center', fontweight='bold', fontsize=16)
+    plt.subplots_adjust(left=0.03, right=0.97, top=0.93, bottom=0.02, hspace=0.1, wspace=0.1)
     plt.savefig(f"./PEAR/PEAR Baseball/y2025/Visuals/Regional_Win_Prob/regional_win_prob_{formatted_date}.png", bbox_inches='tight')
     print("Visuals Completed")
