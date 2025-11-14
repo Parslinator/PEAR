@@ -20,6 +20,7 @@ jobs:
           sparse-checkout: |
             .github/
             requirements.txt
+            baseball_helper.py
             baseball_update.py
             PEAR/trebuc.ttf
             PEAR/Trebuchet MS Bold.ttf
